@@ -26,7 +26,6 @@
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [Submitting a Pull Request](#submitting-a-pull-request)
-- [Guidelines for Pull Request](#guidelines-for-pull-request)
 - [Authors](#authors)
 
 ---
@@ -99,14 +98,6 @@ We welcome contributions of all kinds! Please read our [Contributing Guidelines]
 7. Open a Pull Request and clearly describe what you changed and why. Link related issues (e.g., “Fixes #123”).
 
 <!-- <img src="https://img.shields.io/github/:variant/:user/:repo?style=flat-square&labelColor=orange" alt="Open a Pull Request" /> -->
-
----
-
-## Guidelines for Pull Request
-- Avoid PRs that are automated/scripted or plagiarized from someone else’s work.
-- Don’t spam; keep each PR focused and meaningful.
-- The project maintainer’s decision on PR validity is final.
-- For more, see our [Contributing Guidelines](contributing.md) and the Hacktoberfest [participation rules](https://hacktoberfest.com/participation).
 
 ---
 
