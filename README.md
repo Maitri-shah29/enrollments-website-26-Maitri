@@ -3,9 +3,9 @@
 ![Forktober GIF](https://raw.githubusercontent.com/ACM-VIT/.github/master/profile/acm_gif_banner.gif)
 
 <!-- Project Title -->
-<h2>PROJECT TITLE</h2>
+<h2>ACM OCS Website 2025-26</h2>
 
-<p>Short description about the project. One or two lines that explain what it does and who it’s for.</p>
+<p>The enrollments website for ACM OCS 2025-26</p>
 
 <p>
   <a href="https://acmvit.in/" target="_blank">
@@ -25,7 +25,6 @@
 - [Quick Start](#quick-start)
 - [Usage](#usage)
 - [Contributing](#contributing)
-- [Hacktoberfest](#hacktoberfest)
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Guidelines for Pull Request](#guidelines-for-pull-request)
 - [Authors](#authors)
@@ -49,10 +48,10 @@ Write a compelling overview about the project: the problem it solves, the motiva
  git checkout -b feat/your-feature
 
 # 3) Install dependencies
-# paste your install command(s) here
+npm install
 
 # 4) Run the project
-# paste your run command(s) here
+npm run dev
 ```
 
 ---
@@ -70,24 +69,6 @@ Provide examples and code snippets showing how to use the project. Add screensho
 
 ## Contributing
 We welcome contributions of all kinds! Please read our [Contributing Guidelines](contributing.md) to get started quickly and make your PRs count.
-
----
-
-## Hacktoberfest
-
-<p>
-  <a href="https://hacktoberfest.com/" target="_blank">
-<img alt="hactoberfest" src="https://img.shields.io/github/hacktoberfest/2025/tmrowco/tmrowapp-contrib?style=flat-square&logo=acm&labelColor=indigo&link=hacktoberfest.com"/>
-  </a>
-
-<!-- Badge Format 
-https://img.shields.io/github/hacktoberfest/:year/:user/:repo
--->
-
-Join us for Hacktoberfest! Quality > quantity.
-- Aim for meaningful, well‑scoped PR/MRs that solve real issues.
-- Non‑code contributions (docs, design, tutorials) are welcome via PR.
-- Full participation details: https://hacktoberfest.com/participation
 
 ---
 
