@@ -95,8 +95,11 @@ const Landing: React.FC = () => {
             }`}
           >
             {tab.title}
-            <button
-              type="button"
+            {/*biome-ignore lint/a11y/useSemanticElements: inner close button
+            cannot be a nested button*/}
+            <span
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 closeTab(tab.id);
@@ -110,10 +113,11 @@ const Landing: React.FC = () => {
               className="hover:bg-white/20 rounded-full w-4 h-4 flex items-center justify-center ml-auto"
             >
               x
-            </button>
+            </span>
           </button>
         ))}
 
+        {/* Add Tab button */}
         <button
           type="button"
           onClick={addTab}
