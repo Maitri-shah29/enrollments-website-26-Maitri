@@ -60,9 +60,6 @@ AUTH_SERCRET="string"
 AUTH_GOOGLE_ID="string"
 AUTH_GOOGLE_SECRET="string"
 
-# 5) Pull the db with prisma
-npx prisma db pull
-
 # 6) Generate the client
 npx prisma generate
 
