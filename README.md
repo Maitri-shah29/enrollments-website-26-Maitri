@@ -21,7 +21,6 @@
 ---
 
 ## Table of Contents
-
 - [About](#about)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
@@ -32,7 +31,6 @@
 ---
 
 ## About
-
 Write a compelling overview about the project: the problem it solves, the motivation, and what makes it unique. Include a short roadmap or key features if helpful.
 
 ---
@@ -51,29 +49,13 @@ Write a compelling overview about the project: the problem it solves, the motiva
 # 3) Install dependencies
 npm install
 
-# 4) Add the values to .env and .env.local
-.env
-DATABASE_URL="postgresql://url"
-
-.env.local
-AUTH_SERCRET="string"
-AUTH_GOOGLE_ID="string"
-AUTH_GOOGLE_SECRET="string"
-
-# 6) Generate the client
-npx prisma generate
-
-# 7) Run the project
+# 4) Run the project
 npm run dev
-
-# 8) To Use Prisma Studio
-npx prisma studio
 ```
 
 ---
 
 ## Usage
-
 Provide examples and code snippets showing how to use the project. Add screenshots or GIFs if applicable.
 
 ```console
@@ -85,7 +67,6 @@ Provide examples and code snippets showing how to use the project. Add screensho
 ---
 
 ## Contributing
-
 We welcome contributions of all kinds! Please read our [Contributing Guidelines](contributing.md) to get started quickly and make your PRs count.
 
 ---
@@ -128,7 +109,6 @@ We welcome contributions of all kinds! Please read our [Contributing Guidelines]
 ---
 
 ## Community & Conduct
-
 By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
