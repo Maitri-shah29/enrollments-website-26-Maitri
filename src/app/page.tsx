@@ -1,10 +1,15 @@
 import Image from "next/image";
 import React from "react";
+import SignIn from "../components/temp-login";
 import Landing from "./components/Landing";
 
-const page = () => {
+export default function Home() {
   return (
     <>
+      <main>
+        {/* to do real auth */}
+        <SignIn />
+      </main>
       <div className="w-screen h-screen overflow-hidden">
         <Image
           src="/images/backdrop.jpeg"
@@ -22,6 +27,4 @@ const page = () => {
       </div>
     </>
   );
-};
-
-export default page;
+}
