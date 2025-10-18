@@ -1,6 +1,7 @@
+"use client";
 import Image from "next/image";
 
-export default function Home() {
+export default function SignIn() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br bg-black p-8">
       <div className="text-center mb-12">
