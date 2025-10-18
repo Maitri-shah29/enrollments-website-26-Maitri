@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+model Round {
+  id         String      @id @default(cuid())
+  number     Int
+  domain     Domain
+  active     Boolean
+  type       RoundType
+  eliminates Boolean
+  announced  Boolean
+  hidden     Boolean     @default(false)
+  Meet       Meet?
+  Question   Question[]
+  RoundUser  RoundUser[]
+
+  @@unique([domain, number])
+}
+
+model RoundUser {
+  id             String          @id @default(cuid())
+  roundId        String
+  userId         String
+  status         RoundStatus     @default(pending)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  formSubmission FormSubmission?
+  Meet_User      Meet_User?
+  round          Round           @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Task           Task?
+  TaskSubmission TaskSubmission?
+
+  @@unique([roundId, userId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                 String         @id @default(cuid())
+  name               String?
+  email              String?        @unique
+  emailVerified      DateTime?
+  image              String?
+  phone              String?
+  accounts           Account[]
+  Comments           Comments[]
+  RoundUser          RoundUser[]
+  sessions           Session[]
+  push_subscriptions Subscription[]
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  endpoint  String
+  p256dh    String
+  auth      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FormSubmission {
+  id              String     @id @default(cuid())
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  formSubmittedAt DateTime?
+  roundUserId     String     @unique
+  valid           Boolean
+  roundUser       RoundUser  @relation(fields: [roundUserId], references: [id], onDelete: Cascade)
+  responses       Response[]
+}
+
+model Question {
+  id         String           @id @default(cuid())
+  serial     Int
+  question   String
+  helpText   String?
+  roundId    String
+  type       Type
+  options    String[]
+  varName    String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  round      Round            @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  responses  Response[]
+  validators ValidationRule[]
+}
+
+model Response {
+  id         String         @id @default(cuid())
+  questionId String
+  formId     String
+  response   String?
+  error      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  submission FormSubmission @relation(fields: [formId], references: [id], onDelete: Cascade)
+  question   Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, formId])
+}
+
+model ValidationRule {
+  id         String   @id @default(cuid())
+  questionId String
+  ruleType   RuleType
+  ruleValue  String?
+  priority   Int
+  helpText   String
+  helpTitle  String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Comments {
+  id      String   @id @default(cuid())
+  userId  String
+  comment String
+  by      String
+  for     Domain
+  time    DateTime @default(now())
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Meet {
+  id             String   @id @default(cuid())
+  title          String
+  roundId        String   @unique
+  meetLink       String
+  schedulingLink String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  round          Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  Slot           Slot[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  roundUserId String    @unique
+  text        String
+  deadline    DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  roundUser   RoundUser @relation(fields: [roundUserId], references: [id], onDelete: Cascade)
+}
+
+model Meet_User {
+  id          String    @id @default(cuid())
+  roundUserId String    @unique
+  slotId      String
+  roundUser   RoundUser @relation(fields: [roundUserId], references: [id], onDelete: Cascade)
+  slot        Slot      @relation(fields: [slotId], references: [id], onDelete: Cascade)
+}
+
+model TaskSubmission {
+  id          String    @id @default(cuid())
+  roundUserId String    @unique
+  text        String
+  submittedAt DateTime  @default(now())
+  roundUser   RoundUser @relation(fields: [roundUserId], references: [id], onDelete: Cascade)
+}
+
+model Slot {
+  id        String      @id @default(cuid())
+  meetId    String
+  from      DateTime
+  to        DateTime
+  capacity  Int
+  scheduled Meet_User[]
+  meet      Meet        @relation(fields: [meetId], references: [id], onDelete: Cascade)
+}
+
+enum RoundType {
+  form
+  interview
+  task
+}
+
+enum RoundStatus {
+  pending
+  evaluate
+  promoted
+  rejected
+}
+
+enum Domain {
+  cc
+  web
+  app
+  research
+  management
+  design
+}
+
+enum Type {
+  stq
+  ltq
+  scq
+  mcq
+}
+
+enum RuleType {
+  requiredIf
+  required
+  min
+  max
+  pattern
+  custom
+}
+
+enum crdb_internal_region {
+  aws_ap_south_1 @map("aws-ap-south-1")
+}
