@@ -1,13 +1,12 @@
 "use client";
 import { useState } from "react";
-import ProfileMenu from "./ProfileMenu";
+import type { UserAuthDisplayProps } from "../../lib/types";
+import ProfileMenu from "./profile-menu";
 
 const ProfileButton: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(
-    null,
-  );
+  const [user, setUser] = useState<UserAuthDisplayProps["user"]>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -17,7 +16,7 @@ const ProfileButton: React.FC = () => {
     // Dummy login, to replace with actual auth logic later very very soon™️.
     setIsAuthenticated(true);
     setUser({
-      name: "User Name",
+      name: "User's First Name",
       email: "test@example.com",
     });
   };

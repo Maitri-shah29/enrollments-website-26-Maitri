@@ -1,10 +1,5 @@
 "use client";
-
-interface UserAuthDisplayProps {
-  isAuthenticated: boolean;
-  user: { name: string; email: string } | null;
-  onLogin?: () => void;
-}
+import type { UserAuthDisplayProps } from "../../lib/types";
 
 // Render sign in button or user info based on authentication status
 const UserAuthDisplay: React.FC<UserAuthDisplayProps> = ({

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import ProfileButton from "./ProfileButton";
+import ProfileButton from "./profile-button";
 
 interface Tab {
   id: number;

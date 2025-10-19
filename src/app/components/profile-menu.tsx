@@ -1,17 +1,17 @@
 "use client"; // Cuz interaction
 import type React from "react";
+import type { UserAuthDisplayProps } from "../../lib/types";
 
 // ProfileMenu properties
-interface ProfileMenuProps {
-  isAuthenticated: boolean;
-  user: { name: string; email: string } | null;
-  onLogin: () => void;
+interface ProfileMenuProps extends UserAuthDisplayProps {
   onLogout: () => void;
   onClose: () => void;
 }
 
 // View for unauthenticated users, will prompt to login using google.
-const unauthenticatedView = (onLogin: () => void) => (
+const unauthenticatedView = (
+  onLogin: NonNullable<UserAuthDisplayProps["onLogin"]>,
+) => (
   <div className="flex flex-col items-center py-8 px-6">
     <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center mb-4">
       <svg
@@ -28,9 +28,9 @@ const unauthenticatedView = (onLogin: () => void) => (
         />
       </svg>
     </div>
-    <h3 className="text-white text-lg font-medium mb-2">as</h3>
+    <h3 className="text-white text-lg font-medium mb-2">Guest User</h3>
     <p className="text-gray-400 text-sm text-center mb-6">
-      Sign in to gain access to all of ACM browser's features.
+      Sign in to access all features.
     </p>
     <button
       type="button"
@@ -44,7 +44,7 @@ const unauthenticatedView = (onLogin: () => void) => (
 
 // View for authenticated users, shows user info and a sign out button.
 const authenticatedView = (
-  user: { name: string; email: string } | null,
+  user: UserAuthDisplayProps["user"],
   onLogout: () => void,
 ) => (
   <div className="flex flex-col">
@@ -90,7 +90,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
       <div className="absolute right-0 top-12 w-80 bg-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
         {isAuthenticated
           ? authenticatedView(user, onLogout)
-          : unauthenticatedView(onLogin)}
+          : unauthenticatedView(onLogin!)}
       </div>
     </>
   );
