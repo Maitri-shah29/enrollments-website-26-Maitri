@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ProfileButton from "./ProfileButton";
 
 interface Tab {
   id: number;
@@ -15,6 +16,7 @@ const Landing: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
 
   // Load tabs and activeTab from localStorage
+
   useEffect(() => {
     const savedTabs = localStorage.getItem("tabs");
     const savedActiveTab = localStorage.getItem("activeTab");
@@ -142,6 +144,9 @@ const Landing: React.FC = () => {
             onKeyDown={handleKeyPress}
             placeholder="acmvit.in"
           />
+        </div>
+        <div className="ml-auto mb-1">
+          <ProfileButton />
         </div>
       </div>
 
