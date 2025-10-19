@@ -1,8 +1,8 @@
 "use client";
 import type React from "react";
 import { useState } from "react";
+import Landing from "./landing";
 import SignIn from "./sign-up";
-import Landing from "./temp-page";
 
 const Page: React.FC = () => {
   const [showLanding, setShowLanding] = useState(false);
