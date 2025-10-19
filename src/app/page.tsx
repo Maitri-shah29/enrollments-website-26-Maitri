@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Home from "./components/home";
+import Page from "./components/main-page";
 
-export default function HomePage() {
+export default function MainPage() {
   return (
     <>
       <div className="w-screen h-screen overflow-hidden">
@@ -16,7 +16,7 @@ export default function HomePage() {
         />
         <div className="absolute top-0 left-0 -z-9 bg-white/30 h-full w-full"></div>
         <div className="p-5 h-full w-full flex items-center justify-center">
-          <Home />
+          <Page />
         </div>
       </div>
     </>

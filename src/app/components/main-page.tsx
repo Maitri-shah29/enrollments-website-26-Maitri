@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from "react";
-import Landing from "./landing";
-import SignIn from "./signup-page";
+import type React from "react";
+import { useState } from "react";
+import SignIn from "./sign-up";
+import Landing from "./temp-page";
 
-export default function Home() {
+const Page: React.FC = () => {
   const [showLanding, setShowLanding] = useState(false);
 
   return (
@@ -15,4 +16,6 @@ export default function Home() {
       )}
     </>
   );
-}
+};
+
+export default Page;
