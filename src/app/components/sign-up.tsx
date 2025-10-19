@@ -1,7 +1,14 @@
+// Moved the page.tsx in the signup folder to a separate component SignupPage.tsx
+
 "use client";
 import Image from "next/image";
-import Link from "next/link";
-export default function SignIn() {
+import type React from "react";
+
+interface SignupPageProps {
+  onSignIn: () => void;
+}
+
+const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
   return (
     <div className="flex flex-col items-center justify-center w-screen h-screen bg-gradient-to-br bg-black p-8">
       <div className="text-center mb-12">
@@ -15,8 +22,9 @@ export default function SignIn() {
           Sign In
         </h2>
 
-        <Link
-          href="/"
+        <button
+          type="button"
+          onClick={onSignIn}
           className="w-full flex items-center justify-center gap-3 bg-gray-700 border-2 border-gray-600 rounded-lg px-6 py-3 text-gray-200 font-medium text-base hover:bg-gray-600 hover:border-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <Image
@@ -26,8 +34,10 @@ export default function SignIn() {
             height={24}
           />
           Sign in Using Google
-        </Link>
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default SignupPage;

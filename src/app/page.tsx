@@ -1,9 +1,7 @@
 import Image from "next/image";
-import React from "react";
-import Landing from "./components/Landing";
-import SignIn from "./signup/page";
+import Page from "./components/main-page";
 
-export default function Home() {
+export default function MainPage() {
   return (
     <>
       <div className="w-screen h-screen overflow-hidden">
@@ -18,7 +16,7 @@ export default function Home() {
         />
         <div className="absolute top-0 left-0 -z-9 bg-white/30 h-full w-full"></div>
         <div className="p-5 h-full w-full flex items-center justify-center">
-          <Landing />
+          <Page />
         </div>
       </div>
     </>
