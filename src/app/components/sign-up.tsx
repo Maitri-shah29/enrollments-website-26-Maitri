@@ -2,7 +2,6 @@
 
 "use client";
 import Image from "next/image";
-import Link from "next/link";
 import type React from "react";
 
 interface SignupPageProps {
@@ -23,10 +22,10 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
           Sign In
         </h2>
 
-        <Link
-          href="/"
-          className="w-full flex items-center justify-center gap-3 bg-gray-700 border-2 border-gray-600 rounded-lg px-6 py-3 text-gray-200 font-medium text-base hover:bg-gray-600 hover:border-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
+        <button
+          type="button"
           onClick={onSignIn}
+          className="w-full flex items-center justify-center gap-3 bg-gray-700 border-2 border-gray-600 rounded-lg px-6 py-3 text-gray-200 font-medium text-base hover:bg-gray-600 hover:border-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <Image
             src="/google-logo.svg"
@@ -35,7 +34,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
             height={24}
           />
           Sign in Using Google
-        </Link>
+        </button>
       </div>
     </div>
   );
