@@ -14,7 +14,7 @@ const ProfileButton: React.FC = () => {
   };
 
   const handleLogin = () => {
-    // Simulate login - replace with actual auth logic later
+    // Dummy login, to replace with actual auth logic later very very soon™️.
     setIsAuthenticated(true);
     setUser({
       name: "User Name",
@@ -42,6 +42,7 @@ const ProfileButton: React.FC = () => {
         ) : (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <title>Profile icon</title>
+            {/* Profile icon, alternatively u can load a separate SVG file */}
             <path
               fillRule="evenodd"
               d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"

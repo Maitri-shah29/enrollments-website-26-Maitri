@@ -6,6 +6,7 @@ interface UserAuthDisplayProps {
   onLogin?: () => void;
 }
 
+// Render sign in button or user info based on authentication status
 const UserAuthDisplay: React.FC<UserAuthDisplayProps> = ({
   isAuthenticated,
   user,

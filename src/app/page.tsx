@@ -1,9 +1,12 @@
+"use client";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import Landing from "./components/Landing";
-import SignIn from "./signup/page";
+import SignIn from "./components/SignupPage";
 
 export default function Home() {
+  const [showLanding, setShowLanding] = useState(false);
+
   return (
     <>
       <div className="w-screen h-screen overflow-hidden">
@@ -18,7 +21,11 @@ export default function Home() {
         />
         <div className="absolute top-0 left-0 -z-9 bg-white/30 h-full w-full"></div>
         <div className="p-5 h-full w-full flex items-center justify-center">
-          <Landing />
+          {showLanding ? (
+            <Landing />
+          ) : (
+            <SignIn onSignIn={() => setShowLanding(true)} />
+          )}
         </div>
       </div>
     </>

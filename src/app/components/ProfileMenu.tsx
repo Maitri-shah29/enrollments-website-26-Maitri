@@ -1,6 +1,7 @@
-"use client";
+"use client"; // Cuz interaction
 import type React from "react";
 
+// ProfileMenu properties
 interface ProfileMenuProps {
   isAuthenticated: boolean;
   user: { name: string; email: string } | null;
@@ -9,6 +10,7 @@ interface ProfileMenuProps {
   onClose: () => void;
 }
 
+// View for unauthenticated users, will prompt to login using google.
 const unauthenticatedView = (onLogin: () => void) => (
   <div className="flex flex-col items-center py-8 px-6">
     <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center mb-4">
@@ -18,7 +20,7 @@ const unauthenticatedView = (onLogin: () => void) => (
         viewBox="0 0 20 20"
       >
         <title>User icon</title>
-        {/* User Icon */}
+        {/* Profile icon, alternatively u can load a separate SVG file */}
         <path
           fillRule="evenodd"
           d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -40,6 +42,7 @@ const unauthenticatedView = (onLogin: () => void) => (
   </div>
 );
 
+// View for authenticated users, shows user info and a sign out button.
 const authenticatedView = (
   user: { name: string; email: string } | null,
   onLogout: () => void,
@@ -75,7 +78,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
 }) => {
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop to close menu on clicking outside the menu and escape */}
       <button
         type="button"
         className="fixed inset-0 z-40 focus:outline-none"
@@ -83,7 +86,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
         onClick={onClose}
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       ></button>
-      {/* Menu */}
+      {/* Load either authenticated or unauthenticated menu as needed */}
       <div className="absolute right-0 top-12 w-80 bg-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
         {isAuthenticated
           ? authenticatedView(user, onLogout)
