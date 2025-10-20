@@ -3,12 +3,19 @@
 "use client";
 import Image from "next/image";
 import type React from "react";
+import { authClient } from "@/lib/auth-client";
 
 interface SignupPageProps {
   onSignIn: () => void;
 }
 
 const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
+  const handleGoogleSignIn = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    });
+  };
   return (
     <div className="flex flex-col items-center justify-center w-screen h-screen bg-gradient-to-br bg-black p-8">
       <div className="text-center mb-12">
@@ -16,7 +23,6 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
           OCS&apos;26
         </h1>
       </div>
-
       <div className="bg-black rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-semibold text-white mb-6 text-center">
           Sign In
@@ -24,7 +30,8 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
 
         <button
           type="button"
-          onClick={onSignIn}
+          // onClick={onSignIn}
+          onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center gap-3 bg-gray-700 border-2 border-gray-600 rounded-lg px-6 py-3 text-gray-200 font-medium text-base hover:bg-gray-600 hover:border-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <Image

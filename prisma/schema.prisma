@@ -41,19 +41,20 @@ model RoundUser {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String    @id @default(cuid())
   userId            String
-  type              String
   provider          String
   providerAccountId String
   refresh_token     String?
   access_token      String?
-  expires_at        Int?
+  expires_at        DateTime?
   token_type        String?
   scope             String?
   id_token          String?
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt         DateTime
+  createdAt         DateTime
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -63,20 +64,37 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime
+  updatedAt    DateTime
+  ipAddress    String?
+  userAgent    String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
 }
 
 model User {
   id                 String         @id @default(cuid())
   name               String?
   email              String?        @unique
-  emailVerified      DateTime?
+  emailVerified      Boolean?
   image              String?
   phone              String?
   accounts           Account[]
   Comments           Comments[]
   RoundUser          RoundUser[]
   sessions           Session[]
+  createdAt          DateTime
+  updatedAt          DateTime
   push_subscriptions Subscription[]
 }
 

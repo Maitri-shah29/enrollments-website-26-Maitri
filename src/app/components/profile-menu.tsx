@@ -1,5 +1,6 @@
 "use client"; // Cuz interaction
 import type React from "react";
+import { authClient } from "@/lib/auth-client";
 import type { UserAuthDisplayProps } from "../../lib/types";
 
 // ProfileMenu properties
@@ -8,6 +9,12 @@ interface ProfileMenuProps extends UserAuthDisplayProps {
   onClose: () => void;
 }
 
+const handleGoogleSignIn = async () => {
+  await authClient.signIn.social({
+    provider: "google",
+    callbackURL: "/",
+  });
+};
 // View for unauthenticated users, will prompt to login using google.
 const unauthenticatedView = (
   onLogin: NonNullable<UserAuthDisplayProps["onLogin"]>,
@@ -34,7 +41,8 @@ const unauthenticatedView = (
     </p>
     <button
       type="button"
-      onClick={onLogin}
+      // onClick={onLogin}
+      onClick={handleGoogleSignIn}
       className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full transition-colors"
     >
       Sign in using google
