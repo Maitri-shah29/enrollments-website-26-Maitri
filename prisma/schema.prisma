@@ -52,7 +52,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  updatedAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
   createdAt         DateTime  @default(now())
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -65,7 +65,7 @@ model Session {
   userId       String
   expires      DateTime
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
   ipAddress    String?
   userAgent    String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -94,7 +94,7 @@ model User {
   RoundUser          RoundUser[]
   sessions           Session[]
   createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now()) @updatedAt
   push_subscriptions Subscription[]
 }
 
