@@ -52,8 +52,8 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  updatedAt         DateTime
-  createdAt         DateTime
+  updatedAt         DateTime  @default(now())
+  createdAt         DateTime  @default(now())
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -64,8 +64,8 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  createdAt    DateTime
-  updatedAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
   ipAddress    String?
   userAgent    String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -93,8 +93,8 @@ model User {
   Comments           Comments[]
   RoundUser          RoundUser[]
   sessions           Session[]
-  createdAt          DateTime
-  updatedAt          DateTime
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now())
   push_subscriptions Subscription[]
 }
 
