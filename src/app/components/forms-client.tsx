@@ -16,8 +16,14 @@ import {
   type Domain,
   type Round,
 } from "@/lib/domain";
+import { type ValidationRuleInput, validateAnswer } from "@/lib/validation";
 
-const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
+// Extend local RoundQuestion shape on the fly with optional validators for the wireframe.
+type RoundWithValidators = Round & {
+  validators?: Record<number, ValidationRuleInput[] | undefined>;
+};
+
+const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, RoundWithValidators[]> = {
   tech: [
     {
       title: "Round 1",
@@ -25,6 +31,10 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
         { question: "againn ppp?", answer: "" },
         { question: "againn?", answer: "" },
       ],
+      validators: {
+        0: [{ type: "required" }],
+        1: [{ type: "min", value: 5 }],
+      },
     },
     {
       title: "Round 2",
@@ -32,6 +42,9 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
         { question: "a 1?", answer: "" },
         { question: "a?", answer: "" },
       ],
+      validators: {
+        0: [{ type: "required" }],
+      },
     },
     {
       title: "Round 3",
@@ -63,6 +76,15 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
         { question: "f 1?", answer: "" },
         { question: "f?", answer: "" },
       ],
+      validators: {
+        0: [
+          {
+            type: "requiredIf",
+            value: "q1=yes",
+            message: "Required when q1 is yes",
+          },
+        ],
+      },
     },
     {
       title: "Round 2",
@@ -101,6 +123,9 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
         { question: "k 1?", answer: "" },
         { question: "k?", answer: "" },
       ],
+      validators: {
+        0: [{ type: "required" }, { type: "max", value: 50 }],
+      },
     },
     {
       title: "Round 2",
@@ -171,13 +196,16 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
     },
   ],
 
-  desgin: [
+  design: [
     {
       title: "Round 1",
       questions: [
         { question: "u 1?", answer: "" },
         { question: "u?", answer: "" },
       ],
+      validators: {
+        0: [{ type: "required" }],
+      },
     },
     {
       title: "Round 2",
@@ -216,8 +244,9 @@ function SendIcon() {
 
 export default function FormsClient() {
   const [domain, setDomain] = useState<Domain>(DOMAINS[0]);
-  const [rounds, setRounds] = useState<Round[]>(() =>
-    cloneRounds(DOMAIN_ROUNDS_TEMPLATES[DOMAINS[0]]),
+  const [rounds, setRounds] = useState<RoundWithValidators[]>(
+    () =>
+      cloneRounds(DOMAIN_ROUNDS_TEMPLATES[DOMAINS[0]]) as RoundWithValidators[],
   );
   const [activeRoundIndex, setActiveRoundIndex] = useState(0);
   const [validationErrors, setValidationErrors] = useState<
@@ -244,7 +273,9 @@ export default function FormsClient() {
   function handleDomainChange(e: ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as Domain;
     setDomain(next);
-    setRounds(cloneRounds(DOMAIN_ROUNDS_TEMPLATES[next]));
+    setRounds(
+      cloneRounds(DOMAIN_ROUNDS_TEMPLATES[next]) as RoundWithValidators[],
+    );
     setActiveRoundIndex(0);
     setValidationErrors({});
   }
@@ -272,17 +303,25 @@ export default function FormsClient() {
     }
   }
 
-  function validateRequired(answer: string): boolean {
-    //ruleType === "required"
-    return answer.trim().length > 0;
-  }
+  //validation handled by validateAnswer now
+  // function validateRequired(answer: string): boolean {
+  //   return answer.trim().length > 0;
+  // }
 
   function handleSubmit(e: FormEvent, qIndex: number) {
     e.preventDefault();
     const q = currentRound.questions[qIndex];
     if (!q) return;
 
-    const isValid = validateRequired(q.answer);
+    const answersByVar = Object.fromEntries(
+      currentRound.questions.map((qq, idx) => [`q${idx + 1}`, qq.answer ?? ""]),
+    );
+
+    const rules: ValidationRuleInput[] | undefined = (
+      currentRound as RoundWithValidators
+    ).validators?.[qIndex];
+    const result = validateAnswer(q.answer, rules, { answersByVar });
+    const isValid = result.valid;
     const domainLabel = DOMAIN_LABELS[domain];
 
     console.log(
@@ -296,7 +335,7 @@ export default function FormsClient() {
     if (!isValid) {
       setValidationErrors((prev) => ({
         ...prev,
-        [qIndex]: "This field is required and cannot be empty",
+        [qIndex]: result.error || "Invalid value",
       }));
       return;
     }
