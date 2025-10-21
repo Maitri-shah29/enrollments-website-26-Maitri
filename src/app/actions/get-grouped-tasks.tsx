@@ -1,6 +1,7 @@
 "use server";
 
 import type { Prisma } from "@prisma/client";
+import { authClient } from "@/lib/auth-client";
 import { prisma } from "@/lib/prisma";
 
 export type TaskRoundUser = Prisma.RoundUserGetPayload<{
@@ -19,12 +20,12 @@ export type GroupedTasksByDomain = {
 };
 
 export default async function getGroupedTasks() {
-  const user_id_my = "IZmwy2HTQZa3behiMtbIJ5ITYiGjOjG8"; // to add user id from auth api when done;
+  const session = await authClient.getSession();
 
   try {
     const taskRoundUsers = await prisma.roundUser.findMany({
       where: {
-        userId: user_id_my,
+        userId: session.data?.user.id,
         round: {
           type: "task",
         },
