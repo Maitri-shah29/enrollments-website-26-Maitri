@@ -1,9 +1,8 @@
-"use client"; // Cuz interaction
+"use client";
 import type React from "react";
 import { authClient } from "@/lib/auth-client";
 import type { UserAuthDisplayProps } from "../../lib/types";
 
-// ProfileMenu properties
 interface ProfileMenuProps extends UserAuthDisplayProps {
   onLogout: () => void;
   onClose: () => void;
