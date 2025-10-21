@@ -41,7 +41,12 @@ const Landing: React.FC = () => {
   };
 
   const closeTab = (id: number) => {
-    if (tabs.length === 1) return;
+    if (tabs.length === 1) {
+      tabs[0].url = null;
+      tabs[0].title = "Home";
+      setInputValue("");
+      return;
+    }
     const remaining = tabs.filter((tab) => tab.id !== id);
     setTabs(remaining);
     if (activeTab === id) {
