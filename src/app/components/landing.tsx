@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import RefreshButton from "@/app/components/refresh-button";
 import FormsClient from "./forms-client";
 import ProfileButton from "./profile-button";
 
@@ -148,6 +149,9 @@ const Landing: React.FC = () => {
       </div>
 
       <div className="w-full bg-blue-800 h-10 flex items-end py-1 px-10 gap-2">
+        <div className="flex items-center gap-2">
+          <RefreshButton className="p-2 rounded hover:bg-white/10" />
+        </div>
         <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white">
           <span className="text-gray-300 select-none">https://</span>
           <input
