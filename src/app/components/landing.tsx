@@ -1,5 +1,5 @@
 "use client";
-import { act, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import FormsClient from "./forms-client";
 import ProfileButton from "./profile-button";
 
@@ -51,7 +51,6 @@ const Landing: React.FC = () => {
     setTabs(remaining);
     if (activeTab === id) {
       const newActive = remaining[remaining.length - 1];
-      console.log(newActive);
       setActiveTab(newActive.id);
       setInputValue(
         newActive.url ? newActive.url.replace(/^https:\/\//, "") : "",
