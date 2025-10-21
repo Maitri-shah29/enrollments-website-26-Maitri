@@ -3,7 +3,7 @@ export const DOMAINS = [
   "managment",
   "research",
   "cc",
-  "desgin",
+  "design",
 ] as const;
 export type Domain = (typeof DOMAINS)[number];
 
@@ -12,7 +12,7 @@ export const DOMAIN_LABELS: Record<Domain, string> = {
   managment: "Management",
   research: "Research",
   cc: "CC",
-  desgin: "Design",
+  design: "Design",
 };
 
 export interface RoundQuestion {
