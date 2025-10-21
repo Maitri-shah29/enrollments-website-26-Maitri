@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -18,7 +19,6 @@ import {
 } from "@/lib/domain";
 import { type ValidationRuleInput, validateAnswer } from "@/lib/validation";
 
-// Extend local RoundQuestion shape on the fly with optional validators for the wireframe.
 type RoundWithValidators = Round & {
   validators?: Record<number, ValidationRuleInput[] | undefined>;
 };
@@ -69,7 +69,7 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, RoundWithValidators[]> = {
     },
   ],
 
-  managment: [
+  management: [
     {
       title: "Round 1",
       questions: [
@@ -243,6 +243,9 @@ function SendIcon() {
 }
 
 export default function FormsClient() {
+  const searchParams = useSearchParams();
+  const roundIdFromUrl = searchParams.get("roundId");
+  const formIdFromUrl = searchParams.get("formId");
   const [domain, setDomain] = useState<Domain>(DOMAINS[0]);
   const [rounds, setRounds] = useState<RoundWithValidators[]>(
     () =>
@@ -252,6 +255,16 @@ export default function FormsClient() {
   const [validationErrors, setValidationErrors] = useState<
     Record<number, string>
   >({});
+  const [externalValidators, setExternalValidators] = useState<
+    Record<number, ValidationRuleInput[] | undefined>
+  >({});
+  const [externalQuestionIds, setExternalQuestionIds] = useState<
+    Record<number, string | undefined>
+  >({});
+  const [externalVarNames, setExternalVarNames] = useState<
+    Record<number, string | undefined>
+  >({});
+  const [usingServerQuestions, setUsingServerQuestions] = useState(false);
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -260,15 +273,78 @@ export default function FormsClient() {
     [rounds, activeRoundIndex],
   );
 
+  //check for local mode
+  const hasAnyServerQuestionId = useMemo(
+    () => Object.values(externalQuestionIds).some(Boolean),
+    [externalQuestionIds],
+  );
+  const isLocalMode = !formIdFromUrl || !hasAnyServerQuestionId;
+
   useEffect(() => {
     const t = setTimeout(() => {
-      // use activeRoundIndex to indicate dependency is intentional
+      //use activeRoundIndex to indicate dependency is intentional
       if (activeRoundIndex >= 0) {
         inputRefs.current[0]?.focus();
       }
     }, 0);
     return () => clearTimeout(t);
   }, [activeRoundIndex]);
+  useEffect(() => {
+    const fetchValidators = async () => {
+      if (!roundIdFromUrl) {
+        setExternalValidators({});
+        setExternalQuestionIds({});
+        setExternalVarNames({});
+        setUsingServerQuestions(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/rounds/${roundIdFromUrl}/questions`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: {
+          questions: Array<{
+            id: string;
+            serial: number;
+            question: string;
+            helpText?: string | null;
+            varName?: string | null;
+            validators: ValidationRuleInput[];
+          }>;
+        } = await res.json();
+        const vmap: Record<number, ValidationRuleInput[] | undefined> = {};
+        const idmap: Record<number, string | undefined> = {};
+        const namemap: Record<number, string | undefined> = {};
+        for (const q of data.questions) {
+          const idx = Math.max(0, (q.serial ?? 1) - 1);
+          vmap[idx] = q.validators;
+          idmap[idx] = q.id;
+          namemap[idx] = q.varName ?? undefined;
+        }
+        setExternalValidators(vmap);
+        setExternalQuestionIds(idmap);
+        setExternalVarNames(namemap);
+
+        // Build a single-round view from server questions to replace local templates
+        const serverRound: RoundWithValidators = {
+          title: "Round 1",
+          questions: data.questions
+            .sort((a, b) => (a.serial ?? 0) - (b.serial ?? 0))
+            .map((q) => ({ question: q.question, answer: "" })),
+          validators: vmap,
+        };
+        setRounds([serverRound]);
+        setActiveRoundIndex(0);
+        setUsingServerQuestions(true);
+      } catch (err) {
+        console.warn("[forms] failed to fetch validators:", err);
+        setExternalValidators({});
+        setExternalQuestionIds({});
+        setExternalVarNames({});
+        setUsingServerQuestions(false);
+      }
+    };
+    fetchValidators();
+  }, [roundIdFromUrl]);
 
   function handleDomainChange(e: ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as Domain;
@@ -314,12 +390,17 @@ export default function FormsClient() {
     if (!q) return;
 
     const answersByVar = Object.fromEntries(
-      currentRound.questions.map((qq, idx) => [`q${idx + 1}`, qq.answer ?? ""]),
+      currentRound.questions.map((qq, idx) => [
+        usingServerQuestions && externalVarNames[idx]
+          ? (externalVarNames[idx] as string)
+          : `q${idx + 1}`,
+        qq.answer ?? "",
+      ]),
     );
 
-    const rules: ValidationRuleInput[] | undefined = (
-      currentRound as RoundWithValidators
-    ).validators?.[qIndex];
+    const rules: ValidationRuleInput[] | undefined =
+      externalValidators[qIndex] ||
+      (currentRound as RoundWithValidators).validators?.[qIndex];
     const result = validateAnswer(q.answer, rules, { answersByVar });
     const isValid = result.valid;
     const domainLabel = DOMAIN_LABELS[domain];
@@ -337,6 +418,59 @@ export default function FormsClient() {
         ...prev,
         [qIndex]: result.error || "Invalid value",
       }));
+      return;
+    }
+
+    // If a formId and a server-side questionId are present, submit to server for revalidation + save
+    const serverQuestionId = externalQuestionIds[qIndex];
+    if (formIdFromUrl && serverQuestionId) {
+      (async () => {
+        try {
+          const resp = await fetch(`/api/forms/${formIdFromUrl}/responses`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              questionId: serverQuestionId,
+              response: q.answer,
+            }),
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            const msg =
+              err?.error || `Server rejected response (HTTP ${resp.status})`;
+            setValidationErrors((prev) => ({ ...prev, [qIndex]: msg }));
+            return;
+          }
+        } catch (err) {
+          console.warn("[forms] failed to submit response:", err);
+          setValidationErrors((prev) => ({
+            ...prev,
+            [qIndex]: "Network error, please retry",
+          }));
+          return;
+        }
+
+        // On success, clear the field as before
+        setValidationErrors((prev) => {
+          const next = { ...prev };
+          delete next[qIndex];
+          return next;
+        });
+
+        setRounds((prev) =>
+          prev.map((r, ri) =>
+            ri !== activeRoundIndex
+              ? r
+              : {
+                  ...r,
+                  questions: r.questions.map((qq, qi) =>
+                    qi === qIndex ? { ...qq, answer: "" } : qq,
+                  ),
+                },
+          ),
+        );
+        setTimeout(() => inputRefs.current[qIndex + 1]?.focus(), 0);
+      })();
       return;
     }
 
@@ -463,6 +597,16 @@ export default function FormsClient() {
               </section>
             ))}
           </div>
+
+          {isLocalMode && (
+            <output
+              className="mt-10 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3"
+              aria-live="polite"
+            >
+              Warning: You are offline; changes made are not being saved
+              immediately.
+            </output>
+          )}
         </div>
       </main>
     </div>

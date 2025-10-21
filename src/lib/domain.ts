@@ -1,6 +1,6 @@
 export const DOMAINS = [
   "tech",
-  "managment",
+  "management",
   "research",
   "cc",
   "design",
@@ -9,7 +9,7 @@ export type Domain = (typeof DOMAINS)[number];
 
 export const DOMAIN_LABELS: Record<Domain, string> = {
   tech: "Tech",
-  managment: "Management",
+  management: "Management",
   research: "Research",
   cc: "CC",
   design: "Design",
