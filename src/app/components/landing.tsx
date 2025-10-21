@@ -1,4 +1,6 @@
 "use client";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useEffect, useState } from "react";
 import RefreshButton from "@/app/components/refresh-button";
 import FormsClient from "./forms-client";
@@ -11,6 +13,10 @@ interface Tab {
 }
 
 const Landing: React.FC = () => {
+  const [pagesStack, setPagesStack] = useState<Tab[]>([]);
+  const [pointer, setPointer] = useState<number>(-1);
+  const [isPrevPossible, setIsPrevPossible] = useState<boolean>(false);
+  const [isNextPossible, setIsNextPossible] = useState<boolean>(false);
   const [tabs, setTabs] = useState<Tab[]>([
     { id: 1, title: "Home", url: null },
   ]);
@@ -25,12 +31,83 @@ const Landing: React.FC = () => {
     const savedActiveTab = localStorage.getItem("activeTab");
     if (savedTabs) setTabs(JSON.parse(savedTabs));
     if (savedActiveTab) setActiveTab(Number(savedActiveTab));
+    const savedPages = localStorage.getItem(`${savedActiveTab}`);
+    const pointerr = localStorage.getItem(`${savedActiveTab}-pointer`);
+    if (savedPages) {
+      const parsedPages = JSON.parse(savedPages);
+      setPagesStack(parsedPages);
+      if (pointerr) {
+        const parsedPointer = JSON.parse(pointerr);
+        if (parsedPointer > 0 && parsedPointer < parsedPages.length - 1) {
+          setIsPrevPossible(true);
+          setIsNextPossible(true);
+        } else if (parsedPointer <= 0) {
+          setIsPrevPossible(false);
+        } else {
+          setIsNextPossible(false);
+        }
+        if (parsedPointer) {
+        }
+        setPointer(parsedPointer);
+        setInputValue(
+          parsedPages[
+            parsedPointer >= 0 ? parsedPointer : parsedPages.length - 1
+          ]?.url.slice(8),
+        );
+      } else {
+        setPointer(parsedPages.length - 1);
+        setIsNextPossible(false);
+        if (parsedPages.length <= 1) {
+          setIsPrevPossible(false);
+        } else {
+          setIsPrevPossible(true);
+        }
+        setInputValue(parsedPages[parsedPages.length - 1].url.slice(8));
+      }
+    }
   }, []);
 
   // Save tabs and activeTab to localStorage
   useEffect(() => {
     localStorage.setItem("tabs", JSON.stringify(tabs));
     localStorage.setItem("activeTab", activeTab.toString());
+    const savedPages = localStorage.getItem(`${activeTab}`);
+    const pointerr = localStorage.getItem(`${activeTab}-pointer`);
+    if (savedPages) {
+      const parsedPages = JSON.parse(savedPages);
+      setPagesStack(parsedPages);
+      if (pointerr) {
+        const parsedPointer = JSON.parse(pointerr);
+        if (parsedPointer > 0 && parsedPointer < parsedPages.length - 1) {
+          setIsPrevPossible(true);
+          setIsNextPossible(true);
+        } else if (parsedPointer <= 0) {
+          setIsPrevPossible(false);
+          setIsNextPossible(true);
+        } else {
+          setIsNextPossible(false);
+          setIsPrevPossible(true);
+        }
+        setPointer(parsedPointer);
+        setInputValue(
+          parsedPages[
+            parsedPointer >= 0 ? parsedPointer : parsedPages.length - 1
+          ]?.url.slice(8),
+        );
+      } else {
+        setPointer(parsedPages.length - 1);
+        setIsNextPossible(false);
+        if (parsedPages.length <= 1) {
+          setIsPrevPossible(false);
+        } else {
+          setIsPrevPossible(true);
+        }
+        setInputValue(parsedPages[parsedPages.length - 1].url.slice(8));
+      }
+    } else {
+      setPagesStack([]);
+      setPointer(-1);
+    }
   }, [tabs, activeTab]);
 
   const addTab = () => {
@@ -70,7 +147,36 @@ const Landing: React.FC = () => {
         setShowForms(true);
         return;
       }
-
+      const pageStack = localStorage.getItem(`${activeTab}`);
+      if (pageStack) {
+        const parsedData = JSON.parse(pageStack);
+        parsedData.push({
+          id: 69,
+          title: "new tab",
+          url: `https://${inputValue}`,
+        });
+        setPagesStack(parsedData);
+        setPointer(parsedData.length - 1);
+        localStorage.setItem(
+          `${activeTab}-pointer`,
+          JSON.stringify(parsedData.length - 1),
+        );
+        localStorage.setItem(`${activeTab}`, JSON.stringify(parsedData));
+      } else {
+        const parsedData = [];
+        parsedData.push({
+          id: 69,
+          title: "new tab",
+          url: `https://${inputValue}`,
+        });
+        setPagesStack(parsedData);
+        setPointer(parsedData.length - 1);
+        localStorage.setItem(
+          `${activeTab}-pointer`,
+          JSON.stringify(parsedData.length - 1),
+        );
+        localStorage.setItem(`${activeTab}`, JSON.stringify(parsedData));
+      }
       const formatted = inputValue.startsWith("https://")
         ? inputValue
         : `https://${inputValue}`; // fixed template literal
@@ -88,7 +194,51 @@ const Landing: React.FC = () => {
     if (tab) setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
   };
 
-  const activeTabData = tabs.find((t) => t.id === activeTab);
+  const activeTabData = pagesStack[pointer];
+
+  const goPrevious = () => {
+    if (pointer >= 0) {
+      localStorage.setItem(`${activeTab}-pointer`, JSON.stringify(pointer - 1));
+      if (pagesStack[pointer - 1]?.url) {
+        setInputValue(pagesStack[pointer - 1]?.url?.slice(8) ?? "");
+      } else {
+        setInputValue("");
+      }
+      if (pointer <= pagesStack.length - 1) {
+        setIsNextPossible(true);
+      } else {
+        setIsNextPossible(false);
+      }
+      if (pointer - 1 >= 0) {
+        setIsPrevPossible(true);
+      } else {
+        setIsPrevPossible(false);
+      }
+      setPointer(pointer - 1);
+    }
+  };
+
+  const goNext = () => {
+    if (pointer < pagesStack.length - 1) {
+      localStorage.setItem(`${activeTab}-pointer`, JSON.stringify(pointer + 1));
+      if (pagesStack[pointer + 1]?.url) {
+        setInputValue(pagesStack[pointer + 1]?.url?.slice(8) ?? "");
+      } else {
+        setInputValue("");
+      }
+      if (pointer + 1 === pagesStack.length - 1) {
+        setIsNextPossible(false);
+      } else {
+        setIsNextPossible(true);
+      }
+      if (pointer + 1 > -1) {
+        setIsPrevPossible(true);
+      } else {
+        setIsPrevPossible(false);
+      }
+      setPointer(pointer + 1);
+    }
+  };
 
   return (
     <div className="bg-blue-800 w-full h-full rounded-xl flex flex-col overflow-hidden">
@@ -148,15 +298,43 @@ const Landing: React.FC = () => {
         </button>
       </div>
 
-      <div className="w-full bg-blue-800 h-10 flex items-end py-1 px-10 gap-2">
+      <div className="w-full bg-blue-800 h-10 flex items-center py-1 px-10 gap-2">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="hover:bg-white/10 rounded-full"
+            onClick={goPrevious}
+          >
+            <ArrowBackIcon
+              style={{
+                fontSize: 24,
+                padding: 3,
+                color: isPrevPossible ? "white" : "grey",
+              }}
+            />
+          </button>
+          <button
+            type="button"
+            className="hover:bg-white/10 rounded-full"
+            onClick={goNext}
+          >
+            <ArrowForwardIcon
+              style={{
+                fontSize: 24,
+                padding: 3,
+                color: isNextPossible ? "white" : "grey",
+              }}
+            />
+          </button>
+        </div>
         <div className="flex items-center gap-2">
           <RefreshButton className="p-2 rounded hover:bg-white/10" />
         </div>
-        <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white">
+        <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white justify-center">
           <span className="text-gray-300 select-none">https://</span>
           <input
             className="bg-transparent w-full outline-none text-white"
-            value={inputValue}
+            value={inputValue ?? ""}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
             placeholder="acmvit.in"
@@ -184,7 +362,7 @@ const Landing: React.FC = () => {
               <span className="select-none">https://</span>
               <input
                 className="bg-transparent w-full outline-none"
-                value={inputValue}
+                value={inputValue ?? ""}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyPress}
                 placeholder="acmvit.in"
