@@ -220,6 +220,9 @@ export default function FormsClient() {
     cloneRounds(DOMAIN_ROUNDS_TEMPLATES[DOMAINS[0]]),
   );
   const [activeRoundIndex, setActiveRoundIndex] = useState(0);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<number, string>
+  >({});
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -243,6 +246,7 @@ export default function FormsClient() {
     setDomain(next);
     setRounds(cloneRounds(DOMAIN_ROUNDS_TEMPLATES[next]));
     setActiveRoundIndex(0);
+    setValidationErrors({});
   }
 
   function handleInputChange(qIndex: number, value: string) {
@@ -258,17 +262,52 @@ export default function FormsClient() {
             },
       ),
     );
+    //clear error when user starts retyping
+    if (validationErrors[qIndex]) {
+      setValidationErrors((prev) => {
+        const next = { ...prev };
+        delete next[qIndex];
+        return next;
+      });
+    }
+  }
+
+  function validateRequired(answer: string): boolean {
+    //ruleType === "required"
+    return answer.trim().length > 0;
   }
 
   function handleSubmit(e: FormEvent, qIndex: number) {
     e.preventDefault();
     const q = currentRound.questions[qIndex];
     if (!q) return;
+
+    const isValid = validateRequired(q.answer);
     const domainLabel = DOMAIN_LABELS[domain];
+
     console.log(
       `[forms] submit: domain=${domain} (${domainLabel}) | round=${currentRound.title} | q=${qIndex + 1} | question="${q.question}" | answer=`,
       q.answer,
     );
+    console.log(
+      `[validation] required check: ${isValid ? "valid" : "invalid"}`,
+    );
+
+    if (!isValid) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        [qIndex]: "This field is required and cannot be empty",
+      }));
+      return;
+    }
+
+    //clear validation error on submission
+    setValidationErrors((prev) => {
+      const next = { ...prev };
+      delete next[qIndex];
+      return next;
+    });
+
     setRounds((prev) =>
       prev.map((r, ri) =>
         ri !== activeRoundIndex
@@ -351,9 +390,17 @@ export default function FormsClient() {
                     }}
                     value={q.answer}
                     onChange={(e) => handleInputChange(qi, e.target.value)}
-                    className="w-full p-4 pr-14 bg-white text-gray-900 shadow-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition placeholder:text-gray-500"
+                    className={`w-full p-4 pr-14 bg-white text-gray-900 shadow-sm border rounded-xl focus:ring-2 transition placeholder:text-gray-500 ${
+                      validationErrors[qi]
+                        ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-200 focus:ring-blue-500 focus:border-blue-500"
+                    }`}
                     placeholder="type your answer..."
                     aria-label={`Answer for ${q.question}`}
+                    aria-invalid={!!validationErrors[qi]}
+                    aria-describedby={
+                      validationErrors[qi] ? `error-${qi}` : undefined
+                    }
                   />
                   <button
                     type="submit"
@@ -364,6 +411,16 @@ export default function FormsClient() {
                     <SendIcon />
                   </button>
                 </form>
+                {validationErrors[qi] && (
+                  <p
+                    id={`error-${qi}`}
+                    className="mt-2 text-sm text-red-600 flex items-center gap-1"
+                    role="alert"
+                  >
+                    <span aria-hidden="true">⚠</span>
+                    {validationErrors[qi]}
+                  </p>
+                )}
               </section>
             ))}
           </div>
