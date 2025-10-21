@@ -1,9 +1,7 @@
-// Moved the page.tsx in the signup folder to a separate component SignupPage.tsx
-
 "use client";
 import Image from "next/image";
 import type React from "react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, signIn } from "@/lib/auth-client";
 
 interface SignupPageProps {
   onSignIn: () => void;
@@ -11,10 +9,8 @@ interface SignupPageProps {
 
 const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
   const handleGoogleSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/",
-    });
+    await signIn();
+    // onSignIn();
   };
   return (
     <div className="flex flex-col items-center justify-center w-screen h-screen bg-gradient-to-br bg-black p-8">
