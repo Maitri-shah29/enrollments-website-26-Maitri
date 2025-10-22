@@ -1,223 +1,84 @@
 "use client";
-import { useEffect, useState } from "react";
-import RefreshButton from "@/app/components/refresh-button";
-import Management from "../clients/management-client";
-import FormsClient from "./forms-client";
-import ProfileButton from "./profile-button";
+import { useState } from "react";
+import Tab, { type TabData } from "./landing/tab";
 
-interface Tab {
-  id: number;
-  title: string;
-  url: string | null;
-}
-
+// Main Landing Component
 const Landing: React.FC = () => {
-  const [pagesStack, setPagesStack] = useState<Tab[]>([]);
-  const [pointer, setPointer] = useState<number>(-1);
-  const [tabs, setTabs] = useState<Tab[]>([
-    { id: 1, title: "Home", url: null },
+  const [tabs, setTabs] = useState<TabData[]>([
+    {
+      id: 1,
+      title: "Home",
+      showForms: false,
+      showManagement: false,
+      history: [],
+      pointer: -1,
+    },
   ]);
-  const [activeTab, setActiveTab] = useState<number>(1);
-  const [inputValue, setInputValue] = useState<string>("");
-  const [showForms, setShowForms] = useState<boolean>(false);
-  const [showManagement, setShowManagement] = useState<boolean>(false);
-
-  // Load tabs and activeTab from localStorage
-
-  useEffect(() => {
-    const savedTabs = localStorage.getItem("tabs");
-    const savedActiveTab = localStorage.getItem("activeTab");
-    if (savedTabs) setTabs(JSON.parse(savedTabs));
-    if (savedActiveTab) setActiveTab(Number(savedActiveTab));
-    const savedPages = localStorage.getItem(`${savedActiveTab}`);
-    const pointerr = localStorage.getItem(`${savedActiveTab}-pointer`);
-    if (savedPages) {
-      const parsedPages = JSON.parse(savedPages);
-      setPagesStack(parsedPages);
-      if (pointerr) {
-        const parsedPointer = JSON.parse(pointerr);
-        if (parsedPointer) {
-        }
-        setPointer(parsedPointer);
-        setInputValue(
-          parsedPages[
-            parsedPointer >= 0 ? parsedPointer : parsedPages.length - 1
-          ]?.url.slice(8),
-        );
-      } else {
-        setPointer(parsedPages.length - 1);
-        setInputValue(parsedPages[parsedPages.length - 1].url.slice(8));
-      }
-    }
-  }, []);
-
-  // Save tabs and activeTab to localStorage
-  useEffect(() => {
-    localStorage.setItem("tabs", JSON.stringify(tabs));
-    localStorage.setItem("activeTab", activeTab.toString());
-    const savedPages = localStorage.getItem(`${activeTab}`);
-    const pointerr = localStorage.getItem(`${activeTab}-pointer`);
-    if (savedPages) {
-      const parsedPages = JSON.parse(savedPages);
-      setPagesStack(parsedPages);
-      if (pointerr) {
-        const parsedPointer = JSON.parse(pointerr);
-        setPointer(parsedPointer);
-        setInputValue(
-          parsedPages[
-            parsedPointer >= 0 ? parsedPointer : parsedPages.length - 1
-          ]?.url.slice(8),
-        );
-      } else {
-        setPointer(parsedPages.length - 1);
-        setInputValue(parsedPages[parsedPages.length - 1].url.slice(8));
-      }
-    } else {
-      setPagesStack([]);
-      setPointer(-1);
-    }
-  }, [tabs, activeTab]);
+  const [activeTabId, setActiveTabId] = useState<number>(1);
 
   const addTab = () => {
-    if (tabs.length >= 5) return;
+    if (tabs.length >= 6) return;
     const newId = Date.now();
-    setTabs([...tabs, { id: newId, title: "New Tab", url: null }]);
-    setActiveTab(newId);
-    setInputValue("");
+    const newTab: TabData = {
+      id: newId,
+      title: "New Tab",
+      showForms: false,
+      showManagement: false,
+      history: [],
+      pointer: -1,
+    };
+    setTabs([...tabs, newTab]);
+    setActiveTabId(newId);
   };
 
   const closeTab = (id: number) => {
-    localStorage.removeItem(`${id}`);
     if (tabs.length === 1) {
-      tabs[0].url = null;
-      tabs[0].title = "Home";
-      setInputValue("");
-      setPagesStack([]);
-      setPointer(-1);
-      // If forms were open, close them when the only tab is reset
-      setShowForms(false);
+      // Reset the only tab
+      setTabs([
+        {
+          id: tabs[0].id,
+          title: "Home",
+          showForms: false,
+          showManagement: false,
+          history: [],
+          pointer: -1,
+        },
+      ]);
       return;
     }
+
     const remaining = tabs.filter((tab) => tab.id !== id);
     setTabs(remaining);
-    // Close forms if the closed tab was showing forms (defensive)
-    setShowForms(false);
-    if (activeTab === id) {
-      const newActive = remaining[remaining.length - 1];
-      setActiveTab(newActive.id);
-      setInputValue(
-        newActive.url ? newActive.url.replace(/^https:\/\//, "") : "",
-      );
+
+    if (activeTabId === id) {
+      setActiveTabId(remaining[remaining.length - 1].id);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value.replace(/^https:\/\//, ""));
+  const updateTab = (updatedTab: TabData) => {
+    setTabs(tabs.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab)));
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim() !== "") {
-      const trimmed = inputValue.trim().toLowerCase();
-      if (trimmed === "forms") {
-        setShowForms(true);
-        return;
-      } else if (trimmed === "management") {
-        setShowForms(false);
-        setShowManagement(true);
-        return;
-      }
-      const pageStack = localStorage.getItem(`${activeTab}`);
-      if (pageStack) {
-        const parsedData = JSON.parse(pageStack);
-        parsedData.push({
-          id: 69,
-          title: "new tab",
-          url: `https://${inputValue}`,
-        });
-        setPagesStack(parsedData);
-        setPointer(parsedData.length - 1);
-        localStorage.setItem(
-          `${activeTab}-pointer`,
-          JSON.stringify(parsedData.length - 1),
-        );
-        localStorage.setItem(`${activeTab}`, JSON.stringify(parsedData));
-      } else {
-        const parsedData = [];
-        parsedData.push({
-          id: 69,
-          title: "new tab",
-          url: `https://${inputValue}`,
-        });
-        setPagesStack(parsedData);
-        setPointer(parsedData.length - 1);
-        localStorage.setItem(
-          `${activeTab}-pointer`,
-          JSON.stringify(parsedData.length - 1),
-        );
-        localStorage.setItem(`${activeTab}`, JSON.stringify(parsedData));
-      }
-      const formatted = inputValue.startsWith("https://")
-        ? inputValue
-        : `https://${inputValue}`;
-      setTabs(
-        tabs.map((tab) =>
-          tab.id === activeTab ? { ...tab, url: formatted } : tab,
-        ),
-      );
-    }
-  };
-
-  const switchTab = (id: number) => {
-    setActiveTab(id);
-    const tab = tabs.find((t) => t.id === id);
-    if (tab) {
-      setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
-      if (tab.url) setShowForms(false);
-    }
-  };
-
-  const activeTabData = pagesStack[pointer];
-
-  const goPrevious = () => {
-    if (pointer >= 0) {
-      localStorage.setItem(`${activeTab}-pointer`, JSON.stringify(pointer - 1));
-      if (pagesStack[pointer - 1]?.url) {
-        setInputValue(pagesStack[pointer - 1]?.url?.slice(8) ?? "");
-      } else {
-        setInputValue("");
-      }
-      setPointer(pointer - 1);
-    }
-  };
-
-  const goNext = () => {
-    if (pointer < pagesStack.length - 1) {
-      localStorage.setItem(`${activeTab}-pointer`, JSON.stringify(pointer + 1));
-      if (pagesStack[pointer + 1]?.url) {
-        setInputValue(pagesStack[pointer + 1]?.url?.slice(8) ?? "");
-      } else {
-        setInputValue("");
-      }
-      setPointer(pointer + 1);
-    }
-  };
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   return (
-    <div className="bg-blue-800 w-full h-full rounded-xl flex flex-col overflow-hidden">
+    <div className="bg-blue-800 w-full h-screen rounded-xl flex flex-col overflow-hidden">
+      {/* Window Controls */}
       <div className="bg-gray-500 h-8 rounded-t-xl w-full flex items-center px-2 gap-2">
         <div className="bg-red-400 w-4 h-4 rounded-full"></div>
         <div className="bg-yellow-400 w-4 h-4 rounded-full"></div>
         <div className="bg-green-500 w-4 h-4 rounded-full"></div>
       </div>
 
+      {/* Tab Bar */}
       <div className="w-full bg-blue-300 h-10 flex items-end px-2 gap-2 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            onClick={() => switchTab(tab.id)}
+            onClick={() => setActiveTabId(tab.id)}
             className={`w-60 h-9 rounded-t-xl flex items-center px-4 whitespace-nowrap text-white text-sm cursor-pointer transition-all ${
-              activeTab === tab.id
+              activeTabId === tab.id
                 ? "bg-blue-800"
                 : "bg-blue-400 hover:bg-blue-500"
             }`}
@@ -245,7 +106,6 @@ const Landing: React.FC = () => {
           </button>
         ))}
 
-        {/* Add Tab button */}
         <button
           type="button"
           onClick={addTab}
@@ -260,120 +120,9 @@ const Landing: React.FC = () => {
         </button>
       </div>
 
-      <div className="w-full bg-blue-800 h-10 flex items-center py-1 px-10 gap-2">
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            className="hover:bg-white/10 rounded-full p-2"
-            onClick={goPrevious}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 512 512"
-              width="15"
-              height="15"
-              fill={pointer !== -1 ? "white" : "grey"}
-            >
-              <title>Previous</title>
-              <path d="M512 224H147.3l136.4-136.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L147.3 288H512c17.7 0 32-14.3 32-32s-14.3-32-32-32z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="hover:bg-white/10 rounded-full p-2"
-            onClick={goNext}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 512 512"
-              width="15"
-              height="15"
-              fill={pointer !== pagesStack.length - 1 ? "white" : "grey"}
-            >
-              <title>Next</title>
-              <path d="M0 288h364.7l-136.4 136.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3l-192-192c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L364.7 224H0c-17.7 0-32 14.3-32 32s14.3 32 32 32z" />
-            </svg>
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <RefreshButton className="p-2 rounded hover:bg-white/10" />
-        </div>
-        <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white justify-center">
-          <span className="text-gray-300 select-none">https://</span>
-          <input
-            className="bg-transparent w-full outline-none text-white"
-            value={inputValue ?? ""}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder="acmvit.in"
-          />
-        </div>
-        <div className="ml-auto mb-1">
-          <ProfileButton />
-        </div>
-      </div>
-
-      <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
-        {showForms ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close forms"
-              onClick={() => setShowForms(false)}
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
-            <div className="h-full">
-              <FormsClient />
-            </div>
-          </div>
-        ) : showManagement ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close Management"
-              onClick={() => setShowManagement(false)}
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
-            <div className="h-full">
-              <Management />
-            </div>
-          </div>
-        ) : activeTabData?.url ? (
-          <iframe
-            key={activeTabData.url}
-            className="w-full h-full rounded-b-xl"
-            src={activeTabData.url}
-            title="Browser Tab"
-            allowFullScreen
-          ></iframe>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-6 w-full">
-            <h1 className="text-6xl font-semibold">ACM-OCS'26</h1>
-
-            <div className="flex items-center w-170 min-w-[400px] h-10 bg-white rounded-full px-3 text-black shadow-md">
-              <span className="select-none">https://</span>
-              <input
-                className="bg-transparent w-full outline-none"
-                value={inputValue ?? ""}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyPress}
-                placeholder="acmvit.in"
-              />
-            </div>
-
-            <div className="flex gap-4 flex-wrap justify-center mt-4">
-              <div className="w-40 h-25 bg-white/70 rounded-4xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-4xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-4xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-4xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-4xl"></div>
-            </div>
-          </div>
-        )}
+      {/* Active Tab Content */}
+      <div className="flex-1 overflow-hidden">
+        {activeTab && <Tab tabData={activeTab} onUpdateTab={updateTab} />}
       </div>
     </div>
   );
