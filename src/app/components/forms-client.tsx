@@ -324,7 +324,6 @@ export default function FormsClient() {
         setExternalQuestionIds(idmap);
         setExternalVarNames(namemap);
 
-        // Build a single-round view from server questions to replace local templates
         const serverRound: RoundWithValidators = {
           title: "Round 1",
           questions: data.questions
