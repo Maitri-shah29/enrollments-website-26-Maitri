@@ -76,6 +76,7 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
       questions: [
         { question: "h 1?", answer: "" },
         { question: "h?", answer: "" },
+        { question: "h 2?", answer: "" },
       ],
     },
     {
@@ -324,7 +325,7 @@ export default function FormsClient() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row">
+    <div className="h-full min-h-0 bg-white flex flex-col md:flex-row">
       <aside className="w-full md:w-72 md:shrink-0 border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50 p-4 md:p-6 md:sticky md:top-0 md:h-screen md:flex md:flex-col">
         <div className="mb-6">
           <label
