@@ -19,6 +19,7 @@ import {
 } from "@/lib/domain";
 import { type ValidationRuleInput, validateAnswer } from "@/lib/validation";
 import getRoundQuestions from "../actions/get-round-questions";
+import saveFormResponse from "../actions/save-form-response";
 
 type RoundWithValidators = Round & {
   validators?: Record<number, ValidationRuleInput[] | undefined>;
@@ -267,6 +268,7 @@ export default function FormsClient() {
     Record<number, string | undefined>
   >({});
   const [usingServerQuestions, setUsingServerQuestions] = useState(false);
+  const [questionsLoaded, setQuestionsLoaded] = useState(false);
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -280,7 +282,8 @@ export default function FormsClient() {
     () => Object.values(externalQuestionIds).some(Boolean),
     [externalQuestionIds],
   );
-  const isLocalMode = !formIdFromUrl || !hasAnyServerQuestionId;
+  const isLocalMode =
+    questionsLoaded && (!formIdFromUrl || !hasAnyServerQuestionId);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -297,6 +300,7 @@ export default function FormsClient() {
         setExternalQuestionIds({});
         setExternalVarNames({});
         setUsingServerQuestions(false);
+        setQuestionsLoaded(true);
         return;
       }
       try {
@@ -324,12 +328,14 @@ export default function FormsClient() {
         setRounds([serverRound]);
         setActiveRoundIndex(0);
         setUsingServerQuestions(true);
+        setQuestionsLoaded(true);
       } catch (err) {
         console.warn("[forms] failed to load questions:", err);
         setExternalValidators({});
         setExternalQuestionIds({});
         setExternalVarNames({});
         setUsingServerQuestions(false);
+        setQuestionsLoaded(true);
       }
     };
     loadQuestions();
@@ -371,7 +377,7 @@ export default function FormsClient() {
     return answer.trim().length > 0;
   }
 
-  function handleSubmit(e: FormEvent, qIndex: number) {
+  async function handleSubmit(e: FormEvent, qIndex: number) {
     e.preventDefault();
     const q = currentRound.questions[qIndex];
     if (!q) return;
@@ -414,19 +420,37 @@ export default function FormsClient() {
       return next;
     });
 
-    setRounds((prev) =>
-      prev.map((r, ri) =>
-        ri !== activeRoundIndex
-          ? r
-          : {
-              ...r,
-              questions: r.questions.map((qq, qi) =>
-                qi === qIndex ? { ...qq, answer: "" } : qq,
-              ),
-            },
-      ),
-    );
-    setTimeout(() => inputRefs.current[qIndex + 1]?.focus(), 0);
+    let savedOk = false;
+    if (usingServerQuestions && formIdFromUrl) {
+      try {
+        const questionId = externalQuestionIds[qIndex];
+        if (questionId) {
+          await saveFormResponse(formIdFromUrl, questionId, q.answer ?? "");
+          savedOk = true;
+        }
+      } catch (err) {
+        console.warn("[forms] failed to save response:", err);
+      }
+    } else {
+      // Local/offline mode: consider it 'saved' for UX so we clear the input
+      savedOk = true;
+    }
+
+    if (savedOk) {
+      setRounds((prev) =>
+        prev.map((r, ri) =>
+          ri !== activeRoundIndex
+            ? r
+            : {
+                ...r,
+                questions: r.questions.map((qq, qi) =>
+                  qi === qIndex ? { ...qq, answer: "" } : qq,
+                ),
+              },
+        ),
+      );
+      setTimeout(() => inputRefs.current[qIndex + 1]?.focus(), 0);
+    }
   }
 
   return (
