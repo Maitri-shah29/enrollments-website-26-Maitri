@@ -85,7 +85,7 @@ const Landing: React.FC = () => {
   };
 
   const closeTab = (id: number) => {
-    localStorage.removeItem(`${activeTab}`);
+    localStorage.removeItem(`${id}`);
     if (tabs.length === 1) {
       tabs[0].url = null;
       tabs[0].title = "Home";
