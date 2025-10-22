@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RefreshButton from "@/app/components/refresh-button";
+import Management from "../clients/management-client";
 import FormsClient from "./forms-client";
 import ProfileButton from "./profile-button";
 
@@ -19,6 +20,7 @@ const Landing: React.FC = () => {
   const [activeTab, setActiveTab] = useState<number>(1);
   const [inputValue, setInputValue] = useState<string>("");
   const [showForms, setShowForms] = useState<boolean>(false);
+  const [showManagement, setShowManagement] = useState<boolean>(false);
 
   // Load tabs and activeTab from localStorage
 
@@ -118,6 +120,10 @@ const Landing: React.FC = () => {
       const trimmed = inputValue.trim().toLowerCase();
       if (trimmed === "forms") {
         setShowForms(true);
+        return;
+      } else if (trimmed === "management") {
+        setShowForms(false);
+        setShowManagement(true);
         return;
       }
       const pageStack = localStorage.getItem(`${activeTab}`);
@@ -320,6 +326,20 @@ const Landing: React.FC = () => {
             </button>
             <div className="h-full">
               <FormsClient />
+            </div>
+          </div>
+        ) : showManagement ? (
+          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close Management"
+              onClick={() => setShowManagement(false)}
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
+            <div className="h-full">
+              <Management />
             </div>
           </div>
         ) : activeTabData?.url ? (
