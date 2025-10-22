@@ -6,7 +6,6 @@ import { prisma } from "../../lib/prisma";
 
 export default async function createFormSubmission(roundId: string) {
   try {
-    // Step 1: Get the user session
     const user = await auth.api.getSession({
       headers: await headers(),
     });
@@ -16,7 +15,6 @@ export default async function createFormSubmission(roundId: string) {
       return { error: "Not logged in" };
     }
 
-    // Step 2: Get the round-user link
     const roundDetail = await prisma.roundUser.findUnique({
       where: {
         roundId_userId: {
@@ -37,7 +35,6 @@ export default async function createFormSubmission(roundId: string) {
       return { error: "User does not exist for this round" };
     }
 
-    // Step 3: Check if already submitted
     const userSubmission = await prisma.formSubmission.findUnique({
       where: {
         roundUserId: roundDetail.id,
@@ -48,7 +45,6 @@ export default async function createFormSubmission(roundId: string) {
       return { error: "Already submitted user" };
     }
 
-    // Step 4: Create new form submission
     const newForm = await prisma.formSubmission.create({
       data: {
         roundUserId: roundDetail.id,
