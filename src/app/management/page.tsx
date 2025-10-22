@@ -29,16 +29,16 @@ export default function Management() {
 
   return (
     <div
-      className="min-h-screen flex flex-row bg-cover bg-center bg-no-repeat"
+      className="min-h-full flex flex-row bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
     >
       {/* Sidebar */}
-      <aside className="flex flex-col min-h-screen w-[20vw] p-8 text-white">
+      <aside className="flex flex-col min-h-full w-[20vw] p-8 text-white">
         <Image
           src="/acmviticon.svg"
           alt="ACM VIT icon"
-          width={150}
-          height={150}
+          width={180}
+          height={180}
           className="mb-8"
         />
 
