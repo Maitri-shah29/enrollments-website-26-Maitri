@@ -22,37 +22,23 @@ export default async function createFormSubmission(roundId: string) {
           userId: user.session.userId,
         },
       },
-      include: {
-        round: {
-          include: {
-            Question: true,
-          },
-        },
-      },
     });
 
     if (!roundDetail) {
       return { error: "User does not exist for this round" };
     }
-
-    const userSubmission = await prisma.formSubmission.findUnique({
+    const userSubmission = await prisma.formSubmission.upsert({
       where: {
         roundUserId: roundDetail.id,
       },
-    });
-
-    if (userSubmission) {
-      return { error: "Already submitted user" };
-    }
-
-    const newForm = await prisma.formSubmission.create({
-      data: {
+      create: {
         roundUserId: roundDetail.id,
         valid: true,
       },
+      update: {},
     });
 
-    return { success: true, formSubmission: newForm };
+    return { success: true, formSubmission: userSubmission };
   } catch (e) {
     console.error("Error in submitting the form:", e);
     return { error: "Form cannot be submitted" };

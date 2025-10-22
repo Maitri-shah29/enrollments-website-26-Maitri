@@ -52,11 +52,12 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  updatedAt         DateTime  @default(now()) @updatedAt
+  updatedAt         DateTime  @updatedAt
   createdAt         DateTime  @default(now())
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -65,10 +66,12 @@ model Session {
   userId       String
   expires      DateTime
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   ipAddress    String?
-  updatedAt    DateTime @default(now()) @updatedAt
   userAgent    String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Verification {
@@ -77,7 +80,7 @@ model Verification {
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
   @@map("verification")
 }
@@ -89,12 +92,12 @@ model User {
   emailVerified      Boolean        @default(false)
   image              String?
   phone              String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @default(now()) @updatedAt
   accounts           Account[]
   Comments           Comments[]
   RoundUser          RoundUser[]
   sessions           Session[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   push_subscriptions Subscription[]
 }
 
