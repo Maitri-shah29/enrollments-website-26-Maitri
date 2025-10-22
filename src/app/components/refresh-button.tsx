@@ -1,21 +1,19 @@
 "use client";
 
-import React from "react";
-
 type RefreshButtonProps = {
   className?: string;
   title?: string;
 };
-
+import Image from "next/image";
 export default function RefreshButton({
   className,
   title = "Refresh page",
 }: RefreshButtonProps) {
   const handleClick = () => {
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]',
+      'iframe[title="Browser Tab"]'
     ) as HTMLIFrameElement;
-    if (iframe && iframe.src) {
+    if (iframe?.src) {
       const currentSrc = iframe.src;
       iframe.src = currentSrc;
     }
@@ -29,10 +27,12 @@ export default function RefreshButton({
       onClick={handleClick}
       className={className}
     >
-      <img
+      import Image from "next/image";
+      <Image
         src="/refresh-button.svg"
-        alt=""
-        aria-hidden="true"
+        alt="Refresh"
+        width={20}
+        height={20}
         className="w-5 h-5"
       />
     </button>
