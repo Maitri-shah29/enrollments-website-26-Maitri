@@ -172,7 +172,7 @@ const TechWebsite = () => {
 
   return (
     <div className="w-full h-full bg-[#08111D] flex font-jetbrains">
-      <div className="w-[20%] border-r-2 border-[#993C7A] h-full p-3 overflow-y-auto font-jetbrains">
+      <div className="w-[20%] overflow-hidden border-r-2 border-[#993C7A] h-full p-3 overflow-y-auto font-jetbrains">
         <Image
           src="/images/acmlogo.svg"
           alt="acm logo"
