@@ -166,7 +166,6 @@ const Landing: React.FC = () => {
     const tab = tabs.find((t) => t.id === id);
     if (tab) {
       setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
-      // if switching to a tab with a url, ensure forms are closed
       if (tab.url) setShowForms(false);
     }
   };
