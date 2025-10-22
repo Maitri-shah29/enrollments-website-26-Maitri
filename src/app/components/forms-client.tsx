@@ -18,6 +18,7 @@ import {
   type Round,
 } from "@/lib/domain";
 import { type ValidationRuleInput, validateAnswer } from "@/lib/validation";
+import getRoundQuestions from "../actions/get-round-questions";
 
 type RoundWithValidators = Round & {
   validators?: Record<number, ValidationRuleInput[] | undefined>;
@@ -290,7 +291,7 @@ export default function FormsClient() {
     return () => clearTimeout(t);
   }, [activeRoundIndex]);
   useEffect(() => {
-    const fetchValidators = async () => {
+    const loadQuestions = async () => {
       if (!roundIdFromUrl) {
         setExternalValidators({});
         setExternalQuestionIds({});
@@ -299,18 +300,7 @@ export default function FormsClient() {
         return;
       }
       try {
-        const res = await fetch(`/api/rounds/${roundIdFromUrl}/questions`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: {
-          questions: Array<{
-            id: string;
-            serial: number;
-            question: string;
-            helpText?: string | null;
-            varName?: string | null;
-            validators: ValidationRuleInput[];
-          }>;
-        } = await res.json();
+        const data = await getRoundQuestions(roundIdFromUrl);
         const vmap: Record<number, ValidationRuleInput[] | undefined> = {};
         const idmap: Record<number, string | undefined> = {};
         const namemap: Record<number, string | undefined> = {};
@@ -335,14 +325,14 @@ export default function FormsClient() {
         setActiveRoundIndex(0);
         setUsingServerQuestions(true);
       } catch (err) {
-        console.warn("[forms] failed to fetch validators:", err);
+        console.warn("[forms] failed to load questions:", err);
         setExternalValidators({});
         setExternalQuestionIds({});
         setExternalVarNames({});
         setUsingServerQuestions(false);
       }
     };
-    fetchValidators();
+    loadQuestions();
   }, [roundIdFromUrl]);
 
   function handleDomainChange(e: ChangeEvent<HTMLSelectElement>) {
