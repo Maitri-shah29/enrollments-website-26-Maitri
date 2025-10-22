@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RefreshButton from "@/app/components/refresh-button";
-import Management from "../management/page";
+import Management from "../clients/management-client";
 import FormsClient from "./forms-client";
 import ProfileButton from "./profile-button";
 

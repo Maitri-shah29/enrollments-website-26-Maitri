@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import About from "./components/about";
-import Instructions from "./components/instructions";
-import Questions from "./components/questions";
-import WhatWeDo from "./components/whatwedo";
+import About from "./components/management/about";
+import Instructions from "./components/management/instructions";
+import Questions from "./components/management/questions";
+import WhatWeDo from "./components/management/whatwedo";
 
 // ----- Main Page -----
 export default function Management() {
