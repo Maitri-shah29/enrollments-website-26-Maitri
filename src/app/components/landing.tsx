@@ -83,26 +83,26 @@ const Landing: React.FC = () => {
                 : "bg-blue-400 hover:bg-blue-500"
             }`}
           >
-            <span className="flex-1 truncate">{tab.title}</span>
-            <div>
-              <button
-                type="button"
-                tabIndex={0}
-                onClick={(e) => {
+            {tab.title}
+            {/*biome-ignore lint/a11y/useSemanticElements: inner close button
+            cannot be a nested button*/}
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                closeTab(tab.id);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
                   e.stopPropagation();
                   closeTab(tab.id);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.stopPropagation();
-                    closeTab(tab.id);
-                  }
-                }}
-                className="hover:bg-white/20 rounded-full w-4 h-4 flex items-center justify-center ml-2"
-              >
-                x
-              </button>
-            </div>
+                }
+              }}
+              className="hover:bg-white/20 rounded-full w-4 h-4 flex items-center justify-center ml-auto"
+            >
+              x
+            </span>
           </button>
         ))}
 
