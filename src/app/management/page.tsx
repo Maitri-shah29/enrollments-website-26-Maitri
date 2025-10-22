@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import About from "./components/about";
 import Instructions from "./components/instructions";
-import Round1Questions from "./components/questions";
+import Questions from "./components/questions";
 import WhatWeDo from "./components/whatwedo";
 
 // ----- Main Page -----
@@ -21,7 +21,7 @@ export default function Management() {
       case "Instructions":
         return <Instructions />;
       case "Round 1":
-        return <Round1Questions />;
+        return <Questions />;
       default:
         return <About />;
     }
@@ -48,10 +48,10 @@ export default function Management() {
               key={section}
               type="button"
               onClick={() => setActiveSection(section)}
-              className={`rounded-xl px-6 py-2 text-left font-medium transition ${
+              className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
                 activeSection === section
-                  ? "bg-white/50 text-black shadow-md"
-                  : "hover:text-gray-200 hover:bg-white/25 active:text-black"
+                  ? "bg-white/50 text-white drop-shadow-lg/50"
+                  : "hover:text-gray-200 hover:bg-white/25 text-white"
               }`}
             >
               {section}
