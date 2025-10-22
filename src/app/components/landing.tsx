@@ -1,6 +1,4 @@
 "use client";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useEffect, useState } from "react";
 import RefreshButton from "@/app/components/refresh-button";
 import FormsClient from "./forms-client";
@@ -15,8 +13,6 @@ interface Tab {
 const Landing: React.FC = () => {
   const [pagesStack, setPagesStack] = useState<Tab[]>([]);
   const [pointer, setPointer] = useState<number>(-1);
-  const [isPrevPossible, setIsPrevPossible] = useState<boolean>(false);
-  const [isNextPossible, setIsNextPossible] = useState<boolean>(false);
   const [tabs, setTabs] = useState<Tab[]>([
     { id: 1, title: "Home", url: null },
   ]);
@@ -38,14 +34,6 @@ const Landing: React.FC = () => {
       setPagesStack(parsedPages);
       if (pointerr) {
         const parsedPointer = JSON.parse(pointerr);
-        if (parsedPointer > 0 && parsedPointer < parsedPages.length - 1) {
-          setIsPrevPossible(true);
-          setIsNextPossible(true);
-        } else if (parsedPointer <= 0) {
-          setIsPrevPossible(false);
-        } else {
-          setIsNextPossible(false);
-        }
         if (parsedPointer) {
         }
         setPointer(parsedPointer);
@@ -56,12 +44,6 @@ const Landing: React.FC = () => {
         );
       } else {
         setPointer(parsedPages.length - 1);
-        setIsNextPossible(false);
-        if (parsedPages.length <= 1) {
-          setIsPrevPossible(false);
-        } else {
-          setIsPrevPossible(true);
-        }
         setInputValue(parsedPages[parsedPages.length - 1].url.slice(8));
       }
     }
@@ -78,16 +60,6 @@ const Landing: React.FC = () => {
       setPagesStack(parsedPages);
       if (pointerr) {
         const parsedPointer = JSON.parse(pointerr);
-        if (parsedPointer > 0 && parsedPointer < parsedPages.length - 1) {
-          setIsPrevPossible(true);
-          setIsNextPossible(true);
-        } else if (parsedPointer <= 0) {
-          setIsPrevPossible(false);
-          setIsNextPossible(true);
-        } else {
-          setIsNextPossible(false);
-          setIsPrevPossible(true);
-        }
         setPointer(parsedPointer);
         setInputValue(
           parsedPages[
@@ -96,12 +68,6 @@ const Landing: React.FC = () => {
         );
       } else {
         setPointer(parsedPages.length - 1);
-        setIsNextPossible(false);
-        if (parsedPages.length <= 1) {
-          setIsPrevPossible(false);
-        } else {
-          setIsPrevPossible(true);
-        }
         setInputValue(parsedPages[parsedPages.length - 1].url.slice(8));
       }
     } else {
@@ -119,10 +85,13 @@ const Landing: React.FC = () => {
   };
 
   const closeTab = (id: number) => {
+    localStorage.removeItem(`${activeTab}`);
     if (tabs.length === 1) {
       tabs[0].url = null;
       tabs[0].title = "Home";
       setInputValue("");
+      setPagesStack([]);
+      setPointer(-1);
       return;
     }
     const remaining = tabs.filter((tab) => tab.id !== id);
@@ -204,16 +173,6 @@ const Landing: React.FC = () => {
       } else {
         setInputValue("");
       }
-      if (pointer <= pagesStack.length - 1) {
-        setIsNextPossible(true);
-      } else {
-        setIsNextPossible(false);
-      }
-      if (pointer - 1 >= 0) {
-        setIsPrevPossible(true);
-      } else {
-        setIsPrevPossible(false);
-      }
       setPointer(pointer - 1);
     }
   };
@@ -225,16 +184,6 @@ const Landing: React.FC = () => {
         setInputValue(pagesStack[pointer + 1]?.url?.slice(8) ?? "");
       } else {
         setInputValue("");
-      }
-      if (pointer + 1 === pagesStack.length - 1) {
-        setIsNextPossible(false);
-      } else {
-        setIsNextPossible(true);
-      }
-      if (pointer + 1 > -1) {
-        setIsPrevPossible(true);
-      } else {
-        setIsPrevPossible(false);
       }
       setPointer(pointer + 1);
     }
@@ -302,29 +251,35 @@ const Landing: React.FC = () => {
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="hover:bg-white/10 rounded-full"
+            className="hover:bg-white/10 rounded-full p-2"
             onClick={goPrevious}
           >
-            <ArrowBackIcon
-              style={{
-                fontSize: 24,
-                padding: 3,
-                color: isPrevPossible ? "white" : "grey",
-              }}
-            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 512 512"
+              width="15"
+              height="15"
+              fill={pointer !== -1 ? "white" : "grey"}
+            >
+              <title>Previous</title>
+              <path d="M512 224H147.3l136.4-136.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L147.3 288H512c17.7 0 32-14.3 32-32s-14.3-32-32-32z" />
+            </svg>
           </button>
           <button
             type="button"
-            className="hover:bg-white/10 rounded-full"
+            className="hover:bg-white/10 rounded-full p-2"
             onClick={goNext}
           >
-            <ArrowForwardIcon
-              style={{
-                fontSize: 24,
-                padding: 3,
-                color: isNextPossible ? "white" : "grey",
-              }}
-            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 512 512"
+              width="15"
+              height="15"
+              fill={pointer !== pagesStack.length - 1 ? "white" : "grey"}
+            >
+              <title>Next</title>
+              <path d="M0 288h364.7l-136.4 136.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3l-192-192c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L364.7 224H0c-17.7 0-32 14.3-32 32s14.3 32 32 32z" />
+            </svg>
           </button>
         </div>
         <div className="flex items-center gap-2">
