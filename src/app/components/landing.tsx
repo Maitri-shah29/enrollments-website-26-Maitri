@@ -92,10 +92,14 @@ const Landing: React.FC = () => {
       setInputValue("");
       setPagesStack([]);
       setPointer(-1);
+      // If forms were open, close them when the only tab is reset
+      setShowForms(false);
       return;
     }
     const remaining = tabs.filter((tab) => tab.id !== id);
     setTabs(remaining);
+    // Close forms if the closed tab was showing forms (defensive)
+    setShowForms(false);
     if (activeTab === id) {
       const newActive = remaining[remaining.length - 1];
       setActiveTab(newActive.id);
@@ -148,7 +152,7 @@ const Landing: React.FC = () => {
       }
       const formatted = inputValue.startsWith("https://")
         ? inputValue
-        : `https://${inputValue}`; // fixed template literal
+        : `https://${inputValue}`;
       setTabs(
         tabs.map((tab) =>
           tab.id === activeTab ? { ...tab, url: formatted } : tab,
@@ -160,7 +164,10 @@ const Landing: React.FC = () => {
   const switchTab = (id: number) => {
     setActiveTab(id);
     const tab = tabs.find((t) => t.id === id);
-    if (tab) setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
+    if (tab) {
+      setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
+      if (tab.url) setShowForms(false);
+    }
   };
 
   const activeTabData = pagesStack[pointer];
@@ -300,8 +307,22 @@ const Landing: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6">
-        {activeTabData?.url ? (
+      <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
+        {showForms ? (
+          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close forms"
+              onClick={() => setShowForms(false)}
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
+            <div className="h-full">
+              <FormsClient />
+            </div>
+          </div>
+        ) : activeTabData?.url ? (
           <iframe
             key={activeTabData.url}
             className="w-full h-full rounded-b-xl"
@@ -334,20 +355,6 @@ const Landing: React.FC = () => {
           </div>
         )}
       </div>
-
-      {showForms && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <button
-            type="button"
-            aria-label="Close forms"
-            onClick={() => setShowForms(false)}
-            className="fixed top-4 right-4 z-[60] rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-          >
-            ×
-          </button>
-          <FormsClient />
-        </div>
-      )}
     </div>
   );
 };
