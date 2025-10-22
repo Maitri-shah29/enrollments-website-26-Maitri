@@ -1,9 +1,8 @@
-"use client"; // Cuz interaction
+"use client";
 import type React from "react";
 import { authClient } from "@/lib/auth-client";
 import type { UserAuthDisplayProps } from "../../lib/types";
 
-// ProfileMenu properties
 interface ProfileMenuProps extends UserAuthDisplayProps {
   onLogout: () => void;
   onClose: () => void;
@@ -15,10 +14,8 @@ const handleGoogleSignIn = async () => {
     callbackURL: "/",
   });
 };
-// View for unauthenticated users, will prompt to login using google.
-const unauthenticatedView = (
-  onLogin: NonNullable<UserAuthDisplayProps["onLogin"]>,
-) => (
+
+const unauthenticatedView = () => (
   <div className="flex flex-col items-center py-8 px-6">
     <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center mb-4">
       <svg
@@ -26,8 +23,8 @@ const unauthenticatedView = (
         fill="currentColor"
         viewBox="0 0 20 20"
       >
+        {/* Guest profile icon, this code is AI */}
         <title>User icon</title>
-        {/* Profile icon, alternatively u can load a separate SVG file */}
         <path
           fillRule="evenodd"
           d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -41,16 +38,14 @@ const unauthenticatedView = (
     </p>
     <button
       type="button"
-      // onClick={onLogin}
       onClick={handleGoogleSignIn}
       className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full transition-colors"
     >
-      Sign in using google
+      Sign in using Google
     </button>
   </div>
 );
 
-// View for authenticated users, shows user info and a sign out button.
 const authenticatedView = (
   user: UserAuthDisplayProps["user"],
   onLogout: () => void,
@@ -80,7 +75,6 @@ const authenticatedView = (
 const ProfileMenu: React.FC<ProfileMenuProps> = ({
   isAuthenticated,
   user,
-  onLogin,
   onLogout,
   onClose,
 }) => {
@@ -93,12 +87,11 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
         aria-label="Close profile menu"
         onClick={onClose}
         onKeyDown={(e) => e.key === "Escape" && onClose()}
-      ></button>
-      {/* Load either authenticated or unauthenticated menu as needed */}
+      />
       <div className="absolute right-0 top-12 w-80 bg-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
         {isAuthenticated
           ? authenticatedView(user, onLogout)
-          : unauthenticatedView(onLogin!)}
+          : unauthenticatedView()}
       </div>
     </>
   );

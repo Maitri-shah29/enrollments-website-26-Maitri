@@ -98,6 +98,7 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, RoundWithValidators[]> = {
       questions: [
         { question: "h 1?", answer: "" },
         { question: "h?", answer: "" },
+        { question: "h 2?", answer: "" },
       ],
     },
     {
@@ -282,7 +283,6 @@ export default function FormsClient() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      //use activeRoundIndex to indicate dependency is intentional
       if (activeRoundIndex >= 0) {
         inputRefs.current[0]?.focus();
       }
@@ -368,7 +368,6 @@ export default function FormsClient() {
             },
       ),
     );
-    //clear error when user starts retyping
     if (validationErrors[qIndex]) {
       setValidationErrors((prev) => {
         const next = { ...prev };
@@ -378,10 +377,9 @@ export default function FormsClient() {
     }
   }
 
-  //validation handled by validateAnswer now
-  // function validateRequired(answer: string): boolean {
-  //   return answer.trim().length > 0;
-  // }
+  function validateRequired(answer: string): boolean {
+    return answer.trim().length > 0;
+  }
 
   function handleSubmit(e: FormEvent, qIndex: number) {
     e.preventDefault();
@@ -420,60 +418,6 @@ export default function FormsClient() {
       return;
     }
 
-    // If a formId and a server-side questionId are present, submit to server for revalidation + save
-    const serverQuestionId = externalQuestionIds[qIndex];
-    if (formIdFromUrl && serverQuestionId) {
-      (async () => {
-        try {
-          const resp = await fetch(`/api/forms/${formIdFromUrl}/responses`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              questionId: serverQuestionId,
-              response: q.answer,
-            }),
-          });
-          if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            const msg =
-              err?.error || `Server rejected response (HTTP ${resp.status})`;
-            setValidationErrors((prev) => ({ ...prev, [qIndex]: msg }));
-            return;
-          }
-        } catch (err) {
-          console.warn("[forms] failed to submit response:", err);
-          setValidationErrors((prev) => ({
-            ...prev,
-            [qIndex]: "Network error, please retry",
-          }));
-          return;
-        }
-
-        // On success, clear the field as before
-        setValidationErrors((prev) => {
-          const next = { ...prev };
-          delete next[qIndex];
-          return next;
-        });
-
-        setRounds((prev) =>
-          prev.map((r, ri) =>
-            ri !== activeRoundIndex
-              ? r
-              : {
-                  ...r,
-                  questions: r.questions.map((qq, qi) =>
-                    qi === qIndex ? { ...qq, answer: "" } : qq,
-                  ),
-                },
-          ),
-        );
-        setTimeout(() => inputRefs.current[qIndex + 1]?.focus(), 0);
-      })();
-      return;
-    }
-
-    //clear validation error on submission
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[qIndex];
@@ -496,7 +440,7 @@ export default function FormsClient() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row">
+    <div className="h-full min-h-0 bg-white flex flex-col md:flex-row">
       <aside className="w-full md:w-72 md:shrink-0 border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50 p-4 md:p-6 md:sticky md:top-0 md:h-screen md:flex md:flex-col">
         <div className="mb-6">
           <label
