@@ -92,10 +92,14 @@ const Landing: React.FC = () => {
       setInputValue("");
       setPagesStack([]);
       setPointer(-1);
+      // If forms were open, close them when the only tab is reset
+      setShowForms(false);
       return;
     }
     const remaining = tabs.filter((tab) => tab.id !== id);
     setTabs(remaining);
+    // Close forms if the closed tab was showing forms (defensive)
+    setShowForms(false);
     if (activeTab === id) {
       const newActive = remaining[remaining.length - 1];
       setActiveTab(newActive.id);
@@ -160,7 +164,11 @@ const Landing: React.FC = () => {
   const switchTab = (id: number) => {
     setActiveTab(id);
     const tab = tabs.find((t) => t.id === id);
-    if (tab) setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
+    if (tab) {
+      setInputValue(tab.url ? tab.url.replace(/^https:\/\//, "") : "");
+      // if switching to a tab with a url, ensure forms are closed
+      if (tab.url) setShowForms(false);
+    }
   };
 
   const activeTabData = pagesStack[pointer];

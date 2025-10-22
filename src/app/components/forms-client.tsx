@@ -234,7 +234,6 @@ export default function FormsClient() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      // use activeRoundIndex to indicate dependency is intentional
       if (activeRoundIndex >= 0) {
         inputRefs.current[0]?.focus();
       }
@@ -263,7 +262,6 @@ export default function FormsClient() {
             },
       ),
     );
-    //clear error when user starts retyping
     if (validationErrors[qIndex]) {
       setValidationErrors((prev) => {
         const next = { ...prev };
@@ -274,7 +272,6 @@ export default function FormsClient() {
   }
 
   function validateRequired(answer: string): boolean {
-    //ruleType === "required"
     return answer.trim().length > 0;
   }
 
@@ -302,7 +299,6 @@ export default function FormsClient() {
       return;
     }
 
-    //clear validation error on submission
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[qIndex];
