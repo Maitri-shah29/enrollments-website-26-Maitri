@@ -21,9 +21,16 @@ function mapRule(r: {
   helpTitle: string;
   priority: number;
 }): ValidationRuleInput {
+  const type = r.ruleType as RuleType;
+  // Convert numeric validators coming from Prisma (stored as strings) to numbers
+  let value: string | number | undefined = r.ruleValue ?? undefined;
+  if ((type === "min" || type === "max") && r.ruleValue != null) {
+    const n = Number(r.ruleValue);
+    value = Number.isFinite(n) ? n : undefined;
+  }
   return {
-    type: r.ruleType as RuleType,
-    value: r.ruleValue ?? undefined,
+    type,
+    value,
     message: r.helpText || r.helpTitle || undefined,
   };
 }
