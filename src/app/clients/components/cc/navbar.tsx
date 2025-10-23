@@ -28,7 +28,7 @@ const CCNavBar = () => {
               key={button}
               type="button"
               onClick={() => setActiveButton(button)}
-              className={`px-3 pt-4 pb-2 border-0 text-lg font-medium flex-1 transition-all duration-180 ease-in ${
+              className={`px-3 py-3 border-0 text-lg font-medium flex-1 transition-all duration-180 ease-in ${
                 activeButton === button
                   ? "bg-[#C9EB3E] text-[#16171B]"
                   : "bg-[#16171B] text-[#C9EB3E]"
