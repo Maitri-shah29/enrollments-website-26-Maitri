@@ -213,8 +213,14 @@ const TechWebsite = () => {
                 {item.name}
               </div>
 
-              {item.key === "aoi" && activeSection === "aoi" && (
-                <div className="ml-8 mt-2 flex flex-col gap-2 text-[#993C7A]">
+              {item.key === "aoi" && (
+                <div
+                  className={`ml-8 flex flex-col gap-2 text-[#993C7A] transition-all duration-500 ease-in-out overflow-hidden ${
+                    activeSection === "aoi"
+                      ? "max-h-96 mt-2 opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
                   {aoiList.map((aoi, idx) => {
                     const isActive = activeAOI === aoi;
                     return (
@@ -242,8 +248,14 @@ const TechWebsite = () => {
                 </div>
               )}
 
-              {item.key === "round1" && activeSection === "round1" && (
-                <div className="ml-8 mt-2 flex flex-col gap-2 text-[#993C7A]">
+              {item.key === "round1" && (
+                <div
+                  className={`ml-8 flex flex-col gap-2 text-[#993C7A] transition-all duration-500 ease-in-out overflow-hidden ${
+                    activeSection === "round1"
+                      ? "max-h-96 mt-2 opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
                   {questionsList.map((q, idx) => {
                     const isActive = activeQuestion === q;
                     return (
