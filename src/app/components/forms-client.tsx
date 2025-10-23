@@ -76,6 +76,7 @@ const DOMAIN_ROUNDS_TEMPLATES: Record<Domain, Round[]> = {
       questions: [
         { question: "h 1?", answer: "" },
         { question: "h?", answer: "" },
+        { question: "h 2?", answer: "" },
       ],
     },
     {
@@ -233,7 +234,6 @@ export default function FormsClient() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      // use activeRoundIndex to indicate dependency is intentional
       if (activeRoundIndex >= 0) {
         inputRefs.current[0]?.focus();
       }
@@ -262,7 +262,6 @@ export default function FormsClient() {
             },
       ),
     );
-    //clear error when user starts retyping
     if (validationErrors[qIndex]) {
       setValidationErrors((prev) => {
         const next = { ...prev };
@@ -273,7 +272,6 @@ export default function FormsClient() {
   }
 
   function validateRequired(answer: string): boolean {
-    //ruleType === "required"
     return answer.trim().length > 0;
   }
 
@@ -286,7 +284,9 @@ export default function FormsClient() {
     const domainLabel = DOMAIN_LABELS[domain];
 
     console.log(
-      `[forms] submit: domain=${domain} (${domainLabel}) | round=${currentRound.title} | q=${qIndex + 1} | question="${q.question}" | answer=`,
+      `[forms] submit: domain=${domain} (${domainLabel}) | round=${
+        currentRound.title
+      } | q=${qIndex + 1} | question="${q.question}" | answer=`,
       q.answer,
     );
     console.log(
@@ -301,7 +301,6 @@ export default function FormsClient() {
       return;
     }
 
-    //clear validation error on submission
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[qIndex];
@@ -324,7 +323,7 @@ export default function FormsClient() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row">
+    <div className="h-full min-h-0 w-full bg-white flex flex-col md:flex-row">
       <aside className="w-full md:w-72 md:shrink-0 border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50 p-4 md:p-6 md:sticky md:top-0 md:h-screen md:flex md:flex-col">
         <div className="mb-6">
           <label
@@ -355,7 +354,11 @@ export default function FormsClient() {
                 key={r.title}
                 type="button"
                 onClick={() => setActiveRoundIndex(i)}
-                className={`text-left py-2.5 px-3 rounded-md transition-colors ${i === activeRoundIndex ? "bg-blue-600 text-white shadow-sm ring-1 ring-blue-200" : "text-gray-700 hover:bg-gray-100"}`}
+                className={`text-left py-2.5 px-3 rounded-md transition-colors ${
+                  i === activeRoundIndex
+                    ? "bg-blue-600 text-white shadow-sm ring-1 ring-blue-200"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
                 aria-current={i === activeRoundIndex}
               >
                 {r.title}
