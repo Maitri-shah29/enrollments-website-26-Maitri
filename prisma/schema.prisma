@@ -30,12 +30,12 @@ model RoundUser {
   status         RoundStatus     @default(pending)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  taskId         String?
   formSubmission FormSubmission?
+  taskId         String?
   Meet_User      Meet_User?
   round          Round           @relation(fields: [roundId], references: [id], onDelete: Cascade)
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Task           Task?
+  Task           Task?           @relation(fields: [taskId], references: [id])
   TaskSubmission TaskSubmission?
 
   @@unique([roundId, userId])
@@ -53,11 +53,12 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  updatedAt         DateTime  @default(now()) @updatedAt
+  updatedAt         DateTime  @updatedAt
   createdAt         DateTime  @default(now())
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -66,10 +67,12 @@ model Session {
   userId       String
   expires      DateTime
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   ipAddress    String?
-  updatedAt    DateTime @default(now()) @updatedAt
   userAgent    String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Verification {
@@ -78,7 +81,7 @@ model Verification {
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
   @@map("verification")
 }
@@ -90,12 +93,12 @@ model User {
   emailVerified      Boolean        @default(false)
   image              String?
   phone              String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @default(now()) @updatedAt
   accounts           Account[]
   Comments           Comments[]
   RoundUser          RoundUser[]
   sessions           Session[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   push_subscriptions Subscription[]
 }
 
@@ -185,13 +188,13 @@ model Meet {
 }
 
 model Task {
-  id          String    @id @default(cuid())
-  roundUserId String    @unique
+  id          String      @id @default(cuid())
+  roundUserId String      @unique
   text        String
   deadline    DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  roundUser   RoundUser @relation(fields: [roundUserId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  roundUser   RoundUser[]
 }
 
 model Meet_User {
