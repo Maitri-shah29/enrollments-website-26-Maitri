@@ -31,15 +31,15 @@ function QuestionListBox({
     >
       <div className="flex items-center justify-between bg-[#16171B] w-[401px] h-[65px] border-[0.2px] border-[#C9EB3E]">
         <div className="flex flex-col justify-center space-y-0.5 px-4">
-          <div className="text-[#C9EB3E] font-[Share_Tech_Mono] text-[12px] font-normal leading-normal">
+          <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal">
             Question {slNo}
           </div>
-          <div className="text-white font-[Share_Tech_Mono] text-[16px] font-normal leading-normal">
+          <div className="text-white font-ShareTechMono text-[16px] font-normal leading-normal">
             {title}
           </div>
         </div>
         <div className="flex flex-col items-center justify-center space-y-0.5 w-[110px]">
-          <div className="text-[#C9EB3E] font-[Share_Tech_Mono] text-[12px] font-normal leading-normal text-center">
+          <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal text-center">
             {difficulty}
           </div>
           <div className="flex justify-center space-x-1">
