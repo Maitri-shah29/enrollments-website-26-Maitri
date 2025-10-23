@@ -1,9 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import Management from "@/app/clients/management-client";
 import FormsClient from "../forms-client";
-import TechWebsite from "../tech-website";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 
@@ -18,7 +15,6 @@ export interface TabData {
   title: string;
   showForms: boolean;
   showManagement: boolean;
-  showTech: boolean; // ✅ Added
   history: PageHistory[];
   pointer: number;
 }
@@ -49,7 +45,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           ...tabData,
           showForms: true,
           showManagement: false,
-          showTech: false,
           title: "Forms",
         });
         return;
@@ -58,18 +53,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           ...tabData,
           showForms: false,
           showManagement: true,
-          showTech: false,
           title: "Management",
-        });
-        return;
-      } else if (trimmed === "tech") {
-        // ✅ Added: Opens Tech client
-        onUpdateTab({
-          ...tabData,
-          showForms: false,
-          showManagement: false,
-          showTech: true,
-          title: "Tech",
         });
         return;
       }
@@ -92,7 +76,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         title: inputValue,
         showForms: false,
         showManagement: false,
-        showTech: false,
       });
     }
   };
@@ -187,20 +170,40 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
         {tabData.showForms ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close forms"
+              onClick={() =>
+                onUpdateTab({
+                  ...tabData,
+                  showForms: false,
+                })
+              }
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
             <div className="h-full flex items-center justify-center">
               <FormsClient />
             </div>
           </div>
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close Management"
+              onClick={() =>
+                onUpdateTab({
+                  ...tabData,
+                  showManagement: false,
+                })
+              }
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
             <div className="h-full flex items-center justify-center">
               <Management />
-            </div>
-          </div>
-        ) : tabData.showTech ? ( // ✅ Tech section
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <div className="h-full flex items-center justify-center">
-              <TechWebsite />
             </div>
           </div>
         ) : activePageData?.url ? (
