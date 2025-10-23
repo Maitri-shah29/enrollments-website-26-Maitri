@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import Management from "@/app/clients/management-client";
 import TechWebsite from "@/app/clients/tech-client";
-import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 
@@ -258,9 +257,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             >
               ×
             </button>
-            <div className="h-full flex items-center justify-center">
-              <FormsClient />
-            </div>
           </div>
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
