@@ -33,8 +33,20 @@ body {
   font-display: swap;
 }
 
+@font-face{
+  font-family: "ShareTechMono";
+  src: url("/fonts/ShareTechMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-jetbrains {
   font-family: "JetBrainsMono", monospace;
+}
+
+.font-ShareTechMono{
+  font-family: "ShareTechMono", monospace;
 }
 
 /* Container for the checkbox and text */
@@ -94,4 +106,13 @@ body {
   color: #555;
   font-size: 16px;
   line-height: 25px; /* Aligns text vertically with the box */
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
