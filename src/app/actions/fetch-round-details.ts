@@ -13,15 +13,15 @@ export default async function fetchRound(domain: Domain) {
       console.error("You are not logged in!");
       return { error: "Not logged in" };
     }
-    const fetchData = await prisma.round.findMany({
+    const rounds = await prisma.round.findMany({
       where: {
         domain: domain,
         hidden: false,
       },
     });
-    return fetchData;
+    return rounds;
   } catch (e) {
     console.error("Error: ", e);
-    throw new Error("Error in fetching your round data");
+    throw new Error("Error fetching rounds");
   }
 }
