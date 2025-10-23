@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Management from "@/app/clients/management-client";
+import CcPage from "../cc-page";
 import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
@@ -14,6 +15,7 @@ export interface TabData {
   id: number;
   title: string;
   showForms: boolean;
+  showCc: boolean;
   showManagement: boolean;
   history: PageHistory[];
   pointer: number;
@@ -44,14 +46,25 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         onUpdateTab({
           ...tabData,
           showForms: true,
+          showCc: false,
           showManagement: false,
           title: "Forms",
+        });
+        return;
+      } else if (trimmed === "cc") {
+        onUpdateTab({
+          ...tabData,
+          showForms: false,
+          showCc: true,
+          showManagement: false,
+          title: "Competitive Coding",
         });
         return;
       } else if (trimmed === "management") {
         onUpdateTab({
           ...tabData,
           showForms: false,
+          showCc: false,
           showManagement: true,
           title: "Management",
         });
@@ -204,6 +217,25 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </button>
             <div className="h-full flex items-center justify-center">
               <Management />
+            </div>
+          </div>
+        ) : tabData.showCc ? (
+          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close CC"
+              onClick={() =>
+                onUpdateTab({
+                  ...tabData,
+                  showCc: false,
+                })
+              }
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
+            <div className="h-full flex items-center justify-center">
+              <CcPage />
             </div>
           </div>
         ) : activePageData?.url ? (
