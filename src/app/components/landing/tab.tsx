@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Management from "@/app/clients/management-client";
-import CcPage from "../cc-page";
+import CCClient from "@/app/clients/cc-client";
+import TechWebsite from "@/app/clients/tech-client";
 import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
@@ -49,6 +50,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showForms: true,
           showCc: false,
           showManagement: false,
+          showTech: false,
           title: "Forms",
         });
         return;
@@ -58,6 +60,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showForms: false,
           showCc: true,
           showManagement: false,
+          showTech: false,
           title: "CC",
         });
         return;
@@ -67,7 +70,18 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showForms: false,
           showCc: false,
           showManagement: true,
+          showTech: false,
           title: "Management",
+        });
+        return;
+      } else if (trimmed === "tech") {
+        onUpdateTab({
+          ...tabData,
+          showForms: false,
+          showCc: false,
+          showManagement: false,
+          showTech: true,
+          title: "Tech",
         });
         return;
       }
@@ -90,6 +104,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         title: inputValue,
         showForms: false,
         showManagement: false,
+        showCc: false,
+        showTech: false,
       });
     }
   };
@@ -236,8 +252,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
               ×
             </button>
             <div className="h-full flex items-center justify-center">
-              <CcPage />
-        ) : tabData.showTech ? (
+              <CCClient />
+              </div>
+            </div>
+          ) : tabData.showTech ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <TechWebsite />
