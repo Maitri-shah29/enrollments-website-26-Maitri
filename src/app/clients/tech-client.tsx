@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useState } from "react";
+import { asciiArt } from "./components/tech/ascii-art";
 // biome-ignore lint/a11y/useSemanticElements: using div for clickable layout
 const TechWebsite = () => {
   const [activeSection, setActiveSection] = useState("welcome");
@@ -198,13 +199,9 @@ const TechWebsite = () => {
 
         return (
           <div className="w-full h-full relative">
-            <Image
-              src={`/images/tech-ques/q${questionNumber}.svg`}
-              alt={`Question ${questionNumber}`}
-              width={300}
-              height={90}
-              className="mb-4"
-            />
+            <pre className="text-white font-mono text-sm leading-tight mb-8">
+              {asciiArt[questionNumber] || `Question ${questionNumber}`}
+            </pre>
             
             <div className="mt-8">
               <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
@@ -256,7 +253,7 @@ const TechWebsite = () => {
 
               <div className="flex justify-end">
                 <button
-                  className={`bg-transparent border px-10 py-2 mt-14 font-jetbrains text-sm transition-colors ${
+                  className={`bg-transparent border px-10 py-2 mt-6 font-jetbrains text-sm transition-colors ${
                     isSubmitted
                       ? 'border-gray-500 text-gray-500 cursor-not-allowed'
                       : 'border-[#993C7A] hover:bg-[#993C7A]'
@@ -470,7 +467,7 @@ const TechWebsite = () => {
       </div>
 
       <div className="w-full h-full p-7 relative font-jetbrains">
-        <div className="w-full h-full border-2 border-[#993C7A] flex flex-col justify-center items-center p-10 relative overflow-y-auto [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
+        <div className="w-full h-full border-2 border-[#993C7A] flex flex-col justify-center items-center p-10 relative overflow-y-auto">
           {renderContent()}
         </div>
       </div>
