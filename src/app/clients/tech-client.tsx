@@ -2,6 +2,7 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import { asciiArt } from "./components/tech/ascii-art";
+
 // biome-ignore lint/a11y/useSemanticElements: using div for clickable layout
 const TechWebsite = () => {
   const [activeSection, setActiveSection] = useState("welcome");

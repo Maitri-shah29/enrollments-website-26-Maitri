@@ -1,8 +1,7 @@
-import { useState } from "react";
-import Management from "@/app/clients/management-client";
+import { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
+import Management from "@/app/clients/management-client";
 import TechWebsite from "@/app/clients/tech-client";
-import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 
@@ -21,6 +20,8 @@ export interface TabData {
   showTech: boolean;
   history: PageHistory[];
   pointer: number;
+  // last-typed (not-yet-committed) value for this tab's address bar
+  pendingUrl?: string;
 }
 
 interface TabProps {
@@ -29,106 +30,149 @@ interface TabProps {
 }
 
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
-  const [inputValue, setInputValue] = useState<string>(() => {
+  // Separate inputs for top navbar and home card so typing in one doesn't mirror the other
+  const [navInput, setNavInput] = useState<string>(() => {
+    if (tabData.pendingUrl) return tabData.pendingUrl;
     if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
       return tabData.history[tabData.pointer].url.slice(8);
     }
     return "";
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value.replace(/^https:\/\//, ""));
-  };
+  const [homeInput, setHomeInput] = useState<string>(() => {
+    if (tabData.pendingUrl) return tabData.pendingUrl;
+    if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
+      return tabData.history[tabData.pointer].url.slice(8);
+    }
+    return "";
+  });
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim() !== "") {
-      const trimmed = inputValue.trim().toLowerCase();
+  // Sync inputs when active page changes (keep UX consistent)
+  useEffect(() => {
+    // prefer an explicit pendingUrl (last-typed) if present, otherwise fall back to history
+    const v =
+      tabData.pendingUrl ??
+      (tabData.pointer >= 0 && tabData.history[tabData.pointer]
+        ? tabData.history[tabData.pointer].url.slice(8)
+        : "");
+    setNavInput(v);
+    setHomeInput(v);
+  }, [tabData.pointer, tabData.history, tabData.pendingUrl]);
 
-      if (trimmed === "forms") {
-        onUpdateTab({
-          ...tabData,
-          showForms: true,
-          showCc: false,
-          showManagement: false,
-          showTech: false,
-          title: "Forms",
-        });
-        return;
-      } else if (trimmed === "cc") {
-        onUpdateTab({
-          ...tabData,
-          showForms: false,
-          showCc: true,
-          showManagement: false,
-          showTech: false,
-          title: "CC",
-        });
-        return;
-      } else if (trimmed === "management") {
-        onUpdateTab({
-          ...tabData,
-          showForms: false,
-          showCc: false,
-          showManagement: true,
-          showTech: false,
-          title: "Management",
-        });
-        return;
-      } else if (trimmed === "tech") {
-        onUpdateTab({
-          ...tabData,
-          showForms: false,
-          showCc: false,
-          showManagement: false,
-          showTech: true,
-          title: "Tech",
-        });
-        return;
-      }
+  const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setNavInput(e.target.value.replace(/^https?:\/\//, ""));
+  const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setHomeInput(e.target.value.replace(/^https?:\/\//, ""));
 
-      const formatted = `https://${inputValue}`;
-      const newPage: PageHistory = {
-        id: Date.now(),
-        title: inputValue,
-        url: formatted,
-      };
+  // Centralized commit logic used by either input
+  const commitFrom = (raw: string) => {
+    const inputValue = raw.trim();
+    if (!inputValue) return;
+    const trimmed = inputValue.toLowerCase();
 
-      // Remove forward history and add new page
-      const newHistory = tabData.history.slice(0, tabData.pointer + 1);
-      newHistory.push(newPage);
-
+    if (trimmed === "forms") {
       onUpdateTab({
         ...tabData,
-        history: newHistory,
-        pointer: newHistory.length - 1,
-        title: inputValue,
-        showForms: false,
-        showManagement: false,
+        showForms: true,
         showCc: false,
+        showManagement: false,
         showTech: false,
+        title: "Forms",
+        pendingUrl: "forms",
       });
+      return;
     }
+    if (trimmed === "cc") {
+      onUpdateTab({
+        ...tabData,
+        showForms: false,
+        showCc: true,
+        showManagement: false,
+        showTech: false,
+        title: "CC",
+        pendingUrl: "cc",
+      });
+      return;
+    }
+    if (trimmed === "management") {
+      onUpdateTab({
+        ...tabData,
+        showForms: false,
+        showCc: false,
+        showManagement: true,
+        showTech: false,
+        title: "Management",
+        pendingUrl: "management",
+      });
+      return;
+    }
+    if (trimmed === "tech") {
+      onUpdateTab({
+        ...tabData,
+        showForms: false,
+        showCc: false,
+        showManagement: false,
+        showTech: true,
+        title: "Tech",
+        pendingUrl: "tech",
+      });
+      return;
+    }
+
+    const formatted = `https://${inputValue}`;
+    const newPage: PageHistory = {
+      id: Date.now(),
+      title: inputValue,
+      url: formatted,
+    };
+    const newHistory = tabData.history.slice(0, tabData.pointer + 1);
+    newHistory.push(newPage);
+    // commit navigation and clear/save pendingUrl to the committed value
+    onUpdateTab({
+      ...tabData,
+      history: newHistory,
+      pointer: newHistory.length - 1,
+      title: inputValue,
+      showForms: false,
+      showManagement: false,
+      showCc: false,
+      showTech: false,
+      pendingUrl: inputValue,
+    });
+  };
+
+  const handleNavKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") commitFrom(navInput);
+  };
+  const handleHomeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") commitFrom(homeInput);
   };
 
   const goPrevious = () => {
     if (tabData.pointer > 0) {
       const newPointer = tabData.pointer - 1;
+      const v = tabData.history[newPointer].url.slice(8);
       onUpdateTab({
         ...tabData,
         pointer: newPointer,
+        pendingUrl: v,
       });
-      setInputValue(tabData.history[newPointer].url.slice(8));
+      setNavInput(v);
+      setHomeInput(v);
     }
   };
 
   const goNext = () => {
     if (tabData.pointer < tabData.history.length - 1) {
       const newPointer = tabData.pointer + 1;
+      const v = tabData.history[newPointer].url.slice(8);
       onUpdateTab({
         ...tabData,
         pointer: newPointer,
+        pendingUrl: v,
       });
-      setInputValue(tabData.history[newPointer].url.slice(8));
+      setNavInput(v);
+      setHomeInput(v);
     }
   };
 
@@ -185,9 +229,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           <span className="text-gray-300 select-none">https://</span>
           <input
             className="bg-transparent w-full outline-none text-white"
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
+            value={navInput}
+            onChange={handleNavChange}
+            onKeyDown={handleNavKeyPress}
             placeholder="acmvit.in"
           />
         </div>
@@ -213,9 +257,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             >
               ×
             </button>
-            <div className="h-full flex items-center justify-center">
-              <FormsClient />
-            </div>
           </div>
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
@@ -253,9 +294,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </button>
             <div className="h-full flex items-center justify-center">
               <CCClient />
-              </div>
             </div>
-          ) : tabData.showTech ? (
+          </div>
+        ) : tabData.showTech ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <TechWebsite />
@@ -277,9 +318,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
               <span className="select-none">https://</span>
               <input
                 className="bg-transparent w-full outline-none"
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyPress}
+                value={homeInput}
+                onChange={handleHomeChange}
+                onKeyDown={handleHomeKeyPress}
                 placeholder="acmvit.in"
               />
             </div>
