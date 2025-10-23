@@ -21,7 +21,11 @@ export default function Management() {
       case "Instructions":
         return <Instructions />;
       case "Round 1":
-        return <Questions />;
+        return (
+          <Questions
+            questions={Array(25).fill("Lorem ipsum bhrwrhuhurhfhofho")} // here give the array of strings which have questions
+          />
+        );
       default:
         return <About />;
     }
@@ -29,7 +33,7 @@ export default function Management() {
 
   return (
     <div
-      className="min-h-full flex flex-row bg-cover bg-center bg-no-repeat"
+      className="min-h-full flex flex-row bg-cover bg-center bg-no-repeat w-full"
       style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
     >
       {/* Sidebar */}
@@ -61,7 +65,7 @@ export default function Management() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-8 py-10">
+      <main className="flex-1 flex items-center justify-center px-8 py-10 w-full min-h-fit">
         {renderContent()}
       </main>
     </div>
