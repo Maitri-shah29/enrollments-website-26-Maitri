@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import Management from "@/app/clients/management-client";
@@ -29,40 +31,36 @@ interface TabProps {
   onUpdateTab: (updatedTab: TabData) => void;
 }
 
+const INTERNAL_KEYWORDS = new Set(["forms", "cc", "management", "tech"]);
+
+const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
+const ensureHttps = (hostOrUrl: string) =>
+  /^https?:\/\//i.test(hostOrUrl) ? hostOrUrl : `https://${hostOrUrl}`;
+
+const currentHostFromPointer = (tabData: TabData) => {
+  if (tabData.pendingUrl) return stripProtocol(tabData.pendingUrl);
+  if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
+    return stripProtocol(tabData.history[tabData.pointer].url);
+  }
+  return "";
+};
+
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   // Separate inputs for top navbar and home card so typing in one doesn't mirror the other
-  const [navInput, setNavInput] = useState<string>(() => {
-    if (tabData.pendingUrl) return tabData.pendingUrl;
-    if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
-      return tabData.history[tabData.pointer].url.slice(8);
-    }
-    return "";
-  });
-
-  const [homeInput, setHomeInput] = useState<string>(() => {
-    if (tabData.pendingUrl) return tabData.pendingUrl;
-    if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
-      return tabData.history[tabData.pointer].url.slice(8);
-    }
-    return "";
-  });
+  const [navInput, setNavInput] = useState<string>(() => currentHostFromPointer(tabData));
+  const [homeInput, setHomeInput] = useState<string>(() => currentHostFromPointer(tabData));
 
   // Sync inputs when active page changes (keep UX consistent)
   useEffect(() => {
-    // prefer an explicit pendingUrl (last-typed) if present, otherwise fall back to history
-    const v =
-      tabData.pendingUrl ??
-      (tabData.pointer >= 0 && tabData.history[tabData.pointer]
-        ? tabData.history[tabData.pointer].url.slice(8)
-        : "");
+    const v = currentHostFromPointer(tabData);
     setNavInput(v);
     setHomeInput(v);
   }, [tabData.pointer, tabData.history, tabData.pendingUrl]);
 
   const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setNavInput(e.target.value.replace(/^https?:\/\//, ""));
+    setNavInput(stripProtocol(e.target.value));
   const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setHomeInput(e.target.value.replace(/^https?:\/\//, ""));
+    setHomeInput(stripProtocol(e.target.value));
 
   // Centralized commit logic used by either input
   const commitFrom = (raw: string) => {
@@ -70,64 +68,38 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
 
-    if (trimmed === "forms") {
+    // Handle internal sections
+    if (INTERNAL_KEYWORDS.has(trimmed)) {
       onUpdateTab({
         ...tabData,
-        showForms: true,
-        showCc: false,
-        showManagement: false,
-        showTech: false,
-        title: "Forms",
-        pendingUrl: "forms",
-      });
-      return;
-    }
-    if (trimmed === "cc") {
-      onUpdateTab({
-        ...tabData,
-        showForms: false,
-        showCc: true,
-        showManagement: false,
-        showTech: false,
-        title: "CC",
-        pendingUrl: "cc",
-      });
-      return;
-    }
-    if (trimmed === "management") {
-      onUpdateTab({
-        ...tabData,
-        showForms: false,
-        showCc: false,
-        showManagement: true,
-        showTech: false,
-        title: "Management",
-        pendingUrl: "management",
-      });
-      return;
-    }
-    if (trimmed === "tech") {
-      onUpdateTab({
-        ...tabData,
-        showForms: false,
-        showCc: false,
-        showManagement: false,
-        showTech: true,
-        title: "Tech",
-        pendingUrl: "tech",
+        showForms: trimmed === "forms",
+        showCc: trimmed === "cc",
+        showManagement: trimmed === "management",
+        showTech: trimmed === "tech",
+        title:
+          trimmed === "forms"
+            ? "Forms"
+            : trimmed === "cc"
+            ? "CC"
+            : trimmed === "management"
+            ? "Management"
+            : "Tech",
+        pendingUrl: trimmed,
       });
       return;
     }
 
-    const formatted = `https://${inputValue}`;
+    // Handle regular URL navigation
+    const formatted = ensureHttps(inputValue);
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
       url: formatted,
     };
+
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
     newHistory.push(newPage);
-    // commit navigation and clear/save pendingUrl to the committed value
+
     onUpdateTab({
       ...tabData,
       history: newHistory,
@@ -137,7 +109,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       showManagement: false,
       showCc: false,
       showTech: false,
-      pendingUrl: inputValue,
+      pendingUrl: inputValue, // save last-typed committed value
     });
   };
 
@@ -166,7 +138,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   const goPrevious = () => {
     if (tabData.pointer > 0) {
       const newPointer = tabData.pointer - 1;
-      const v = tabData.history[newPointer].url.slice(8);
+      const v = stripProtocol(tabData.history[newPointer].url);
       onUpdateTab({
         ...tabData,
         pointer: newPointer,
@@ -180,7 +152,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   const goNext = () => {
     if (tabData.pointer < tabData.history.length - 1) {
       const newPointer = tabData.pointer + 1;
-      const v = tabData.history[newPointer].url.slice(8);
+      const v = stripProtocol(tabData.history[newPointer].url);
       onUpdateTab({
         ...tabData,
         pointer: newPointer,
@@ -237,9 +209,11 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </svg>
           </button>
         </div>
+
         <div className="flex items-center gap-2">
           <RefreshButton className="p-2 rounded hover:bg-white/10" />
         </div>
+
         <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white justify-center">
           <span className="text-gray-300 select-none">https://</span>
           <input
@@ -250,6 +224,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             placeholder="acmvit.in"
           />
         </div>
+
         <div className="ml-auto mb-1">
           <ProfileButton />
         </div>
@@ -313,6 +288,19 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           </div>
         ) : tabData.showTech ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close Tech"
+              onClick={() =>
+                onUpdateTab({
+                  ...tabData,
+                  showTech: false,
+                })
+              }
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
             <div className="h-full flex items-center justify-center">
               <TechWebsite />
             </div>
