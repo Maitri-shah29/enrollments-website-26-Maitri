@@ -1,5 +1,7 @@
 "use server";
 
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   type RuleType,
@@ -36,10 +38,26 @@ export default async function saveFormResponse(
   if (!formId) throw new Error("formId required");
   if (!questionId) throw new Error("questionId required");
 
+  // Ensure caller is authenticated and owns the form submission
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.session?.userId;
+  if (!userId) throw new Error("Not logged in");
+
+  const form = await prisma.formSubmission.findUnique({
+    where: { id: formId },
+    select: {
+      id: true,
+      roundUser: { select: { id: true, userId: true, roundId: true } },
+    },
+  });
+  if (!form) throw new Error("Form not found");
+  if (form.roundUser.userId !== userId) throw new Error("Forbidden");
+
   const question = await prisma.question.findUnique({
     where: { id: questionId },
     select: {
       id: true,
+      roundId: true,
       varName: true,
       validators: {
         select: {
@@ -55,6 +73,8 @@ export default async function saveFormResponse(
   });
 
   if (!question) throw new Error("question not found");
+  if (question.roundId !== form.roundUser.roundId)
+    throw new Error("Question does not belong to this form's round");
 
   const existing = await prisma.response.findMany({
     where: { formId },
