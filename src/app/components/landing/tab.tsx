@@ -146,7 +146,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       commitFrom(navInput);
       return;
     }
-    // If user presses TAB without typing anything, open the placeholder site
+
     if (e.key === "Tab" && !navInput.trim()) {
       e.preventDefault();
       commitFrom("acmvit.in");
@@ -157,7 +157,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       commitFrom(homeInput);
       return;
     }
-    // If user presses TAB without typing anything, open the placeholder site
     if (e.key === "Tab" && !homeInput.trim()) {
       e.preventDefault();
       commitFrom("acmvit.in");
