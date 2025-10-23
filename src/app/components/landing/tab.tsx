@@ -57,7 +57,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showForms: false,
           showCc: true,
           showManagement: false,
-          title: "Competitive Coding",
+          title: "CC",
         });
         return;
       } else if (trimmed === "management") {
