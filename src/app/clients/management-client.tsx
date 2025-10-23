@@ -23,7 +23,7 @@ export default function Management() {
       case "Round 1":
         return (
           <Questions
-            questions={Array(25).fill("Lorem ipsum bhrwrhuhurhfhofho")} // here give the array of strings which have questions
+            questions={Array(5).fill("Lorem ipsum bhrwrhuhurhfhofho")}
           />
         );
       default:
