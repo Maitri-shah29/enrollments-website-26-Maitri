@@ -11,6 +11,7 @@ const Landing: React.FC = () => {
       showForms: false,
       showCc: false,
       showManagement: false,
+      showTech: false,
       history: [],
       pointer: -1,
     },
@@ -26,6 +27,7 @@ const Landing: React.FC = () => {
       showForms: false,
       showCc: false,
       showManagement: false,
+      showTech: false,
       history: [],
       pointer: -1,
     };
@@ -43,6 +45,7 @@ const Landing: React.FC = () => {
           showForms: false,
           showCc: false,
           showManagement: false,
+          showTech: false,
           history: [],
           pointer: -1,
         },
@@ -65,7 +68,7 @@ const Landing: React.FC = () => {
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   return (
-    <div className="bg-blue-800 w-full h-screen rounded-xl flex flex-col overflow-hidden">
+    <div className="bg-blue-800 w-full h-full rounded-xl flex flex-col overflow-hidden">
       {/* Window Controls */}
       <div className="bg-gray-500 h-8 rounded-t-xl w-full flex items-center px-2 gap-2">
         <div className="bg-red-400 w-4 h-4 rounded-full"></div>
@@ -87,7 +90,7 @@ const Landing: React.FC = () => {
             }`}
           >
             {tab.title}
-            {/*biome-ignore lint/a11y/useSemanticElements: inner close button
+            {/* biome-ignore lint/a11y/useSemanticElements: inner close button
             cannot be a nested button*/}
             <span
               role="button"

@@ -2,6 +2,7 @@ import { useState } from "react";
 import Management from "@/app/clients/management-client";
 import CcPage from "../cc-page";
 import FormsClient from "../forms-client";
+import TechWebsite from "../tech-website";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 
@@ -17,6 +18,7 @@ export interface TabData {
   showForms: boolean;
   showCc: boolean;
   showManagement: boolean;
+  showTech: boolean;
   history: PageHistory[];
   pointer: number;
 }
@@ -48,6 +50,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showForms: true,
           showCc: false,
           showManagement: false,
+          showTech: false,
           title: "Forms",
         });
         return;
@@ -66,7 +69,17 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showForms: false,
           showCc: false,
           showManagement: true,
+          showTech: false,
           title: "Management",
+        });
+        return;
+      } else if (trimmed === "tech") {
+        onUpdateTab({
+          ...tabData,
+          showForms: false,
+          showManagement: false,
+          showTech: true,
+          title: "Tech",
         });
         return;
       }
@@ -78,7 +91,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         url: formatted,
       };
 
-      // Remove forward history and add new page
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
       newHistory.push(newPage);
 
@@ -89,6 +101,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         title: inputValue,
         showForms: false,
         showManagement: false,
+        showTech: false,
       });
     }
   };
@@ -161,9 +174,11 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </svg>
           </button>
         </div>
+
         <div className="flex items-center gap-2">
           <RefreshButton className="p-2 rounded hover:bg-white/10" />
         </div>
+
         <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white justify-center">
           <span className="text-gray-300 select-none">https://</span>
           <input
@@ -174,6 +189,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             placeholder="acmvit.in"
           />
         </div>
+
         <div className="ml-auto mb-1">
           <ProfileButton />
         </div>
@@ -183,38 +199,12 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
         {tabData.showForms ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close forms"
-              onClick={() =>
-                onUpdateTab({
-                  ...tabData,
-                  showForms: false,
-                })
-              }
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
             <div className="h-full flex items-center justify-center">
               <FormsClient />
             </div>
           </div>
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close Management"
-              onClick={() =>
-                onUpdateTab({
-                  ...tabData,
-                  showManagement: false,
-                })
-              }
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
             <div className="h-full flex items-center justify-center">
               <Management />
             </div>
@@ -236,6 +226,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </button>
             <div className="h-full flex items-center justify-center">
               <CcPage />
+        ) : tabData.showTech ? (
+          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <div className="h-full flex items-center justify-center">
+              <TechWebsite />
             </div>
           </div>
         ) : activePageData?.url ? (
