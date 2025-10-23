@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const { PrismaClient } = require("@prisma/client");
 
 function readDatabaseUrl() {
@@ -22,7 +22,7 @@ function readDatabaseUrl() {
         return val;
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
   return undefined;

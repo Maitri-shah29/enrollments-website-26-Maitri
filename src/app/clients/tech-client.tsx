@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useState } from "react";
+
 // biome-ignore lint/a11y/useSemanticElements: using div for clickable layout
 const TechWebsite = () => {
   const [activeSection, setActiveSection] = useState("welcome");

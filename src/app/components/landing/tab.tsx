@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Management from "@/app/clients/management-client";
 import CCClient from "@/app/clients/cc-client";
+import Management from "@/app/clients/management-client";
 import TechWebsite from "@/app/clients/tech-client";
 import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
@@ -253,9 +253,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </button>
             <div className="h-full flex items-center justify-center">
               <CCClient />
-              </div>
             </div>
-          ) : tabData.showTech ? (
+          </div>
+        ) : tabData.showTech ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <TechWebsite />

@@ -373,7 +373,7 @@ export default function FormsClient() {
     }
   }
 
-  function validateRequired(answer: string): boolean {
+  function _validateRequired(answer: string): boolean {
     return answer.trim().length > 0;
   }
 
