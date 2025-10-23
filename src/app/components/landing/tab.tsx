@@ -1,6 +1,6 @@
-import { useState } from "react";
-import Management from "@/app/clients/management-client";
+import { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
+import Management from "@/app/clients/management-client";
 import TechWebsite from "@/app/clients/tech-client";
 import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
@@ -29,12 +29,30 @@ interface TabProps {
 }
 
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
-  const [inputValue, setInputValue] = useState<string>(() => {
-    if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
-      return tabData.history[tabData.pointer].url.slice(8);
+  const [inputValue, setInputValue] = useState<string>("");
+  useEffect(() => {
+    if (tabData.showForms) {
+      setInputValue("forms");
+    } else if (tabData.showCc) {
+      setInputValue("cc");
+    } else if (tabData.showManagement) {
+      setInputValue("management");
+    } else if (tabData.showTech) {
+      setInputValue("tech");
+    } else if (tabData.pointer >= 0 && tabData.history[tabData.pointer]) {
+      // This handles all regular URLs from history
+      setInputValue(tabData.history[tabData.pointer].url.slice(8));
+    } else {
+      setInputValue("");
     }
-    return "";
-  });
+  }, [
+    tabData.showForms,
+    tabData.showCc,
+    tabData.showManagement,
+    tabData.showTech,
+    tabData.pointer,
+    tabData.history,
+  ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value.replace(/^https:\/\//, ""));
@@ -253,9 +271,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </button>
             <div className="h-full flex items-center justify-center">
               <CCClient />
-              </div>
             </div>
-          ) : tabData.showTech ? (
+          </div>
+        ) : tabData.showTech ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <TechWebsite />
