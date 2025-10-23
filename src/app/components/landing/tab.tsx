@@ -3,6 +3,7 @@ import Management from "@/app/clients/management-client";
 import FormsClient from "../forms-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
+import TechWebsite from "../tech-website";
 
 interface PageHistory {
   id: number;
@@ -46,6 +47,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           ...tabData,
           showForms: true,
           showManagement: false,
+          showTech: false,
           title: "Forms",
         });
         return;
@@ -54,7 +56,18 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           ...tabData,
           showForms: false,
           showManagement: true,
+          showTech: false,
           title: "Management",
+        });
+        return;
+      }
+      else if (trimmed === "tech") {
+        onUpdateTab({
+          ...tabData,
+          showForms: false,
+          showManagement: false,
+          showTech: true,
+          title: "Tech",
         });
         return;
       }
@@ -76,6 +89,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         pointer: newHistory.length - 1,
         title: inputValue,
         showForms: false,
+        showTech: false,
         showManagement: false,
       });
     }
@@ -207,7 +221,26 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
               <Management />
             </div>
           </div>
-        ) : activePageData?.url ? (
+        ) : tabData.showTech ? (
+          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <button
+              type="button"
+              aria-label="Close Tech Website"
+              onClick={() =>
+                onUpdateTab({
+                  ...tabData,
+                  showTech: false,
+                })
+              }
+              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
+            >
+              ×
+            </button>
+            <div className="h-full flex items-center justify-center">
+              <TechWebsite />
+            </div>
+          </div>
+        ): activePageData?.url ? (
           <iframe
             key={activePageData.url}
             className="w-full h-full rounded-b-xl"
