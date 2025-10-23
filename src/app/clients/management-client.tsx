@@ -33,7 +33,7 @@ export default function Management() {
 
   return (
     <div
-      className="h-full min-w-full flex flex-row bg-cover bg-center bg-no-repeat"
+      className="min-h-full flex flex-row bg-cover bg-center bg-no-repeat w-full"
       style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
     >
       {/* Sidebar */}

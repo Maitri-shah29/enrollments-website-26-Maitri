@@ -1,12 +1,13 @@
 "use client";
 import Image from "next/image";
 import type React from "react";
-import { authClient, signIn } from "@/lib/auth-client";
+import { signIn } from "@/lib/auth-client";
 
 interface SignupPageProps {
   onSignIn: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SignupPage: React.FC<SignupPageProps> = ({ onSignIn }) => {
   const handleGoogleSignIn = async () => {
     await signIn();
