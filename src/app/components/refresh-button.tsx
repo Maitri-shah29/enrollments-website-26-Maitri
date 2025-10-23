@@ -1,10 +1,10 @@
 "use client";
+import Image from "next/image";
 
 type RefreshButtonProps = {
   className?: string;
   title?: string;
 };
-import Image from "next/image";
 export default function RefreshButton({
   className,
   title = "Refresh page",
@@ -27,7 +27,6 @@ export default function RefreshButton({
       onClick={handleClick}
       className={className}
     >
-      import Image from "next/image";
       <Image
         src="/refresh-button.svg"
         alt="Refresh"
