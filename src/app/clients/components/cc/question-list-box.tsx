@@ -43,7 +43,7 @@ function QuestionListBox({
             {difficulty}
           </div>
           <div className="flex justify-center space-x-1">
-            {iconsToRender.map((id, i) => (
+            {iconsToRender.map((id, _i) => (
               <svg
                 key={`${difficulty}-${id}`}
                 xmlns="http://www.w3.org/2000/svg"

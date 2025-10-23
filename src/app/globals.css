@@ -33,7 +33,7 @@ body {
   font-display: swap;
 }
 
-@font-face{
+@font-face {
   font-family: "ShareTechMono";
   src: url("/fonts/ShareTechMono-Regular.ttf") format("truetype");
   font-weight: 400;
@@ -45,7 +45,7 @@ body {
   font-family: "JetBrainsMono", monospace;
 }
 
-.font-ShareTechMono{
+.font-ShareTechMono {
   font-family: "ShareTechMono", monospace;
 }
 
@@ -68,7 +68,7 @@ body {
 
 /* Create the custom checkbox box */
 .custom-checkbox span::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;
@@ -80,13 +80,13 @@ body {
 
 /* Style the box when the input is checked */
 .custom-checkbox input:checked ~ span::before {
-  background-color: #2196F3; /* Changes color when checked */
-  border-color: #2196F3;
+  background-color: #2196f3; /* Changes color when checked */
+  border-color: #2196f3;
 }
 
 /* Create the checkmark */
 .custom-checkbox span::after {
-  content: '✓'; /* Unicode character for a checkmark */
+  content: "✓"; /* Unicode character for a checkmark */
   position: absolute;
   left: 6px;
   top: 0px;
@@ -109,8 +109,8 @@ body {
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none; 
-  scrollbar-width: none; 
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .hide-scrollbar::-webkit-scrollbar {

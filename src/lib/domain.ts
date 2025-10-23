@@ -1,18 +1,18 @@
 export const DOMAINS = [
   "tech",
-  "managment",
+  "management",
   "research",
   "cc",
-  "desgin",
+  "design",
 ] as const;
 export type Domain = (typeof DOMAINS)[number];
 
 export const DOMAIN_LABELS: Record<Domain, string> = {
   tech: "Tech",
-  managment: "Management",
+  management: "Management",
   research: "Research",
   cc: "CC",
-  desgin: "Design",
+  design: "Design",
 };
 
 export interface RoundQuestion {
@@ -25,9 +25,11 @@ export interface Round {
   questions: RoundQuestion[];
 }
 
-export function cloneRounds(src: Round[]): Round[] {
+// Clone rounds while preserving any extra metadata on the round object (e.g., validators)
+export function cloneRounds<T extends Round>(src: T[]): T[] {
   return src.map((r) => ({
-    title: r.title,
+    // Preserve all existing round-level fields (like validators), but reset question answers
+    ...(r as T),
     questions: r.questions.map((q) => ({ question: q.question, answer: "" })),
   }));
 }
