@@ -32,15 +32,14 @@ export function validateAnswer(
   const trimmed = value.trim();
   const ctx = context ?? {};
 
-  const effectiveRules: ValidationRuleInput[] =
-    rules && rules.length
-      ? rules
-      : [
-          {
-            type: "required",
-            message: "This field is required and cannot be empty",
-          },
-        ];
+  const effectiveRules: ValidationRuleInput[] = rules?.length
+    ? rules
+    : [
+        {
+          type: "required",
+          message: "This field is required and cannot be empty",
+        },
+      ];
 
   for (const rule of effectiveRules) {
     const msg = rule.message;
