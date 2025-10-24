@@ -47,15 +47,19 @@ const currentHostFromPointer = (tabData: TabData) => {
 
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   // Separate inputs for top navbar and home card so typing in one doesn't mirror the other
-  const [navInput, setNavInput] = useState<string>(() => currentHostFromPointer(tabData));
-  const [homeInput, setHomeInput] = useState<string>(() => currentHostFromPointer(tabData));
+  const [navInput, setNavInput] = useState<string>(() =>
+    currentHostFromPointer(tabData),
+  );
+  const [homeInput, setHomeInput] = useState<string>(() =>
+    currentHostFromPointer(tabData),
+  );
 
   // Sync inputs when active page changes (keep UX consistent)
   useEffect(() => {
     const v = currentHostFromPointer(tabData);
     setNavInput(v);
     setHomeInput(v);
-  }, [tabData.pointer, tabData.history, tabData.pendingUrl]);
+  }, [tabData]);
 
   const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setNavInput(stripProtocol(e.target.value));
@@ -70,6 +74,15 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
 
     // Handle internal sections
     if (INTERNAL_KEYWORDS.has(trimmed)) {
+      const newPage: PageHistory = {
+        id: Date.now(),
+        title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
+        url: trimmed,
+      };
+
+      const newHistory = tabData.history.slice(0, tabData.pointer + 1);
+      newHistory.push(newPage);
+
       onUpdateTab({
         ...tabData,
         showForms: trimmed === "forms",
@@ -77,14 +90,12 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showManagement: trimmed === "management",
         showTech: trimmed === "tech",
         title:
-          trimmed === "forms"
-            ? "Forms"
-            : trimmed === "cc"
+          trimmed === "cc"
             ? "CC"
-            : trimmed === "management"
-            ? "Management"
-            : "Tech",
+            : trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         pendingUrl: trimmed,
+        history: newHistory,
+        pointer: newHistory.length - 1,
       });
       return;
     }
@@ -128,6 +139,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         ...tabData,
         pointer: newPointer,
         pendingUrl: v,
+        title: v === "cc" ? "CC" : v.charAt(0).toUpperCase() + v.slice(1),
+        showCc: v === "cc",
+        showManagement: v === "management",
+        showTech: v === "tech",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -142,6 +157,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         ...tabData,
         pointer: newPointer,
         pendingUrl: v,
+        title: v === "cc" ? "CC" : v.charAt(0).toUpperCase() + v.slice(1),
+        showCc: v === "cc",
+        showManagement: v === "management",
+        showTech: v === "tech",
       });
       setNavInput(v);
       setHomeInput(v);
