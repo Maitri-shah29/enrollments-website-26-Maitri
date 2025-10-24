@@ -35,7 +35,11 @@ export default async function createFormSubmission(roundId: string) {
     });
 
     if (userSubmission) {
-      return { error: "Already submitted user" };
+      return {
+        success: true as const,
+        alreadySubmitted: true as const,
+        formSubmission: userSubmission,
+      };
     }
 
     const newForm = await prisma.formSubmission.create({
@@ -45,7 +49,7 @@ export default async function createFormSubmission(roundId: string) {
       },
     });
 
-    return { success: true, formSubmission: newForm };
+    return { success: true as const, formSubmission: newForm };
   } catch (e) {
     console.error("Error in submitting the form:", e);
     return { error: "Form cannot be submitted" };

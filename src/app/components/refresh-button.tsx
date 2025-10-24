@@ -11,7 +11,7 @@ export default function RefreshButton({
 }: RefreshButtonProps) {
   const handleClick = () => {
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]'
+      'iframe[title="Browser Tab"]',
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
