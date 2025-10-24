@@ -87,19 +87,40 @@ model Verification {
 }
 
 model User {
-  id                 String         @id @default(cuid())
-  name               String?
-  email              String?        @unique
-  emailVerified      Boolean        @default(false)
-  image              String?
-  phone              String?
-  accounts           Account[]
-  Comments           Comments[]
-  RoundUser          RoundUser[]
-  sessions           Session[]
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  push_subscriptions Subscription[]
+  id                  String                @id @default(cuid())
+  name                String?
+  email               String?               @unique
+  emailVerified       Boolean               @default(false)
+  image               String?
+  phone               String?
+  accounts            Account[]
+  Comments            Comments[]
+  RoundUser           RoundUser[]
+  sessions            Session[]
+  notification        Notification[]
+  NotificationHistory NotificationHistory[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  push_subscriptions  Subscription[]
+}
+
+model Notification {
+  id                  String                @id @default(cuid())
+  message             String
+  userId              String
+  sentAt              DateTime              @default(now())
+  read                Boolean               @default(false)
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  NotificationHistory NotificationHistory[]
+}
+
+model NotificationHistory {
+  id             String       @id @default(cuid())
+  userId         String
+  notificationId String
+  readAt         DateTime?
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Subscription {
