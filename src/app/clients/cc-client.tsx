@@ -9,7 +9,7 @@ const page = () => {
         <div className="absolute inset-x-0 top-[22%] z-0 grid grid-cols-2 grid-rows-4 gap-x-0 gap-y-0 w-full h-[75%]">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
-              key={i + 1}
+              key={`background-logo-${i + 1}`}
               className={`flex items-center ${
                 i % 2 === 0 ? "justify-end" : "justify-start"
               } w-full h-full z-[0] transform scale-[1.09]`}

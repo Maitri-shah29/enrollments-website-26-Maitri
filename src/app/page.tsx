@@ -6,7 +6,7 @@ import Landing from "./components/landing";
 import SignupPage from "./components/sign-up";
 
 export default function Home() {
-  const [session, setSession] = useState<any | null>(null);
+  const [session, setSession] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
