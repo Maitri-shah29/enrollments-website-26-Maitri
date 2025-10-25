@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
+import QuestionBox from "./components/management/question-box";
 import QuestionList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
 
@@ -45,7 +46,7 @@ export default function Management() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-8 py-10 w-full min-h-fit">
+      <main className="flex-1 flex items-center justify-center px-8 py-10 w-full h-[80vh]">
         <div
           style={{ display: activeSection === "About" ? "block" : "none" }}
           className="h-full w-full"
@@ -70,7 +71,8 @@ export default function Management() {
           style={{ display: activeSection === "Round 1" ? "block" : "none" }}
           className="h-full w-full"
         >
-          <QuestionList activeSection="Round 1" />
+          {/* <QuestionList activeSection="Round 1" /> */}
+          <QuestionBox />
         </div>
       </main>
     </div>
