@@ -7,7 +7,7 @@ interface Props {
 
 export default function Questions({ questions }: Props) {
   return (
-    <div className="relative bg-white backdrop-blur-md rounded-2xl min-w-[90%] h-[90%] shadow-lg overflow-y-auto opacity-[70%]">
+    <div className="relative bg-white backdrop-blur-md rounded-2xl min-w-[90%] h-full shadow-lg overflow-y-auto opacity-[70%]">
       <Header />
       <div className="p-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">

@@ -3,7 +3,7 @@ import Header from "./header";
 
 export default function WhatWeDo() {
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-y-auto">
+    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-full shadow-lg overflow-y-auto">
       <Header />
       <div className="p-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">
