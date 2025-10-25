@@ -125,10 +125,25 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   };
 
   const handleNavKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") commitFrom(navInput);
+    if (e.key === "Enter") {
+      commitFrom(navInput);
+      return;
+    }
+
+    if (e.key === "Tab" && !navInput.trim()) {
+      e.preventDefault();
+      commitFrom("acmvit.in");
+    }
   };
   const handleHomeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") commitFrom(homeInput);
+    if (e.key === "Enter") {
+      commitFrom(homeInput);
+      return;
+    }
+    if (e.key === "Tab" && !homeInput.trim()) {
+      e.preventDefault();
+      commitFrom("acmvit.in");
+    }
   };
 
   const goPrevious = () => {
