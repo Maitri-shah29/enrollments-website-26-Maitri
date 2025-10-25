@@ -5,7 +5,7 @@ import ACMText from "../../../../../public/images/ACM logo text.svg";
 import ACMLogo from "../../../../../public/images/ACM-VIT Logo.png";
 
 const CCNavBar = () => {
-  const [activeButton, setActiveButton] = useState<string>("About");
+  const [activeButton, setActiveButton] = useState<string>("");
 
   const buttons: string[] = [
     "About",
