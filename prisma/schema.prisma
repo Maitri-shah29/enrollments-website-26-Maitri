@@ -259,8 +259,7 @@ enum RoundStatus {
 
 enum Domain {
   cc
-  web
-  app
+  tech
   research
   management
   design
