@@ -324,8 +324,8 @@ const TechWebsite = () => {
         <Image
           src="/images/welcome-tech.svg"
           alt="welcome image"
-          width={5000}
-          height={5000}
+          width={600} // Made ts not spill outside of readable area (at least hopefully)
+          height={600}
         />
       </div>
     );
