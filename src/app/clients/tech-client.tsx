@@ -78,12 +78,12 @@ const TechWebsite = () => {
           <Image
             src="/images/about-tech.svg"
             alt="acm logo"
-            width={5000}
-            height={5000}
+            width={700}
+            height={700}
           />
           <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
             <pre className="text-right pr-4 select-none text-[#993C7A]">
-              {Array.from({ length: 10 }, (_, i) => (
+              {Array.from({ length: 6 }, (_, i) => (
                 <div key={i}>{i + 1}</div>
               ))}
             </pre>
@@ -171,12 +171,12 @@ const TechWebsite = () => {
           <Image
             src="/images/tech-instructions.svg"
             alt="acm logo"
-            width={5000}
-            height={5000}
+            width={700}
+            height={700}
           />
           <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
             <pre className="text-right pr-4 select-none text-[#993C7A]">
-              {Array.from({ length: 10 }, (_, i) => (
+              {Array.from({ length: 6 }, (_, i) => (
                 <div key={i}>{i + 1}</div>
               ))}
             </pre>
@@ -212,10 +212,11 @@ const TechWebsite = () => {
               <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
                 q{questionNumber}:\{questionTitle}
               </div>
-              <div className="text-[#993C7A] font-jetbrains text-sm leading-relaxed px-20 mb-4">
+              <div className="text-[#993C7A] font-jetbrains text-sm leading-relaxed mb-4">
                 {questionDescription.split("\n").map((line, idx) => (
-                  <div key={idx}>
-                    <span className="text-[#993C7A] ">&gt;</span> {line}
+                  <div key={idx} className="flex items-start gap-2 px-18">
+                    <span className="text-[#993C7A] select-none">{">"}</span>
+                    <span className="pl-3">{line}</span>
                   </div>
                 ))}
               </div>
@@ -223,9 +224,13 @@ const TechWebsite = () => {
                 q{questionNumber}:\ans
               </div>
 
-              <div className="mb-8 px-18">
+              <div className="mb-8 px-18 flex items-start gap-2">
+                <span className="text-[#993C7A] font-jetbrains text-sm select-none">
+                  {">"}
+                </span>
                 <textarea
-                  className={`w-full h-32 bg-transparent text-[#E097CE] font-jetbrains text-sm p-3 resize-none focus:outline-none focus:border-white transition-colors ${
+                  style={{ height: "calc(7 * 1.25rem)" }}
+                  className={`flex-1 bg-transparent text-[#E097CE] font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                     isSubmitted
                       ? "border-gray-500 text-gray-500 cursor-not-allowed"
                       : "border-[#993C7A]"
@@ -244,18 +249,15 @@ const TechWebsite = () => {
                       }));
                     }
                   }}
-                  onFocus={(e) => {
-                    if (!isSubmitted && !answers[questionKey]) {
-                      setAnswers((prev) => ({
-                        ...prev,
-                        [questionKey]: "> ",
-                      }));
-                      setTimeout(() => {
-                        (e.target as HTMLTextAreaElement).selectionStart = (
-                          e.target as HTMLTextAreaElement
-                        ).selectionEnd = 2;
-                      }, 0);
-                    }
+                  onWheel={(e) => {
+                    e.preventDefault();
+                    const target = e.currentTarget;
+                    const lineHeight = 20;
+                    const currentScroll = target.scrollTop;
+                    const direction = e.deltaY > 0 ? 1 : -1;
+                    const currentLine = Math.round(currentScroll / lineHeight);
+                    const nextLine = currentLine + direction;
+                    target.scrollTop = nextLine * lineHeight;
                   }}
                   disabled={isSubmitted}
                   readOnly={isSubmitted}
