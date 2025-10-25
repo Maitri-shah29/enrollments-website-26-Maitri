@@ -30,12 +30,12 @@ model RoundUser {
   status         RoundStatus     @default(pending)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  formSubmission FormSubmission?
   taskId         String?
+  formSubmission FormSubmission?
   Meet_User      Meet_User?
   round          Round           @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   Task           Task?           @relation(fields: [taskId], references: [id])
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   TaskSubmission TaskSubmission?
 
   @@unique([roundId, userId])
@@ -93,14 +93,14 @@ model User {
   emailVerified       Boolean               @default(false)
   image               String?
   phone               String?
-  accounts            Account[]
-  Comments            Comments[]
-  RoundUser           RoundUser[]
-  sessions            Session[]
-  notification        Notification[]
-  NotificationHistory NotificationHistory[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
+  accounts            Account[]
+  Comments            Comments[]
+  notification        Notification[]
+  NotificationHistory NotificationHistory[]
+  RoundUser           RoundUser[]
+  sessions            Session[]
   push_subscriptions  Subscription[]
 }
 
@@ -259,10 +259,10 @@ enum RoundStatus {
 
 enum Domain {
   cc
-  tech
   research
   management
   design
+  tech
 }
 
 enum Type {
