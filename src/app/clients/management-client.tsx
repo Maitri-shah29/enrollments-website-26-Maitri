@@ -5,20 +5,18 @@ import { useState } from "react";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
 import QuestionBox from "./components/management/question-box";
-import QuestionList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
 
-// ----- Main Page -----
 export default function Management() {
   const [activeSection, setActiveSection] = useState("About");
 
   return (
     <div
-      className="min-h-full flex flex-row bg-cover bg-center bg-no-repeat w-full"
+      className="h-full flex flex-row bg-cover bg-center bg-no-repeat w-full overflow-x-hidden"
       style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
     >
       {/* Sidebar */}
-      <aside className="flex flex-col min-h-full w-[20vw] p-8 text-white">
+      <aside className="flex flex-col h-full w-[20vw] p-8 text-white">
         <Image
           src="/acmviticon.svg"
           alt="ACM VIT icon"
@@ -46,33 +44,12 @@ export default function Management() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-8 py-10 w-full h-[80vh]">
-        <div
-          style={{ display: activeSection === "About" ? "block" : "none" }}
-          className="h-full w-full"
-        >
-          <About />
-        </div>
-        <div
-          style={{ display: activeSection === "What we do" ? "block" : "none" }}
-          className="h-full w-full"
-        >
-          <WhatWeDo />
-        </div>
-        <div
-          style={{
-            display: activeSection === "Instructions" ? "block" : "none",
-          }}
-          className="h-full w-full"
-        >
-          <Instructions />
-        </div>
-        <div
-          style={{ display: activeSection === "Round 1" ? "block" : "none" }}
-          className="h-full w-full"
-        >
-          {/* <QuestionList activeSection="Round 1" /> */}
-          <QuestionBox />
+      <main className="flex-1 flex justify-center items-center px-8">
+        <div className="h-[90%] w-full flex items-center justify-center">
+          {activeSection === "About" && <About />}
+          {activeSection === "What we do" && <WhatWeDo />}
+          {activeSection === "Instructions" && <Instructions />}
+          {activeSection === "Round 1" && <QuestionBox />}
         </div>
       </main>
     </div>
