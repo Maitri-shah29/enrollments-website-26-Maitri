@@ -32,6 +32,12 @@ jobs:
           corepack enable
           corepack prepare pnpm@9 --activate
 
+      - name: Ensure pnpm is available (fallback)
+        run: |
+          if ! command -v pnpm >/dev/null 2>&1; then
+            npm i -g pnpm@9
+          fi
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -55,6 +61,12 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate
+
+      - name: Ensure pnpm is available (fallback)
+        run: |
+          if ! command -v pnpm >/dev/null 2>&1; then
+            npm i -g pnpm@9
+          fi
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -80,6 +92,12 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate
+
+      - name: Ensure pnpm is available (fallback)
+        run: |
+          if ! command -v pnpm >/dev/null 2>&1; then
+            npm i -g pnpm@9
+          fi
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
