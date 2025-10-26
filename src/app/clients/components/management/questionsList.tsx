@@ -42,13 +42,6 @@ export default function QuestionsList({ questions }: QuestionsProps) {
     setActiveIndex(index);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleClick(index);
-    }
-  };
-
   return (
     <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg flex flex-col overflow-hidden">
       <div className="bg-[#D0D0D0] px-6 py-4 flex items-center gap-3 flex-shrink-0">
@@ -72,13 +65,11 @@ export default function QuestionsList({ questions }: QuestionsProps) {
         <div className="text-black leading-relaxed space-y-4 text-base">
           <div className="space-y-4">
             {questions.map((question, index) => (
-              <div
+              <button
                 key={`question-${key}-${question.substring(0, 20)}-${index}`}
+                type="button"
                 onClick={() => handleClick(index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                role="button"
-                tabIndex={0}
-                className="cursor-pointer hover:bg-gray-100 rounded-lg p-4 transition flex items-start gap-4"
+                className="w-full cursor-pointer hover:bg-gray-100 rounded-lg p-4 transition flex items-start gap-4 text-left"
               >
                 <div className="relative w-6 h-6 min-w-[24px] min-h-[24px] mt-1 flex-shrink-0">
                   <input
@@ -86,7 +77,7 @@ export default function QuestionsList({ questions }: QuestionsProps) {
                     checked={visited[index]}
                     readOnly
                     tabIndex={-1}
-                    className="w-full h-full cursor-pointer rounded-lg border-2 border-gray-400 accent-blue-600"
+                    className="w-full h-full cursor-pointer rounded-lg border-2 border-gray-400 accent-blue-600 pointer-events-none"
                   />
                 </div>
                 <span
@@ -95,7 +86,7 @@ export default function QuestionsList({ questions }: QuestionsProps) {
                 >
                   {index + 1}. {question}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
