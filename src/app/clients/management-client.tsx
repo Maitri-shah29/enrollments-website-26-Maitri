@@ -23,7 +23,6 @@ export default function Management() {
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
-  // no input refs needed since saving is disabled
 
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
@@ -42,7 +41,6 @@ export default function Management() {
       if (roundInitDone || loading || activeSection !== "Round 1") return;
       setLoading(true);
       setInitError(null);
-      // forms removed: no warning state
       try {
         const domain: Domain = "management";
         const rounds = await fetchRound(domain);
@@ -96,7 +94,6 @@ export default function Management() {
       setErrors((prev) => ({ ...prev, [q.id]: vres.error || "Invalid value" }));
       return;
     }
-    // Forms feature removed: saving is disabled.
     setErrors((prev) => ({ ...prev, [q.id]: "Saving is disabled." }));
   }
 
