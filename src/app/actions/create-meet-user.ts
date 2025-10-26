@@ -27,7 +27,9 @@ export default async function createMeetUser(
         id: true,
       },
     });
-
+    if (!owningRoundUser) {
+      return "Round user not found";
+    }
     const createMeet = await prisma.meet_User.create({
       data: {
         roundUserId: roundUserId,
