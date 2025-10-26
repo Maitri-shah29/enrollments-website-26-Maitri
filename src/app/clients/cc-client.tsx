@@ -1,0 +1,170 @@
+import Image from "next/image";
+import ACM from "../../../public/images/ACM.svg";
+import CCNavBar from "./components/cc/navbar";
+
+const page = () => {
+  return (
+    <div className="w-full h-full absolute overflow-hidden">
+      <div className="w-full h-full bg-[#121216] absolute overflow-hidden">
+        <div className="absolute inset-x-0 top-[22%] z-0 grid grid-cols-2 grid-rows-4 gap-x-0 gap-y-0 w-full h-[75%]">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={`background-logo-${i + 1}`}
+              className={`flex items-center ${
+                i % 2 === 0 ? "justify-end" : "justify-start"
+              } w-full h-full z-[0] transform scale-[1.09]`}
+              style={{
+                letterSpacing: "2%",
+                marginLeft: i % 2 === 0 ? "-5%" : "5%",
+                opacity: 0.45,
+              }}
+            >
+              <Image
+                src={ACM}
+                alt={`ACM-${i}`}
+                className="max-w-[200%] max-h-[90%]"
+                style={{ color: "#C9EB3E" }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col justify-center items-center h-full w-full overflow-hidden z-[1] opacity-10 translate-y-[5%]">
+          <h1
+            className="text-3xl font-bold relative"
+            style={{
+              fontFamily: "'Share Tech Mono', monospace",
+              color: "#C9EB3E",
+            }}
+          >
+            Welcome to
+          </h1>
+          <h1
+            className="text-[20vh] font-bold relative leading-none"
+            style={{
+              fontFamily: "'Share Tech Mono', monospace",
+              color: "#C9EB3E",
+            }}
+          >
+            <span
+              style={{
+                color: "transparent",
+                WebkitTextStroke: "3px #C9EB3E",
+              }}
+            >
+              &lt;
+            </span>
+            ACM
+            <span className="relative mx-4" style={{ display: "inline-block" }}>
+              <span
+                style={{
+                  position: "absolute",
+                  left: "5%",
+                  top: "-4px",
+                  color: "transparent",
+                  WebkitTextStroke: "3px #C9EB3E",
+                  zIndex: 0,
+                }}
+              >
+                /
+              </span>
+              <span
+                style={{
+                  position: "absolute",
+                  left: "calc(50% + 5%)",
+                  top: "-4px",
+                  color: "transparent",
+                  WebkitTextStroke: "3px #C9EB3E",
+                  zIndex: 0,
+                }}
+              >
+                /
+              </span>
+              <span style={{ position: "relative", zIndex: 1 }}>{"//"}</span>
+            </span>
+            CC
+            <span
+              style={{
+                color: "transparent",
+                WebkitTextStroke: "3px #C9EB3E",
+              }}
+            >
+              &gt;
+            </span>
+          </h1>
+        </div>
+      </div>
+
+      <div className="flex flex-col justify-center items-center h-full w-full overflow-hidden z-[10] translate-y-[5%]">
+        <h1
+          className="text-3xl font-bold relative z-10"
+          style={{
+            fontFamily: "'Share Tech Mono', monospace",
+            color: "#C9EB3E",
+          }}
+        >
+          Welcome to
+        </h1>
+        <h1
+          className="text-[20vh] font-bold relative z-10 leading-none"
+          style={{
+            fontFamily: "'Share Tech Mono', monospace",
+            color: "#C9EB3E",
+          }}
+        >
+          <span
+            style={{
+              color: "transparent",
+              WebkitTextStroke: "3px #C9EB3E",
+            }}
+          >
+            &lt;
+          </span>
+          ACM
+          <span className="relative mx-4" style={{ display: "inline-block" }}>
+            <span
+              style={{
+                position: "absolute",
+                left: "5%",
+                top: "-4px",
+                color: "transparent",
+                WebkitTextStroke: "3px #C9EB3E",
+                zIndex: 0,
+              }}
+            >
+              /
+            </span>
+            <span
+              style={{
+                position: "absolute",
+                left: "calc(50% + 5%)",
+                top: "-4px",
+                color: "transparent",
+                WebkitTextStroke: "3px #C9EB3E",
+                zIndex: 0,
+              }}
+            >
+              /
+            </span>
+            <span style={{ position: "relative", zIndex: 1 }}>{"//"}</span>
+          </span>
+          CC
+          <span
+            style={{
+              color: "transparent",
+              WebkitTextStroke: "3px #C9EB3E",
+            }}
+          >
+            &gt;
+          </span>
+        </h1>
+      </div>
+
+      <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between px-16">
+        <CCNavBar />
+      </div>
+    </div>
+  );
+};
+
+export default page;
