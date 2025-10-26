@@ -8,7 +8,6 @@ const Landing: React.FC = () => {
     {
       id: 1,
       title: "Home",
-      showForms: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -24,7 +23,6 @@ const Landing: React.FC = () => {
     const newTab: TabData = {
       id: newId,
       title: "New Tab",
-      showForms: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -42,7 +40,6 @@ const Landing: React.FC = () => {
         {
           id: tabs[0].id,
           title: "Home",
-          showForms: false,
           showCc: false,
           showManagement: false,
           showTech: false,

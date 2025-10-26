@@ -1,12 +1,14 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
 import ACMText from "../../../../../public/images/ACM logo text.svg";
 import ACMLogo from "../../../../../public/images/ACM-VIT Logo.png";
 
-const CCNavBar = () => {
-  const [activeButton, setActiveButton] = useState<string>("");
+type CCNavBarProps = {
+  selected: string;
+  onSelect: (selected: string) => void;
+};
 
+const CCNavBar = ({ selected, onSelect }: CCNavBarProps) => {
   const buttons: string[] = [
     "About",
     "Instructions",
@@ -27,9 +29,9 @@ const CCNavBar = () => {
             <button
               key={button}
               type="button"
-              onClick={() => setActiveButton(button)}
+              onClick={() => onSelect(button)}
               className={`px-3 py-3 border-0 text-lg font-medium flex-1 transition-all duration-180 ease-in ${
-                activeButton === button
+                selected === button
                   ? "bg-[#C9EB3E] text-[#16171B]"
                   : "bg-[#16171B] text-[#C9EB3E]"
               }`}
