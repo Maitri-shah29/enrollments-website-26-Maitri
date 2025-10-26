@@ -13,7 +13,7 @@ export const Question = ({ question, goBack }: Props) => {
   // const [submitted, setSubmitted] = useState(false);
 
   return (
-    <div className="relative bg-white opacity-[70%] rounded-2xl min-w-[90%] h-[90%] shadow-lg flex flex-col overflow-hidden">
+    <div className="relative bg-white opacity-[70%] rounded-2xl w-[90%] h-[90%] shadow-lg flex flex-col overflow-hidden">
       <div className="relative h-14 flex items-center pl-5 text-2xl font-semibold text-black shadow-sm w-full bg-[#D0B5B5] rounded-t-2xl flex-shrink-0">
         <button
           type="button"
