@@ -18,7 +18,7 @@ export default async function createMeetUser(
 
     const currentUserId = user.session.userId;
 
-    const owningRoundUser = await prisma.roundUser.findUnique({
+    const owningRoundUser = await prisma.roundUser.findFirst({
       where: {
         id: roundUserId,
         userId: currentUserId,
@@ -27,9 +27,11 @@ export default async function createMeetUser(
         id: true,
       },
     });
+
     if (!owningRoundUser) {
-      return "Round user not found";
+      throw new Error("Authorization failed or resource not found.");
     }
+
     const createMeet = await prisma.meet_User.create({
       data: {
         roundUserId: roundUserId,

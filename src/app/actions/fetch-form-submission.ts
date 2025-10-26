@@ -15,7 +15,7 @@ export default async function fetchFormSubmission(roundUserId: string) {
 
     const currentUserId = user.session.userId;
 
-    const formSubmission = await prisma.formSubmission.findUnique({
+    const formSubmission = await prisma.formSubmission.findFirst({
       where: {
         roundUserId: roundUserId,
         roundUser: {
