@@ -49,23 +49,45 @@ export default function Management() {
       setFormWarning(null);
       try {
         const domain: Domain = "management";
+
+        // Fetch rounds with better error handling
         const rounds = await fetchRound(domain);
+
+        // Check if user is not logged in
         if (!Array.isArray(rounds)) {
           setInitError("Please sign in to view Management rounds.");
+          setLoading(false);
+          setRoundInitDone(true);
           return;
         }
+
+        // Check if rounds exist
         if (rounds.length === 0) {
           setInitError("No active rounds found for Management.");
+          setLoading(false);
+          setRoundInitDone(true);
           return;
         }
+
         const r = rounds[0];
         setRoundId(r.id);
 
+        // Fetch questions with error handling
         const qres = await getRoundQuestions(r.id);
-        const qs = (qres?.questions ?? []).sort(
+
+        if (!qres || !qres.questions) {
+          setInitError("Failed to load questions. Please try again.");
+          setLoading(false);
+          setRoundInitDone(true);
+          return;
+        }
+
+        const qs = (qres.questions ?? []).sort(
           (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
         ) as QuestionPayload[];
+
         setQuestions(qs);
+
         const initialAnswers: Record<string, string> = {};
         qs.forEach((q) => {
           initialAnswers[q.id] = "";
@@ -74,30 +96,45 @@ export default function Management() {
 
         // Ensure the current user is mapped to this round so form submission can be created
         const ensureRes = await ensureRoundUser(r.id);
-        if ("error" in ensureRes && ensureRes.error === "Not logged in") {
+
+        if (
+          ensureRes &&
+          "error" in ensureRes &&
+          ensureRes.error === "Not logged in"
+        ) {
           setInitError("Please sign in to answer questions.");
+          setLoading(false);
+          setRoundInitDone(true);
           return;
         }
-        if ("error" in ensureRes && ensureRes.error) {
+
+        if (ensureRes && "error" in ensureRes && ensureRes.error) {
           // If we cannot ensure mapping, allow viewing but warn about saving
           setFormWarning(
             "Could not link you to this round automatically; you can view questions but cannot save answers.",
           );
         }
 
+        // Create form submission
         const createRes = await createFormSubmission(r.id);
+
         // Accept both freshly created and already existing submission
         const fid =
           createRes && "formSubmission" in createRes
             ? createRes.formSubmission?.id
             : undefined;
-        if (fid) setFormId(fid);
-        else if (
+
+        if (fid) {
+          setFormId(fid);
+        } else if (
           createRes &&
           "error" in createRes &&
           createRes.error === "Not logged in"
         ) {
           setInitError("Please sign in to answer questions.");
+          setLoading(false);
+          setRoundInitDone(true);
+          return;
         } else if (
           createRes &&
           "error" in createRes &&
