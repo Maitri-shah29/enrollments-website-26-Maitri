@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import revalidateHome from "@/app/actions/revalidate";
 import type { QuestionPayload } from "@/lib/validation";
 import { Question } from "./question";
-
-// import revalidateHome from "@/app/actions/revalidate";
 
 interface QuestionsProps {
   questions: QuestionPayload[];
@@ -24,25 +23,25 @@ export default function QuestionsList({
 }: QuestionsProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [visited, setVisited] = useState<boolean[]>([]);
-  // const [revalidating, setRevalidating] = useState(false);
+  const [revalidating, setRevalidating] = useState(false);
 
   useEffect(() => {
     const initial = Array(questions.length).fill(false);
     setVisited(initial);
   }, [questions.length]);
 
-  // const handleRevalidate = async () => {
-  // setRevalidating(true);
+  const handleRevalidate = async () => {
+    setRevalidating(true);
 
-  //   try {
-  //     await revalidateHome();
-  //   } catch (error) {
-  //     console.error("Revalidation failed:", error);
-  //     alert("Revalidation failed! Check console for details.");
-  //   } finally {
-  //     setRevalidating(false);
-  //   }
-  // };
+    try {
+      await revalidateHome();
+    } catch (error) {
+      console.error("Revalidation failed:", error);
+      alert("Revalidation failed! Check console for details.");
+    } finally {
+      setRevalidating(false);
+    }
+  };
 
   if (activeIndex !== null) {
     const questionData = questions[activeIndex];
@@ -79,29 +78,26 @@ export default function QuestionsList({
         </button>
         <button
           type="button"
-          // onClick={handleRevalidate}
-          // disabled={revalidating}
-          className={
-            `p-2 rounded-lg transition`
-            // ${
-            //   revalidating
-            //     ? "bg-gray-400 cursor-not-allowed"
-            //     : "hover:bg-gray-300"
-            // }`
-          }
-          // aria-label="Revalidate"
+          onClick={handleRevalidate}
+          disabled={revalidating}
+          className={`p-2 rounded-lg transition ${
+            revalidating
+              ? "bg-gray-400 cursor-not-allowed"
+              : "hover:bg-gray-300"
+          }`}
+          aria-label="Revalidate"
         >
           <Image
             src="/retry.svg"
             alt="Revalidate"
             width={24}
             height={24}
-            // className={revalidating ? "animate-spin" : ""}
+            className={revalidating ? "animate-spin" : ""}
           />
         </button>
-        {/* {revalidating && (
+        {revalidating && (
           <span className="text-sm text-gray-600">Revalidating...</span>
-        )} */}
+        )}
       </div>
       <div className="flex-1 p-10 overflow-y-auto overflow-x-hidden min-h-0">
         <div className="text-black leading-relaxed space-y-4 text-base">
