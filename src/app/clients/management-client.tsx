@@ -7,6 +7,8 @@ import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import fetchRound from "../actions/fetch-round-details";
 import getRoundQuestions from "../actions/get-round-questions";
+import ensureRoundUser from "../actions/ensure-round-user";
+import createFormSubmission from "../actions/create-form-submission";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
 import ManagementLanding from "./components/management/landing";
@@ -23,6 +25,8 @@ export default function Management() {
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
+  const [formWarning, setFormWarning] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
 
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
@@ -201,13 +205,20 @@ export default function Management() {
           );
         }
         return roundId && questions.length > 0 ? (
-          <QuestionsList
-            questions={questions}
-            answers={answers}
-            errors={errors}
-            onChangeAnswer={onChangeAnswer}
-            onSubmitAnswer={onSubmitAnswer}
-          />
+          <div className="w-full">
+            {formWarning ? (
+              <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-yellow-800">
+                {formWarning}
+              </div>
+            ) : null}
+            <QuestionsList
+              questions={questions}
+              answers={answers}
+              errors={errors}
+              onChangeAnswer={onChangeAnswer}
+              onSubmitAnswer={onSubmitAnswer}
+            />
+          </div>
         ) : (
           <div className="text-center">
             <p className="text-gray-700">No questions available.</p>
