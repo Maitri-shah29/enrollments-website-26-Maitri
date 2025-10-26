@@ -11,6 +11,7 @@ import getRoundQuestions from "../actions/get-round-questions";
 import saveFormResponse from "../actions/save-form-response";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
+import QuestionsList from "./components/management/questionsList";
 import WhatWeDo from "./components/management/whatwedo";
 
 type QuestionPayload = {
@@ -28,11 +29,11 @@ type QuestionPayload = {
 export default function Management() {
   const [activeSection, setActiveSection] = useState("About");
   const [loading, setLoading] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
+  const [_initError, setInitError] = useState<string | null>(null);
   const [roundInitDone, setRoundInitDone] = useState(false);
-  const [_roundId, setRoundId] = useState<string | null>(null);
+  const [roundId, setRoundId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
-  const [formWarning, setFormWarning] = useState<string | null>(null);
+  const [_formWarning, setFormWarning] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
@@ -127,7 +128,7 @@ export default function Management() {
     load();
   }, [activeSection, loading, roundInitDone]);
 
-  function onChangeAnswer(qid: string, value: string) {
+  function _onChangeAnswer(qid: string, value: string) {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
     if (errors[qid]) {
       setErrors((prev) => {
@@ -138,7 +139,7 @@ export default function Management() {
     }
   }
 
-  async function onSubmitAnswer(q: QuestionPayload) {
+  async function _onSubmitAnswer(q: QuestionPayload) {
     const current = answers[q.id] ?? "";
     const vres = validateAnswer(current, q.validators, { answersByVar });
     if (!vres.valid) {
@@ -172,73 +173,10 @@ export default function Management() {
       case "Instructions":
         return <Instructions />;
       case "Round 1":
-        return (
-          <div className="relative bg-white backdrop-blur-md rounded-2xl min-w-[90%] h-[90%] shadow-lg overflow-y-auto opacity-[70%]">
-            {/* Simple header bar for consistency */}
-            <div className="h-13 flex items-center pl-5 text-2xl font-semibold text-[#666363] shadow-[0px_0px_5px_4px_rgb(0,0,0,0.1)] w-full bg-[#D0D0D0]">
-              Round 1 · Management
-            </div>
-
-            <div className="p-10">
-              <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">
-                Questions
-              </h1>
-
-              {loading && <p className="text-gray-700 text-center">Loading…</p>}
-              {initError && (
-                <p className="text-red-600 text-center" role="alert">
-                  {initError}
-                </p>
-              )}
-              {formWarning && !initError && (
-                <output className="text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3 text-center block">
-                  {formWarning}
-                </output>
-              )}
-
-              {!loading && !initError && questions.length === 0 && (
-                <p className="text-gray-700 text-center">No questions.</p>
-              )}
-
-              <div className="space-y-8 max-w-3xl mx-auto">
-                {questions.map((q) => (
-                  <section key={q.id} className="text-black">
-                    <h3 className="mb-3 font-semibold">
-                      Q{q.serial}. {q.question}
-                    </h3>
-                    <div className="relative">
-                      <input
-                        ref={(el) => {
-                          inputRefs.current[q.id] = el;
-                        }}
-                        value={answers[q.id] ?? ""}
-                        onChange={(e) => onChangeAnswer(q.id, e.target.value)}
-                        className={`w-full p-4 pr-28 bg-white text-gray-900 shadow-sm border rounded-xl focus:ring-2 transition placeholder:text-gray-500 ${
-                          errors[q.id]
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-200 focus:ring-blue-500 focus:border-blue-500"
-                        }`}
-                        placeholder="type your answer..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => onSubmitAnswer(q)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-lg bg-blue-600 text-white shadow hover:bg-blue-700 disabled:bg-gray-300"
-                        disabled={!formId || !(answers[q.id] ?? "").trim()}
-                      >
-                        Save
-                      </button>
-                    </div>
-                    {errors[q.id] && (
-                      <p className="mt-2 text-sm text-red-600" role="alert">
-                        {errors[q.id]}
-                      </p>
-                    )}
-                  </section>
-                ))}
-              </div>
-            </div>
-          </div>
+        return roundId ? (
+          <QuestionsList questions={questions.map((q) => q.question)} />
+        ) : (
+          <p className="text-gray-700 text-center">Loading round...</p>
         );
       default:
         return <About />;
@@ -247,17 +185,17 @@ export default function Management() {
 
   return (
     <div
-      className="min-h-full flex flex-row bg-cover bg-center bg-no-repeat w-full"
+      className="h-screen flex flex-row bg-cover bg-center bg-no-repeat w-full overflow-hidden"
       style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
     >
-      {/* Sidebar */}
-      <aside className="flex flex-col min-h-full w-[20vw] p-8 text-white">
+      {/* Sidebar - Fixed */}
+      <aside className="fixed left-0 top-0 h-screen w-[20vw] pt-20 px-8 pb-8 text-white flex flex-col z-10 overflow-y-auto mt-[5%]">
         <Image
           src="/acmviticon.svg"
           alt="ACM VIT icon"
-          width={180}
-          height={180}
-          className="mb-8"
+          width={120}
+          height={120}
+          className="mb-8 ml-8"
         />
 
         <nav className="flex flex-col space-y-4 text-lg">
@@ -278,8 +216,8 @@ export default function Management() {
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-8 py-10 w-full min-h-fit">
+      {/* Main Content - with left margin to account for fixed sidebar */}
+      <main className="ml-[20vw] flex-1 flex items-center justify-center px-8 py-10 h-screen overflow-hidden mt-5">
         {renderContent()}
       </main>
     </div>
