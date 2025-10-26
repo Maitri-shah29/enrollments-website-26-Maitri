@@ -25,24 +25,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-
-      - name: Enable Corepack and pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
-
-      - name: Ensure pnpm is available (fallback)
-        run: |
-          if ! command -v pnpm >/dev/null 2>&1; then
-            npm i -g pnpm@9
-          fi
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install --no-fund --no-audit
 
       - name: Run Biome
-        run: pnpm exec biome check . --reporter=github
+        run: npm run lint -- --reporter=github .
 
   typecheck:
     name: TypeScript type-check
@@ -55,24 +44,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-
-      - name: Enable Corepack and pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
-
-      - name: Ensure pnpm is available (fallback)
-        run: |
-          if ! command -v pnpm >/dev/null 2>&1; then
-            npm i -g pnpm@9
-          fi
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install --no-fund --no-audit
 
       - name: Type check
-        run: pnpm tsc --noEmit
+        run: npx tsc --noEmit
 
   build:
     name: Build
@@ -86,27 +64,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-
-      - name: Enable Corepack and pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
-
-      - name: Ensure pnpm is available (fallback)
-        run: |
-          if ! command -v pnpm >/dev/null 2>&1; then
-            npm i -g pnpm@9
-          fi
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install --no-fund --no-audit
 
       - name: (Optional) Generate Prisma Client
-        run: pnpm prisma generate
+        run: npx prisma generate
         continue-on-error: true
 
       - name: Build Next.js
         env:
           NODE_ENV: production
-        run: pnpm build
+        run: npm run build
