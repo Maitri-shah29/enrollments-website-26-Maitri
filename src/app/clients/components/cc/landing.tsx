@@ -12,7 +12,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
   return (
     <div className="w-full h-full relative overflow-hidden">
       <div className="w-full h-full bg-[#121216]">
-        {/* Background ACM watermark grid */}
+        {}
         <div className="absolute inset-x-0 top-[22%] z-0 grid grid-cols-2 grid-rows-4 gap-x-0 gap-y-0 w-full h-[75%]">
           {cells.map((id, i) => (
             <div
@@ -102,7 +102,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
         </div>
       </div>
 
-      {/* Fixed Get Started button at bottom with 50px gutter */}
+      {}
       <div className="fixed bottom-[175px] left-1/2 -translate-x-1/2 z-20">
         <Button
           label="Get Started →"
