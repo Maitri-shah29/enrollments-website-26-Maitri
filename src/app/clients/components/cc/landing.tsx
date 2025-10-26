@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import ACM from "../../../../../public/images/ACM.svg";
 import Button from "./button";
 
 type Props = {
@@ -26,8 +25,9 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
                 opacity: 0.45,
               }}
             >
-              <Image
-                src={ACM}
+              {}
+              <img
+                src="/images/ACM.svg"
                 alt={`ACM-${i}`}
                 className="max-w-[200%] max-h-[90%]"
                 style={{ color: "#C9EB3E" }}
