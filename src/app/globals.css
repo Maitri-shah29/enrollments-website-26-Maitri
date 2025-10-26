@@ -49,7 +49,6 @@ body {
   font-display: swap;
 }
 
-
 .font-jetbrains {
   font-family: "JetBrainsMono", monospace;
 }
@@ -61,7 +60,6 @@ body {
 .font-ShareTechMono {
   font-family: "PolysansTrial", monospace;
 }
-
 
 /* Container for the checkbox and text */
 .custom-checkbox {

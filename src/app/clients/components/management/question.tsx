@@ -2,18 +2,38 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import type { QuestionPayload } from "@/lib/validation";
 
 interface Props {
-  question: string;
+  question: QuestionPayload;
+  answer: string;
+  error?: string;
+  onChangeAnswer: (qid: string, value: string) => void;
+  onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
   goBack?: () => void;
 }
 
-export const Question = ({ question, goBack }: Props) => {
-  const [answer, setAnswer] = useState("");
-  // const [submitted, setSubmitted] = useState(false);
+export const Question = ({
+  question,
+  answer,
+  error,
+  onChangeAnswer,
+  onSubmitAnswer,
+  goBack,
+}: Props) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await onSubmitAnswer(question);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div className="relative bg-white opacity-[70%] rounded-2xl w-[90%] h-[90%] shadow-lg flex flex-col overflow-hidden">
+    <div className="relative bg-white opacity-[70%] rounded-2xl min-w-[90%] h-[90%] shadow-lg flex flex-col overflow-hidden">
       <div className="relative h-14 flex items-center pl-5 text-2xl font-semibold text-black shadow-sm w-full bg-[#D0B5B5] rounded-t-2xl flex-shrink-0">
         <button
           type="button"
@@ -50,13 +70,15 @@ export const Question = ({ question, goBack }: Props) => {
           className="break-words overflow-wrap-anywhere"
           style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
         >
-          {question}
+          {question.question}
         </p>
+        {question.helpText && (
+          <p className="text-sm text-gray-600 mt-2">{question.helpText}</p>
+        )}
       </div>
 
       <div className="flex justify-center flex-1 px-6 pb-6 min-h-0 overflow-hidden">
         <div className="bg-[#D0B5B5] w-full rounded-2xl text-lg flex flex-col overflow-hidden">
-          {/* Reply section with arrow */}
           <div className="px-6 pt-4 pb-2 flex-shrink-0 overflow-hidden">
             <div className="flex items-center text-black text-sm overflow-hidden">
               <Image
@@ -81,21 +103,26 @@ export const Question = ({ question, goBack }: Props) => {
           <div className="flex-1 px-6 flex flex-col min-h-0 overflow-hidden">
             <textarea
               value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
+              onChange={(e) => onChangeAnswer(question.id, e.target.value)}
               className="w-full flex-1 p-0 bg-transparent text-black text-base resize-none outline-none border-none overflow-auto leading-relaxed"
               style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-              placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit..."
+              placeholder="Type your answer here..."
             />
+            {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
           </div>
 
           <div className="flex justify-end px-6 pb-4 flex-shrink-0">
             <button
               type="button"
-              // onClick={() => setSubmitted(true)}
-              // disabled={submitted}
-              className="px-8 py-2.5 rounded-full text-white font-medium shadow-md bg-[#C87B7B] hover:bg-[#B86B6B]"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className={`px-8 py-2.5 rounded-full text-white font-medium shadow-md transition ${
+                submitting
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#C87B7B] hover:bg-[#B86B6B]"
+              }`}
             >
-              Submit
+              {submitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </div>

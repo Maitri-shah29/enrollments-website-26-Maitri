@@ -3,7 +3,8 @@
 import type { Domain } from "@prisma/client";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { type ValidationRuleInput, validateAnswer } from "@/lib/validation";
+import type { QuestionPayload } from "@/lib/validation";
+import { validateAnswer } from "@/lib/validation";
 import createFormSubmission from "../actions/create-form-submission";
 import ensureRoundUser from "../actions/ensure-round-user";
 import fetchRound from "../actions/fetch-round-details";
@@ -14,26 +15,15 @@ import Instructions from "./components/management/instructions";
 import QuestionsList from "./components/management/questionsList";
 import WhatWeDo from "./components/management/whatwedo";
 
-type QuestionPayload = {
-  id: string;
-  serial: number;
-  question: string;
-  helpText?: string | null;
-  varName?: string | null;
-  type?: string | null;
-  options?: unknown;
-  validators: ValidationRuleInput[];
-};
-
 // ----- Main Page -----
 export default function Management() {
   const [activeSection, setActiveSection] = useState("About");
   const [loading, setLoading] = useState(false);
-  const [_initError, setInitError] = useState<string | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
   const [roundInitDone, setRoundInitDone] = useState(false);
   const [roundId, setRoundId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
-  const [_formWarning, setFormWarning] = useState<string | null>(null);
+  const [formWarning, setFormWarning] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
@@ -128,7 +118,7 @@ export default function Management() {
     load();
   }, [activeSection, loading, roundInitDone]);
 
-  function _onChangeAnswer(qid: string, value: string) {
+  function onChangeAnswer(qid: string, value: string) {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
     if (errors[qid]) {
       setErrors((prev) => {
@@ -139,7 +129,7 @@ export default function Management() {
     }
   }
 
-  async function _onSubmitAnswer(q: QuestionPayload) {
+  async function onSubmitAnswer(q: QuestionPayload) {
     const current = answers[q.id] ?? "";
     const vres = validateAnswer(current, q.validators, { answersByVar });
     if (!vres.valid) {
@@ -173,10 +163,50 @@ export default function Management() {
       case "Instructions":
         return <Instructions />;
       case "Round 1":
-        return roundId ? (
-          <QuestionsList questions={questions.map((q) => q.question)} />
+        if (loading) {
+          return (
+            <div className="text-center">
+              <p className="text-gray-700">Loading round...</p>
+            </div>
+          );
+        }
+        if (initError) {
+          return (
+            <div className="text-center">
+              <p className="text-red-600 font-semibold">{initError}</p>
+            </div>
+          );
+        }
+        if (formWarning) {
+          return (
+            <div className="text-center">
+              <p className="text-yellow-600 font-semibold mb-4">
+                {formWarning}
+              </p>
+              {roundId && questions.length > 0 && (
+                <QuestionsList
+                  questions={questions}
+                  answers={answers}
+                  errors={errors}
+                  onChangeAnswer={onChangeAnswer}
+                  onSubmitAnswer={onSubmitAnswer}
+                />
+              )}
+            </div>
+          );
+        }
+        return roundId && questions.length > 0 ? (
+          <QuestionsList
+            questions={questions}
+            answers={answers}
+            errors={errors}
+            onChangeAnswer={onChangeAnswer}
+            onSubmitAnswer={onSubmitAnswer}
+          />
         ) : (
-          <p className="text-gray-700 text-center">Loading round...</p>
+          <div className="text-center">
+            <p className="text-gray-700">No questions available.</p>
+          </div>
         );
       default:
         return <About />;

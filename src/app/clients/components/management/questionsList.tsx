@@ -2,18 +2,30 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import type { QuestionPayload } from "@/lib/validation";
 import { Question } from "./question";
 
-// Questions Component
 interface QuestionsProps {
-  questions: string[];
+  questions: QuestionPayload[];
+  answers: Record<string, string>;
+  errors: Record<string, string>;
+  onChangeAnswer: (qid: string, value: string) => void;
+  onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
 }
 
-export default function QuestionsList({ questions }: QuestionsProps) {
+// ... rest of the code stays the same
+
+export default function QuestionsList({
+  questions,
+  answers,
+  errors,
+  onChangeAnswer,
+  onSubmitAnswer,
+}: QuestionsProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [visited, setVisited] = useState<boolean[]>(() => {
     const initial = Array(questions.length).fill(false);
-    initial[0] = true; // First question is checked by default
+    initial[0] = true;
     return initial;
   });
   const [key, setKey] = useState(0);
@@ -29,8 +41,17 @@ export default function QuestionsList({ questions }: QuestionsProps) {
   };
 
   if (activeIndex !== null) {
-    const question = questions[activeIndex];
-    return <Question question={question} goBack={() => setActiveIndex(null)} />;
+    const questionData = questions[activeIndex];
+    return (
+      <Question
+        question={questionData}
+        answer={answers[questionData.id] || ""}
+        error={errors[questionData.id]}
+        onChangeAnswer={onChangeAnswer}
+        onSubmitAnswer={onSubmitAnswer}
+        goBack={() => setActiveIndex(null)}
+      />
+    );
   }
 
   const handleClick = (index: number) => {
@@ -64,9 +85,9 @@ export default function QuestionsList({ questions }: QuestionsProps) {
       <div className="flex-1 p-10 overflow-y-auto overflow-x-hidden min-h-0">
         <div className="text-black leading-relaxed space-y-4 text-base">
           <div className="space-y-4">
-            {questions.map((question, index) => (
+            {questions.map((q, index) => (
               <button
-                key={`question-${key}-${question.substring(0, 20)}-${index}`}
+                key={`question-${key}-${q.question.substring(0, 20)}-${index}`}
                 type="button"
                 onClick={() => handleClick(index)}
                 className="w-full cursor-pointer hover:bg-gray-100 rounded-lg p-4 transition flex items-start gap-4 text-left"
@@ -84,7 +105,7 @@ export default function QuestionsList({ questions }: QuestionsProps) {
                   className="font-medium flex-1 text-gray-700"
                   style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
                 >
-                  {index + 1}. {question}
+                  {index + 1}. {q.question}
                 </span>
               </button>
             ))}
