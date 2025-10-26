@@ -6,6 +6,10 @@ on:
   push:
     branches: [main, dev]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -21,16 +25,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: npm
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: true
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
 
       - name: Run Biome
-        run: pnpm run lint --reporter=github .
+        run: npm run lint -- --reporter=github .
 
   typecheck:
     name: TypeScript type-check
@@ -43,16 +44,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: npm
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: true
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
 
       - name: Type check
-        run: pnpm tsc --noEmit
+        run: npx tsc --noEmit
 
   build:
     name: Build
@@ -66,19 +64,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: npm
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: true
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
 
       - name: (Optional) Generate Prisma Client
-        run: pnpm prisma generate
+        run: npx prisma generate
         continue-on-error: true
 
       - name: Build Next.js
         env:
           NODE_ENV: production
-        run: pnpm build
+        run: npm run build
