@@ -7,6 +7,8 @@ import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import fetchRound from "../actions/fetch-round-details";
 import getRoundQuestions from "../actions/get-round-questions";
+import ensureRoundUser from "../actions/ensure-round-user";
+import createFormSubmission from "../actions/create-form-submission";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
 import ManagementLanding from "./components/management/landing";
@@ -23,6 +25,8 @@ export default function Management() {
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
+  const [formWarning, setFormWarning] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
 
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
@@ -43,28 +47,101 @@ export default function Management() {
       setInitError(null);
       try {
         const domain: Domain = "management";
+
+        // Fetch rounds with better error handling
         const rounds = await fetchRound(domain);
+
+        // Check if user is not logged in
         if (!Array.isArray(rounds)) {
           setInitError("Please sign in to view Management rounds.");
+          setLoading(false);
+          setRoundInitDone(true);
           return;
         }
+
+        // Check if rounds exist
         if (rounds.length === 0) {
           setInitError("No active rounds found for Management.");
+          setLoading(false);
+          setRoundInitDone(true);
           return;
         }
+
         const r = rounds[0];
         setRoundId(r.id);
 
+        // Fetch questions with error handling
         const qres = await getRoundQuestions(r.id);
-        const qs = (qres?.questions ?? []).sort(
+
+        if (!qres || !qres.questions) {
+          setInitError("Failed to load questions. Please try again.");
+          setLoading(false);
+          setRoundInitDone(true);
+          return;
+        }
+
+        const qs = (qres.questions ?? []).sort(
           (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
         ) as QuestionPayload[];
+
         setQuestions(qs);
+
         const initialAnswers: Record<string, string> = {};
         qs.forEach((q) => {
           initialAnswers[q.id] = "";
         });
         setAnswers(initialAnswers);
+
+        // Ensure the current user is mapped to this round so form submission can be created
+        const ensureRes = await ensureRoundUser(r.id);
+
+        if (
+          ensureRes &&
+          "error" in ensureRes &&
+          ensureRes.error === "Not logged in"
+        ) {
+          setInitError("Please sign in to answer questions.");
+          setLoading(false);
+          setRoundInitDone(true);
+          return;
+        }
+
+        if (ensureRes && "error" in ensureRes && ensureRes.error) {
+          // If we cannot ensure mapping, allow viewing but warn about saving
+          setFormWarning(
+            "Could not link you to this round automatically; you can view questions but cannot save answers.",
+          );
+        }
+
+        // Create form submission
+        const createRes = await createFormSubmission(r.id);
+
+        // Accept both freshly created and already existing submission
+        const fid =
+          createRes && "formSubmission" in createRes
+            ? createRes.formSubmission?.id
+            : undefined;
+
+        if (fid) {
+          setFormId(fid);
+        } else if (
+          createRes &&
+          "error" in createRes &&
+          createRes.error === "Not logged in"
+        ) {
+          setInitError("Please sign in to answer questions.");
+          setLoading(false);
+          setRoundInitDone(true);
+          return;
+        } else if (
+          createRes &&
+          "error" in createRes &&
+          createRes.error === "User does not exist for this round"
+        ) {
+          setFormWarning(
+            "You're not registered for this round yet; you can view questions but cannot save answers.",
+          );
+        }
       } catch (e) {
         console.error("[management] init load failed", e);
         setInitError("Failed to load round/questions. Try again later.");
@@ -128,13 +205,20 @@ export default function Management() {
           );
         }
         return roundId && questions.length > 0 ? (
-          <QuestionsList
-            questions={questions}
-            answers={answers}
-            errors={errors}
-            onChangeAnswer={onChangeAnswer}
-            onSubmitAnswer={onSubmitAnswer}
-          />
+          <div className="w-full">
+            {formWarning ? (
+              <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-yellow-800">
+                {formWarning}
+              </div>
+            ) : null}
+            <QuestionsList
+              questions={questions}
+              answers={answers}
+              errors={errors}
+              onChangeAnswer={onChangeAnswer}
+              onSubmitAnswer={onSubmitAnswer}
+            />
+          </div>
         ) : (
           <div className="text-center">
             <p className="text-gray-700">No questions available.</p>
