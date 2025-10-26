@@ -65,8 +65,6 @@ const Landing: React.FC = () => {
     setTabs(tabs.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab)));
   };
 
-  const activeTab = tabs.find((tab) => tab.id === activeTabId);
-
   return (
     <div className="bg-blue-800 w-full h-full rounded-xl flex flex-col overflow-hidden">
       {/* Window Controls */}

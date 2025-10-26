@@ -9,8 +9,11 @@ const TechWebsite = () => {
   const [activeAOI, setActiveAOI] = useState<string>("app");
   const [activeQuestion, setActiveQuestion] = useState<string>("question1");
   const [activeRound1Folder, setActiveRound1Folder] = useState<string>("");
+  // Control sidebar expansion for AOI and Round 1 lists
+  const [aoiExpanded, setAoiExpanded] = useState<boolean>(false);
+  const [round1Expanded, setRound1Expanded] = useState<boolean>(false);
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
@@ -78,13 +81,15 @@ const TechWebsite = () => {
           <Image
             src="/images/about-tech.svg"
             alt="acm logo"
-            width={5000}
-            height={5000}
+            width={700}
+            height={700}
           />
           <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
             <pre className="text-right pr-4 select-none text-[#993C7A]">
-              {Array.from({ length: 10 }, (_, i) => (
+              {Array.from({ length: 6 }, (_, i) => (
                 <div key={i}>{i + 1}</div>
+              {Array.from({ length: 10 }, (_, i) => (
+                <div key={`about-line-${i + 1}`}>{i + 1}</div>
               ))}
             </pre>
 
@@ -143,7 +148,7 @@ const TechWebsite = () => {
             <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
               <pre className="text-right pr-4 select-none text-[#993C7A]">
                 {Array.from({ length: numLines }, (_, i) => (
-                  <div key={i}>{i + 1}</div>
+                  <div key={`aoi-line-${i + 1}`}>{i + 1}</div>
                 ))}
               </pre>
 
@@ -171,13 +176,15 @@ const TechWebsite = () => {
           <Image
             src="/images/tech-instructions.svg"
             alt="acm logo"
-            width={5000}
-            height={5000}
+            width={700}
+            height={700}
           />
           <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
             <pre className="text-right pr-4 select-none text-[#993C7A]">
-              {Array.from({ length: 10 }, (_, i) => (
+              {Array.from({ length: 6 }, (_, i) => (
                 <div key={i}>{i + 1}</div>
+              {Array.from({ length: 10 }, (_, i) => (
+                <div key={`instructions-line-${i + 1}`}>{i + 1}</div>
               ))}
             </pre>
             <pre className="whitespace-pre-wrap text-[#E097CE]">
@@ -212,9 +219,12 @@ const TechWebsite = () => {
               <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
                 q{questionNumber}:\{questionTitle}
               </div>
-              <div className="text-[#993C7A] font-jetbrains text-sm leading-relaxed px-20 mb-4">
+              <div className="text-[#993C7A] font-jetbrains text-sm leading-relaxed mb-4">
                 {questionDescription.split("\n").map((line, idx) => (
-                  <div key={idx}>
+                  <div key={idx} className="flex items-start gap-2 px-18">
+                    <span className="text-[#993C7A] select-none">{">"}</span>
+                    <span className="pl-3">{line}</span>
+                  <div key={`question-line-${idx}`}>
                     <span className="text-[#993C7A] ">&gt;</span> {line}
                   </div>
                 ))}
@@ -223,9 +233,13 @@ const TechWebsite = () => {
                 q{questionNumber}:\ans
               </div>
 
-              <div className="mb-8 px-18">
+              <div className="mb-8 px-18 flex items-start gap-2">
+                <span className="text-[#993C7A] font-jetbrains text-sm select-none">
+                  {">"}
+                </span>
                 <textarea
-                  className={`w-full h-32 bg-transparent text-[#E097CE] font-jetbrains text-sm p-3 resize-none focus:outline-none focus:border-white transition-colors ${
+                  style={{ height: "calc(7 * 1.25rem)" }}
+                  className={`flex-1 bg-transparent text-[#E097CE] font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                     isSubmitted
                       ? "border-gray-500 text-gray-500 cursor-not-allowed"
                       : "border-[#993C7A]"
@@ -244,18 +258,15 @@ const TechWebsite = () => {
                       }));
                     }
                   }}
-                  onFocus={(e) => {
-                    if (!isSubmitted && !answers[questionKey]) {
-                      setAnswers((prev) => ({
-                        ...prev,
-                        [questionKey]: "> ",
-                      }));
-                      setTimeout(() => {
-                        (e.target as HTMLTextAreaElement).selectionStart = (
-                          e.target as HTMLTextAreaElement
-                        ).selectionEnd = 2;
-                      }, 0);
-                    }
+                  onWheel={(e) => {
+                    e.preventDefault();
+                    const target = e.currentTarget;
+                    const lineHeight = 20;
+                    const currentScroll = target.scrollTop;
+                    const direction = e.deltaY > 0 ? 1 : -1;
+                    const currentLine = Math.round(currentScroll / lineHeight);
+                    const nextLine = currentLine + direction;
+                    target.scrollTop = nextLine * lineHeight;
                   }}
                   disabled={isSubmitted}
                   readOnly={isSubmitted}
@@ -264,6 +275,7 @@ const TechWebsite = () => {
 
               <div className="flex justify-end">
                 <button
+                  type="button"
                   className={`bg-transparent border px-10 py-2 mt-6 font-jetbrains text-sm transition-colors ${
                     isSubmitted
                       ? "border-gray-500 text-gray-500 cursor-not-allowed"
@@ -272,13 +284,13 @@ const TechWebsite = () => {
                   onClick={() => {
                     if (!isSubmitted && answers[questionKey]?.trim()) {
                       setSubmittedQuestions(
-                        (prev) => new Set([...prev, questionKey])
+                        (prev) => new Set([...prev, questionKey]),
                       );
                       console.log(
                         "Answer submitted for question",
                         questionNumber,
                         ":",
-                        answers[questionKey]
+                        answers[questionKey],
                       );
                     }
                   }}
@@ -324,8 +336,8 @@ const TechWebsite = () => {
         <Image
           src="/images/welcome-tech.svg"
           alt="welcome image"
-          width={5000}
-          height={5000}
+          width={600} // Made ts not spill outside of readable area (at least hopefully)
+          height={600}
         />
       </div>
     );
@@ -348,21 +360,34 @@ const TechWebsite = () => {
             { name: "AOI", key: "aoi" },
             { name: "Instructions", key: "instructions" },
             { name: "Round 1", key: "round1" },
-          ].map((item, index) => (
-            <React.Fragment key={index}>
-              <div
-                role="button"
-                tabIndex={0}
+          ].map((item) => (
+            <React.Fragment key={item.key}>
+              <button
+                type="button"
                 onClick={() => {
-                  setActiveSection(item.key);
-                  if (item.key === "aoi" && !activeAOI) setActiveAOI("app");
+                  if (item.key === "aoi") {
+                    const next = !aoiExpanded;
+                    setAoiExpanded(next);
+                    setActiveSection("aoi");
+                    if (next && !activeAOI) setActiveAOI("app");
+                    return;
+                  }
                   if (item.key === "round1") {
+                    const next = !round1Expanded;
+                    setRound1Expanded(next);
+                    setActiveSection("round1");
+
                     setActiveRound1Folder("");
                     setActiveQuestion("");
+                    return;
                   }
+
+                  setActiveSection(item.key);
+                  setAoiExpanded(false);
+                  setRound1Expanded(false);
                 }}
                 className={`border-t-2 ${
-                  index === 3 ? "border-b-2" : ""
+                  item.key === "round1" ? "border-b-2" : ""
                 } border-[#993C7A] h-10 text-sm flex items-center cursor-pointer gap-2 px-2 transition-all duration-150 ${
                   activeSection === item.key
                     ? "bg-[#993C7A]/20 text-white"
@@ -376,15 +401,16 @@ const TechWebsite = () => {
                   height={20}
                 />
                 {item.name}
-              </div>
+              </button>
 
-              {item.key === "aoi" && activeSection === "aoi" && (
+              {item.key === "aoi" && activeSection === "aoi" && aoiExpanded && (
                 <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
-                  {aoiList.map((aoi, idx) => {
+                  {aoiList.map((aoi) => {
                     const isActive = activeAOI === aoi;
                     return (
-                      <div
-                        key={idx}
+                      <button
+                        key={aoi}
+                        type="button"
                         onClick={() => setActiveAOI(aoi)}
                         className={`cursor-pointer transition-all gap-3 flex items-center duration-150 text-sm mb-1 ${
                           isActive ? "text-white" : "hover:text-white/80"
@@ -401,80 +427,90 @@ const TechWebsite = () => {
                           height={16}
                         />
                         {aoi}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
               )}
 
-              {item.key === "round1" && activeSection === "round1" && (
-                <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
-                  {round1Folders.map((folder, idx) => {
-                    const isFolderActive = activeRound1Folder === folder;
-                    return (
-                      <React.Fragment key={idx}>
-                        <div
-                          onClick={() => {
-                            setActiveRound1Folder(folder);
-                            setActiveQuestion("");
-                          }}
-                          className={`cursor-pointer transition-all duration-150 text-sm mb-1 flex items-center gap-2 ${
-                            isFolderActive
-                              ? "text-white"
-                              : "hover:text-white/80"
-                          }`}
-                        >
-                          <Image
-                            src={
+              {item.key === "round1" &&
+                activeSection === "round1" &&
+                round1Expanded && (
+                  <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
+                    {round1Folders.map((folder) => {
+                      const isFolderActive = activeRound1Folder === folder;
+                      return (
+                        <React.Fragment key={folder}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (activeRound1Folder === folder) {
+                                //collapse when clicking the same folder again
+                                setActiveRound1Folder("");
+                                setActiveQuestion("");
+                              } else {
+                                setActiveRound1Folder(folder);
+                                setActiveQuestion("");
+                              }
+                            }}
+                            className={`cursor-pointer transition-all duration-150 text-sm mb-1 flex items-center gap-2 ${
                               isFolderActive
-                                ? "/images/selected-folder.svg"
-                                : "/images/unselected-folder.svg"
-                            }
-                            alt={`${folder} icon`}
-                            width={16}
-                            height={16}
-                          />
-                          {folder}
-                        </div>
+                                ? "text-white"
+                                : "hover:text-white/80"
+                            }`}
+                          >
+                            <Image
+                              src={
+                                isFolderActive
+                                  ? "/images/selected-folder.svg"
+                                  : "/images/unselected-folder.svg"
+                              }
+                              alt={`${folder} icon`}
+                              width={16}
+                              height={16}
+                            />
+                            {folder}
+                          </button>
 
-                        {isFolderActive && (
-                          <div className="ml-6 mt-1 flex flex-col gap-1 text-[#993C7A]">
-                            {questionsList.map((q, qIdx) => {
-                              const isQuestionActive = activeQuestion === q;
-                              const questionKey = `${folder}-${q}`;
-                              const isQuestionSubmitted =
-                                submittedQuestions.has(questionKey);
-                              return (
-                                <div
-                                  key={qIdx}
-                                  onClick={() => setActiveQuestion(q)}
-                                  className={`cursor-pointer transition-all duration-150 text-sm mb-1 flex items-center gap-2 ${
-                                    isQuestionActive
-                                      ? "text-white"
-                                      : "hover:text-white/80"
-                                  }`}
-                                >
-                                  <Image
-                                    src={
-                                      isQuestionActive || isQuestionSubmitted
-                                        ? "/images/selected-folder.svg"
-                                        : "/images/unselected-folder.svg"
-                                    }
-                                    alt={`${q} icon`}
-                                    width={12}
-                                    height={12}
-                                  />
-                                  {q}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              )}
+                          {isFolderActive && (
+                            <div className="ml-6 mt-1 flex flex-col gap-1 text-[#993C7A]">
+                              {questionsList.map((q) => {
+                                const isQuestionActive = activeQuestion === q;
+                                const questionKey = `${folder}-${q}`;
+                                const isQuestionSubmitted =
+                                  submittedQuestions.has(questionKey);
+                                return (
+                                  <button
+                                    key={q}
+                                    type="button"
+                                    onClick={() => setActiveQuestion(q)}
+                                    className={`cursor-pointer transition-all duration-150 text-sm mb-1 flex items-center gap-2 ${
+                                      isQuestionActive
+                                        ? "text-white"
+                                        : "hover:text-white/80"
+                                    }`}
+                                  >
+                                    <Image
+                                      src={
+                                        isQuestionActive || isQuestionSubmitted
+                                          ? "/images/selected-folder.svg"
+                                          : "/images/unselected-folder.svg"
+                                      }
+                                      alt={`${q} icon`}
+                                      width={12}
+                                      height={12}
+                                    />
+                                    {q}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
             </React.Fragment>
           ))}
         </div>
