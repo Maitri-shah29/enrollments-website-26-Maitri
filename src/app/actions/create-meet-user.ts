@@ -2,6 +2,7 @@
 import { headers } from "next/headers";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+
 export default async function createMeetUser(
   roundUserId: string,
   slotId: string,
@@ -15,15 +16,28 @@ export default async function createMeetUser(
       return "user is not logged in!";
     }
 
+    const currentUserId = user.session.userId;
+
+    const owningRoundUser = await prisma.roundUser.findUnique({
+      where: {
+        id: roundUserId,
+        userId: currentUserId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
     const createMeet = await prisma.meet_User.create({
       data: {
         roundUserId: roundUserId,
         slotId: slotId,
       },
     });
+
     return createMeet;
   } catch (e) {
     console.error("Error: ", e);
-    throw new Error("meet cant be created");
+    throw new Error("Failed to create meeting slot.");
   }
 }

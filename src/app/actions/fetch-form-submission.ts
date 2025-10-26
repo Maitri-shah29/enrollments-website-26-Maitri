@@ -2,6 +2,7 @@
 import { headers } from "next/headers";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+
 export default async function fetchFormSubmission(roundUserId: string) {
   try {
     const user = await auth.api.getSession({
@@ -12,15 +13,22 @@ export default async function fetchFormSubmission(roundUserId: string) {
       return "user is not logged in!";
     }
 
+    const currentUserId = user.session.userId;
+
     const formSubmission = await prisma.formSubmission.findUnique({
       where: {
         roundUserId: roundUserId,
+        roundUser: {
+          is: {
+            userId: currentUserId,
+          },
+        },
       },
     });
 
     return formSubmission;
   } catch (e) {
     console.error("Error: ", e);
-    throw new Error("Error fetching the data");
+    throw new Error("Error fetching the form submission data.");
   }
 }
