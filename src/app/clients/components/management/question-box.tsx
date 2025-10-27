@@ -90,7 +90,10 @@ export default function QuestionBox({ id }: Props) {
           </div>
         </div>
 
-        <p className="text-xl text-black mb-8 break-words + whitespace-pre-wrap">
+        <p
+          className="text-black break-words overflow-wrap-anywhere"
+          style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+        >
           {question?.question}
         </p>
 
