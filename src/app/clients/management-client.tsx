@@ -1,6 +1,7 @@
 "use client";
 
 import type { Domain } from "@prisma/client";
+import { Pencil, Search } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { QuestionPayload } from "@/lib/validation";
@@ -239,6 +240,11 @@ export default function Management() {
           className="mb-8"
         />
 
+        {/* Compose Button */}
+        <div className="flex mb-5 items-center w-[80%] h-[10%] gap-2 bg-[#d7aaaa] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-lg/40 cursor-pointer hover:bg-[#cfa0a0] transition">
+          <Pencil /> <span className="font-medium">Compose</span>
+        </div>
+
         <nav className="flex flex-col space-y-4 text-lg">
           {["About", "What we do", "Instructions", "Round 1"].map((section) => (
             <button
@@ -258,7 +264,14 @@ export default function Management() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex justify-center items-center px-8">
+      <main className="flex-1 flex flex-col justify-center items-center px-8">
+        <div className="w-full flex justify-start h-[8%] ml-[10%] ">
+          <div className="p-2 gap-2 flex flex-row bg-white/40 w-[50%] rounded-full mt-2">
+            <Search />
+            <p>Search Domain</p>
+          </div>
+        </div>
+
         <div className="h-[90%] w-full flex items-center justify-center">
           {renderActiveSection()}
         </div>
