@@ -1,6 +1,6 @@
 "use client";
 import type { Domain } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import fetchRound from "@/app/actions/fetch-round-details";
 import getRoundQuestions from "@/app/actions/get-round-questions";
 import type { QuestionPayload } from "@/lib/validation";
@@ -18,6 +18,12 @@ export default function QuestionList({ activeSection }: QuestionListProps) {
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [roundInitDone, setRoundInitDone] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  function onChangeAnswer(qid: string, value: string) {
+    setAnswers((prev) => ({ ...prev, [qid]: value }));
+    //error handling??
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -60,6 +66,8 @@ export default function QuestionList({ activeSection }: QuestionListProps) {
         <QuestionBox
           id={selectedQuestion}
           goBack={() => setSelectedQuestion(null)}
+          answer={answers[selectedQuestion] ? answers[selectedQuestion] : ""}
+          onChangeAnswer={onChangeAnswer}
         />
       ) : (
         <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-full shadow-lg overflow-y-auto">

@@ -15,11 +15,17 @@ import Header from "./header";
 type Props = {
   id: string;
   goBack: () => void;
+  answer: string;
+  onChangeAnswer: (qid: string, answer: string) => void;
 };
 
-export default function QuestionBox({ id, goBack }: Props) {
+export default function QuestionBox({
+  id,
+  goBack,
+  answer,
+  onChangeAnswer,
+}: Props) {
   const [question, setQuestion] = useState<QuestionPayload>();
-  const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
   const [formId, setFormId] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -113,7 +119,9 @@ export default function QuestionBox({ id, goBack }: Props) {
             rows={6}
             placeholder="type your answer..."
             value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
+            onChange={(e) => {
+              onChangeAnswer(id, e.target.value);
+            }}
           />
           {error && (
             <p className="text-sm text-red-600" role="alert">
