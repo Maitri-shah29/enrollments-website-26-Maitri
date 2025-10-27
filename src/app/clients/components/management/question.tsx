@@ -34,9 +34,9 @@ export default function Question({
   };
 
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-y-auto">
+    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
       <Header onClick={goBack} />
-      <div className="p-10">
+      <div className="p-10 overflow-y-auto h-full ">
         {/* Email Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
@@ -62,7 +62,7 @@ export default function Question({
         )}
 
         {/* Answer Box */}
-        <div className="bg-[#D9D9D9] mt-6 rounded-2xl p-5 space-y-3">
+        <div className="bg-[#D9D9D9] mt-6 mb-6 rounded-2xl p-5 space-y-3">
           <div className="flex items-center text-sm text-gray-700 space-x-2">
             <Reply size={16} />
             <p>

@@ -69,7 +69,7 @@ export default function QuestionsList({
 
   return (
     <>
-      <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-y-auto">
+      <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
         <Header />
 
         <button
@@ -95,7 +95,7 @@ export default function QuestionsList({
           <span className="text-sm text-gray-600">Revalidating...</span>
         )}
 
-        <div className="p-2">
+        <div className="p-2 h-full overflow-y-auto">
           <div className="space-y-1 max-w-3xl">
             {questions.map((q, index) => (
               <label
