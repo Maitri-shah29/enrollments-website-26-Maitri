@@ -75,7 +75,7 @@ export default function Question({
             onChange={(e) => onChangeAnswer(question.id, e.target.value)}
             style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
             placeholder="Type your answer here..."
-            className="text-black w-full min-h-20"
+            className="text-black w-full min-h-20 outline-none"
           />
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 

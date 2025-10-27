@@ -268,7 +268,11 @@ export default function Management() {
         <div className="w-full flex justify-start h-[8%] ml-[10%] ">
           <div className="p-2 gap-2 flex flex-row bg-white/40 w-[50%] rounded-full mt-2">
             <Search />
-            <p>Search Domain</p>
+            <input
+              type="text"
+              placeholder="Search Domain"
+              className="outline-none flex-1 text-white placeholder-white-500"
+            />
           </div>
         </div>
 
