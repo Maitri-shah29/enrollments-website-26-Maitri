@@ -7,7 +7,7 @@ export default function About() {
       <Header />
       <div className="p-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">
-          Welcome to ACM&apos;s Management domain
+          About Management
         </h1>
 
         {/* Email Header */}
