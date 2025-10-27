@@ -1,105 +1,133 @@
 "use client";
-import type { Domain } from "@prisma/client";
-import { useEffect, useMemo, useState } from "react";
-import fetchRound from "@/app/actions/fetch-round-details";
-import getRoundQuestions from "@/app/actions/get-round-questions";
+
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import revalidateHome from "@/app/actions/revalidate";
 import type { QuestionPayload } from "@/lib/validation";
 import Header from "./header";
-import QuestionBox from "./question-box";
-import { QuestionCheckBox } from "./question-checkbox";
+import Question from "./question";
 
-type QuestionListProps = {
-  activeSection: string;
-};
+interface QuestionsProps {
+  questions: QuestionPayload[];
+  answers: Record<string, string>;
+  errors: Record<string, string>;
+  onChangeAnswer: (qid: string, value: string) => void;
+  onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
+}
 
-export default function QuestionList({ activeSection }: QuestionListProps) {
-  const [loading, setLoading] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<QuestionPayload[]>([]);
-  const [roundInitDone, setRoundInitDone] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  function onChangeAnswer(qid: string, value: string) {
-    setAnswers((prev) => ({ ...prev, [qid]: value }));
-    //error handling??
-  }
+export default function QuestionsList({
+  questions,
+  answers,
+  errors,
+  onChangeAnswer,
+  onSubmitAnswer,
+}: QuestionsProps) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [visited, setVisited] = useState<boolean[]>([]);
+  const [revalidating, setRevalidating] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
-      if (roundInitDone || loading || activeSection !== "Round 1") return;
-      setLoading(true);
-      setInitError(null);
+    const initial = Array(questions.length).fill(false);
+    setVisited(initial);
+  }, [questions.length]);
 
-      try {
-        const domain: Domain = "management";
-        const rounds = await fetchRound(domain);
-        if (!Array.isArray(rounds) || rounds.length === 0) {
-          setInitError("No active rounds found for Management.");
-          return;
-        }
+  const handleRevalidate = async () => {
+    setRevalidating(true);
 
-        const round = rounds[0];
-        const qres = await getRoundQuestions(round.id);
-        const qs = (qres?.questions ?? []).sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
-        ) as QuestionPayload[];
-        setQuestions(qs);
-      } catch (e) {
-        console.error("[management] init load failed", e);
-        setInitError("Failed to load round/questions. Try again later.");
-      } finally {
-        setLoading(false);
-        setRoundInitDone(true);
-      }
-    };
-    load();
-  }, [activeSection, loading, roundInitDone]);
+    try {
+      await revalidateHome();
+    } catch (error) {
+      console.error("Revalidation failed:", error);
+      alert("Revalidation failed! Check console for details.");
+    } finally {
+      setRevalidating(false);
+    }
+  };
 
-  function handleCheckboxClick(qid: string) {
-    setSelectedQuestion(qid);
+  if (activeIndex !== null) {
+    const questionData = questions[activeIndex];
+    return (
+      <Question
+        question={questionData}
+        answer={answers[questionData.id] || ""}
+        error={errors[questionData.id]}
+        onChangeAnswer={onChangeAnswer}
+        onSubmitAnswer={onSubmitAnswer}
+        goBack={() => setActiveIndex(null)}
+      />
+    );
   }
+
+  const handleClick = (index: number) => {
+    setVisited((prev) => {
+      const next = [...prev];
+      next[index] = true;
+      return next;
+    });
+    setActiveIndex(index);
+  };
 
   return (
     <>
-      {selectedQuestion !== null ? (
-        <QuestionBox
-          id={selectedQuestion}
-          goBack={() => setSelectedQuestion(null)}
-          answer={answers[selectedQuestion] ? answers[selectedQuestion] : ""}
-          onChangeAnswer={onChangeAnswer}
-        />
-      ) : (
-        <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-full shadow-lg overflow-y-auto">
-          <Header />
+      <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-full shadow-lg overflow-y-auto">
+        <Header />
 
-          <div className="p-2">
-            {loading && <p className="text-gray-700 text-center">Loading…</p>}
-            {initError && (
-              <p className="text-red-600 text-center" role="alert">
-                {initError}
-              </p>
-            )}
+        <button
+          type="button"
+          onClick={handleRevalidate}
+          disabled={revalidating}
+          className={`p-4 rounded-full transition ${
+            revalidating
+              ? "bg-gray-400 cursor-not-allowed"
+              : "hover:bg-gray-300"
+          }`}
+          aria-label="Revalidate"
+        >
+          <Image
+            src="/retry.svg"
+            alt="Revalidate"
+            width={20}
+            height={20}
+            className={revalidating ? "animate-spin" : ""}
+          />
+        </button>
+        {revalidating && (
+          <span className="text-sm text-gray-600">Revalidating...</span>
+        )}
 
-            {!loading && !initError && questions.length === 0 && (
-              <p className="text-gray-700 text-center">No questions.</p>
-            )}
-
-            <div className="space-y-1 max-w-3xl">
-              {questions.map((q, index) => (
-                <QuestionCheckBox
-                  key={q.id}
-                  index={index}
-                  question={q.question}
-                  onClick={() => {
-                    handleCheckboxClick(q.id);
-                  }}
+        <div className="p-2">
+          <div className="space-y-1 max-w-3xl">
+            {questions.map((q, index) => (
+              <label
+                key={q.id}
+                onClick={() => handleClick(index)}
+                className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
+              >
+                <input
+                  type="checkbox"
+                  checked={visited[index] || false}
+                  tabIndex={-1}
+                  className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
+                  readOnly
                 />
-              ))}
-            </div>
+
+                <span
+                  className="font-medium flex-1 text-gray-700"
+                  style={{
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {index + 1}.{" "}
+                  {q.question.length > 50
+                    ? q.question.slice(0, 50) + "..."
+                    : q.question}
+                </span>
+              </label>
+            ))}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
