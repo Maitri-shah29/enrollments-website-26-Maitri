@@ -76,18 +76,18 @@ export default function QuestionsList({
           type="button"
           onClick={handleRevalidate}
           disabled={revalidating}
-          className={`p-4 rounded-full transition ${
+          className={`absolute left-14 top-1 rounded-lg p-1 transition ${
             revalidating
               ? "bg-gray-400 cursor-not-allowed"
-              : "hover:bg-gray-300"
+              : "hover:bg-gray-400"
           }`}
           aria-label="Revalidate"
         >
           <Image
             src="/retry.svg"
             alt="Revalidate"
-            width={20}
-            height={20}
+            width={18}
+            height={18}
             className={revalidating ? "animate-spin" : ""}
           />
         </button>
