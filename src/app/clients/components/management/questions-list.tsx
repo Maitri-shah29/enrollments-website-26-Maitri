@@ -57,7 +57,10 @@ export default function QuestionList({ activeSection }: QuestionListProps) {
   return (
     <>
       {selectedQuestion !== null ? (
-        <QuestionBox id={selectedQuestion} />
+        <QuestionBox
+          id={selectedQuestion}
+          goBack={() => setSelectedQuestion(null)}
+        />
       ) : (
         <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-full shadow-lg overflow-y-auto">
           <Header />

@@ -14,9 +14,10 @@ import Header from "./header";
 
 type Props = {
   id: string;
+  goBack: () => void;
 };
 
-export default function QuestionBox({ id }: Props) {
+export default function QuestionBox({ id, goBack }: Props) {
   const [question, setQuestion] = useState<QuestionPayload>();
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +34,7 @@ export default function QuestionBox({ id }: Props) {
         const r = rounds[0];
         const qres = await getRoundQuestions(r.id);
         const qs = qres?.questions ?? [];
-        const found = qs.find((q: any) => q.id === id);
+        const found = qs.find((q: QuestionPayload) => q.id === id);
         setQuestion(found);
 
         const ensureRes = await ensureRoundUser(r.id);
@@ -74,7 +75,7 @@ export default function QuestionBox({ id }: Props) {
 
   return (
     <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-full shadow-lg overflow-y-auto">
-      <Header />
+      <Header onClick={goBack} />
       <div className="p-10">
         {/* Email Header */}
         <div className="flex items-center justify-between mb-8">
