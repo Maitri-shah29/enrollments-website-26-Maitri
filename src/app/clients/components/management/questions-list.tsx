@@ -6,7 +6,7 @@ import getRoundQuestions from "@/app/actions/get-round-questions";
 import type { QuestionPayload } from "@/lib/validation";
 import Header from "./header";
 import QuestionBox from "./question-box";
-import { QuestionCheckBox } from "./questionCheckBox";
+import { QuestionCheckBox } from "./question-checkbox";
 
 type QuestionListProps = {
   activeSection: string;

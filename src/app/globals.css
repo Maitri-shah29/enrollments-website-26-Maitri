@@ -41,12 +41,24 @@ body {
   font-display: swap;
 }
 
+@font-face {
+  font-family: "PolysansTrial";
+  src: url("/fonts/PolysansTrial-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-jetbrains {
   font-family: "JetBrainsMono", monospace;
 }
 
 .font-ShareTechMono {
   font-family: "ShareTechMono", monospace;
+}
+
+.font-ShareTechMono {
+  font-family: "PolysansTrial", monospace;
 }
 
 /* Container for the checkbox and text */
