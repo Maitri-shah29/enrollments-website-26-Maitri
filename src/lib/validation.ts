@@ -23,6 +23,17 @@ export interface ValidationResult {
   error?: string;
 }
 
+export type QuestionPayload = {
+  id: string;
+  serial: number;
+  question: string;
+  helpText?: string | null;
+  varName?: string | null;
+  type?: string | null;
+  options?: unknown;
+  validators: ValidationRuleInput[];
+};
+
 export function validateAnswer(
   answer: string,
   rules: ValidationRuleInput[] | undefined,

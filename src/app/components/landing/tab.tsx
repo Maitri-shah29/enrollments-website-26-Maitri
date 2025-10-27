@@ -16,7 +16,6 @@ interface PageHistory {
 export interface TabData {
   id: number;
   title: string;
-  showForms: boolean;
   showCc: boolean;
   showManagement: boolean;
   showTech: boolean;
@@ -31,7 +30,7 @@ interface TabProps {
   onUpdateTab: (updatedTab: TabData) => void;
 }
 
-const INTERNAL_KEYWORDS = new Set(["forms", "cc", "management", "tech"]);
+const INTERNAL_KEYWORDS = new Set(["cc", "management", "tech"]);
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
 const ensureHttps = (hostOrUrl: string) =>
@@ -85,7 +84,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
 
       onUpdateTab({
         ...tabData,
-        showForms: trimmed === "forms",
         showCc: trimmed === "cc",
         showManagement: trimmed === "management",
         showTech: trimmed === "tech",
@@ -116,7 +114,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       history: newHistory,
       pointer: newHistory.length - 1,
       title: inputValue,
-      showForms: false,
       showManagement: false,
       showCc: false,
       showTech: false,
@@ -125,10 +122,25 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   };
 
   const handleNavKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") commitFrom(navInput);
+    if (e.key === "Enter") {
+      commitFrom(navInput);
+      return;
+    }
+
+    if (e.key === "Tab" && !navInput.trim()) {
+      e.preventDefault();
+      commitFrom("acmvit.in");
+    }
   };
   const handleHomeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") commitFrom(homeInput);
+    if (e.key === "Enter") {
+      commitFrom(homeInput);
+      return;
+    }
+    if (e.key === "Tab" && !homeInput.trim()) {
+      e.preventDefault();
+      commitFrom("acmvit.in");
+    }
   };
 
   const goPrevious = () => {
@@ -236,75 +248,20 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
 
       {/* Content Area */}
       <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
-        {tabData.showForms ? (
+        {tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close forms"
-              onClick={() =>
-                onUpdateTab({
-                  ...tabData,
-                  showForms: false,
-                })
-              }
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
-          </div>
-        ) : tabData.showManagement ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close Management"
-              onClick={() =>
-                onUpdateTab({
-                  ...tabData,
-                  showManagement: false,
-                })
-              }
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
             <div className="h-full flex items-center justify-center">
               <Management />
             </div>
           </div>
         ) : tabData.showCc ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close CC"
-              onClick={() =>
-                onUpdateTab({
-                  ...tabData,
-                  showCc: false,
-                })
-              }
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
             <div className="h-full flex items-center justify-center">
               <CCClient />
             </div>
           </div>
         ) : tabData.showTech ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
-            <button
-              type="button"
-              aria-label="Close Tech"
-              onClick={() =>
-                onUpdateTab({
-                  ...tabData,
-                  showTech: false,
-                })
-              }
-              className="absolute top-4 right-4 z-10 rounded-full w-12 h-12 flex items-center justify-center text-white text-2xl font-semibold bg-blue-600 hover:bg-blue-700 shadow"
-            >
-              ×
-            </button>
             <div className="h-full flex items-center justify-center">
               <TechWebsite />
             </div>
