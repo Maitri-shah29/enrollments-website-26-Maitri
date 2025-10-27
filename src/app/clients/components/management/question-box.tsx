@@ -124,9 +124,9 @@ export default function QuestionBox({ id, goBack }: Props) {
             type="button"
             onClick={handleSave}
             disabled={!answer.trim()}
-            className="px-4 py-2 mt-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="ml-[90%] px-5 py-1 mt-2 rounded-full bg-[#AD3232CC] text-white hover:bg-[#AD3232CC]/70 disabled:bg-gray-400"
           >
-            Save
+            Submit
           </button>
         </div>
       </div>
