@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
-import QuestionBox from "./components/management/question-box";
+import QuestionList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
 
 export default function Management() {
@@ -45,11 +45,22 @@ export default function Management() {
 
       {/* Main Content */}
       <main className="flex-1 flex justify-center items-center px-8">
-        <div className="h-[90%] w-full flex items-center justify-center">
-          {activeSection === "About" && <About />}
-          {activeSection === "What we do" && <WhatWeDo />}
-          {activeSection === "Instructions" && <Instructions />}
-          {activeSection === "Round 1" && <QuestionBox />}
+        {activeSection !== "Round 1" && (
+          <div className="h-[90%] w-full flex items-center justify-center">
+            {activeSection === "About" && <About />}
+            {activeSection === "What we do" && <WhatWeDo />}
+            {activeSection === "Instructions" && <Instructions />}
+          </div>
+        )}
+        {/* So that it doesn't unmount after first load */}
+        <div
+          className={
+            activeSection === "Round 1"
+              ? "block h-[90%] w-full flex items-center justify-center"
+              : "hidden"
+          }
+        >
+          <QuestionList activeSection={activeSection} />
         </div>
       </main>
     </div>
