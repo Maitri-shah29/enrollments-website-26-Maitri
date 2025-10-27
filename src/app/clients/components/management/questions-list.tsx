@@ -95,8 +95,8 @@ export default function QuestionsList({
           <span className="text-sm text-gray-600">Revalidating...</span>
         )}
 
-        <div className="p-2 h-full overflow-y-auto">
-          <div className="space-y-1 max-w-3xl">
+        <div className="p-2 h-full w-full overflow-y-auto">
+          <div className="space-y-1">
             {questions.map((q, index) => (
               <label
                 key={q.id}
