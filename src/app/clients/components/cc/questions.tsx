@@ -201,7 +201,7 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
         </div>
       ) : (
         <div className="flex space-x-20 min-h-screen">
-          <div className="w-[50%]">
+          <div className="w-[30%]">
             <QuestionList
               questions={questionsForList}
               onQuestionSelect={handleQuestionSelect}
@@ -209,26 +209,25 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
             />
           </div>
 
-          <div className="w-[50%] flex flex-row max-h-screen">
+          <div className="w-[60%] flex flex-row max-h-screen">
             {activeQuestion ? (
               <div className="w-full flex flex-col h-[70%] space-y-4">
-                <div className="h-[30%]">
+                <div className="h-[25%]">
                   <QuestionBox
                     subject={activeQuestion.question}
                     body={activeQuestion.helpText || ""}
                   />
                 </div>
-                <div className="h-[60%]">
+                <div className="h-[65%]">
                   <AnswerBox
-                    id={`response-${activeQuestion.id}`}
+                    key={activeQuestion.id}
                     subject="Answer"
-                    body=""
-                    value={currentResponse}
+                    body={currentResponse}
+                    language="plaintext"
                     onChange={(value) =>
                       activeQuestionId &&
                       handleResponseChange(activeQuestionId, value)
                     }
-                    placeholder="Dont' wait, do CP  "
                   />
                 </div>
                 <div className="flex justify-end">
