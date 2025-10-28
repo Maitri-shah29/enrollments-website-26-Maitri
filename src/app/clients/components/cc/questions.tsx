@@ -211,14 +211,14 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
 
           <div className="w-[60%] flex flex-row max-h-screen">
             {activeQuestion ? (
-              <div className="w-full flex flex-col h-[70%] space-y-4">
+              <div className="w-full flex flex-col h-[50%] space-y-3">
                 <div className="h-[25%]">
                   <QuestionBox
                     subject={activeQuestion.question}
                     body={activeQuestion.helpText || ""}
                   />
                 </div>
-                <div className="h-[65%]">
+                <div className="h-[85%]">
                   <AnswerBox
                     key={activeQuestion.id}
                     subject="Answer"
