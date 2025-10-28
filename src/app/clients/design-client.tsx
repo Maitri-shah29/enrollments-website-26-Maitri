@@ -12,7 +12,7 @@ const DesignClient = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
 
   return (
-    <div className="flex flex-col w-full h-screen border border-black">
+    <div className="flex flex-col w-full h-screen border border-black text-black bg-white">
       <DesignNavbar selected={selectedPanel} onSelect={setSelectedPanel} />
       <div className="flex-grow overflow-auto">
         {selectedPanel === "Home" && <Home />}
