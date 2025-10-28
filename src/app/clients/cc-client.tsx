@@ -6,6 +6,7 @@ import Instructions from "./components/cc/instructions";
 import Interview from "./components/cc/interview";
 import Homepage from "./components/cc/landing";
 import CCNavBar from "./components/cc/navbar";
+import Questions from "./components/cc/questions";
 
 const page = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
@@ -27,6 +28,7 @@ const page = () => {
             {selectedPanel === "Instructions" && <Instructions />}
             {selectedPanel === "Contest" && <Contest />}
             {selectedPanel === "Interview" && <Interview />}
+            {selectedPanel === "Questions" && <Questions />}
           </div>
         </div>
       )}
