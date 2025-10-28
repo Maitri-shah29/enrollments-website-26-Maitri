@@ -88,11 +88,6 @@ const TechWebsite = () => {
           <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
             <pre className="text-right pr-4 select-none text-[#993C7A]">
               {Array.from({ length: 6 }, (_, i) => (
-                // FIX: Added key suppression for line numbers as the list is stable
-                // biome-ignore lint/suspicious/noArrayIndexKey: Line numbers are stable.
-                <div key={i}>{i + 1}</div>
-              ))}
-              {Array.from({ length: 10 }, (_, i) => (
                 <div key={`about-line-${i + 1}`}>{i + 1}</div>
               ))}
             </pre>
@@ -188,11 +183,6 @@ const TechWebsite = () => {
           <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
             <pre className="text-right pr-4 select-none text-[#993C7A]">
               {Array.from({ length: 6 }, (_, i) => (
-                // FIX: Added key suppression for line numbers as the list is stable
-                // biome-ignore lint/suspicious/noArrayIndexKey: Line numbers are stable.
-                <div key={i}>{i + 1}</div>
-              ))}
-              {Array.from({ length: 10 }, (_, i) => (
                 <div key={`instructions-line-${i + 1}`}>{i + 1}</div>
               ))}
             </pre>
