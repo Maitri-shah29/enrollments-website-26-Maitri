@@ -2,6 +2,7 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import { asciiArt } from "./components/tech/ascii-art";
+import TechLanding from "./components/tech/landing";
 
 // The unused suppression comment has been removed
 const TechWebsite = () => {
@@ -333,23 +334,9 @@ const TechWebsite = () => {
       );
     }
 
-    return (
-      <div className="overflow-hidden">
-        <Image
-          src="/images/ascii-art-tech.svg"
-          alt="tech image"
-          width={500}
-          height={500}
-          className="absolute bottom-10 right-10"
-        />
-        <Image
-          src="/images/welcome-tech.svg"
-          alt="welcome image"
-          width={600} // Made ts not spill outside of readable area (at least hopefully)
-          height={600}
-        />
-      </div>
-    );
+    if (activeSection === "welcome") {
+      return <TechLanding onGetStarted={() => setActiveSection("about")} />;
+    }
   };
 
   return (

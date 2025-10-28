@@ -2,32 +2,31 @@
 
 import type { Domain } from "@prisma/client";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import createFormSubmission from "../actions/create-form-submission";
 import ensureRoundUser from "../actions/ensure-round-user";
 import fetchRound from "../actions/fetch-round-details";
 import getRoundQuestions from "../actions/get-round-questions";
-import saveFormResponse from "../actions/save-form-response";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
+import ManagementLanding from "./components/management/landing";
 import QuestionsList from "./components/management/questionsList";
 import WhatWeDo from "./components/management/whatwedo";
 
 // ----- Main Page -----
 export default function Management() {
-  const [activeSection, setActiveSection] = useState("About");
+  const [activeSection, setActiveSection] = useState("Landing");
   const [loading, setLoading] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [roundInitDone, setRoundInitDone] = useState(false);
   const [roundId, setRoundId] = useState<string | null>(null);
-  const [formId, setFormId] = useState<string | null>(null);
-  const [formWarning, setFormWarning] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
-  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [formWarning, setFormWarning] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
 
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
@@ -46,7 +45,6 @@ export default function Management() {
       if (roundInitDone || loading || activeSection !== "Round 1") return;
       setLoading(true);
       setInitError(null);
-      setFormWarning(null);
       try {
         const domain: Domain = "management";
 
@@ -173,26 +171,18 @@ export default function Management() {
       setErrors((prev) => ({ ...prev, [q.id]: vres.error || "Invalid value" }));
       return;
     }
-    if (!formId) {
-      setErrors((prev) => ({ ...prev, [q.id]: "Form not initialized" }));
-      return;
-    }
-    try {
-      await saveFormResponse(formId, q.id, current);
-      setAnswers((prev) => ({ ...prev, [q.id]: "" }));
-      // focus next input
-      const idx = questions.findIndex((qq) => qq.id === q.id);
-      const next = questions[idx + 1]?.id;
-      if (next) inputRefs.current[next]?.focus?.();
-    } catch (err) {
-      console.warn("[management] save failed", err);
-      setErrors((prev) => ({ ...prev, [q.id]: "Failed to save. Try again." }));
-    }
+    setErrors((prev) => ({ ...prev, [q.id]: "Saving is disabled." }));
   }
 
+  const handleGetStarted = () => {
+    setActiveSection("About");
+  };
+
   // Function to render content dynamically
-  const renderContent = () => {
+  const renderActiveSection = () => {
     switch (activeSection) {
+      case "Landing":
+        return <ManagementLanding onGetStarted={handleGetStarted} />;
       case "About":
         return <About />;
       case "What we do":
@@ -214,39 +204,28 @@ export default function Management() {
             </div>
           );
         }
-        if (formWarning) {
-          return (
-            <div className="text-center">
-              <p className="text-yellow-600 font-semibold mb-4">
-                {formWarning}
-              </p>
-              {roundId && questions.length > 0 && (
-                <QuestionsList
-                  questions={questions}
-                  answers={answers}
-                  errors={errors}
-                  onChangeAnswer={onChangeAnswer}
-                  onSubmitAnswer={onSubmitAnswer}
-                />
-              )}
-            </div>
-          );
-        }
         return roundId && questions.length > 0 ? (
-          <QuestionsList
-            questions={questions}
-            answers={answers}
-            errors={errors}
-            onChangeAnswer={onChangeAnswer}
-            onSubmitAnswer={onSubmitAnswer}
-          />
+          <div className="w-full">
+            {formWarning ? (
+              <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-yellow-800">
+                {formWarning}
+              </div>
+            ) : null}
+            <QuestionsList
+              questions={questions}
+              answers={answers}
+              errors={errors}
+              onChangeAnswer={onChangeAnswer}
+              onSubmitAnswer={onSubmitAnswer}
+            />
+          </div>
         ) : (
           <div className="text-center">
             <p className="text-gray-700">No questions available.</p>
           </div>
         );
       default:
-        return <About />;
+        return null;
     }
   };
 
@@ -285,7 +264,7 @@ export default function Management() {
 
       {/* Main Content - with left margin to account for fixed sidebar */}
       <main className="ml-[20vw] flex-1 flex items-center justify-center px-8 py-10 h-screen overflow-hidden mt-5">
-        {renderContent()}
+        {renderActiveSection()}
       </main>
     </div>
   );
