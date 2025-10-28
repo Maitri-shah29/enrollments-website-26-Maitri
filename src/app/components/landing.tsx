@@ -11,6 +11,7 @@ const Landing: React.FC = () => {
       showCc: false,
       showManagement: false,
       showTech: false,
+      showDesign: false,
       history: [],
       pointer: -1,
     },
@@ -26,6 +27,7 @@ const Landing: React.FC = () => {
       showCc: false,
       showManagement: false,
       showTech: false,
+      showDesign: false,
       history: [],
       pointer: -1,
     };
@@ -43,6 +45,7 @@ const Landing: React.FC = () => {
           showCc: false,
           showManagement: false,
           showTech: false,
+          showDesign: false,
           history: [],
           pointer: -1,
         },
