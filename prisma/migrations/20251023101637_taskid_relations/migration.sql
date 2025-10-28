@@ -5,7 +5,7 @@ CREATE TYPE "RoundType" AS ENUM ('form', 'interview', 'task');
 CREATE TYPE "RoundStatus" AS ENUM ('pending', 'evaluate', 'promoted', 'rejected');
 
 -- CreateEnum
-CREATE TYPE "Domain" AS ENUM ('cc','tech', 'research', 'management', 'design');
+CREATE TYPE "Domain" AS ENUM ('cc', 'web', 'app', 'research', 'management', 'design');
 
 -- CreateEnum
 CREATE TYPE "Type" AS ENUM ('stq', 'ltq', 'scq', 'mcq');
