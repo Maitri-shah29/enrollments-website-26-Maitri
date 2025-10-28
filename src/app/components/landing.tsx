@@ -8,10 +8,10 @@ const Landing: React.FC = () => {
     {
       id: 1,
       title: "Home",
-      showForms: false,
       showCc: false,
       showManagement: false,
       showTech: false,
+      showDesign: false,
       history: [],
       pointer: -1,
     },
@@ -24,10 +24,10 @@ const Landing: React.FC = () => {
     const newTab: TabData = {
       id: newId,
       title: "New Tab",
-      showForms: false,
       showCc: false,
       showManagement: false,
       showTech: false,
+      showDesign: false,
       history: [],
       pointer: -1,
     };
@@ -42,10 +42,10 @@ const Landing: React.FC = () => {
         {
           id: tabs[0].id,
           title: "Home",
-          showForms: false,
           showCc: false,
           showManagement: false,
           showTech: false,
+          showDesign: false,
           history: [],
           pointer: -1,
         },
@@ -64,8 +64,6 @@ const Landing: React.FC = () => {
   const updateTab = (updatedTab: TabData) => {
     setTabs(tabs.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab)));
   };
-
-  const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   return (
     <div className="bg-blue-800 w-full h-full rounded-xl flex flex-col overflow-hidden">
@@ -126,9 +124,16 @@ const Landing: React.FC = () => {
         </button>
       </div>
 
-      {/* Active Tab Content */}
+      {/* All tabs are rendered at once but only active tab is displayed */}
       <div className="flex-1 overflow-hidden">
-        {activeTab && <Tab tabData={activeTab} onUpdateTab={updateTab} />}
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={activeTabId === tab.id ? "block h-full" : "hidden"}
+          >
+            <Tab tabData={tab} onUpdateTab={updateTab} />
+          </div>
+        ))}
       </div>
     </div>
   );
