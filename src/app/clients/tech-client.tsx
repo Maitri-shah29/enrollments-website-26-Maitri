@@ -33,8 +33,6 @@ const TechWebsite = () => {
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // constants and questionsData are imported from components/tech
-
   const renderContent = () => {
     if (activeSection === "about") {
       return <About />;
