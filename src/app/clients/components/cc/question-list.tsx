@@ -17,7 +17,7 @@ const QuestionList = ({
   activeQuestionId: string | null;
 }) => {
   return (
-    <div className="flex flex-col min-h-screen overflow-y-scroll hide-scrollbar">
+    <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
       {questions.map((question) => (
         <QuestionListBox
           key={question.id}

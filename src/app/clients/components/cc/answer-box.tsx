@@ -2,7 +2,6 @@
 
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { useEffect, useState } from "react";
-
 export type AnswerBoxProps = {
   subject: string;
   body: string;
@@ -73,7 +72,7 @@ const AnswerBox = (props: AnswerBoxProps) => {
 
   return (
     <div className="flex flex-col w-full h-full bg-[#16171B] border-[2px] border-solid border-[#393A3D]">
-      <div className="w-full h-[50px] flex items-center justify-between px-3 border border-solid border-[#393A3D] bg-[#242527]">
+      <div className="w-full h-12 sm:h-12 flex items-center justify-between px-3 border border-solid border-[#393A3D] bg-[#242527]">
         <span className="text-[#C9EB3E] font-ShareTechMono text-[20px] font-normal leading-normal">
           {props.subject}
         </span>
@@ -89,7 +88,7 @@ const AnswerBox = (props: AnswerBoxProps) => {
           ))}
         </select>
       </div>
-      <div className="flex-1 w-full">
+      <div className="flex-1 w-full min-h-[220px] sm:min-h-[320px]">
         <Editor
           height="100%"
           theme="cc-theme"
@@ -99,7 +98,7 @@ const AnswerBox = (props: AnswerBoxProps) => {
           options={{
             minimap: { enabled: false },
             fontFamily: "ShareTechMono, monospace",
-            fontSize: 16,
+            fontSize: 14,
             wordWrap: "on",
             wrappingIndent: "same",
             scrollBeyondLastLine: false,
