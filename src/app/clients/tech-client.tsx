@@ -12,7 +12,6 @@ import TechLanding from "./components/tech/landing";
 import Questions from "./components/tech/questions";
 import Sidebar from "./components/tech/sidebar";
 
-// The unused suppression comment has been removed
 const TechWebsite = () => {
   const {
     activeSection,
