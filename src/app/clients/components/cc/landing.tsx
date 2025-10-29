@@ -26,11 +26,14 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
               }}
             >
               {}
-              <img
+              <Image
                 src="/images/ACM.svg"
                 alt={`ACM-${i}`}
-                className="max-w-[200%] max-h-[90%]"
+                width={200}
+                height={200}
+                className="w-[200%] h-auto max-h-[90%]"
                 style={{ color: "#C9EB3E" }}
+                priority={i < 2}
               />
             </div>
           ))}

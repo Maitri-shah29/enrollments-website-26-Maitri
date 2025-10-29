@@ -17,15 +17,13 @@ const NeonSection: React.FC<{
 
 const Interview: React.FC = () => {
   return (
-    <>
-      <NeonSection title="Interview">
-        <p>
-          Join our weekly coding competition and test your skills against other
-          developers.
-        </p>
-        <Button label="Register Now"></Button>
-      </NeonSection>
-    </>
+    <NeonSection title="Interview">
+      <p>
+        Join our weekly coding competition and test your skills against other
+        developers.
+      </p>
+      <Button label="Register Now"></Button>
+    </NeonSection>
   );
 };
 

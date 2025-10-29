@@ -18,7 +18,8 @@ function QuestionListBox({
   const iconsToRender = iconIdentifiers.slice(0, iconCount);
 
   return (
-    <div
+    <button
+      type="button"
       className={`flex w-full items-center justify-between bg-transparent border-[7px] transition-colors duration-300 cursor-pointer ${
         isActive
           ? "border-[#C9EB3E]"
@@ -34,15 +35,7 @@ function QuestionListBox({
             `,
         } as React.CSSProperties
       }
-      role="button"
-      tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
     >
       <div className="flex items-center justify-between bg-[#16171B] w-full h-20 sm:h-16 border-[0.2px] border-[#C9EB3E]">
         <div className="flex flex-col justify-center space-y-0.5 px-4">
@@ -78,7 +71,7 @@ function QuestionListBox({
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
