@@ -12,7 +12,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
     <div className="w-full h-full relative overflow-hidden">
       <div className="w-full h-full bg-[#121216]">
         {}
-        <div className="absolute inset-x-0 top-[22%] z-0 grid grid-cols-2 grid-rows-4 gap-x-0 gap-y-0 w-full h-[75%]">
+        <div className="absolute inset-x-0 top-[22%] z-0 hidden sm:grid grid-cols-2 grid-rows-4 gap-x-0 gap-y-0 w-full h-[75%]">
           {cells.map((id, i) => (
             <div
               key={id}
@@ -38,7 +38,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
 
         <div className="flex flex-col justify-center items-center h-full w-full relative z-10 translate-y-[75px]">
           <h1
-            className="text-4xl font-bold mb-4"
+            className="text-xl sm:text-2xl font-bold mb-4"
             style={{
               fontFamily: "'Share Tech Mono', monospace",
               color: "#C9EB3E",
@@ -48,7 +48,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
             Welcome to
           </h1>
           <h1
-            className="text-[20vh] font-bold leading-none"
+            className="text-6xl sm:text-8xl md:text-[18vh] font-bold leading-none"
             style={{
               fontFamily: "'Share Tech Mono', monospace",
               color: "#C9EB3E",
@@ -103,7 +103,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
       </div>
 
       {}
-      <div className="fixed bottom-[175px] left-1/2 -translate-x-1/2 z-20">
+      <div className="fixed bottom-16 sm:bottom-44 left-1/2 -translate-x-1/2 z-20">
         <Button
           label="Get Started →"
           onClick={onGetStarted}

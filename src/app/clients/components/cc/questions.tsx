@@ -194,14 +194,14 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
     : "";
 
   return (
-    <div className="flex flex-col space-y-6 h-screen">
+    <div className="flex flex-col space-y-6 min-h-screen">
       {subjectiveQuestions.length === 0 ? (
         <div className="text-white text-lg text-center py-8">
           No subjective questions available for this round.
         </div>
       ) : (
-        <div className="flex space-x-20 min-h-screen">
-          <div className="w-[30%]">
+        <div className="flex flex-col md:flex-row md:space-x-8 min-h-[70vh]">
+          <div className="w-full md:w-1/3">
             <QuestionList
               questions={questionsForList}
               onQuestionSelect={handleQuestionSelect}
@@ -209,16 +209,16 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
             />
           </div>
 
-          <div className="w-[60%] flex flex-row max-h-screen">
+          <div className="w-full md:w-2/3 flex flex-row max-h-screen">
             {activeQuestion ? (
-              <div className="w-full flex flex-col h-[55%] space-y-3">
-                <div className="h-[25%]">
+              <div className="w-full flex flex-col space-y-3">
+                <div className="">
                   <QuestionBox
                     subject={activeQuestion.question}
                     body={activeQuestion.helpText || ""}
                   />
                 </div>
-                <div className="h-[85%]">
+                <div className="flex-1 min-h-[300px] sm:min-h-[420px]">
                   <AnswerBox
                     key={activeQuestion.id}
                     subject="Answer"

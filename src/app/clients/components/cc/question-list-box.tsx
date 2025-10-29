@@ -26,7 +26,6 @@ function QuestionListBox({
       }`}
       style={
         {
-          height: 79,
           "--s": "27px",
           mask: `
                 conic-gradient(#000 0 0) content-box,
@@ -45,7 +44,7 @@ function QuestionListBox({
         }
       }}
     >
-      <div className="flex items-center justify-between bg-[#16171B] w-full h-[65px] border-[0.2px] border-[#C9EB3E]">
+      <div className="flex items-center justify-between bg-[#16171B] w-full h-20 sm:h-16 border-[0.2px] border-[#C9EB3E]">
         <div className="flex flex-col justify-center space-y-0.5 px-4">
           <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal">
             Question {slNo}
@@ -54,7 +53,7 @@ function QuestionListBox({
             {title}
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center space-y-0.5 w-[110px]">
+        <div className="flex flex-col items-center justify-center space-y-0.5 w-28 sm:w-28">
           <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal text-center">
             {difficulty}
           </div>
