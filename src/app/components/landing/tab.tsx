@@ -136,6 +136,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       commitFrom("acmvit.in");
     }
   };
+
   const handleHomeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       commitFrom(homeInput);
@@ -300,10 +301,34 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </div>
 
             <div className="flex gap-4 flex-wrap justify-center mt-4">
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
+              <button
+                type="button"
+                onClick={() => {
+                  commitFrom("management");
+                }}
+                className="w-40 h-25 bg-white/70 rounded-xl"
+              ></button>
+              <button
+                type="button"
+                onClick={() => {
+                  commitFrom("tech");
+                }}
+                className="w-40 h-25 bg-white/70 rounded-xl"
+              ></button>
+              <button
+                type="button"
+                onClick={() => {
+                  commitFrom("cc");
+                }}
+                className="w-40 h-25 bg-white/70 rounded-xl"
+              ></button>
+              <button
+                type="button"
+                onClick={() => {
+                  commitFrom("design");
+                }}
+                className="w-40 h-25 bg-white/70 rounded-xl"
+              ></button>
               <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
             </div>
           </div>
