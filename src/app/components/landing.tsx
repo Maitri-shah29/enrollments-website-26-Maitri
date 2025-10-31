@@ -6,12 +6,13 @@ import Tab, { type TabData } from "./landing/tab";
 const Landing: React.FC = () => {
   const [tabs, setTabs] = useState<TabData[]>([
     {
-      id: 1,
-      title: "Home",
+      id: Date.now(),
+      title: "New Tab",
       showCc: false,
       showManagement: false,
       showTech: false,
       showDesign: false,
+      showResearch: false,
       history: [],
       pointer: -1,
     },
@@ -28,6 +29,7 @@ const Landing: React.FC = () => {
       showManagement: false,
       showTech: false,
       showDesign: false,
+      showResearch: false,
       history: [],
       pointer: -1,
     };
@@ -46,6 +48,7 @@ const Landing: React.FC = () => {
           showManagement: false,
           showTech: false,
           showDesign: false,
+          showResearch: false,
           history: [],
           pointer: -1,
         },
