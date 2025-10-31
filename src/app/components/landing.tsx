@@ -4,9 +4,10 @@ import Tab, { type TabData } from "./landing/tab";
 
 // Main Landing Component
 const Landing: React.FC = () => {
+  const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
     {
-      id: Date.now(),
+      id: initialId,
       title: "New Tab",
       showCc: false,
       showManagement: false,
@@ -17,7 +18,7 @@ const Landing: React.FC = () => {
       pointer: -1,
     },
   ]);
-  const [activeTabId, setActiveTabId] = useState<number>(1);
+  const [activeTabId, setActiveTabId] = useState<number>(initialId);
 
   const addTab = () => {
     if (tabs.length >= 6) return;
