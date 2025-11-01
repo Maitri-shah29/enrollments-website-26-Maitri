@@ -1,164 +1,45 @@
 "use client";
-import Image from "next/image";
 import React, { useState } from "react";
-import { asciiArt } from "./components/tech/ascii-art";
+import { aoiList, questionsList, round1Folders } from "@/lib/constants";
+import { questionsData } from "@/lib/questions-data";
+import { useTechNavigation } from "@/lib/tech-navigation";
+import type { AOI, QuestionId } from "@/lib/types";
+import About from "./components/tech/about";
+import AOIContent from "./components/tech/aoi";
+import TechButton from "./components/tech/button";
+import Instructions from "./components/tech/instructions";
 import TechLanding from "./components/tech/landing";
+import Questions from "./components/tech/questions";
+import Sidebar from "./components/tech/sidebar";
 
-// The unused suppression comment has been removed
 const TechWebsite = () => {
-  const [activeSection, setActiveSection] = useState("welcome");
-  const [activeAOI, setActiveAOI] = useState<string>("app");
-  const [activeQuestion, setActiveQuestion] = useState<string>("question1");
-  const [activeRound1Folder, setActiveRound1Folder] = useState<string>("");
-  // Control sidebar expansion for AOI and Round 1 lists
-  const [aoiExpanded, setAoiExpanded] = useState<boolean>(false);
-  const [round1Expanded, setRound1Expanded] = useState<boolean>(false);
+  const {
+    activeSection,
+    aoiExpanded,
+    roundExpanded,
+    activeAOI,
+    activeRoundFolder,
+    activeQuestion,
+    setSection,
+    toggleAoi,
+    toggleRound,
+    selectAoi,
+    selectFolder,
+    selectQuestion,
+  } = useTechNavigation();
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
     new Set(),
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const questionsData: Record<
-    string,
-    Record<number, { title: string; description: string }>
-  > = {
-    app: {
-      1: {
-        title: "bla bla",
-        description: "shshshshhhshsh question details here",
-      },
-      2: {
-        title: "bla bla bla",
-        description: "shshshshhhshsh question details here",
-      },
-      // Add more questions for app...
-    },
-    web: {
-      1: {
-        title: "bla bla bla",
-        description: "shshshshhhshsh question details here",
-      },
-      2: {
-        title: "bla bla bla",
-        description: "shshshshhhshsh question details here",
-      },
-      // Add more questions for web...
-    },
-    gamedev: {
-      1: {
-        title: "bla bla",
-        description: "shshshshhhshsh question details here",
-      },
-      // Add more questions for gamedev...
-    },
-    foss: {
-      1: {
-        title: "bla bla",
-        description: "shshshshhhshsh question details here",
-      },
-      // Add more questions for foss...
-    },
-  };
-
-  const aoiList = ["app", "web", "gamedev", "foss"];
-  const questionsList = [
-    "question1",
-    "question2",
-    "question3",
-    "question4",
-    "question5",
-    "question6",
-    "question7",
-    "question8",
-    "question9",
-    "question10",
-  ];
-  const round1Folders = ["app", "web", "gamedev", "foss"];
-
   const renderContent = () => {
     if (activeSection === "about") {
-      return (
-        <div className="bg-[#08111D] p-4 rounded-lg">
-          <Image
-            src="/images/about-tech.svg"
-            alt="acm logo"
-            width={700}
-            height={700}
-          />
-          <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
-            <pre className="text-right pr-4 select-none text-[#993C7A]">
-              {Array.from({ length: 6 }, (_, i) => (
-                <div key={`about-line-${i + 1}`}>{i + 1}</div>
-              ))}
-            </pre>
-
-            <pre className="text-white whitespace-pre-wrap">
-              {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate.`}
-            </pre>
-          </div>
-        </div>
-      );
+      return <About />;
     }
 
     if (activeSection === "aoi") {
       if (activeAOI) {
-        const aoiData: Record<
-          string,
-          { text: string; image: string; width: number; height: number }
-        > = {
-          app: {
-            text: `The App Development domain focuses on building robust mobile and desktop applications. Members learn technologies like React Native, Flutter, and Kotlin to design apps that are user-centric and scalable.`,
-            image: "/images/tech-aois/app.svg",
-            width: 500,
-            height: 500,
-          },
-          web: {
-            text: `The Web Development domain emphasizes creating full-stack web solutions. Participants gain skills in frameworks like Next.js, Express, and databases like PostgreSQL and MongoDB to build high-performance, modern websites.`,
-            image: "/images/tech-aois/web.svg",
-            width: 500,
-            height: 500,
-          },
-          gamedev: {
-            text: `The Game Development domain brings creativity and logic together. Developers explore Unity, Unreal Engine, and Godot to create immersive experiences, learning both design and real-time rendering techniques.`,
-            image: "/images/tech-aois/gamedev.svg",
-            width: 800,
-            height: 800,
-          },
-          foss: {
-            text: `The FOSS (Free and Open Source Software) domain nurtures collaborative software development. Students contribute to open-source projects on GitHub, learning version control, documentation, and large-scale code management.`,
-            image: "/images/tech-aois/foss.svg",
-            width: 600,
-            height: 600,
-          },
-        };
-
-        const aoi = aoiData[activeAOI];
-        const numLines = aoi.text.split(".").length + 1;
-
-        return (
-          <div className="text-[#993C7A] text-2xl font-semibold flex items-center flex-col">
-            <Image
-              src={aoi.image}
-              alt={`${activeAOI} logo`}
-              width={aoi.width}
-              height={aoi.height}
-              className="mt-5"
-            />
-            <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
-              <pre className="text-right pr-4 select-none text-[#993C7A]">
-                {Array.from({ length: numLines }, (_, i) => (
-                  // FIX: Added key suppression for line numbers as the list is stable
-                  // biome-ignore lint/suspicious/noArrayIndexKey: Line numbers are stable.
-                  <div key={i}>{i + 1}</div>
-                ))}
-              </pre>
-
-              <pre className="whitespace-pre-wrap text-[#E097CE] max-w-4xl">
-                {aoi.text}
-              </pre>
-            </div>
-          </div>
-        );
+        return <AOIContent activeAOI={activeAOI} />;
       }
 
       return (
@@ -172,342 +53,50 @@ const TechWebsite = () => {
     }
 
     if (activeSection === "instructions") {
-      return (
-        <div className="text-[#993C7A] text-2xl">
-          <Image
-            src="/images/tech-instructions.svg"
-            alt="acm logo"
-            width={700}
-            height={700}
-          />
-          <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
-            <pre className="text-right pr-4 select-none text-[#993C7A]">
-              {Array.from({ length: 6 }, (_, i) => (
-                <div key={`instructions-line-${i + 1}`}>{i + 1}</div>
-              ))}
-            </pre>
-            <pre className="whitespace-pre-wrap text-[#E097CE]">
-              {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate.`}
-            </pre>
-          </div>
-        </div>
-      );
+      return <Instructions />;
     }
 
     if (activeSection === "round1") {
-      if (activeRound1Folder && activeQuestion) {
-        const questionNumber = Number(activeQuestion.replace("question", ""));
-        const questionKey = `${activeRound1Folder}-${activeQuestion}`;
-        const isSubmitted = submittedQuestions.has(questionKey);
-
-        const currentQuestion =
-          questionsData[activeRound1Folder]?.[questionNumber];
-        const questionTitle =
-          currentQuestion?.title || `Question ${questionNumber}`;
-        const questionDescription =
-          currentQuestion?.description ||
-          "No description available for this question.";
-
-        return (
-          <div className="w-full h-full relative">
-            <pre className="text-white font-mono text-sm leading-tight mb-8">
-              {asciiArt[questionNumber] || `Question ${questionNumber}`}
-            </pre>
-
-            <div className="mt-8">
-              <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
-                q{questionNumber}:\{questionTitle}
-              </div>
-              <div className="text-[#993C7A] font-jetbrains text-sm leading-relaxed mb-4">
-                {questionDescription.split("\n").map((line, idx) => (
-                  // FIX: Added key suppression for splitting text as the list is stable
-                  // biome-ignore lint/suspicious/noArrayIndexKey: The line order is stable.
-                  <div key={idx} className="flex items-start gap-2 px-18">
-                    <span className="text-[#993C7A] select-none">{">"}</span>
-                    <span className="pl-3">{line}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
-                q{questionNumber}:\ans
-              </div>
-
-              <div className="mb-8 px-18 flex items-start gap-2">
-                <span className="text-[#993C7A] font-jetbrains text-sm select-none">
-                  {">"}
-                </span>
-                <textarea
-                  style={{ height: "calc(7 * 1.25rem)" }}
-                  className={`flex-1 bg-transparent text-[#E097CE] font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-                    isSubmitted
-                      ? "border-gray-500 text-gray-500 cursor-not-allowed"
-                      : "border-[#993C7A]"
-                  }`}
-                  placeholder={
-                    isSubmitted
-                      ? "Answer submitted"
-                      : "Type your answer here..."
-                  }
-                  value={answers[questionKey] || ""}
-                  onChange={(e) => {
-                    if (!isSubmitted) {
-                      setAnswers((prev) => ({
-                        ...prev,
-                        [questionKey]: e.target.value,
-                      }));
-                    }
-                  }}
-                  onWheel={(e) => {
-                    e.preventDefault();
-                    const target = e.currentTarget;
-                    const lineHeight = 20;
-                    const currentScroll = target.scrollTop;
-                    const direction = e.deltaY > 0 ? 1 : -1;
-                    const currentLine = Math.round(currentScroll / lineHeight);
-                    const nextLine = currentLine + direction;
-                    target.scrollTop = nextLine * lineHeight;
-                  }}
-                  disabled={isSubmitted}
-                  readOnly={isSubmitted}
-                />
-              </div>
-
-              <div className="flex justify-end">
-                {/* FIX: Type is already set to "button" */}
-                <button
-                  type="button"
-                  className={`bg-transparent border px-10 py-2 mt-6 font-jetbrains text-sm transition-colors ${
-                    isSubmitted
-                      ? "border-gray-500 text-gray-500 cursor-not-allowed"
-                      : "border-[#993C7A] hover:bg-[#993C7A]"
-                  }`}
-                  onClick={() => {
-                    if (!isSubmitted && answers[questionKey]?.trim()) {
-                      setSubmittedQuestions(
-                        (prev) => new Set([...prev, questionKey]),
-                      );
-                      console.log(
-                        "Answer submitted for question",
-                        questionNumber,
-                        ":",
-                        answers[questionKey],
-                      );
-                    }
-                  }}
-                  disabled={isSubmitted || !answers[questionKey]?.trim()}
-                >
-                  {isSubmitted ? "submitted" : "submit"}
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      }
-      if (activeRound1Folder) {
-        return (
-          <div className="text-[#993C7A] text-2xl font-semibold">
-            <h1>{activeRound1Folder} </h1>
-            <p className="mt-4 text-lg text-white">
-              Select a question to get started with {""}
-              {activeRound1Folder}.
-            </p>
-          </div>
-        );
-      }
       return (
-        <div className="text-[#993C7A] text-2xl font-semibold">
-          <h1>Round 1 Overview</h1>
-          <p className="mt-4 text-lg text-white">
-            Choose a folder from the sidebar to get started.
-          </p>
-        </div>
+        <Questions
+          activeRoundFolder={activeRoundFolder}
+          activeQuestion={activeQuestion}
+          questionsData={questionsData}
+          answers={answers}
+          submittedQuestions={submittedQuestions}
+          onChangeAnswer={(key, value) =>
+            setAnswers((prev) => ({ ...prev, [key]: value }))
+          }
+          onSubmit={(key) =>
+            setSubmittedQuestions((prev) => new Set([...prev, key]))
+          }
+        />
       );
     }
 
     if (activeSection === "welcome") {
-      return <TechLanding onGetStarted={() => setActiveSection("about")} />;
+      return <TechLanding onGetStarted={() => setSection("about")} />;
     }
   };
 
   return (
     <div className="w-full h-full bg-[#08111D] flex font-jetbrains [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
-      <div className="w-40 sm:w-[14%] overflow-hidden border-r-2 border-[#993C7A] h-full p-2 overflow-y-auto font-jetbrains [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
-        <Image
-          src="/images/acmlogo.svg"
-          alt="acm logo"
-          width={120}
-          height={36}
-          className="hover:cursor-pointer"
-          onClick={() => setActiveSection("welcome")}
-        />
-        <div className="w-full h-fit mt-5 font-jetbrains">
-          {[
-            { name: "About", key: "about" },
-            { name: "AOI", key: "aoi" },
-            { name: "Instructions", key: "instructions" },
-            { name: "Round 1", key: "round1" },
-          ].map((item) => (
-            // FIX: Using item.key (a stable, unique string) for the fragment key.
-            <React.Fragment key={item.key}>
-              {/* FIX: Replaced div with a semantic button element for interactivity (a11y/useSemanticElements and a11y/useKeyWithClickEvents) */}
-              <button
-                type="button" // Added type="button" for clarity
-                onClick={() => {
-                  if (item.key === "aoi") {
-                    const next = !aoiExpanded;
-                    setAoiExpanded(next);
-                    setActiveSection("aoi");
-                    if (next && !activeAOI) setActiveAOI("app");
-                    return;
-                  }
-                  if (item.key === "round1") {
-                    const next = !round1Expanded;
-                    setRound1Expanded(next);
-                    setActiveSection("round1");
-
-                    setActiveRound1Folder("");
-                    setActiveQuestion("");
-                    return;
-                  }
-
-                  setActiveSection(item.key);
-                  setAoiExpanded(false);
-                  setRound1Expanded(false);
-                }}
-                className={`border-t-2 ${
-                  item.key === "round1" ? "border-b-2" : ""
-                } border-[#993C7A] h-10 text-sm flex items-center cursor-pointer gap-2 px-2 transition-all duration-150 w-full text-left ${
-                  // Added w-full text-left for button styling
-                  activeSection === item.key
-                    ? "bg-[#993C7A]/20 text-white"
-                    : "text-[#993C7A] hover:bg-[#993C7A]/10"
-                }`}
-              >
-                <Image
-                  src="/images/folder.svg"
-                  alt={`${item.name} icon`}
-                  width={20}
-                  height={20}
-                />
-                {item.name}
-              </button>
-
-              {item.key === "aoi" && activeSection === "aoi" && aoiExpanded && (
-                <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
-                  {aoiList.map((aoi) => {
-                    const isActive = activeAOI === aoi;
-                    return (
-                      // FIX: Replaced div with a semantic button and used the unique string 'aoi' as the key.
-                      <button
-                        key={aoi}
-                        type="button"
-                        onClick={() => setActiveAOI(aoi)}
-                        className={`cursor-pointer transition-all gap-3 flex items-center duration-150 text-sm mb-1 w-full text-left ${
-                          isActive ? "text-white" : "hover:text-white/80"
-                        }`}
-                      >
-                        <Image
-                          src={
-                            isActive
-                              ? "/images/selected-folder.svg"
-                              : "/images/unselected-folder.svg"
-                          }
-                          alt={`${aoi} icon`}
-                          width={16}
-                          height={16}
-                        />
-                        {aoi}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {item.key === "round1" &&
-                activeSection === "round1" &&
-                round1Expanded && (
-                  <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
-                    {round1Folders.map((folder) => {
-                      const isFolderActive = activeRound1Folder === folder;
-                      return (
-                        // FIX: Used the stable string 'folder' as the key.
-                        <React.Fragment key={folder}>
-                          {/* FIX: Replaced div with a semantic button and used the unique string 'folder' as the key. */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (activeRound1Folder === folder) {
-                                //collapse when clicking the same folder again
-                                setActiveRound1Folder("");
-                                setActiveQuestion("");
-                              } else {
-                                setActiveRound1Folder(folder);
-                                setActiveQuestion("");
-                              }
-                            }}
-                            className={`cursor-pointer transition-all duration-150 text-sm mb-1 flex items-center gap-2 w-full text-left ${
-                              isFolderActive
-                                ? "text-white"
-                                : "hover:text-white/80"
-                            }`}
-                          >
-                            <Image
-                              src={
-                                isFolderActive
-                                  ? "/images/selected-folder.svg"
-                                  : "/images/unselected-folder.svg"
-                              }
-                              alt={`${folder} icon`}
-                              width={16}
-                              height={16}
-                            />
-                            {folder}
-                          </button>
-
-                          {isFolderActive && (
-                            <div className="ml-6 mt-1 flex flex-col gap-1 text-[#993C7A]">
-                              {questionsList.map((q) => {
-                                const isQuestionActive = activeQuestion === q;
-                                const questionKey = `${folder}-${q}`;
-                                const isQuestionSubmitted =
-                                  submittedQuestions.has(questionKey);
-                                return (
-                                  // FIX: Replaced div with a semantic button and used the unique string 'q' as the key.
-                                  <button
-                                    key={q}
-                                    type="button"
-                                    onClick={() => setActiveQuestion(q)}
-                                    className={`cursor-pointer transition-all duration-150 text-sm mb-1 flex items-center gap-2 w-full text-left ${
-                                      isQuestionActive
-                                        ? "text-white"
-                                        : "hover:text-white/80"
-                                    }`}
-                                  >
-                                    <Image
-                                      src={
-                                        isQuestionActive || isQuestionSubmitted
-                                          ? "/images/selected-folder.svg"
-                                          : "/images/unselected-folder.svg"
-                                      }
-                                      alt={`${q} icon`}
-                                      width={12}
-                                      height={12}
-                                    />
-                                    {q}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
+      <Sidebar
+        activeSection={activeSection}
+        onChangeSection={setSection}
+        aoiExpanded={aoiExpanded}
+        onToggleAoi={toggleAoi}
+        roundExpanded={roundExpanded}
+        onToggleRound={toggleRound}
+        activeAOI={activeAOI}
+        onSelectAOI={selectAoi}
+        activeRoundFolder={activeRoundFolder}
+        activeQuestion={activeQuestion}
+        onSelectFolder={selectFolder}
+        onSelectQuestion={selectQuestion}
+        submittedQuestions={submittedQuestions}
+        onLogoClick={() => setSection("welcome")}
+      />
 
       <div className="w-full h-full p-7 relative font-jetbrains">
         <div className="w-full h-full border-2 border-[#993C7A] flex flex-col justify-center items-center p-10 relative overflow-y-auto">
