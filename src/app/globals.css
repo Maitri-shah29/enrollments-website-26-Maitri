@@ -57,10 +57,6 @@ body {
   font-family: "ShareTechMono", monospace;
 }
 
-.font-ShareTechMono {
-  font-family: "PolysansTrial", monospace;
-}
-
 /* Container for the checkbox and text */
 .custom-checkbox {
   display: block; /* Makes the entire label a block element */

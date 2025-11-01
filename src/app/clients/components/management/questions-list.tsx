@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import revalidateHome from "@/app/actions/revalidate";
 import type { QuestionPayload } from "@/lib/validation";
-import { Question } from "./question";
+import Header from "./header";
+import Question from "./question";
 
 interface QuestionsProps {
   questions: QuestionPayload[];
@@ -67,68 +68,66 @@ export default function QuestionsList({
   };
 
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg flex flex-col overflow-hidden">
-      <div className="bg-[#D0D0D0] px-6 py-4 flex items-center gap-3 flex-shrink-0">
-        <button
-          type="button"
-          className="p-2 hover:bg-gray-300 rounded-lg transition"
-          aria-label="Back"
-        >
-          <Image src="/back-arrow.svg" alt="Back" width={24} height={24} />
-        </button>
+    <>
+      <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
+        <Header />
+
         <button
           type="button"
           onClick={handleRevalidate}
           disabled={revalidating}
-          className={`p-2 rounded-lg transition ${
+          className={`absolute left-14 top-1 rounded-lg p-1 transition ${
             revalidating
               ? "bg-gray-400 cursor-not-allowed"
-              : "hover:bg-gray-300"
+              : "hover:bg-gray-400"
           }`}
           aria-label="Revalidate"
         >
           <Image
             src="/retry.svg"
             alt="Revalidate"
-            width={24}
-            height={24}
+            width={18}
+            height={18}
             className={revalidating ? "animate-spin" : ""}
           />
         </button>
         {revalidating && (
           <span className="text-sm text-gray-600">Revalidating...</span>
         )}
-      </div>
-      <div className="flex-1 p-10 overflow-y-auto overflow-x-hidden min-h-0">
-        <div className="text-black leading-relaxed space-y-4 text-base">
-          <div className="space-y-4">
+
+        <div className="p-2 h-full w-full overflow-y-auto">
+          <div className="space-y-1">
             {questions.map((q, index) => (
-              <button
-                key={`question-${q.id}-${index}`}
-                type="button"
+              <label
+                key={q.id}
                 onClick={() => handleClick(index)}
-                className="w-full cursor-pointer hover:bg-gray-100 rounded-lg p-4 transition flex items-start gap-4 text-left"
+                className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
               >
-                <div className="relative w-6 h-6 min-w-[24px] min-h-[24px] mt-1 flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={visited[index] || false}
-                    readOnly
-                    tabIndex={-1}
-                    className="w-full h-full cursor-pointer rounded-lg border-2 border-gray-400 accent-blue-600 pointer-events-none"
-                  />
-                </div>
+                <input
+                  type="checkbox"
+                  checked={visited[index] || false}
+                  tabIndex={-1}
+                  className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
+                  readOnly
+                />
+
                 <span
                   className="font-medium flex-1 text-gray-700"
-                  style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+                  style={{
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                  }}
                 >
-                  {index + 1}. {q.question}
+                  {index + 1}.{" "}
+                  {q.question.length > 50
+                    ? q.question.slice(0, 50) + "..."
+                    : q.question}
                 </span>
-              </button>
+              </label>
             ))}
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

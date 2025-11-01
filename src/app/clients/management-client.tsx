@@ -1,6 +1,7 @@
 "use client";
 
 import type { Domain } from "@prisma/client";
+import { Pencil, Search } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { QuestionPayload } from "@/lib/validation";
@@ -12,10 +13,9 @@ import getRoundQuestions from "../actions/get-round-questions";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
 import ManagementLanding from "./components/management/landing";
-import QuestionsList from "./components/management/questionsList";
+import QuestionsList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
 
-// ----- Main Page -----
 export default function Management() {
   const [activeSection, setActiveSection] = useState("Landing");
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,6 @@ export default function Management() {
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
   const [formWarning, setFormWarning] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
-
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
     for (const q of questions) {
@@ -163,7 +162,6 @@ export default function Management() {
       });
     }
   }
-
   async function onSubmitAnswer(q: QuestionPayload) {
     const current = answers[q.id] ?? "";
     const vres = validateAnswer(current, q.validators, { answersByVar });
@@ -177,8 +175,6 @@ export default function Management() {
   const handleGetStarted = () => {
     setActiveSection("About");
   };
-
-  // Function to render content dynamically
   const renderActiveSection = () => {
     switch (activeSection) {
       case "Landing":
@@ -193,7 +189,7 @@ export default function Management() {
         if (loading) {
           return (
             <div className="text-center">
-              <p className="text-gray-700">Loading round...</p>
+              <p className="text-white">Loading round...</p>
             </div>
           );
         }
@@ -205,7 +201,7 @@ export default function Management() {
           );
         }
         return roundId && questions.length > 0 ? (
-          <div className="w-full">
+          <>
             {formWarning ? (
               <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-yellow-800">
                 {formWarning}
@@ -218,7 +214,7 @@ export default function Management() {
               onChangeAnswer={onChangeAnswer}
               onSubmitAnswer={onSubmitAnswer}
             />
-          </div>
+          </>
         ) : (
           <div className="text-center">
             <p className="text-gray-700">No questions available.</p>
@@ -231,18 +227,23 @@ export default function Management() {
 
   return (
     <div
-      className="h-screen flex flex-row bg-cover bg-center bg-no-repeat w-full overflow-hidden"
+      className="h-full flex flex-row bg-cover bg-center bg-no-repeat w-full overflow-x-hidden"
       style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
     >
-      {/* Sidebar - Fixed */}
-      <aside className="fixed left-0 top-0 h-screen w-[20vw] pt-20 px-8 pb-8 text-white flex flex-col z-10 overflow-y-auto mt-[5%]">
+      {/* Sidebar */}
+      <aside className="flex flex-col h-full w-[20vw] p-8 text-white">
         <Image
           src="/acmviticon.svg"
           alt="ACM VIT icon"
-          width={120}
-          height={120}
-          className="mb-8 ml-8"
+          width={180}
+          height={180}
+          className="mb-8"
         />
+
+        {/* Compose Button */}
+        <div className="flex mb-5 items-center w-[80%] h-[10%] gap-2 bg-[#d7aaaa] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-lg/40 cursor-pointer hover:bg-[#cfa0a0] transition">
+          <Pencil /> <span className="font-medium">Compose</span>
+        </div>
 
         <nav className="flex flex-col space-y-4 text-lg">
           {["About", "What we do", "Instructions", "Round 1"].map((section) => (
@@ -262,9 +263,22 @@ export default function Management() {
         </nav>
       </aside>
 
-      {/* Main Content - with left margin to account for fixed sidebar */}
-      <main className="ml-[20vw] flex-1 flex items-center justify-center px-8 py-10 h-screen overflow-hidden mt-5">
-        {renderActiveSection()}
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col justify-center items-center px-8">
+        <div className="w-full flex justify-start h-[8%] ml-[10%] ">
+          <div className="p-2 gap-2 flex flex-row bg-white/40 w-[50%] rounded-full mt-2">
+            <Search />
+            <input
+              type="text"
+              placeholder="Search Domain"
+              className="outline-none flex-1 text-white placeholder-white-500"
+            />
+          </div>
+        </div>
+
+        <div className="h-[90%] w-full flex items-center justify-center">
+          {renderActiveSection()}
+        </div>
       </main>
     </div>
   );

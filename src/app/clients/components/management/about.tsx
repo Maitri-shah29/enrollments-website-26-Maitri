@@ -3,11 +3,11 @@ import Header from "./header";
 
 export default function About() {
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-y-auto">
+    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
       <Header />
-      <div className="p-10">
+      <div className="p-10 overflow-y-auto h-full">
         <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">
-          Welcome to ACM&apos;s Management domain
+          About Management
         </h1>
 
         {/* Email Header */}
