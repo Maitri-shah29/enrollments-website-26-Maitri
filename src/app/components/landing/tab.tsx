@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
 import Management from "@/app/clients/management-client";
+import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
@@ -21,6 +22,7 @@ export interface TabData {
   showManagement: boolean;
   showTech: boolean;
   showDesign: boolean;
+  showResearch: boolean;
   history: PageHistory[];
   pointer: number;
   // last-typed (not-yet-committed) value for this tab's address bar
@@ -32,7 +34,13 @@ interface TabProps {
   onUpdateTab: (updatedTab: TabData) => void;
 }
 
-const INTERNAL_KEYWORDS = new Set(["cc", "management", "tech", "design"]);
+const INTERNAL_KEYWORDS = new Set([
+  "cc",
+  "management",
+  "tech",
+  "design",
+  "research",
+]);
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
 const ensureHttps = (hostOrUrl: string) =>
@@ -90,6 +98,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showManagement: trimmed === "management",
         showTech: trimmed === "tech",
         showDesign: trimmed === "design",
+        showResearch: trimmed === "research",
         title:
           trimmed === "cc"
             ? "CC"
@@ -121,7 +130,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       showCc: false,
       showTech: false,
       showDesign: false,
-      pendingUrl: inputValue, // save last-typed committed value
+      showResearch: false,
+      pendingUrl: inputValue,
     });
   };
 
@@ -161,6 +171,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showManagement: v === "management",
         showTech: v === "tech",
         showDesign: v === "design",
+        showResearch: v === "research",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -180,6 +191,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showManagement: v === "management",
         showTech: v === "tech",
         showDesign: v === "design",
+        showResearch: v === "research",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -276,6 +288,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         ) : tabData.showDesign ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
             <DesignClient />
+          </div>
+        ) : tabData.showResearch ? (
+          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+            <ResearchClient />
           </div>
         ) : activePageData?.url ? (
           <iframe
