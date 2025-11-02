@@ -12,7 +12,7 @@ const page = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
 
   return (
-    <div className="w-full h-full relative overflow-auto">
+    <div className="w-full h-full relative overflow-hidden">
       <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between px-16">
         <CCNavBar selected={selectedPanel} onSelect={setSelectedPanel} />
       </div>
