@@ -18,7 +18,7 @@ interface ResearchNavbarProps {
   selected: string;
   onSelect: (panel: string) => void;
 }
-
+//test
 const Icon = {
   ChevronRight: (_props: React.SVGProps<SVGSVGElement>) => (
     <Image src={RightArrow} width={9} height={16} alt="RightArrow" />
