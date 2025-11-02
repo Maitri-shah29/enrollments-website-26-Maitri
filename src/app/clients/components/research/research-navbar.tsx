@@ -3,14 +3,14 @@
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
-import About from "../../../../../public/images/research/About.svg";
-import ACM from "../../../../../public/images/research/ACM logo.svg";
-import Aoi from "../../../../../public/images/research/Aoi.svg";
+import About from "../../../../../public/images/research/about.svg";
+import ACM from "../../../../../public/images/research/acm-logo.svg";
+import Aoi from "../../../../../public/images/research/aoi.svg";
 import Help from "../../../../../public/images/research/help.svg";
-import Instructions from "../../../../../public/images/research/Instructions.svg";
-import Interview from "../../../../../public/images/research/Interview.svg";
-import RightArrow from "../../../../../public/images/research/RightArrow.svg";
-import Round from "../../../../../public/images/research/Round Icon.svg";
+import Instructions from "../../../../../public/images/research/instructions.svg";
+import Interview from "../../../../../public/images/research/interview.svg";
+import RightArrow from "../../../../../public/images/research/right-arrow.svg";
+import Round from "../../../../../public/images/research/round-icon.svg";
 import Settings from "../../../../../public/images/research/settings.svg";
 import Vault from "../../../../../public/images/research/vault.svg";
 
