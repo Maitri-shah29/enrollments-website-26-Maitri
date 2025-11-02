@@ -71,7 +71,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
   return (
     <aside
-      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-y-auto"
+      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-y-auto border-r-1 border-white"
       aria-label="Research sidebar"
     >
       <div className="px-0 pt-6 pb-3">
