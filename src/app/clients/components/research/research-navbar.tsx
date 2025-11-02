@@ -3,16 +3,17 @@
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
-import About from "../../../../../public/images/research/about.svg";
-import ACM from "../../../../../public/images/research/acm-logo.svg";
-import Aoi from "../../../../../public/images/research/aoi.svg";
-import Help from "../../../../../public/images/research/help.svg";
-import Instructions from "../../../../../public/images/research/instructions.svg";
-import Interview from "../../../../../public/images/research/interview.svg";
-import RightArrow from "../../../../../public/images/research/right-arrow.svg";
-import Round from "../../../../../public/images/research/round-icon.svg";
-import Settings from "../../../../../public/images/research/settings.svg";
-import Vault from "../../../../../public/images/research/vault.svg";
+
+const About = "/images/research/about.svg";
+const ACM = "/images/research/acm-logo.svg";
+const Aoi = "/images/research/aoi.svg";
+const Help = "/images/research/help.svg";
+const Instructions = "/images/research/instructions.svg";
+const Interview = "/images/research/interview.svg";
+const RightArrow = "/images/research/right-arrow.svg";
+const Round = "/images/research/round-icon.svg";
+const Settings = "/images/research/settings.svg";
+const Vault = "/images/research/vault.svg";
 
 interface ResearchNavbarProps {
   selected: string;
@@ -184,7 +185,13 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               className={`w-full flex items-center gap-3 pl-3 py-1 text-left transition-colors cursor-pointer ${selected !== "Interview" ? "hover:bg-white/3" : ""}`}
             >
               <span className="w-5 h-full text-white/90">
-                <Image src={Interview} alt="interview" className="w-5 h-5" />
+                <Image
+                  src={Interview}
+                  alt="interview"
+                  width={40}
+                  height={40}
+                  className="w-5 h-5"
+                />
               </span>
               <div
                 className={`w-full flex items-center py-1 pl-1 text-left transition-colors cursor-pointer ${
@@ -201,19 +208,37 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             className="p-2 hover:scale-105 transition-transform"
             type="button"
           >
-            <Image src={Vault} alt="vault" className="w-5 h-5" />
+            <Image
+              src={Vault}
+              alt="vault"
+              width={40}
+              height={40}
+              className="w-5 h-5"
+            />
           </button>
           <button
             className="p-2 hover:scale-105 transition-transform"
             type="button"
           >
-            <Image src={Help} alt="help" className="w-5 h-5" />
+            <Image
+              src={Help}
+              alt="help"
+              width={40}
+              height={40}
+              className="w-5 h-5"
+            />
           </button>
           <button
             className="p-2 hover:scale-105 transition-transform"
             type="button"
           >
-            <Image src={Settings} alt="settings" className="w-5 h-5" />
+            <Image
+              src={Settings}
+              alt="settings"
+              width={40}
+              height={40}
+              className="w-5 h-5"
+            />
           </button>
         </div>
       </div>
