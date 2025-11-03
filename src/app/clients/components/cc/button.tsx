@@ -6,7 +6,6 @@ type ButtonProps = {
   buttonClassName?: string;
 };
 
-<<<<<<< Updated upstream
 function Button({
   label,
   onClick,
@@ -14,9 +13,6 @@ function Button({
   fullWidth = false,
   buttonClassName = "",
 }: ButtonProps) {
-=======
-function Button({ label, onClick, className, fullWidth = false, buttonClassName = "" }: ButtonProps) {
->>>>>>> Stashed changes
   return (
     <div className={`p-0.2 bg-[#c9eb3e] skew-x-30 w-fit ${className ?? ""}`}>
       <button
