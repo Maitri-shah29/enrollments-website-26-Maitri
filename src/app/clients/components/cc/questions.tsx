@@ -194,7 +194,7 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
     : "";
 
   return (
-    <div className="flex flex-col space-y-6 min-h-screen">
+    <div className="flex flex-col space-y-6 min-h-full">
       {subjectiveQuestions.length === 0 ? (
         <div className="text-white text-lg text-center py-8">
           No subjective questions available for this round.
