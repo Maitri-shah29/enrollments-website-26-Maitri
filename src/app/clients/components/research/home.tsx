@@ -2,9 +2,7 @@
 
 import type React from "react";
 
-// Static faint lines positioned from Figma output, scaled responsively
 function StaticFaintLines() {
-  // Base artboard size from Figma
   const BASE_W = 1366;
   const BASE_H = 944;
 
@@ -21,12 +19,23 @@ function StaticFaintLines() {
     { w: 948.19, left: 348.77, top: 928.33, rot: -14.13 },
     { w: 1043.89, left: 368.89, top: 696.9, rot: -19.73 },
     { w: 864.67, left: 416.88, top: 142.0, rot: 27.6 },
-    // extras around edges for richness
-    { w: 822.02, left: 321.5, top: 949.01, rot: -90 },
   ];
 
+  const minLeft = Math.min(...lines.map((l) => l.left));
+  const minTop = Math.min(...lines.map((l) => l.top));
+  const leftOffsetPct = (minLeft / BASE_W) * 100;
+  const topOffsetPct = (minTop / BASE_H) * 100;
+
   return (
-    <>
+    <div
+      className="absolute"
+      style={{
+        left: `-${leftOffsetPct}%`,
+        top: `-${topOffsetPct}%`,
+        width: `calc(100% + ${leftOffsetPct}%)`,
+        height: `calc(100% + ${topOffsetPct}%)`,
+      }}
+    >
       {lines.map((l, idx) => (
         <div
           key={idx}
@@ -40,57 +49,36 @@ function StaticFaintLines() {
           }}
         />
       ))}
-    </>
+    </div>
   );
 }
 
-// Decorative clusters (from Figma snippet) placed around the canvas background
-
 export default function Home() {
   return (
-    <div
-      className="relative w-full h-full bg-[#0A0A0F] overflow-hidden"
-      style={
-        {
-          // Reserve space for a future sidebar; adjust in one place later
-          // Example: 16rem (256px). Consumers can override via CSS if needed.
-          ["--rs-sidebar" as any]: "16rem",
-        } as React.CSSProperties
-      }
-    >
-      {/* Faint lines taken from Figma spec */}
-      <StaticFaintLines />
-
-      {/* Centered headline inside content column (excluding sidebar area) */}
-      <div
-        className="absolute inset-0"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "var(--rs-sidebar) 1fr",
-        }}
-      >
-        <div className="col-start-2 row-start-1 flex items-center justify-center">
-          <h1
-            style={{
-              color: "#C8B7FF",
-              textAlign: "center",
-              fontFamily:
-                '"SF Pro", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"',
-              fontSize: "6.25rem", // 100px
-              fontStyle: "normal",
-              fontWeight: 590,
-              lineHeight: "normal",
-            }}
-            className="px-4 select-none"
-          >
-            Welcome to
-            <br />
-            ACM VIT
-            <br />
-            Research
-          </h1>
-        </div>
+    <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex items-center justify-center">
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <StaticFaintLines />
       </div>
+
+      <h1
+        style={{
+          color: "#C8B7FF",
+          textAlign: "center",
+          fontFamily:
+            '"SF Pro", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"',
+          fontSize: "6.25rem", // 100px
+          fontStyle: "normal",
+          fontWeight: 590,
+          lineHeight: "normal",
+        }}
+        className="px-4 select-none relative z-10 m-0"
+      >
+        Welcome to
+        <br />
+        ACM VIT
+        <br />
+        Research
+      </h1>
     </div>
   );
 }
