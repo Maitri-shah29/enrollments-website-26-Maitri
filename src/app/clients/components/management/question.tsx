@@ -52,17 +52,17 @@ export default function Question({
         </div>
 
         <p
-          className="break-words overflow-wrap-anywhere text-black"
+          className="break-words overflow-wrap-anywhere text-black mb-6"
           style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
         >
           {question.question}
         </p>
         {question.helpText && (
-          <p className="text-sm text-gray-600 mt-2">{question.helpText}</p>
+          <p className="text-sm text-gray-600 mt-2 mb-6">{question.helpText}</p>
         )}
 
         {/* Answer Box */}
-        <div className="bg-[#D9D9D9] mt-6 mb-6 rounded-2xl p-5 space-y-3">
+        <div className="bg-[#D9D9D9] mt-10 mb-6 rounded-2xl p-5 space-y-3">
           <div className="flex items-center text-sm text-gray-700 space-x-2">
             <Reply size={16} />
             <p>
@@ -75,7 +75,19 @@ export default function Question({
             onChange={(e) => onChangeAnswer(question.id, e.target.value)}
             style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
             placeholder="Type your answer here..."
-            className="text-black w-full min-h-20 outline-none"
+            className="text-black w-full min-h-20 max-h-[290px] outline-none resize-none overflow-y-auto"
+            rows={3}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = "auto";
+              const newHeight = Math.min(target.scrollHeight, 290);
+              target.style.height = newHeight + "px";
+              if (target.scrollHeight > 290) {
+                target.style.overflowY = "auto";
+              } else {
+                target.style.overflowY = "hidden";
+              }
+            }}
           />
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
