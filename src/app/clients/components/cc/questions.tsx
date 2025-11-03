@@ -49,101 +49,36 @@ type QuestionsProps = {
   roundUser?: RoundUserExtended;
 };
 
-// Sample data for testing
-const sampleRoundUser: RoundUserExtended = {
-  id: "sample-round-user-id",
-  roundId: "sample-round-id",
-  userId: "sample-user-id",
-  status: "pending",
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  taskId: null,
-  round: {
-    id: "sample-round-id",
-    number: 1,
-    domain: "cc",
-    active: true,
-    type: "form",
-    eliminates: false,
-    announced: true,
-    hidden: false,
-    Question: [
-      {
-        id: "q1",
-        serial: 1,
-        question: "What is your name?",
-        helpText:
-          "Please provide your full name as it appears on official documents.",
-        roundId: "sample-round-id",
-        type: "stq",
-        options: [],
-        varName: "Hard",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "q2",
-        serial: 2,
-        question: "Why do you want to join ACM VIT?",
-        helpText:
-          "Please provide a detailed answer explaining your motivation and goals.",
-        roundId: "sample-round-id",
-        type: "ltq",
-        options: [],
-        varName: "Easy",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "q3",
-        serial: 3,
-        question: "What is your programming experience?",
-        helpText: "Select your level of programming experience.",
-        roundId: "sample-round-id",
-        type: "stq",
-        options: ["Beginner", "Intermediate", "Advanced", "Expert"],
-        varName: "Medium",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  },
-  formSubmission: {
-    id: "sample-form-submission-id",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    formSubmittedAt: null,
-    valid: false,
-    responses: [
-      {
-        id: "r1",
-        questionId: "q1",
-        response: "John Doe",
-        error: null,
-        updatedAt: new Date(),
-      },
-    ],
-  },
-  Task: null,
-  Meet_User: null,
-  user: {
-    id: "sample-user-id",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    emailVerified: false,
-    image: null,
-    phone: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-};
+// import fetchRoundUser from "../../actions/fetch-round-user";
 
-const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
+const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
+  const [roundUser, setRoundUser] = useState<RoundUserExtended | undefined>(
+    initialRoundUser,
+  );
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (roundUser.formSubmission?.responses) {
+    if (!initialRoundUser) {
+      setLoading(true);
+      fetch("/api/round-user?domain=cc")
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch round user data");
+          const data = await res.json();
+          setRoundUser(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setError("Failed to fetch round user data");
+          setLoading(false);
+        });
+    }
+  }, [initialRoundUser]);
+
+  useEffect(() => {
+    if (roundUser?.formSubmission?.responses) {
       const initialResponses: Record<string, string> = {};
       roundUser.formSubmission.responses.forEach((response) => {
         if (response.response) {
@@ -152,16 +87,22 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
       });
       setResponses(initialResponses);
     }
-  }, [roundUser.formSubmission?.responses]);
+  }, [roundUser?.formSubmission?.responses]);
 
   useEffect(() => {
+    if (
+      !roundUser ||
+      !roundUser.round ||
+      !Array.isArray(roundUser.round.Question)
+    )
+      return;
     const subjectiveQuestions = roundUser.round.Question.filter(
       (question) => question.type === "stq" || question.type === "ltq",
     );
     if (subjectiveQuestions.length > 0 && !activeQuestionId) {
       setActiveQuestionId(subjectiveQuestions[0].id);
     }
-  }, [roundUser.round.Question, activeQuestionId]);
+  }, [roundUser, activeQuestionId]);
 
   const handleQuestionSelect = (questionId: string) => {
     setActiveQuestionId(questionId);
@@ -174,6 +115,28 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
     }));
   };
 
+  if (loading) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        Loading questions...
+      </div>
+    );
+  }
+  if (error) {
+    return <div className="text-red-500 text-lg text-center py-8">{error}</div>;
+  }
+  if (
+    !roundUser ||
+    !roundUser.round ||
+    !Array.isArray(roundUser.round.Question)
+  ) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        No round user data found.
+      </div>
+    );
+  }
+
   const subjectiveQuestions = roundUser.round.Question.filter(
     (question) => question.type === "stq" || question.type === "ltq",
   );
@@ -182,7 +145,7 @@ const Questions = ({ roundUser = sampleRoundUser }: QuestionsProps) => {
     id: question.id,
     serial: question.serial,
     title: question.question,
-    difficulty: question.varName, // use varname for difficulty
+    difficulty: question.varName,
   }));
 
   const activeQuestion = subjectiveQuestions.find(
