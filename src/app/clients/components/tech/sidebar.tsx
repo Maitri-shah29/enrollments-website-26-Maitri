@@ -44,8 +44,8 @@ export default function Sidebar({
       <Image
         src="/images/acmlogo.svg"
         alt="acm logo"
-        width={120}
-        height={36}
+        width={200}
+        height={120}
         className="hover:cursor-pointer"
         onClick={onLogoClick}
       />
