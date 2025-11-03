@@ -46,6 +46,24 @@ export async function GET(request: Request) {
     await ensureRoundUser(round.id);
     // Fetch round user
     const roundUser = await fetchRoundUser(domainStr);
+
+    // Ensure form submission exists if roundUser exists
+    if (
+      roundUser &&
+      typeof roundUser === "object" &&
+      !roundUser.formSubmission
+    ) {
+      await prisma.formSubmission.create({
+        data: {
+          roundUserId: roundUser.id,
+          valid: false,
+        },
+      });
+      // Fetch again to get the form submission
+      const updatedRoundUser = await fetchRoundUser(domainStr);
+      return NextResponse.json(updatedRoundUser);
+    }
+
     return NextResponse.json(roundUser);
   } catch (e) {
     return NextResponse.json(

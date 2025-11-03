@@ -53,6 +53,9 @@ type QuestionsProps = {
 
 const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
+  const [notificationType, setNotificationType] = useState<"success" | "error">(
+    "success",
+  );
   const [roundUser, setRoundUser] = useState<RoundUserExtended | undefined>(
     initialRoundUser,
   );
@@ -158,9 +161,20 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
     : "";
 
   const handleSubmit = async () => {
-    if (!activeQuestion || !roundUser?.formSubmission?.id) return;
+    if (!activeQuestion || !roundUser?.formSubmission?.id) {
+      setNotificationType("error");
+      setNotification("No active question or form submission found");
+      return;
+    }
+
     setLoading(true);
     setNotification(null);
+    console.log("Submitting response:", {
+      formId: roundUser.formSubmission.id,
+      questionId: activeQuestion.id,
+      response: currentResponse,
+    });
+
     try {
       const res = await fetch("/api/save-form-response", {
         method: "POST",
@@ -171,22 +185,30 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
           response: currentResponse,
         }),
       });
+
       const result = await res.json();
-      if (!res.ok || result.error) {
-        let errorMsg = "Failed to submit response";
-        if (result.error) {
-          errorMsg =
-            typeof result.error === "string"
-              ? result.error
-              : JSON.stringify(result.error);
-        }
+      console.log("Response status:", res.status, "Result:", result);
+
+      if (!res.ok) {
+        setNotificationType("error");
+        const errorMsg = result?.error || `HTTP ${res.status} error`;
+        setNotification(errorMsg);
+      } else if (result?.error) {
+        setNotificationType("error");
+        const errorMsg =
+          typeof result.error === "string" ? result.error : "Submission failed";
         setNotification(errorMsg);
       } else {
+        setNotificationType("success");
         setNotification("Answer submitted successfully!");
-        setTimeout(() => setNotification(null), 2500);
+        setTimeout(() => setNotification(null), 3000);
       }
     } catch (err) {
-      setNotification("Failed to submit response");
+      console.error("Submit error:", err);
+      setNotificationType("error");
+      const errorMsg =
+        err instanceof Error ? err.message : "Network error - please try again";
+      setNotification(errorMsg);
     }
     setLoading(false);
   };
@@ -194,7 +216,11 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
   return (
     <div className="flex flex-col space-y-6 min-h-full">
       {notification && (
-        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+        <div
+          className={`fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white ${
+            notificationType === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
           {notification}
         </div>
       )}
