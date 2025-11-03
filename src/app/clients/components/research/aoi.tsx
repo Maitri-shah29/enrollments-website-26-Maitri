@@ -2,6 +2,7 @@
 import Image from "next/image";
 import type React from "react";
 import { useEffect, useState } from "react";
+import ResearchNavbar from "./research-navbar";
 
 const aoiEllipse = "/images/research/aoi-ellipse.svg";
 const researchEllipse = "/images/research/research-ellipse.svg";
