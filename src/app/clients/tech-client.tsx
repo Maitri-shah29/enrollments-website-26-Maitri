@@ -28,7 +28,7 @@ const TechWebsite = () => {
     selectQuestion,
   } = useTechNavigation();
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
