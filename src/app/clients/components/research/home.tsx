@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 function StaticFaintLines() {
   const BASE_W = 1366;
   const BASE_H = 944;

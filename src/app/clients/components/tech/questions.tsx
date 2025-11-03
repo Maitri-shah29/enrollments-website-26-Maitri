@@ -1,6 +1,4 @@
 "use client";
-import Image from "next/image";
-import React from "react";
 import { asciiArt } from "./ascii-art";
 import TechButton from "./button";
 

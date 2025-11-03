@@ -1,6 +1,7 @@
 "use client";
-import type React from "react";
 import Image from "next/image";
+import type React from "react";
+
 const AOIs: React.FC = () => {
   return (
     <div className="h-full w-full flex items-center flex-col mb-20">
@@ -117,7 +118,6 @@ const AOIs: React.FC = () => {
           </p>
         </div>
       </div>
-      
     </div>
   );
 };

@@ -1,12 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import { aoiList, questionsList, round1Folders } from "@/lib/constants";
+import { useState } from "react";
 import { questionsData } from "@/lib/questions-data";
 import { useTechNavigation } from "@/lib/tech-navigation";
-import type { AOI, QuestionId } from "@/lib/types";
 import About from "./components/tech/about";
 import AOIContent from "./components/tech/aoi";
-import TechButton from "./components/tech/button";
 import Instructions from "./components/tech/instructions";
 import TechLanding from "./components/tech/landing";
 import Questions from "./components/tech/questions";
@@ -28,7 +25,7 @@ const TechWebsite = () => {
     selectQuestion,
   } = useTechNavigation();
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
 

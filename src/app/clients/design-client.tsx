@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import About from "./components/design/about";
 import AOIs from "./components/design/aoi";
@@ -7,7 +8,7 @@ import Home from "./components/design/home";
 import Instructions from "./components/design/instructions";
 import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
-import Image from "next/image";
+
 const DesignClient = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
 

@@ -26,7 +26,7 @@ export default function Management() {
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
   const [formWarning, setFormWarning] = useState<string | null>(null);
-  const [formId, setFormId] = useState<string | null>(null);
+  const [_formId, setFormId] = useState<string | null>(null);
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
     for (const q of questions) {
