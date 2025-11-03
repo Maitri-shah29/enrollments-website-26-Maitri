@@ -62,6 +62,7 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -167,7 +168,7 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     setNotification(null);
     console.log("Submitting response:", {
       formId: roundUser.formSubmission.id,
@@ -210,7 +211,7 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
         err instanceof Error ? err.message : "Network error - please try again";
       setNotification(errorMsg);
     }
-    setLoading(false);
+    setSubmitting(false);
   };
 
   return (
@@ -259,7 +260,10 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <Button label="Submit" onClick={handleSubmit} />
+                  <Button
+                    label={submitting ? "Submitting..." : "Submit"}
+                    onClick={handleSubmit}
+                  />
                 </div>
               </div>
             ) : (
