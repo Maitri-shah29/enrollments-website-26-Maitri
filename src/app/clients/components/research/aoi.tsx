@@ -1,5 +1,11 @@
 "use client";
+import Image from "next/image";
 import type React from "react";
+import { useEffect, useState } from "react";
+
+const aoiEllipse = "/images/research/aoi-ellipse.svg";
+const researchEllipse = "/images/research/research-ellipse.svg";
+const aoiVector = "/images/research/aoi-vector.svg";
 
 const AOIs: React.FC = () => {
   const aois = [
