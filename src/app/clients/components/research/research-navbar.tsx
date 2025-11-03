@@ -259,6 +259,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
           </button>
         </div>
       </div>
+
+      <div className="pointer-events-none absolute top-0 right-0 h-full w-px bg-white" />
     </aside>
   );
 };
