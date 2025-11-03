@@ -9,7 +9,12 @@ type Props = {
 export default function AOIContent({ activeAOI }: Props) {
   const aoiData: Record<
     string,
-    { text: string; image: string; width: number; height: number }
+    {
+      text: string;
+      image: string | Array<{ src: string; width: number; height: number }>;
+      width: number;
+      height: number;
+    }
   > = {
     app: {
       text: "The App Development domain focuses on building robust mobile and desktop applications. Members learn technologies like React Native, Flutter, and Kotlin to design apps that are user-centric and scalable.",
@@ -35,6 +40,15 @@ export default function AOIContent({ activeAOI }: Props) {
       width: 600,
       height: 600,
     },
+    devops: {
+      text: "The DevOps domain bridges development and operations, focusing on automation, continuous integration, and deployment. Members learn tools like Docker, Kubernetes, Jenkins, and Terraform to build robust CI/CD pipelines and manage cloud infrastructure efficiently.",
+      image: [
+        { src: "/images/tech-aois/devops.svg", width: 510, height: 510 },
+        { src: "/images/dockerdevops.svg", width: 218, height: 271 },
+      ],
+      width: 510,
+      height: 510,
+    },
   };
 
   const aoi = aoiData[activeAOI];
@@ -42,15 +56,23 @@ export default function AOIContent({ activeAOI }: Props) {
 
   const numLines = aoi.text.split(".").length + 1;
 
+  const images = Array.isArray(aoi.image)
+    ? aoi.image
+    : [{ src: aoi.image, width: aoi.width, height: aoi.height }];
+
   return (
     <div className="text-[#993C7A] text-2xl font-semibold flex items-center flex-col">
-      <Image
-        src={aoi.image}
-        alt={`${activeAOI} logo`}
-        width={aoi.width}
-        height={aoi.height}
-        className="mt-5"
-      />
+      <div className="flex gap-12 items-center mt-5">
+        {images.map((img, index) => (
+          <Image
+            key={index}
+            src={img.src}
+            alt={`${activeAOI} logo ${index + 1}`}
+            width={img.width}
+            height={img.height}
+          />
+        ))}
+      </div>
       <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
         <pre className="text-right pr-4 select-none text-[#993C7A]">
           {Array.from({ length: numLines }, (_, i) => (
