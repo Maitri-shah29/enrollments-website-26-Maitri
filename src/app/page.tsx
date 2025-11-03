@@ -1,16 +1,20 @@
 "use client";
+import { Session } from "better-auth";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { authClient, signIn } from "@/lib/auth-client";
 import Landing from "./components/landing";
 import SignupPage from "./components/sign-up";
 
+type SessionType = Awaited<ReturnType<typeof authClient.getSession>>;
+
 export default function Home() {
-  const [session, setSession] = useState<unknown>(null);
+  const [session, setSession] = useState<SessionType>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     authClient.getSession().then((s) => {
+      console.log(s);
       setSession(s);
       setLoading(false);
     });
@@ -18,7 +22,7 @@ export default function Home() {
 
   if (loading) return null;
 
-  if (!session) {
+  if (!session?.data) {
     // return <SignupPage onSignIn={() => authClient.signIn("google")} />;
     return <SignupPage onSignIn={signIn} />;
   }
