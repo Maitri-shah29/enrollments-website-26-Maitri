@@ -345,7 +345,13 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
                 }}
                 className="w-40 h-25 bg-white/70 rounded-xl"
               ></button>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
+              <button
+                type="button"
+                onClick={() => {
+                  commitFrom("research");
+                }}
+                className="w-40 h-25 bg-white/70 rounded-xl"
+              ></button>
             </div>
           </div>
         )}
