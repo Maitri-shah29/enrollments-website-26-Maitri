@@ -12,7 +12,11 @@ const ResearchClient = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
 
   return (
+<<<<<<< Updated upstream
     <div className="flex w-full h-screen overflow-hidden bg-[#0A0A0F]">
+=======
+    <div className="flex flex-col w-full h-full border border-black text-black bg-[#1a1a1a]">
+>>>>>>> Stashed changes
       <ResearchNavbar selected={selectedPanel} onSelect={setSelectedPanel} />
 
       <div className="flex-1 min-w-0 h-full overflow-auto">

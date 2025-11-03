@@ -76,7 +76,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
       className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-y-auto"
       aria-label="Research sidebar"
     >
-      <div className="px-0 pt-6 pb-3">
+      <div className="flex flex-col h-full p-2">
         <div className="space-y-0">
           <button
             type="button"
@@ -220,7 +220,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </button>
           </div>
         </div>
-        <div className="flex flex-col items-start mt-4 pb-4">
+        <div className="flex flex-col items-start mt-auto">
           <button
             className="p-2 hover:scale-105 transition-transform"
             type="button"
