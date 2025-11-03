@@ -43,7 +43,7 @@ export default function AOIContent({ activeAOI }: Props) {
       text: "The DevOps domain bridges development and operations, focusing on automation, continuous integration, and deployment. Members learn tools like Docker, Kubernetes, Jenkins, and Terraform to build robust CI/CD pipelines and manage cloud infrastructure efficiently.",
       image: [
         { src: "/images/tech-aois/devops.svg", width: 510, height: 510 },
-        { src: "/images/dockerdevops.svg", width: 218, height: 271 },
+        { src: "/images/dockerdevopsascii.svg", width: 218, height: 271 },
       ],
       width: 510,
       height: 510,
