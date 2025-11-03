@@ -1,5 +1,7 @@
 "use client";
+import React from "react";
 import Image from "next/image";
+<<<<<<< Updated upstream
 
 type CCNavBarProps = {
   selected: string;
@@ -7,6 +9,17 @@ type CCNavBarProps = {
 };
 
 const CCNavBar = ({ selected, onSelect }: CCNavBarProps) => {
+=======
+import ACMText from "../../../../../public/images/ACM logo text.svg";
+import ACMLogo from "../../../../../public/images/ACM-VIT Logo.png";
+
+type Props = {
+  selected?: string;
+  onSelect?: (s: string) => void;
+};
+
+const CCNavBar: React.FC<Props> = ({ selected = "", onSelect = () => {} }) => {
+>>>>>>> Stashed changes
   const buttons: string[] = [
     "About",
     "Instructions",
