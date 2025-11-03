@@ -2,7 +2,6 @@
 import { useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 
-// hjh
 // Main Landing Component
 const Landing: React.FC = () => {
   const initialId = Date.now();
