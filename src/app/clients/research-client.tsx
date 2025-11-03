@@ -2,7 +2,7 @@
 import { useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
-import Home from "@/app/clients/components/research/home";
+import ResearchHome from "@/app/clients/components/research/home";
 import Instructions from "@/app/clients/components/research/instructions";
 import Interview from "@/app/clients/components/research/interview";
 import Questions from "@/app/clients/components/research/questions";
@@ -12,10 +12,11 @@ const ResearchClient = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
 
   return (
-    <div className="flex flex-col w-full h-screen border border-black text-black bg-[#1a1a1a]">
+    <div className="flex flex-col w-full h-full border border-black text-black bg-[#1a1a1a]">
       <ResearchNavbar selected={selectedPanel} onSelect={setSelectedPanel} />
-      <div className="flex-grow overflow-auto">
-        {selectedPanel === "Home" && <Home />}
+
+      <div className="flex-1 min-w-0 h-full overflow-auto">
+        {selectedPanel === "Home" && <ResearchHome />}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
         {selectedPanel === "AOIs" && <AOIs />}

@@ -106,7 +106,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
       </div>
 
       {}
-      <div className="fixed bottom-16 sm:bottom-44 left-1/2 -translate-x-1/2 z-20">
+      <div className="fixed bottom-[13%] left-1/2 -translate-x-1/2 z-20">
         <Button
           label="Get Started →"
           onClick={onGetStarted}
