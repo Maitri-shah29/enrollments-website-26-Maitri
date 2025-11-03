@@ -52,6 +52,7 @@ type QuestionsProps = {
 // import fetchRoundUser from "../../actions/fetch-round-user";
 
 const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
+  const [notification, setNotification] = useState<string | null>(null);
   const [roundUser, setRoundUser] = useState<RoundUserExtended | undefined>(
     initialRoundUser,
   );
@@ -156,8 +157,47 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
     ? responses[activeQuestionId] || ""
     : "";
 
+  const handleSubmit = async () => {
+    if (!activeQuestion || !roundUser?.formSubmission?.id) return;
+    setLoading(true);
+    setNotification(null);
+    try {
+      const res = await fetch("/api/save-form-response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formId: roundUser.formSubmission.id,
+          questionId: activeQuestion.id,
+          response: currentResponse,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        let errorMsg = "Failed to submit response";
+        if (result.error) {
+          errorMsg =
+            typeof result.error === "string"
+              ? result.error
+              : JSON.stringify(result.error);
+        }
+        setNotification(errorMsg);
+      } else {
+        setNotification("Answer submitted successfully!");
+        setTimeout(() => setNotification(null), 2500);
+      }
+    } catch (err) {
+      setNotification("Failed to submit response");
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="flex flex-col space-y-6 min-h-full">
+      {notification && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+          {notification}
+        </div>
+      )}
       {subjectiveQuestions.length === 0 ? (
         <div className="text-white text-lg text-center py-8">
           No subjective questions available for this round.
@@ -171,7 +211,6 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
               activeQuestionId={activeQuestionId}
             />
           </div>
-
           <div className="w-full md:w-2/3 flex flex-row max-h-screen">
             {activeQuestion ? (
               <div className="w-full flex flex-col space-y-3">
@@ -194,7 +233,7 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
                   />
                 </div>
                 <div className="flex justify-end">
-                  <Button label="Submit" />
+                  <Button label="Submit" onClick={handleSubmit} />
                 </div>
               </div>
             ) : (
