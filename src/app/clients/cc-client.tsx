@@ -22,7 +22,7 @@ const page = () => {
       )}
 
       {selectedPanel !== "Home" && (
-        <div className="w-full min-h-screen bg-[#121216] pt-28 pb-16">
+        <div className="w-full min-h-full bg-[#121216] pt-28 pb-16">
           <div className="w-full space-y-8 px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32 mt-[45px]">
             {selectedPanel === "About" && <About />}
             {selectedPanel === "Instructions" && <Instructions />}
