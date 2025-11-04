@@ -1,4 +1,4 @@
-export type AOI = "app" | "web" | "gamedev" | "foss";
+export type AOI = "app" | "web" | "gamedev" | "foss" | "devops";
 
 export type QuestionId =
   | "question1"

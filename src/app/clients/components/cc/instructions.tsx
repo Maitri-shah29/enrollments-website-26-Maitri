@@ -5,6 +5,7 @@ import NeonSection from "./neon-section";
 const Instructions: React.FC = () => {
   return (
     <>
+      <div></div>
       <NeonSection title="Instructions">
         <ul className="list-disc pl-6 space-y-2 text-white">
           <li>Next round will be a CC contest round.</li>

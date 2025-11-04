@@ -73,14 +73,20 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
   return (
     <aside
-      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-y-auto border-r-1 border-white"
+      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-y-auto"
       aria-label="Research sidebar"
     >
-      <div className="px-0 pt-6 pb-3">
+      <div className="flex flex-col h-full p-2">
         <div className="space-y-0">
-          <div className="p-2 mb-5 ml-1 transition-transform">
+          <button
+            type="button"
+            aria-label="Go to Home"
+            onClick={() => onSelect("Home")}
+            className="p-2 mb-5 ml-1 cursor-pointer"
+          >
             <Image src={ACM} width={175} height={175} alt="ACM" />
-          </div>
+          </button>
+
           {items.map((it) => (
             <button
               key={it.key}
@@ -88,7 +94,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               onClick={() => {
                 onSelect(it.key);
               }}
-              className={`w-full flex items-center gap-3 pl-3 py-0.5 text-left transition-colors cursor-pointer ${selected !== it.key ? "hover:bg-white/3" : ""}`}
+              className={`w-full flex items-center gap-3 pl-3 py-0.5 text-left transition-colors cursor-pointer ${
+                selected !== it.key ? "hover:bg-white/3" : ""
+              }`}
             >
               <span className="w-5 h-full text-white/90">{it.icon}</span>
               <div
@@ -102,7 +110,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
           ))}
 
           <button
-            className={`mt-1 w-full flex items-center justify-end pl-3  py-0.5 rounded-sm cursor-pointer transition-colors ${selected === "Round 1" ? "" : "hover:bg-white/3"}`}
+            className={`mt-1 w-full flex items-center justify-end pl-3  py-0.5 rounded-sm cursor-pointer transition-colors ${
+              selected === "Round 1" ? "" : "hover:bg-white/3"
+            }`}
             onClick={(e) => {
               setExpandedRound((s) => !s);
               onSelect(expandedRound ? "" : "Round 1");
@@ -116,7 +126,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                 <Image src={Round} alt="Round" width={20} height={20} />
               </div>
               <div
-                className={`flex w-full h-full pl-1 py-1 ${selected === "Round 1" ? "bg-[#7D5BED] text-white" : ""}`}
+                className={`flex w-full h-full pl-1 py-1 ${
+                  selected === "Round 1" ? "bg-[#7D5BED] text-white" : ""
+                }`}
               >
                 <span className={`text-sm text-left`}>Round 1</span>
               </div>
@@ -147,7 +159,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
                     <div className="inline-flex items-center">
                       <div
-                        className={`w-4 h-4 border-white border-1 rounded-[25%] ${aoi === AOI ? "bg-[#C8B7FF]" : ""}`}
+                        className={`w-4 h-4 border-white border-1 rounded-[25%] ${
+                          aoi === AOI ? "bg-[#C8B7FF]" : ""
+                        }`}
                       ></div>
                     </div>
                   </div>
@@ -183,7 +197,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               onClick={() => {
                 onSelect("Interview");
               }}
-              className={`w-full flex items-center gap-3 pl-3 py-1 text-left transition-colors cursor-pointer ${selected !== "Interview" ? "hover:bg-white/3" : ""}`}
+              className={`w-full flex items-center gap-3 pl-3 py-1 text-left transition-colors cursor-pointer ${
+                selected !== "Interview" ? "hover:bg-white/3" : ""
+              }`}
             >
               <span className="w-5 h-full text-white/90">
                 <Image
@@ -204,7 +220,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </button>
           </div>
         </div>
-        <div className="flex flex-col items-start mt-4 pb-4">
+        <div className="flex flex-col items-start mt-auto">
           <button
             className="p-2 hover:scale-105 transition-transform"
             type="button"
@@ -243,6 +259,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
           </button>
         </div>
       </div>
+
+      <div className="pointer-events-none absolute top-0 right-0 h-full w-px bg-white" />
     </aside>
   );
 };
