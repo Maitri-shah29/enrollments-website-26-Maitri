@@ -2,10 +2,14 @@
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 
+interface AOIsProps {
+  onSelect: (panel: string) => void;
+}
+
 const aoiEllipse = "/images/research/aoi-ellipse.svg";
 const researchEllipse = "/images/research/research-ellipse.svg";
 
-const AOIs: React.FC = () => {
+const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const aois = [
@@ -86,8 +90,13 @@ const AOIs: React.FC = () => {
       .attr("height", (d) => (d.id === "research" ? 100 : 50))
       .attr("x", -35)
       .attr("y", -35)
-      .style("cursor", "pointer")
-      .on("click", (_, d) => console.log(`Clicked on ${d.id}`))
+      .style("cursor", (d) => (d.id === "research" ? "default" : "pointer"))
+      .on("click", (_, d) => {
+        if (d.id !== "research") {
+          const panelName = d.id.replace(/\s|\//g, "").toUpperCase();
+          onSelect(panelName);
+        }
+      })
       .call(
         d3
           .drag<SVGImageElement, NodeType>()
@@ -127,22 +136,13 @@ const AOIs: React.FC = () => {
         .attr("y2", (d) => (d.target as NodeType).y ?? 0);
 
       node.attr("x", (d) => (d.x ?? 0) - 35).attr("y", (d) => (d.y ?? 0) - 35);
-
       label.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
     });
-  }, []); // ✅ Removed `aois` dependency — it's constant
+  }, [onSelect]);
 
   return (
     <div className="flex justify-center items-center h-full w-full bg-[#1a1a1a] overflow-hidden">
-      {/* Accessibility title for SVG */}
-      <svg
-        ref={svgRef}
-        className="w-full h-full"
-        role="img"
-        aria-label="Areas of Interest Visualization"
-      >
-        <title>Areas of Interest Visualization</title>
-      </svg>
+      <svg ref={svgRef} className="w-full h-full" />
     </div>
   );
 };
