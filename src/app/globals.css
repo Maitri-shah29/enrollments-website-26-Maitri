@@ -49,10 +49,32 @@ body {
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Brushwell";
+  src: url("/fonts/Brushwell.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Georgia";
+  src: url("/fonts/georgia.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-georgia {
+  font-family: "Georgia", monospace;
+}
+
 .font-jetbrains {
   font-family: "JetBrainsMono", monospace;
 }
-
+.font-brushwell {
+  font-family: "Brushwell", monospace;
+}
 .font-ShareTechMono {
   font-family: "ShareTechMono", monospace;
 }

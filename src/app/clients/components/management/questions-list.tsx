@@ -68,66 +68,62 @@ export default function QuestionsList({
   };
 
   return (
-    <>
-      <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
-        <Header />
+    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
+      <Header />
 
-        <button
-          type="button"
-          onClick={handleRevalidate}
-          disabled={revalidating}
-          className={`absolute left-14 top-1 rounded-lg p-1 transition ${
-            revalidating
-              ? "bg-gray-400 cursor-not-allowed"
-              : "hover:bg-gray-400"
-          }`}
-          aria-label="Revalidate"
-        >
-          <Image
-            src="/retry.svg"
-            alt="Revalidate"
-            width={18}
-            height={18}
-            className={revalidating ? "animate-spin" : ""}
-          />
-        </button>
-        {revalidating && (
-          <span className="text-sm text-gray-600">Revalidating...</span>
-        )}
+      <button
+        type="button"
+        onClick={handleRevalidate}
+        disabled={revalidating}
+        className={`absolute left-14 top-1 rounded-lg p-1 transition ${
+          revalidating ? "bg-gray-400 cursor-not-allowed" : "hover:bg-gray-400"
+        }`}
+        aria-label="Revalidate"
+      >
+        <Image
+          src="/retry.svg"
+          alt="Revalidate"
+          width={18}
+          height={18}
+          className={revalidating ? "animate-spin" : ""}
+        />
+      </button>
+      {revalidating && (
+        <span className="text-sm text-gray-600">Revalidating...</span>
+      )}
 
-        <div className="p-2 h-full w-full overflow-y-auto">
-          <div className="space-y-1">
-            {questions.map((q, index) => (
-              <label
-                key={q.id}
-                onClick={() => handleClick(index)}
-                className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
+      <div className="p-2 h-full w-full overflow-y-auto">
+        <div className="space-y-1">
+          {questions.map((q, index) => (
+            <label
+              key={q.id}
+              onClick={() => handleClick(index)}
+              className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
+            >
+              <input
+                type="checkbox"
+                checked={visited[index] || false}
+                tabIndex={-1}
+                className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
+                readOnly
+              />
+
+              <span
+                className="font-medium flex-1 text-gray-700"
+                style={{
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-word",
+                }}
               >
-                <input
-                  type="checkbox"
-                  checked={visited[index] || false}
-                  tabIndex={-1}
-                  className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
-                  readOnly
-                />
-
-                <span
-                  className="font-medium flex-1 text-gray-700"
-                  style={{
-                    overflowWrap: "anywhere",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {index + 1}.{" "}
-                  {q.question.length > 50
-                    ? q.question.slice(0, 50) + "..."
-                    : q.question}
-                </span>
-              </label>
-            ))}
-          </div>
+                {index + 1}.{" "}
+                {q.question.length > 50
+                  ? `${q.question.slice(0, 50)}...`
+                  : q.question}
+              </span>
+            </label>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
 }
