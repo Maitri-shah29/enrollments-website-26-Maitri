@@ -17,6 +17,16 @@ import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
 
 const DesignClient = () => {
+  const [activeSection, setActiveSection] = useState("Landing");
+  const [loading, setLoading] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [roundInitDone, setRoundInitDone] = useState(false);
+  const [roundId, setRoundId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<QuestionPayload[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
+  const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
+  const [formWarning, setFormWarning] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [rounds, setRounds] = useState<RoundWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
