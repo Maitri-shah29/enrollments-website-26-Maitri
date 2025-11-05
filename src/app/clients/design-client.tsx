@@ -1,3 +1,10 @@
+/*
+TODOS
+1) Add sign in gaurd if the user is not logged in i think jenifer is working on it's component so it can be resued here
+2) add form validation to the text boxes inside questions component i think design questions will only have long answer questions or smth so it shouldnt be too hard 
+3) TO BE DISCUSSED WITH SC adding auto save 3 sec debounce iirc they did say yes to it but asking once more wouldnt hurt
+4) Adding a varname guard, right now a question with any varname will be rendered, we can hardcode a list of allowed varnames inside question submission so stoopid questions dont get rendered 
+*/
 "use client";
 import type { Response } from "@prisma/client";
 import Image from "next/image";
@@ -17,16 +24,6 @@ import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
 
 const DesignClient = () => {
-  const [activeSection, setActiveSection] = useState("Landing");
-  const [loading, setLoading] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
-  const [roundInitDone, setRoundInitDone] = useState(false);
-  const [roundId, setRoundId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<QuestionPayload[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
-  const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
-  const [formWarning, setFormWarning] = useState<string | null>(null);
-  const [formId, setFormId] = useState<string | null>(null);
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [rounds, setRounds] = useState<RoundWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
