@@ -9,6 +9,7 @@ interface Props {
   question: QuestionPayload;
   answer: string;
   error?: string;
+  successMessage?: string;
   onChangeAnswer: (qid: string, value: string) => void;
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
   goBack?: () => void;
@@ -18,6 +19,7 @@ export default function Question({
   question,
   answer,
   error,
+  successMessage,
   onChangeAnswer,
   onSubmitAnswer,
   goBack,
@@ -78,6 +80,9 @@ export default function Question({
             className="text-black w-full min-h-20 outline-none"
           />
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {successMessage && (
+            <p className="text-green-600 text-sm mt-2">{successMessage}</p>
+          )}
 
           <div className="flex justify-end mt-2">
             <button
