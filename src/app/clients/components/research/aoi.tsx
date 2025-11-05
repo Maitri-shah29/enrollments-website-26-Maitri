@@ -10,6 +10,57 @@ interface AOIsProps {
 const aoiEllipse = "/images/research/aoi-ellipse.svg";
 const researchEllipse = "/images/research/research-ellipse.svg";
 
+function StaticFaintLines() {
+  const BASE_W = 1366;
+  const BASE_H = 944;
+
+  type Line = { w: number; left: number; top: number; rot: number };
+  const lines: Line[] = [
+    { w: 949.58, left: 368.89, top: 392.29, rot: 18.71 },
+    { w: 936.34, left: 416.88, top: 307.24, rot: 24.59 },
+    { w: 828.01, left: 368.89, top: 392.29, rot: 10.46 },
+    { w: 948.11, left: 324.0, top: 781.96, rot: -5.15 },
+    { w: 828.74, left: 368.89, top: 696.9, rot: -10.73 },
+    { w: 960.33, left: 368.89, top: 696.9, rot: 15.78 },
+    { w: 1027.32, left: 368.89, top: 392.29, rot: 28.9 },
+    { w: 950.31, left: 324.0, top: 781.96, rot: 6.45 },
+    { w: 948.19, left: 348.77, top: 928.33, rot: -14.13 },
+    { w: 1043.89, left: 368.89, top: 696.9, rot: -19.73 },
+    { w: 864.67, left: 416.88, top: 142.0, rot: 27.6 },
+  ];
+
+  const minLeft = Math.min(...lines.map((l) => l.left));
+  const minTop = Math.min(...lines.map((l) => l.top));
+  const leftOffsetPct = (minLeft / BASE_W) * 100;
+  const topOffsetPct = (minTop / BASE_H) * 100;
+
+  return (
+    <div
+      className="absolute"
+      style={{
+        left: `-${leftOffsetPct}%`,
+        top: `-${topOffsetPct}%`,
+        width: `calc(100% + ${leftOffsetPct}%)`,
+        height: `calc(100% + ${topOffsetPct}%)`,
+      }}
+    >
+      {lines.map((l, idx) => (
+        <div
+          key={idx}
+          className="absolute h-px bg-white/10"
+          style={{
+            width: `${(l.w / BASE_W) * 100}%`,
+            left: `${(l.left / BASE_W) * 100}%`,
+            top: `${(l.top / BASE_H) * 100}%`,
+            transformOrigin: "top left",
+            transform: `rotate(${l.rot}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -43,6 +94,10 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
 
     const width = svgElement.clientWidth;
     const height = svgElement.clientHeight;
+    const researchSize = 70; // center circle size (was 100)
+    const nodeSize = 35; // outer circle size (was 50)
+    const researchRadius = researchSize / 2;
+    const nodeRadius = nodeSize / 2;
 
     const nodes: NodeType[] = [
       { id: "research" },
@@ -67,7 +122,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
         d3
           .forceLink<NodeType, LinkType>(links)
           .id((d) => d.id)
-          .distance(200),
+          .distance(320),
       )
       .force("charge", d3.forceManyBody().strength(-500))
       .force("center", d3.forceCenter(width / 2, height / 2));
@@ -75,11 +130,11 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
     const link = svg
       .append("g")
       .attr("stroke", "#9b7fff")
-      .attr("stroke-opacity", 0.3)
+      .attr("stroke-opacity", 0.35)
       .selectAll("line")
       .data(links)
       .join("line")
-      .attr("stroke-width", 1.2);
+      .attr("stroke-width", 2.8);
 
     const node = svg
       .append("g")
@@ -87,10 +142,9 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
       .data(nodes)
       .join("image")
       .attr("href", (d) => (d.id === "research" ? researchEllipse : aoiEllipse))
-      .attr("width", (d) => (d.id === "research" ? 100 : 50))
-      .attr("height", (d) => (d.id === "research" ? 100 : 50))
-      .attr("x", -35)
-      .attr("y", -35)
+      .attr("width", (d) => (d.id === "research" ? researchSize : nodeSize))
+      .attr("height", (d) => (d.id === "research" ? researchSize : nodeSize))
+      // initial x/y left to tick handler; keep cursor/click/drag the same
       .style("cursor", (d) => (d.id === "research" ? "default" : "pointer"))
       .on("click", (_, d) => {
         if (d.id !== "research") {
@@ -125,9 +179,9 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
       .text((d) => (d.id === "research" ? d.id.toUpperCase() : d.id))
       .attr("fill", "#fff")
       .attr("font-weight", (d) => (d.id === "research" ? "700" : "400"))
-      .attr("font-size", (d) => (d.id === "research" ? "1.2rem" : "1rem"))
+      .attr("font-size", (d) => (d.id === "research" ? "1.1rem" : "1rem"))
       .attr("text-anchor", "middle")
-      .attr("dy", (d) => (d.id === "research" ? 60 : 50));
+      .style("pointer-events", "none");
 
     simulation.on("tick", () => {
       link
@@ -136,8 +190,25 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
         .attr("x2", (d) => (d.target as NodeType).x ?? 0)
         .attr("y2", (d) => (d.target as NodeType).y ?? 0);
 
-      node.attr("x", (d) => (d.x ?? 0) - 35).attr("y", (d) => (d.y ?? 0) - 35);
-      label.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
+      node
+        .attr(
+          "x",
+          (d) =>
+            (d.x ?? 0) - (d.id === "research" ? researchRadius : nodeRadius),
+        )
+        .attr(
+          "y",
+          (d) =>
+            (d.y ?? 0) - (d.id === "research" ? researchRadius : nodeRadius),
+        );
+
+      label
+        .attr("x", (d) => d.x ?? 0)
+        .attr("y", (d) =>
+          d.id === "research"
+            ? (d.y ?? 0) + researchRadius + 20
+            : (d.y ?? 0) + nodeRadius + 14,
+        );
     });
   }, [onSelect]);
 
