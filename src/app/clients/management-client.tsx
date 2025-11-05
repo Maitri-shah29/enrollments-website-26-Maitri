@@ -10,6 +10,7 @@ import createFormSubmission from "../actions/create-form-submission";
 import ensureRoundUser from "../actions/ensure-round-user";
 import fetchRound from "../actions/fetch-round-details";
 import getRoundQuestions from "../actions/get-round-questions";
+import saveFormResponse from "../actions/save-form-response";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
 import ManagementLanding from "./components/management/landing";
@@ -26,7 +27,7 @@ export default function Management() {
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
   const [formWarning, setFormWarning] = useState<string | null>(null);
-  const [_formId, setFormId] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
     for (const q of questions) {
@@ -169,7 +170,29 @@ export default function Management() {
       setErrors((prev) => ({ ...prev, [q.id]: vres.error || "Invalid value" }));
       return;
     }
-    setErrors((prev) => ({ ...prev, [q.id]: "Saving is disabled." }));
+
+    if (!formId) {
+      setErrors((prev) => ({ ...prev, [q.id]: "Form not initialized" }));
+      return;
+    }
+
+    try {
+      await saveFormResponse(formId, q.id, current || null);
+      setErrors((prev) => ({ ...prev, [q.id]: "Saved successfully!" }));
+      // Clear success message after 2 seconds
+      setTimeout(() => {
+        setErrors((prev) => {
+          const next = { ...prev };
+          if (next[q.id] === "Saved successfully!") {
+            delete next[q.id];
+          }
+          return next;
+        });
+      }, 2000);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to save";
+      setErrors((prev) => ({ ...prev, [q.id]: message }));
+    }
   }
 
   const handleGetStarted = () => {
