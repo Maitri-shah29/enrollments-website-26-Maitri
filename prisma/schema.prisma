@@ -263,17 +263,6 @@ enum Domain {
   management
   design
   tech
-  uiux
-  videoediting
-  motiongraphics
-  illustrations
-  pixar // pixar means 3d graphics
-  aiml
-  blockchain
-  cybersecurity
-  bioinformatics
-  quantum
-  iot
 }
 
 enum Type {
