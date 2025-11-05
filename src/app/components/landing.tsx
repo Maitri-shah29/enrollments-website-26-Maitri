@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { type DragEvent, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 
 // Main Landing Component
-const Landing: React.FC = () => {
+const Landing = () => {
   const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
     {
@@ -19,6 +19,7 @@ const Landing: React.FC = () => {
     },
   ]);
   const [activeTabId, setActiveTabId] = useState<number>(initialId);
+  const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
 
   const addTab = () => {
     if (tabs.length >= 6) return;
@@ -40,7 +41,6 @@ const Landing: React.FC = () => {
 
   const closeTab = (id: number) => {
     if (tabs.length === 1) {
-      // Reset the only tab
       setTabs([
         {
           id: tabs[0].id,
@@ -69,66 +69,173 @@ const Landing: React.FC = () => {
     setTabs(tabs.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab)));
   };
 
+  const handleDragStart = (event: DragEvent<HTMLButtonElement>, id: number) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(id));
+    setDraggingTabId(id);
+  };
+
+  const handleDragOver = (
+    event: DragEvent<HTMLButtonElement>,
+    targetId: number,
+  ) => {
+    event.preventDefault();
+    if (draggingTabId === null || draggingTabId === targetId) return;
+    event.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (
+    event: DragEvent<HTMLButtonElement>,
+    targetId: number,
+  ) => {
+    event.preventDefault();
+    const payload = event.dataTransfer.getData("text/plain");
+    const draggedId = Number(payload);
+    if (!draggedId || draggedId === targetId) {
+      setDraggingTabId(null);
+      return;
+    }
+
+    setTabs((prev) => {
+      const draggedIndex = prev.findIndex((tab) => tab.id === draggedId);
+      const targetIndex = prev.findIndex((tab) => tab.id === targetId);
+      if (draggedIndex === -1 || targetIndex === -1) return prev;
+      const reordered = [...prev];
+      const [draggedTab] = reordered.splice(draggedIndex, 1);
+      reordered.splice(targetIndex, 0, draggedTab);
+      return reordered;
+    });
+    setDraggingTabId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingTabId(null);
+  };
+
   return (
-    <div className="bg-blue-800 w-full h-full rounded-xl flex flex-col overflow-hidden">
-      {/* Window Controls */}
-      <div className="bg-gray-500 h-8 rounded-t-xl w-full flex items-center px-2 gap-2">
-        <div className="bg-red-400 w-4 h-4 rounded-full"></div>
-        <div className="bg-yellow-400 w-4 h-4 rounded-full"></div>
-        <div className="bg-green-500 w-4 h-4 rounded-full"></div>
-      </div>
+    <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
+      <svg
+        width="0"
+        height="0"
+        aria-label="SVG Clip Paths"
+        style={{ position: "absolute" }}
+      >
+        <title>Clip path definitions for landing tabs</title>
+        <defs>
+          <clipPath id="tabShape" clipPathUnits="objectBoundingBox">
+            <path
+              d="
+              M 0,1
+              L 0.08,0.15
+              Q 0.09,0.03 0.11,0.01
+              Q 0.13,0 0.16,0
+              L 0.84,0
+              Q 0.87,0 0.89,0.01
+              Q 0.91,0.03 0.92,0.15
+              L 1,1
+              Z
+            "
+            />
+          </clipPath>
+          <clipPath id="plusButtonShape" clipPathUnits="objectBoundingBox">
+            <path
+              d="
+              M 0.08,0.08
+              Q 0.07,0 0.10,0
+              L 0.66,0
+              Q 0.70,0 0.72,0.03
+              L 0.95,0.95
+              Q 0.97,1 0.92,1
+              L 0.34,1
+              Q 0.30,1 0.28,0.97
+              L 0.08,0.13
+              Q 0.07,0.10 0.08,0.08
+              Z
+            "
+            />
+          </clipPath>
+        </defs>
+      </svg>
 
-      {/* Tab Bar */}
-      <div className="w-full bg-blue-300 h-10 flex items-end px-2 gap-2 overflow-x-auto">
-        {tabs.map((tab) => (
+      <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
+        <div className="flex items-end gap-0">
+          <div className="flex items-end gap-1 overflow-x-auto overflow-y-visible">
+            {tabs.map((tab, index) => {
+              const isActive = activeTabId === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTabId(tab.id)}
+                  draggable
+                  onDragStart={(event) => handleDragStart(event, tab.id)}
+                  onDragOver={(event) => handleDragOver(event, tab.id)}
+                  onDrop={(event) => handleDrop(event, tab.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
+                    isActive
+                      ? "z-40 text-neutral-900 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.35)]"
+                      : "z-20 text-neutral-200 bg-gradient-to-b from-[#585858] to-[#bdbdbd] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                  } ${index > 0 ? "-ml-6" : ""} ${
+                    draggingTabId === tab.id ? "opacity-70" : ""
+                  }`}
+                  style={{
+                    clipPath: "url(#tabShape)",
+                    WebkitClipPath: "url(#tabShape)",
+                  }}
+                >
+                  <span
+                    className="absolute inset-0 rounded-t-xl"
+                    style={{ clipPath: "url(#tabShape)" }}
+                  />
+                  <span className="truncate pr-4 relative z-10">
+                    {tab.title}
+                  </span>
+                  {/* biome-ignore lint/a11y/useSemanticElements: inner close button cannot be a nested button*/}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        closeTab(tab.id);
+                      }
+                    }}
+                    className={`ml-auto flex h-4 w-4 items-center justify-center rounded-full transition-colors relative z-10 text-base ${
+                      isActive
+                        ? "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200"
+                        : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
+                    }`}
+                  >
+                    ×
+                  </span>
+                </button>
+              );
+            })}
+          </div>
           <button
-            key={tab.id}
             type="button"
-            onClick={() => setActiveTabId(tab.id)}
-            className={`w-60 h-9 rounded-t-xl flex items-center px-4 whitespace-nowrap text-white text-sm cursor-pointer transition-all ${
-              activeTabId === tab.id
-                ? "bg-blue-800"
-                : "bg-blue-400 hover:bg-blue-500"
-            }`}
+            onClick={addTab}
+            disabled={tabs.length >= 6}
+            className={`relative flex h-7 w-12 border-[#454545] bg-gradient-to-b from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
+              tabs.length >= 6
+                ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
+                : "cursor-pointer text-neutral-200 bg-gradient-to-b from-[#585858] to-[#bdbdbd] hover:from-neutral-500/90 hover:to-neutral-600/90"
+            } z-30 ml-3 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
+            style={{
+              clipPath: "url(#plusButtonShape)",
+              WebkitClipPath: "url(#plusButtonShape)",
+            }}
           >
-            {tab.title}
-            {/* biome-ignore lint/a11y/useSemanticElements: inner close button
-            cannot be a nested button*/}
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                closeTab(tab.id);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.stopPropagation();
-                  closeTab(tab.id);
-                }
-              }}
-              className="hover:bg-white/20 rounded-full w-4 h-4 flex items-center justify-center ml-auto"
-            >
-              x
-            </span>
+            <span className="relative z-10 text-xl leading-none">+</span>
           </button>
-        ))}
-
-        <button
-          type="button"
-          onClick={addTab}
-          disabled={tabs.length >= 6}
-          className={`w-7 mb-1 h-7 rounded-full aspect-square flex items-center justify-center text-white text-sm cursor-pointer ${
-            tabs.length >= 6
-              ? "bg-blue-200 cursor-not-allowed"
-              : "bg-blue-400 hover:bg-blue-500"
-          }`}
-        >
-          +
-        </button>
+        </div>
       </div>
 
-      {/* All tabs are rendered at once but only active tab is displayed */}
       <div className="flex-1 overflow-hidden">
         {tabs.map((tab) => (
           <div
