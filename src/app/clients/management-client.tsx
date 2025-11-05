@@ -3,7 +3,7 @@
 import type { Domain } from "@prisma/client";
 import { Pencil, Search } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import createFormSubmission from "../actions/create-form-submission";
@@ -26,8 +26,12 @@ export default function Management() {
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
   const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
+  const [successMessages, setSuccessMessages] = useState<
+    Record<string, string>
+  >({}); // key: questionId
   const [formWarning, setFormWarning] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
+  const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
     for (const q of questions) {
@@ -153,10 +157,25 @@ export default function Management() {
     load();
   }, [activeSection, loading, roundInitDone]);
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(timeoutRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
   function onChangeAnswer(qid: string, value: string) {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
+    // Clear both errors and success messages when user types
     if (errors[qid]) {
       setErrors((prev) => {
+        const next = { ...prev };
+        delete next[qid];
+        return next;
+      });
+    }
+    if (successMessages[qid]) {
+      setSuccessMessages((prev) => {
         const next = { ...prev };
         delete next[qid];
         return next;
@@ -178,19 +197,42 @@ export default function Management() {
 
     try {
       await saveFormResponse(formId, q.id, current || null);
-      setErrors((prev) => ({ ...prev, [q.id]: "Saved successfully!" }));
+
+      // Clear any error for this question
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[q.id];
+        return next;
+      });
+
+      // Set success message
+      setSuccessMessages((prev) => ({
+        ...prev,
+        [q.id]: "Saved successfully!",
+      }));
+
+      // Clear any existing timeout for this question
+      if (timeoutRef.current[q.id]) {
+        clearTimeout(timeoutRef.current[q.id]);
+      }
+
       // Clear success message after 2 seconds
-      setTimeout(() => {
-        setErrors((prev) => {
+      timeoutRef.current[q.id] = setTimeout(() => {
+        setSuccessMessages((prev) => {
           const next = { ...prev };
-          if (next[q.id] === "Saved successfully!") {
-            delete next[q.id];
-          }
+          delete next[q.id];
           return next;
         });
+        delete timeoutRef.current[q.id];
       }, 2000);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to save";
+      // Clear success message and set error
+      setSuccessMessages((prev) => {
+        const next = { ...prev };
+        delete next[q.id];
+        return next;
+      });
       setErrors((prev) => ({ ...prev, [q.id]: message }));
     }
   }
@@ -234,6 +276,7 @@ export default function Management() {
               questions={questions}
               answers={answers}
               errors={errors}
+              successMessages={successMessages}
               onChangeAnswer={onChangeAnswer}
               onSubmitAnswer={onSubmitAnswer}
             />
