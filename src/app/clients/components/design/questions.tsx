@@ -196,30 +196,30 @@ const Questions: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-screen flex items-center flex-col">
-      <h1 className="text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0">
+    <div className="h-full w-full flex items-center justify-start flex-col px-[5%] py-[3%] overflow-y-auto">
+      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[3%] mt-[2%]">
         Questions
       </h1>
-      <div className="flex w-full px-15 gap-10">
-        <div className="w-[20%]">
-          <div className="relative mb-8">
+      <div className="flex flex-col lg:flex-row w-full px-[3%] gap-[3%]">
+        <div className="w-full lg:w-[25%] mb-[3%] lg:mb-0">
+          <div className="relative mb-4 lg:mb-8">
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
-            <div className="bg-[#43A363] p-6 rounded-xl flex flex-col gap-2">
+            <div className="bg-[#43A363] p-4 lg:p-6 rounded-xl flex flex-col gap-2">
               {aoiData.map((aoi) => (
                 <div
-                  className="flex gap-5 items-center cursor-pointer z-100"
+                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100"
                   key={aoi.name}
                   onClick={() => handleAoiClick(aoi)}
                 >
                   <div
-                    className={`w-6 aspect-square rounded-sm ${
+                    className={`w-4 lg:w-6 aspect-square rounded-sm ${
                       selectedAoi.name === aoi.name
                         ? "bg-[#1A1A1A]"
                         : "bg-white"
                     }`}
                   ></div>
                   <p
-                    className={`font-georgia truncate ${
+                    className={`font-georgia text-[clamp(0.875rem,1vw,1rem)] truncate ${
                       selectedAoi.name === aoi.name ? "font-bold" : ""
                     }`}
                   >
@@ -232,22 +232,22 @@ const Questions: React.FC = () => {
 
           <div className="relative">
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
-            <div className="bg-[#3389E5] p-8 rounded-xl flex flex-col gap-2">
+            <div className="bg-[#3389E5] p-4 lg:p-8 rounded-xl flex flex-col gap-2">
               {selectedAoi.questions.map((question) => (
                 <div
-                  className="flex gap-5 items-center cursor-pointer z-100"
+                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100"
                   key={question.header}
                   onClick={() => setSelectedQuestion(question)}
                 >
                   <div
-                    className={`w-6 aspect-square rounded-sm ${
+                    className={`w-4 lg:w-6 aspect-square rounded-sm ${
                       selectedQuestion.header === question.header
                         ? "bg-[#1A1A1A]"
                         : "bg-white"
                     }`}
                   ></div>
                   <p
-                    className={`font-georgia truncate ${
+                    className={`font-georgia text-[clamp(0.875rem,1vw,1rem)] truncate ${
                       selectedQuestion.header === question.header
                         ? "font-bold"
                         : ""
@@ -261,19 +261,21 @@ const Questions: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-full h-full bg-[#302E2E] rounded-xl p-10 text-white flex flex-col">
+        <div className="w-full lg:flex-1 min-h-[60vh] lg:min-h-0 bg-[#302E2E] rounded-xl p-6 lg:p-10 text-white flex flex-col">
           {selectedQuestion ? (
             <div className="flex flex-col flex-1">
-              <h2 className="text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
+              <h2 className="text-lg lg:text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
                 {selectedQuestion.header}
               </h2>
-              <p className="text-lg font-georgia">{selectedQuestion.content}</p>
-              <div className="h-[1px] my-5 w-full bg-white"></div>
-              <h2 className="text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
+              <p className="text-base lg:text-lg font-georgia">
+                {selectedQuestion.content}
+              </p>
+              <div className="h-[1px] my-3 lg:my-5 w-full bg-white"></div>
+              <h2 className="text-lg lg:text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
                 Answer
               </h2>
 
-              <div className="flex-1">
+              <div className="flex-1 min-h-[200px]">
                 <textarea
                   className="
                         w-full h-full
@@ -281,6 +283,7 @@ const Questions: React.FC = () => {
                         bg-transparent
                         font-georgia
                         text-white
+                        text-sm lg:text-base
                         outline-none
                         border-none
                         selection:bg-transparent selection:text-[#EA86B5]
@@ -292,7 +295,7 @@ const Questions: React.FC = () => {
               <div className="flex justify-end pt-4">
                 <button
                   type="button"
-                  className="px-10 py-4 border-2 border-white font-georgia rounded-lg"
+                  className="px-6 lg:px-10 py-3 lg:py-4 border-2 border-white font-georgia rounded-lg text-sm lg:text-base hover:bg-white hover:text-[#302E2E] transition-colors"
                 >
                   Submit
                 </button>
