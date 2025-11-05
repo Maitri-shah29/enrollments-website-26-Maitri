@@ -263,7 +263,6 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
                   <Button
                     label={submitting ? "Submitting..." : "Submit"}
                     onClick={handleSubmit}
-                    disabled={submitting}
                   />
                 </div>
               </div>
