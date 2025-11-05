@@ -25,11 +25,20 @@ export default async function createMeetUser(
       },
       select: {
         id: true,
+        status: true,
+        round: { select: { active: true, hidden: true } },
       },
     });
 
     if (!owningRoundUser) {
       throw new Error("Authorization failed or resource not found.");
+    }
+
+    if (!owningRoundUser.round.active || owningRoundUser.round.hidden) {
+      throw new Error("Round is not open");
+    }
+    if (owningRoundUser.status !== "pending") {
+      throw new Error("Your response has already been submitted ");
     }
 
     const createMeet = await prisma.meet_User.create({
