@@ -1,5 +1,6 @@
 "use client";
 import * as d3 from "d3";
+import { on } from "events";
 import { useEffect, useRef } from "react";
 
 interface AOIsProps {
@@ -138,7 +139,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
       node.attr("x", (d) => (d.x ?? 0) - 35).attr("y", (d) => (d.y ?? 0) - 35);
       label.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
     });
-  });
+  }, [onSelect]);
 
   return (
     <div className="flex justify-center items-center h-full w-full bg-[#1a1a1a] overflow-hidden">
