@@ -28,7 +28,7 @@ export function useSession() {
 
     // Detect session changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.includes("better-auth")) {
+      if (e.key === "better-auth-session-trigger") {
         checkSession();
       }
     };
