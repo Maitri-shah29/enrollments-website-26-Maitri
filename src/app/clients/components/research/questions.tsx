@@ -303,13 +303,11 @@ const Questions: React.FC<QuestionsProps> = ({
     },
   ];
 
-  // State management - always use props since they're controlled from parent
   const selectedAOI = propSelectedAOI;
   const selectedQuestionIdx = propSelectedQuestionIdx;
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
 
-  // Get current AOI/question with robust fallbacks
   const currentAOI =
     aoiData.find((aoi) => aoi.header === selectedAOI) ?? aoiData[0];
   const safeIndex =
@@ -352,12 +350,12 @@ const Questions: React.FC<QuestionsProps> = ({
         </h1>
       </div>
 
-      {/* Main Content Area with bordered textarea */}
+      {/* Main Content Area */}
       <div className="flex-shrink-0">
-        {/* Textarea container with fixed smaller height */}
+        {/* Textarea */}
         <div className="relative mb-4">
           <div className="relative h-40 border-2 border-purple-500 rounded-lg p-4">
-            {/* Edit icon (pencil) in top-right corner */}
+            {/* Edit icon */}
             <button
               type="button"
               aria-label="Edit"
@@ -381,7 +379,7 @@ const Questions: React.FC<QuestionsProps> = ({
               </svg>
             </button>
 
-            {/* Textarea filling available space */}
+            {/* Textarea */}
             <textarea
               className={`
                 w-full 
@@ -410,7 +408,7 @@ const Questions: React.FC<QuestionsProps> = ({
           </div>
         </div>
 
-        {/* Submit Button at bottom-right */}
+        {/* Submit Button */}
         <div className="flex justify-end flex-shrink-0">
           <button
             type="button"

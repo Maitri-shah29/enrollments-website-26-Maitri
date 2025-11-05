@@ -54,10 +54,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   onQuestionSelect,
 }) => {
   const [expandedRound, setExpandedRound] = useState<boolean>(false);
-  const [AOIState, setAoiState] = useState<string>(""); // local expanded AOI
-  const [questionState, setQuestionState] = useState<number | null>(null); // local selected question index
+  const [AOIState, setAoiState] = useState<string>("");
+  const [questionState, setQuestionState] = useState<number | null>(null);
 
-  // derive effective values (prefer controlled props)
   const effectiveAOI = selectedAOI ?? AOIState;
   const effectiveQuestionIdx =
     typeof selectedQuestionIdx === "number"
