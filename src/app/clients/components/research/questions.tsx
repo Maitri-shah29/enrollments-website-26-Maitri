@@ -306,7 +306,13 @@ const Questions: React.FC<QuestionsProps> = ({
   const selectedAOI = propSelectedAOI;
   const selectedQuestionIdx = propSelectedQuestionIdx;
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState<Set<string>>(new Set());
+  const [lastSubmittedAnswers, setLastSubmittedAnswers] = useState<
+    Record<string, string>
+  >({});
+  const [justSubmitted, setJustSubmitted] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [isFocused, setIsFocused] = useState(false);
 
   const currentAOI =
     aoiData.find((aoi) => aoi.header === selectedAOI) ?? aoiData[0];
@@ -318,26 +324,51 @@ const Questions: React.FC<QuestionsProps> = ({
   const currentQuestion = currentAOI.questions[safeIndex];
 
   const getAnswerKey = () => `${currentAOI.header}-Q${safeIndex + 1}`;
-  const isSubmitted = submitted.has(getAnswerKey());
   const currentAnswer = answers[getAnswerKey()] || "";
+  const lastSubmitted = lastSubmittedAnswers[getAnswerKey()] || "";
+  const isJustSubmitted = justSubmitted[getAnswerKey()] || false;
+
+  // Check if answer has changed since last submission
+  const hasChangedSinceSubmit = currentAnswer !== lastSubmitted;
 
   const handleAnswerChange = (value: string) => {
     setAnswers((prev) => ({
       ...prev,
       [getAnswerKey()]: value,
     }));
+    // Reset submitted state when user types after submitting
+    if (isJustSubmitted) {
+      setJustSubmitted((prev) => ({
+        ...prev,
+        [getAnswerKey()]: false,
+      }));
+    }
   };
 
   const handleSubmit = () => {
     if (currentAnswer.trim()) {
-      setSubmitted((prev) => new Set([...prev, getAnswerKey()]));
+      setJustSubmitted((prev) => ({
+        ...prev,
+        [getAnswerKey()]: true,
+      }));
+      setLastSubmittedAnswers((prev) => ({
+        ...prev,
+        [getAnswerKey()]: currentAnswer,
+      }));
+      console.log("Submitted answer:", currentAnswer);
     }
   };
+
+  const canSubmit =
+    currentAnswer.trim() && (!isJustSubmitted || hasChangedSinceSubmit);
+  const buttonText =
+    isJustSubmitted && !hasChangedSinceSubmit ? "Submitted" : "Submit";
+  const buttonColor = canSubmit ? "#7D5BED" : "#4A4A4A";
 
   return (
     <div className="w-full h-full bg-[#1a1a1a] p-6 overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0" style={{ marginBottom: "125px" }}>
+      <div className="flex-shrink-0" style={{ marginBottom: "25px" }}>
         <h1
           className="text-white break-words leading-tight"
           style={{
@@ -351,10 +382,15 @@ const Questions: React.FC<QuestionsProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-shrink-0">
+      <div className="flex-1 flex flex-col" style={{ paddingBottom: "100px" }}>
         {/* Textarea */}
-        <div className="relative mb-4">
-          <div className="relative h-40 border-2 border-purple-500 rounded-lg p-4">
+        <div className="relative flex-1">
+          <div
+            className="relative h-full rounded-lg p-4 transition-colors"
+            style={{
+              border: `2px solid ${isFocused ? "#7D5BED" : "#C8B7FF"}`,
+            }}
+          >
             {/* Edit icon */}
             <button
               type="button"
@@ -381,7 +417,7 @@ const Questions: React.FC<QuestionsProps> = ({
 
             {/* Textarea */}
             <textarea
-              className={`
+              className="
                 w-full 
                 h-full 
                 bg-transparent 
@@ -392,12 +428,12 @@ const Questions: React.FC<QuestionsProps> = ({
                 border-none
                 p-0
                 placeholder-gray-500
-                ${isSubmitted ? "opacity-60 cursor-not-allowed" : ""}
-              `}
+              "
               placeholder="Type your answer here..."
               value={currentAnswer}
               onChange={(e) => handleAnswerChange(e.target.value)}
-              disabled={isSubmitted}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               style={{
                 fontFamily:
                   "SF Pro, -apple-system, BlinkMacSystemFont, sans-serif",
@@ -409,21 +445,22 @@ const Questions: React.FC<QuestionsProps> = ({
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end flex-shrink-0">
+        <div className="flex justify-end flex-shrink-0 mt-4">
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitted || !currentAnswer.trim()}
-            className={`
-              px-8 py-3 rounded-lg font-medium text-white transition-all duration-200
-              ${
-                isSubmitted || !currentAnswer.trim()
-                  ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                  : "bg-purple-600 hover:bg-purple-700 shadow-lg hover:shadow-purple-500/25"
-              }
-            `}
+            disabled={!canSubmit}
+            className="text-white font-medium transition-all duration-200 flex-shrink-0"
+            style={{
+              width: "10.3125rem",
+              height: "2.25rem",
+              borderRadius: "0.25rem",
+              background: buttonColor,
+              opacity: canSubmit ? 1 : 0.5,
+              cursor: canSubmit ? "pointer" : "not-allowed",
+            }}
           >
-            {isSubmitted ? "Submitted" : "Submit"}
+            {buttonText}
           </button>
         </div>
       </div>
