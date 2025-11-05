@@ -14,7 +14,6 @@ export type RoundWithRelations = Prisma.RoundGetPayload<{
       };
     };
     Meet: true;
-    // RoundUser: true;
   };
 }>;
 
@@ -40,7 +39,6 @@ export default async function fetchRound(domain: Domain) {
           },
         },
         Meet: true,
-        // RoundUser: true,
       },
     });
     return rounds;

@@ -1,17 +1,17 @@
 "use client";
+import type { Response } from "@prisma/client";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import createFormSubmission from "@/app/actions/create-form-submission";
 import createResponse from "@/app/actions/create-response";
-import ensureRoundUser from "@/app/actions/ensure-round-user";
 // import type { Question } from "@prisma/client";
 import type { QuestionWithRelations as Question } from "@/lib/types";
 
-//this page has very disgusting ai code, this will be refactored if we decide to have another form round
-//all of the code to rearrange the the questions object to work with the ui. I dont wanna rewrite rendering logic fml
+//this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
 interface QuestionsProps {
   questions: Question[];
   roundId: string;
+  formSubmissionId: string | null;
+  savedResponses: Response[];
 }
 
 interface TransformedQuestion {
@@ -50,52 +50,16 @@ const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
   }));
 };
 
-const Questions: React.FC<QuestionsProps> = ({ questions, roundId }) => {
-  const [roundUserId, setRoundUserId] = useState<string | null>(null);
-  const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
-
+const Questions: React.FC<QuestionsProps> = ({
+  questions,
+  roundId,
+  formSubmissionId,
+  savedResponses,
+}) => {
   const aoiData = useMemo(
     () => groupQuestionsByVarName(questions),
     [questions],
   );
-
-  // Ensure round user exists when component mounts
-  useEffect(() => {
-    const ensureUser = async () => {
-      const result = await ensureRoundUser(roundId);
-      if ("success" in result && result.success) {
-        setRoundUserId(result.roundUserId);
-        console.log("Round user ensured:", result.roundUserId);
-      } else if ("error" in result) {
-        console.error("Failed to ensure round user:", result.error);
-      }
-    };
-
-    ensureUser();
-  }, [roundId]);
-
-  // Create form submission after round user is ensured
-  useEffect(() => {
-    const setupFormSubmission = async () => {
-      if (roundUserId) {
-        const res = await createFormSubmission(roundId);
-        if ("success" in res && res.formSubmission) {
-          setFormSubmissionId(res.formSubmission.id);
-          console.log(
-            "Form submission created/fetched:",
-            res.formSubmission.id,
-          );
-          if ("alreadySubmitted" in res && res.alreadySubmitted) {
-            console.log("User already has a form submission for this round");
-          }
-        } else if ("error" in res) {
-          console.error("Failed to create form submission:", res.error);
-        }
-      }
-    };
-
-    setupFormSubmission();
-  }, [roundUserId, roundId]);
 
   const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
     aoiData[0] || null,
@@ -105,6 +69,20 @@ const Questions: React.FC<QuestionsProps> = ({ questions, roundId }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
+
+  // Load saved responses into answers state
+  useEffect(() => {
+    if (savedResponses.length > 0) {
+      const loadedAnswers: Record<string, string> = {};
+      for (const response of savedResponses) {
+        if (response.response) {
+          loadedAnswers[response.questionId] = response.response;
+        }
+      }
+      setAnswers(loadedAnswers);
+      console.log("Loaded answers from saved responses:", loadedAnswers);
+    }
+  }, [savedResponses]);
 
   const handleAoiClick = (aoi: AOIData) => {
     setSelectedAoi(aoi);

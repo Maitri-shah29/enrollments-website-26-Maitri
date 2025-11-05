@@ -1,6 +1,10 @@
 "use client";
+import type { Response } from "@prisma/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import createFormSubmission from "../actions/create-form-submission";
+import ensureRoundUser from "../actions/ensure-round-user";
+import fetchFormResponses from "../actions/fetch-form-responses";
 import fetchRound, {
   type RoundWithRelations,
 } from "../actions/fetch-round-details";
@@ -16,6 +20,9 @@ const DesignClient = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [rounds, setRounds] = useState<RoundWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [roundUserId, setRoundUserId] = useState<string | null>(null);
+  const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
+  const [savedResponses, setSavedResponses] = useState<Response[]>([]);
 
   useEffect(() => {
     const fetchDesignRounds = async () => {
@@ -43,8 +50,58 @@ const DesignClient = () => {
     (round) => round.type === "form" && round.active && round.number === 1,
   );
 
-  // Get questions from the form round
+  // get questions from the form round
   const formQuestions = formRound?.Question || [];
+
+  useEffect(() => {
+    const setupFormData = async () => {
+      if (!formRound) return;
+
+      try {
+        // Ensure round user
+        const roundUserResult = await ensureRoundUser(formRound.id);
+        if (!("success" in roundUserResult) || !roundUserResult.success) {
+          console.error("Failed to ensure round user:", roundUserResult);
+          return;
+        }
+        setRoundUserId(roundUserResult.roundUserId);
+        console.log("Round user ensured:", roundUserResult.roundUserId);
+
+        // create/fetch form submission
+        const formSubmissionResult = await createFormSubmission(formRound.id);
+        if (
+          !("success" in formSubmissionResult) ||
+          !formSubmissionResult.formSubmission
+        ) {
+          console.error(
+            "Failed to create form submission:",
+            formSubmissionResult,
+          );
+          return;
+        }
+        setFormSubmissionId(formSubmissionResult.formSubmission.id);
+        console.log(
+          "Form submission created/fetched:",
+          formSubmissionResult.formSubmission.id,
+        );
+
+        // fetch saved responses from db
+        const responsesResult = await fetchFormResponses(
+          formSubmissionResult.formSubmission.id,
+        );
+        if ("responses" in responsesResult && responsesResult.responses) {
+          setSavedResponses(responsesResult.responses);
+          console.log("Loaded saved responses:", responsesResult.responses);
+        } else {
+          console.error("Failed to fetch responses:", responsesResult);
+        }
+      } catch (error) {
+        console.error("Error setting up form data:", error);
+      }
+    };
+
+    setupFormData();
+  }, [formRound]);
 
   return (
     <div className="flex flex-col w-full h-full border border-black text-white">
@@ -66,17 +123,24 @@ const DesignClient = () => {
       <DesignNavbar
         selected={selectedPanel}
         onSelect={setSelectedPanel}
-        disableQuestions={isLoading}
+        disableQuestions={isLoading || !formSubmissionId}
       />
       <div className="flex overflow-y-auto z-10">
         {selectedPanel === "Home" && <Home />}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
         {selectedPanel === "AOIs" && <AOIs />}
-        {selectedPanel === "Questions" && !isLoading && formRound && (
-          // pass formquestions and roundId as props
-          <Questions questions={formQuestions} roundId={formRound.id} />
-        )}
+        {selectedPanel === "Questions" &&
+          !isLoading &&
+          formRound &&
+          formSubmissionId && (
+            <Questions
+              questions={formQuestions}
+              roundId={formRound.id}
+              formSubmissionId={formSubmissionId}
+              savedResponses={savedResponses}
+            />
+          )}
         {selectedPanel === "Interview" && <Interview />}
       </div>
     </div>
