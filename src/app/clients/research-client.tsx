@@ -31,7 +31,6 @@ const ResearchClient = () => {
   };
 
   const handlePanelSelect = (panelName: string) => {
-    // Map panel names from AOI component to AOI names
     const aoiMap: Record<string, string> = {
       BLOCKCHAIN: "Blockchain",
       QUANTUMCOMPUTING: "Quantum Computing",
