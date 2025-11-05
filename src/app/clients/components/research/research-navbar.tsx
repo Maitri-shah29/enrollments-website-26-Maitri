@@ -19,7 +19,6 @@ const Vault = "/images/research/vault.svg";
 interface ResearchNavbarProps {
   selected: string;
   onSelect: (panel: string) => void;
-  // Optional controlled selection wiring from parent
   selectedAOI?: string;
   selectedQuestionIdx?: number | null;
   onAOISelect?: (aoi: string) => void;
