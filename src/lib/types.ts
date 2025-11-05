@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export type AOI = "app" | "web" | "gamedev" | "foss" | "devops";
 
 export type QuestionId =
@@ -21,3 +23,11 @@ export interface UserAuthDisplayProps {
   user: { name: string; email: string } | null;
   onLogin?: () => void;
 }
+
+export type QuestionWithRelations = Prisma.QuestionGetPayload<{
+  include: {
+    round: true;
+    // responses: true;
+    validators: true;
+  };
+}>;
