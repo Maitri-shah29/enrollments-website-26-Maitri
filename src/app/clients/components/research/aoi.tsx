@@ -21,6 +21,19 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
     "IoT",
   ];
 
+  interface NodeType extends d3.SimulationNodeDatum {
+    id: string;
+    fx?: number | null;
+    fy?: number | null;
+    x?: number;
+    y?: number;
+  }
+
+  interface LinkType extends d3.SimulationLinkDatum<NodeType> {
+    source: string | NodeType;
+    target: string | NodeType;
+  }
+
   useEffect(() => {
     const svgElement = svgRef.current;
     if (!svgElement) return;
@@ -29,19 +42,6 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
 
     const width = svgElement.clientWidth;
     const height = svgElement.clientHeight;
-
-    interface NodeType extends d3.SimulationNodeDatum {
-      id: string;
-      fx?: number | null;
-      fy?: number | null;
-      x?: number;
-      y?: number;
-    }
-
-    interface LinkType extends d3.SimulationLinkDatum<NodeType> {
-      source: string | NodeType;
-      target: string | NodeType;
-    }
 
     const nodes: NodeType[] = [
       { id: "research" },
@@ -138,7 +138,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
       node.attr("x", (d) => (d.x ?? 0) - 35).attr("y", (d) => (d.y ?? 0) - 35);
       label.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0);
     });
-  }, [onSelect]);
+  });
 
   return (
     <div className="flex justify-center items-center h-full w-full bg-[#1a1a1a] overflow-hidden">
