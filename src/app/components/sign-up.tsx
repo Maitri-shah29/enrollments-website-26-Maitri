@@ -10,6 +10,8 @@ interface SignupPageProps {
 const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
   const handleGoogleSignIn = async () => {
     await signIn();
+    window.dispatchEvent(new Event("better-auth-session-change"));
+
     // onSignIn();
   };
   return (
@@ -27,14 +29,13 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
       {/* Center content */}
       <div className="relative z-10 bg-black/50 rounded-lg flex flex-col justify-center items-center text-center px-6 h-[90%] w-[90%]">
         {/* Avatar circle */}
-        <div className="w-28 h-28 rounded-full border-4 border-white flex items-center justify-center mb-8">
-          <Image
-            src="/images/profile-icon.svg"
-            alt="Profile icon"
-            fill
-            className="object-cover object-left"
-          />
-        </div>
+        <Image
+          src="/profile-icon-2.svg"
+          alt="Profile icon"
+          width={120}
+          height={120}
+          className="mb-6"
+        />
 
         <p className="text-white text-lg mb-6">
           Sign in with your VIT student mail

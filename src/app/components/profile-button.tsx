@@ -41,6 +41,8 @@ const ProfileButton: React.FC = () => {
     try {
       await authClient.signOut();
       setIsAuthenticated(false);
+      window.dispatchEvent(new Event("better-auth-session-change"));
+
       setUser(null);
       setIsMenuOpen(false);
     } catch (error) {

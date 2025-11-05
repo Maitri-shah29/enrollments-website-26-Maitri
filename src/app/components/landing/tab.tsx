@@ -1,13 +1,15 @@
 "use client";
-// change
 import { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
 import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
+import { signIn } from "@/lib/auth-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
+import { useSessionContext } from "../session-provider"; // Adjust path as needed
+import SignupPage from "../sign-up";
 
 interface PageHistory {
   id: number;
@@ -25,7 +27,6 @@ export interface TabData {
   showResearch: boolean;
   history: PageHistory[];
   pointer: number;
-  // last-typed (not-yet-committed) value for this tab's address bar
   pendingUrl?: string;
 }
 
@@ -55,7 +56,9 @@ const currentHostFromPointer = (tabData: TabData) => {
 };
 
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
-  // Separate inputs for top navbar and home card so typing in one doesn't mirror the other
+  // Get session from context
+  const { session, isPending } = useSessionContext();
+
   const [navInput, setNavInput] = useState<string>(() =>
     currentHostFromPointer(tabData),
   );
@@ -63,7 +66,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     currentHostFromPointer(tabData),
   );
 
-  // Sync inputs when active page changes (keep UX consistent)
   useEffect(() => {
     const v = currentHostFromPointer(tabData);
     setNavInput(v);
@@ -75,23 +77,19 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setHomeInput(stripProtocol(e.target.value));
 
-  // Centralized commit logic used by either input
   const commitFrom = (raw: string) => {
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
 
-    // Handle internal sections
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
         id: Date.now(),
         title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         url: trimmed,
       };
-
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
       newHistory.push(newPage);
-
       onUpdateTab({
         ...tabData,
         showCc: trimmed === "cc",
@@ -110,17 +108,14 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       return;
     }
 
-    // Handle regular URL navigation
     const formatted = ensureHttps(inputValue);
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
       url: formatted,
     };
-
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
     newHistory.push(newPage);
-
     onUpdateTab({
       ...tabData,
       history: newHistory,
@@ -140,7 +135,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       commitFrom(navInput);
       return;
     }
-
     if (e.key === "Tab" && !navInput.trim()) {
       e.preventDefault();
       commitFrom("acmvit.in");
@@ -198,6 +192,16 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     }
   };
 
+  // Show loading state while checking session
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-blue-900">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Render authenticated content
   const activePageData = tabData.history[tabData.pointer];
 
   return (
@@ -244,11 +248,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             </svg>
           </button>
         </div>
-
         <div className="flex items-center gap-2">
           <RefreshButton className="p-2 rounded hover:bg-white/10" />
         </div>
-
         <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white justify-center">
           <span className="text-gray-300 select-none">https://</span>
           <input
@@ -259,15 +261,15 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             placeholder="acmvit.in"
           />
         </div>
-
         <div className="ml-auto mb-1">
           <ProfileButton />
         </div>
       </div>
-
       {/* Content Area */}
       <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
-        {tabData.showManagement ? (
+        {!session?.data ? (
+          <SignupPage onSignIn={signIn} />
+        ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <Management />
@@ -304,7 +306,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         ) : (
           <div className="flex flex-col items-center justify-center gap-6 w-full">
             <h1 className="text-6xl font-semibold">ACM-OCS'26</h1>
-
             <div className="flex items-center w-170 min-w-[400px] h-10 bg-white rounded-full px-3 text-black shadow-md">
               <span className="select-none">https://</span>
               <input
@@ -315,7 +316,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
                 placeholder="acmvit.in"
               />
             </div>
-
             <div className="flex gap-4 flex-wrap justify-center mt-4">
               <button
                 type="button"

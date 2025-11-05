@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Landing from "./components/landing";
+import { SessionProvider } from "./components/session-provider";
 
 export default function Home() {
   return (
@@ -14,7 +15,9 @@ export default function Home() {
       />
       <div className="absolute inset-0 -z-9 bg-white/30" />
       <div className="p-5 h-full w-full flex items-center justify-center">
-        <Landing />
+        <SessionProvider>
+          <Landing />
+        </SessionProvider>
       </div>
     </div>
   );
