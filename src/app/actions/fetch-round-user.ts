@@ -45,6 +45,14 @@ export default async function fetchRoundUser(domain: string) {
             },
           },
         },
+        formSubmission: {
+          include: {
+            responses: true,
+          },
+        },
+        Task: true,
+        Meet_User: true,
+        user: true,
       },
     });
     return roundUser;
