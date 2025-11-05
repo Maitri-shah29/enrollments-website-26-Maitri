@@ -17,12 +17,10 @@ const Page = () => {
       <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between px-16">
         <CCNavBar selected={selectedPanel} onSelect={setSelectedPanel} />
       </div>
-
       {/* Home */}
       {selectedPanel === "Home" && (
         <Homepage onGetStarted={() => setSelectedPanel("About")} />
       )}
-
       {/* About/Instructions */}
       {selectedPanel !== "Home" && (
         <div className="w-full min-h-full bg-[#121216] pt-28 pb-16">
