@@ -79,14 +79,16 @@ export default function Question({
           />
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!answer.trim() || submitting}
-            className="ml-[90%] px-5 py-1 mt-2 rounded-full bg-[#AD3232CC] text-white hover:bg-[#AD3232CC]/70 disabled:bg-gray-400"
-          >
-            {submitting ? "Submitting..." : "Submit"}
-          </button>
+          <div className="flex justify-end mt-2">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!answer.trim() || submitting}
+              className="px-5 py-1 rounded-full bg-[#AD3232CC] text-white hover:bg-[#AD3232CC]/70 disabled:bg-gray-400"
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
