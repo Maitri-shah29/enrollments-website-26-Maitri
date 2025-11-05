@@ -123,7 +123,7 @@ const DesignClient = () => {
         alt="About Design"
         width={1920}
         height={1080}
-        className="w-full h-full object-cover absolute top-0"
+        className="w-full h-full object-cover absolute top-0 left-0"
       />
       <Image
         src="/images/design/acmlogo.svg"

@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
+import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
 // Main Landing Component
 const Landing: React.FC = () => {
+  const { isPending } = useSessionContext();
   const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
     {
@@ -19,6 +21,8 @@ const Landing: React.FC = () => {
     },
   ]);
   const [activeTabId, setActiveTabId] = useState<number>(initialId);
+
+  if (isPending) return null;
 
   const addTab = () => {
     if (tabs.length >= 6) return;
@@ -92,8 +96,7 @@ const Landing: React.FC = () => {
             }`}
           >
             {tab.title}
-            {/* biome-ignore lint/a11y/useSemanticElements: inner close button
-            cannot be a nested button*/}
+            {/* biome-ignore lint/a11y/useSemanticElements: inner close button cannot be a nested button*/}
             <span
               role="button"
               tabIndex={0}
