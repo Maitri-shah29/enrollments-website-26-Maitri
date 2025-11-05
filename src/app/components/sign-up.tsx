@@ -13,30 +13,46 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
     // onSignIn();
   };
   return (
-    <div className="flex flex-col items-center justify-center w-screen h-screen bg-gradient-to-br bg-black p-8">
-      <div className="text-center mb-12">
-        <h1 className="text-7xl font-bold text-white mb-2 tracking-tight">
-          OCS&apos;26
-        </h1>
+    <div className="relative w-full h-full bg-black overflow-hidden flex  items-center justify-center">
+      {/* Left-side faded illustration */}
+      <div className="absolute left-0 top-0 h-full w-1/2 pointer-events-none select-none">
+        <Image
+          src="/images/acmperson.svg"
+          alt="acm person"
+          fill
+          className="object-cover object-left"
+        />
       </div>
-      <div className="bg-black rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-semibold text-white mb-6 text-center">
-          Sign In
-        </h2>
 
+      {/* Center content */}
+      <div className="relative z-10 bg-black/50 rounded-lg flex flex-col justify-center items-center text-center px-6 h-[90%] w-[90%]">
+        {/* Avatar circle */}
+        <div className="w-28 h-28 rounded-full border-4 border-white flex items-center justify-center mb-8">
+          <Image
+            src="/images/profile-icon.svg"
+            alt="Profile icon"
+            fill
+            className="object-cover object-left"
+          />
+        </div>
+
+        <p className="text-white text-lg mb-6">
+          Sign in with your VIT student mail
+        </p>
+
+        {/* Google Button */}
         <button
-          type="button"
-          // onClick={onSignIn}
           onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 bg-gray-700 border-2 border-gray-600 rounded-lg px-6 py-3 text-gray-200 font-medium text-base hover:bg-gray-600 hover:border-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
+          type="button"
+          className="w-80 bg-white text-black font-medium py-3 rounded-xl shadow-md hover:shadow-lg hover:opacity-70 transition-all flex items-center justify-center gap-3"
         >
           <Image
-            src="/google-logo.svg"
-            alt="Google logo"
-            width={24}
-            height={24}
+            src="/google-logo-black.svg"
+            alt="Google"
+            width={22}
+            height={22}
           />
-          Sign in Using Google
+          Log in with Google
         </button>
       </div>
     </div>
