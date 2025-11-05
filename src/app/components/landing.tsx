@@ -1,9 +1,11 @@
 "use client";
 import { type DragEvent, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
+import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
 // Main Landing Component
-const Landing = () => {
+const Landing: React.FC = () => {
+  const { isPending } = useSessionContext();
   const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
     {
@@ -20,6 +22,8 @@ const Landing = () => {
   ]);
   const [activeTabId, setActiveTabId] = useState<number>(initialId);
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
+
+  if (isPending) return null;
 
   const addTab = () => {
     if (tabs.length >= 6) return;
