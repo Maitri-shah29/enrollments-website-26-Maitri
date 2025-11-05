@@ -267,7 +267,12 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       </div>
       {/* Content Area */}
       <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
-        {!session?.data ? (
+        {!session?.data &&
+        (tabData.showManagement ||
+          tabData.showCc ||
+          tabData.showDesign ||
+          tabData.showResearch ||
+          tabData.showTech) ? (
           <SignupPage onSignIn={signIn} />
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
