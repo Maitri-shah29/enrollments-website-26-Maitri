@@ -4,7 +4,7 @@ import type React from "react";
 
 const AOIs: React.FC = () => {
   return (
-    <div className="h-full w-full flex items-center flex-col mb-20">
+    <div className="h-full w-full flex items-center flex-col">
       <h1 className="text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0">
         Areas of Interest
       </h1>
