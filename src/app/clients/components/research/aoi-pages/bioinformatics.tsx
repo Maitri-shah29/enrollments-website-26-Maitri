@@ -1,8 +1,7 @@
-"use client";
 import Image from "next/image";
 import type React from "react";
 
-const iotPage: React.FC = () => {
+const bioinfoPage: React.FC = () => {
   return (
     <div className="relative flex w-full h-full">
       <Image
@@ -13,7 +12,9 @@ const iotPage: React.FC = () => {
         className="object-cover object-bottom z-0 opacity-80"
       />
       <div className="absolute top-0 p-10">
-        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">IOT</h1>
+        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">
+          Bioinformatics
+        </h1>
         <p className="text-white">
           lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
           ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
@@ -33,4 +34,4 @@ const iotPage: React.FC = () => {
   );
 };
 
-export default iotPage;
+export default bioinfoPage;
