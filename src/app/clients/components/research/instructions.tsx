@@ -1,37 +1,40 @@
-import Image from "next/image";
-import type React from "react";
+"use client";
 
-const Instructions: React.FC = () => {
+import NetworkGraph from "./network-graph";
+
+export default function Instructions() {
   return (
-    <div className="relative flex w-full h-full">
-      <Image
-        src="/images/research/background.svg"
-        alt="background image"
-        width={1920}
-        height={500}
-        className="object-cover object-bottom z-0 opacity-80"
-      />
-      <div className="absolute top-0 p-10">
-        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">
+    <div className="relative w-full min-h-screen bg-[#1A1A1A] text-white overflow-hidden">
+      {/* Background Graph (interactive) */}
+      <div className="absolute inset-0 z-0">
+        <NetworkGraph />
+      </div>
+
+      {/* Foreground Content */}
+      <div className="relative z-10 px-16 py-20 max-w-5xl">
+        <h1 className="text-3xl md:text-4xl font-semibold text-purple-400 mb-4">
           Instructions
         </h1>
-        <p className="text-white">
+
+        <p className="text-gray-300 leading-relaxed text-justify">
+          Lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
+          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
           lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
           ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-          lorem ipsum lorem ipsum lorem ipsum v lorem ipsum eugfuw kurfuwbfhweb
-          rbfuyrgp4ugfhfiuwe psiuhfouwgfiewb bwiubfiuwgfwegf7gw uwebcuhsdbvouwg8
-          wegf87gf wegfo8wegf9w7ef
-          wbcusbdvy8gwefesdbjckusbdvywegvwbvhbvjsbvduv8wgvbvhjbvjhsdv sd
-          yugrvehvbwehbvhewbvhsdbvbvyweguewbewbvhbvyubvuywegvubhvbvweyfwe8hfbf
-          fugo8wegvobv bvuwewe eubo8wegowyebvuybewuybvuvb kjhbv wbefiyug
-          djkfvbkuebvuyre kjfbviyuerbi8yr i’ll kill myself wkjehbiwfyw
-          kwhbvwuyvb8wey khvbygrv8owgvo8wegfw wuebo8wegfo8we7gew
-          uvbowvogwe789fwe jhvbouwgvo8gwvo8vo8 kfubhvouego8rgv
-          huvboygv8gf87wef87wefrvb ubvygvo8gfo8we7
+          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
+          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
+          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
+          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum.
+          <br />
+          <br />
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin
+          vulputate ex in urna interdum, sed faucibus sem maximus. Integer
+          blandit, purus ac sodales vestibulum, erat est tincidunt augue, a
+          fermentum velit nisl id nisl. Vivamus blandit arcu at lectus
+          dignissim, sed cursus ex elementum. Suspendisse ac justo nec eros
+          suscipit malesuada. Duis ac ex sed justo tempor convallis ut id mi.
         </p>
       </div>
     </div>
   );
-};
-
-export default Instructions;
+}
