@@ -1,9 +1,22 @@
 "use server";
 
-import type { Domain } from "@prisma/client";
+import type { Domain, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "../../lib/auth";
+
+export type RoundWithRelations = Prisma.RoundGetPayload<{
+  include: {
+    Question: {
+      include: {
+        round: true;
+        validators: true;
+      };
+    };
+    Meet: true;
+  };
+}>;
+
 export default async function fetchRound(domain: Domain) {
   try {
     const user = await auth.api.getSession({
@@ -17,6 +30,15 @@ export default async function fetchRound(domain: Domain) {
       where: {
         domain: domain,
         hidden: false,
+      },
+      include: {
+        Question: {
+          include: {
+            round: true,
+            validators: true,
+          },
+        },
+        Meet: true,
       },
     });
     return rounds;

@@ -1,198 +1,123 @@
 "use client";
+import type { Response } from "@prisma/client";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import createResponse from "@/app/actions/create-response";
+// import type { Question } from "@prisma/client";
+import type { QuestionWithRelations as Question } from "@/lib/types";
 
-const Questions: React.FC = () => {
-  const aoiData = [
-    {
-      name: "UI/UX",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What is the difference between UI and UX?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain the concept of user-centered design.",
-        },
-        {
-          header: "Question 3",
-          content: "What are wireframes and prototypes?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe the user persona and its purpose.",
-        },
-        { header: "Question 5", content: "What is a usability test?" },
-        {
-          header: "Question 6",
-          content: "Explain Jakob's Law of Internet User Experience.",
-        },
-        { header: "Question 7", content: "What is information architecture?" },
-        {
-          header: "Question 8",
-          content: "Describe the Fitt's Law in UI design.",
-        },
-        {
-          header: "Question 9",
-          content: "What are design systems and why are they useful?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain the concept of responsive vs. adaptive design.",
-        },
-      ],
-    },
-    {
-      name: "Video Editing",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What is a jump cut and how is it used?",
-        },
-        { header: "Question 2", content: "Explain the 180-degree rule." },
-        {
-          header: "Question 3",
-          content: "What is the difference between an L-cut and a J-cut?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe the purpose of color grading.",
-        },
-        {
-          header: "Question 5",
-          content: "What is a non-linear editing (NLE) system?",
-        },
-        { header: "Question 6", content: "What are codecs and containers?" },
-        {
-          header: "Question 7",
-          content: "Explain the concept of 'pacing' in editing.",
-        },
-        { header: "Question 8", content: "What is a montage sequence?" },
-        {
-          header: "Question 9",
-          content: "What is the difference between 4K and 1080p resolution?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain the use of Foley in video production.",
-        },
-      ],
-    },
-    {
-      name: "Motion Graphics",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What are keyframes and how do they work?",
-        },
-        {
-          header: "Question 2",
-          content: "Difference between After Effects and Premiere Pro.",
-        },
-        {
-          header: "Question 3",
-          content: "What are the 12 Principles of Animation?",
-        },
-        {
-          header: "Question 4",
-          content: "Explain what 'easing' is in motion design.",
-        },
-        {
-          header: "Question 5",
-          content: "What is a vector graphic and why is it useful in motion?",
-        },
-        {
-          header: "Question 6",
-          content: "Describe the purpose of a storyboard in motion graphics.",
-        },
-        { header: "Question 7", content: "What is rotoscoping?" },
-        {
-          header: "Question 8",
-          content: "Explain the difference between 2D and 3D animation.",
-        },
-        { header: "Question 9", content: "What is kinetic typography?" },
-        { header: "Question 10", content: "What is a 'lower third'?" },
-      ],
-    },
-    {
-      name: "Illustrations",
-      questions: [
-        {
-          header: "Question 1",
-          content: "Vector vs. Raster: What's the difference?",
-        },
-        {
-          header: "Question 2",
-          content: "What is the golden ratio and how is it used in art?",
-        },
-        {
-          header: "Question 3",
-          content: "Explain the principles of color theory.",
-        },
-        {
-          header: "Question 4",
-          content: "What is 'line weight' and why is it important?",
-        },
-        {
-          header: "Question 5",
-          content: "Describe the difference between CMYK and RGB color modes.",
-        },
-        { header: "Question 6", content: "What is perspective in drawing?" },
-        {
-          header: "Question 7",
-          content: "Explain 'composition' in the context of illustration.",
-        },
-        { header: "Question 8", content: "What is a thumbnail sketch?" },
-        { header: "Question 9", content: "What are complementary colors?" },
-        {
-          header: "Question 10",
-          content: "What is typography and its role in illustration?",
-        },
-      ],
-    },
-    {
-      name: "3D Graphics",
-      questions: [
-        { header: "Question 1", content: "Explain polygon modeling." },
-        {
-          header: "Question 2",
-          content: "What is UV unwrapping and why is it necessary?",
-        },
-        {
-          header: "Question 3",
-          content:
-            "Describe the difference between a bump map and a normal map.",
-        },
-        { header: "Question 4", content: "What is rigging in 3D animation?" },
-        {
-          header: "Question 5",
-          content: "Explain the concept of PBR (Physically Based Rendering).",
-        },
-        { header: "Question 6", content: "What is 3D sculpting?" },
-        { header: "Question 7", content: "What is 'topology' in a 3D model?" },
-        {
-          header: "Question 8",
-          content: "Describe the 3D production pipeline.",
-        },
-        { header: "Question 9", content: "What is ray tracing?" },
-        {
-          header: "Question 10",
-          content:
-            "Explain the difference between global and local illumination.",
-        },
-      ],
-    },
-  ];
+//this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
+interface QuestionsProps {
+  questions: Question[];
+  roundId: string;
+  formSubmissionId: string | null;
+  savedResponses: Response[];
+}
 
-  const [selectedAoi, setSelectedAoi] = useState(aoiData[0]);
-  const [selectedQuestion, setSelectedQuestion] = useState(
-    aoiData[0].questions[0],
+interface TransformedQuestion {
+  header: string;
+  content: string;
+  questionId: string; // Added to track question ID for responses
+}
+
+interface AOIData {
+  name: string;
+  questions: TransformedQuestion[];
+}
+
+const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
+  const grouped = questions.reduce(
+    (acc, question) => {
+      const varName = question.varName;
+      if (!acc[varName]) {
+        acc[varName] = [];
+      }
+      acc[varName].push(question);
+      return acc;
+    },
+    {} as Record<string, Question[]>,
   );
 
-  const handleAoiClick = (aoi: (typeof aoiData)[0]) => {
+  return Object.entries(grouped).map(([varName, questions]) => ({
+    name: varName,
+    questions: questions
+      .sort((a, b) => a.serial - b.serial)
+      .map((q) => ({
+        header: `Question ${q.serial}`,
+        content: q.question,
+        questionId: q.id, // Include question ID
+      })),
+  }));
+};
+
+const Questions: React.FC<QuestionsProps> = ({
+  questions,
+  roundId,
+  formSubmissionId,
+  savedResponses,
+}) => {
+  const aoiData = useMemo(
+    () => groupQuestionsByVarName(questions),
+    [questions],
+  );
+
+  const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
+    aoiData[0] || null,
+  );
+  const [selectedQuestion, setSelectedQuestion] =
+    useState<TransformedQuestion | null>(aoiData[0]?.questions[0] || null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
+
+  // Load saved responses into answers state
+  useEffect(() => {
+    if (savedResponses.length > 0) {
+      const loadedAnswers: Record<string, string> = {};
+      for (const response of savedResponses) {
+        if (response.response) {
+          loadedAnswers[response.questionId] = response.response;
+        }
+      }
+      setAnswers(loadedAnswers);
+      console.log("Loaded answers from saved responses:", loadedAnswers);
+    }
+  }, [savedResponses]);
+
+  const handleAoiClick = (aoi: AOIData) => {
     setSelectedAoi(aoi);
     setSelectedQuestion(aoi.questions[0]);
+  };
+
+  const handleQuestionClick = (question: TransformedQuestion) => {
+    setSelectedQuestion(question);
+  };
+
+  const handleSaveResponse = async () => {
+    if (!formSubmissionId || !selectedQuestion) {
+      console.error("Missing required data to save response");
+      return;
+    }
+
+    const currentAnswer = answers[selectedQuestion.questionId] || "";
+    if (!currentAnswer.trim()) {
+      console.error("Answer is empty");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await createResponse(
+        selectedQuestion.questionId,
+        formSubmissionId,
+        currentAnswer,
+      );
+      console.log("Response saved successfully");
+    } catch (error) {
+      console.error("Failed to save response:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -213,14 +138,14 @@ const Questions: React.FC = () => {
                 >
                   <div
                     className={`w-6 aspect-square rounded-sm ${
-                      selectedAoi.name === aoi.name
+                      selectedAoi?.name === aoi.name
                         ? "bg-[#1A1A1A]"
                         : "bg-white"
                     }`}
                   ></div>
                   <p
                     className={`font-georgia truncate ${
-                      selectedAoi.name === aoi.name ? "font-bold" : ""
+                      selectedAoi?.name === aoi.name ? "font-bold" : ""
                     }`}
                   >
                     {aoi.name}
@@ -233,22 +158,22 @@ const Questions: React.FC = () => {
           <div className="relative">
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
             <div className="bg-[#3389E5] p-8 rounded-xl flex flex-col gap-2">
-              {selectedAoi.questions.map((question) => (
+              {selectedAoi?.questions.map((question) => (
                 <div
                   className="flex gap-5 items-center cursor-pointer z-100"
                   key={question.header}
-                  onClick={() => setSelectedQuestion(question)}
+                  onClick={() => handleQuestionClick(question)}
                 >
                   <div
                     className={`w-6 aspect-square rounded-sm ${
-                      selectedQuestion.header === question.header
+                      selectedQuestion?.header === question.header
                         ? "bg-[#1A1A1A]"
                         : "bg-white"
                     }`}
                   ></div>
                   <p
                     className={`font-georgia truncate ${
-                      selectedQuestion.header === question.header
+                      selectedQuestion?.header === question.header
                         ? "font-bold"
                         : ""
                     }`}
@@ -275,6 +200,13 @@ const Questions: React.FC = () => {
 
               <div className="flex-1">
                 <textarea
+                  value={answers[selectedQuestion.questionId] || ""}
+                  onChange={(e) => {
+                    setAnswers((prev) => ({
+                      ...prev,
+                      [selectedQuestion.questionId]: e.target.value,
+                    }));
+                  }}
                   className="
                         w-full h-full
                         resize-none
@@ -285,16 +217,22 @@ const Questions: React.FC = () => {
                         border-none
                         selection:bg-transparent selection:text-[#EA86B5]
                       "
-                  placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate. "
+                  placeholder="Type your answer here..."
                 />
               </div>
 
               <div className="flex justify-end pt-4">
                 <button
                   type="button"
-                  className="px-10 py-4 border-2 border-white font-georgia rounded-lg"
+                  onClick={handleSaveResponse}
+                  disabled={
+                    isSaving ||
+                    !answers[selectedQuestion.questionId]?.trim() ||
+                    !formSubmissionId
+                  }
+                  className="px-10 py-4 border-2 border-white font-georgia rounded-lg "
                 >
-                  Submit
+                  {isSaving ? "Saving..." : "Save Answer"}
                 </button>
               </div>
             </div>
