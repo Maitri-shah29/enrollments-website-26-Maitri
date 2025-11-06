@@ -46,8 +46,8 @@ const ProfileButton: React.FC = () => {
   // ✅ Show loading spinner from session context
   if (isPending) {
     return (
-      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 rounded-full border border-neutral-300 bg-white flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
+        <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -58,7 +58,7 @@ const ProfileButton: React.FC = () => {
       <button
         type="button"
         onClick={toggleMenu}
-        className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white hover:bg-gray-500 transition-colors"
+        className="w-10 h-10 rounded-full border border-neutral-300 bg-white flex items-center justify-center text-neutral-600 shadow-[0_1px_3px_rgba(0,0,0,0.12)] hover:bg-neutral-100 transition-colors"
       >
         {isAuthenticated && user ? (
           <span className="text-sm font-semibold">
