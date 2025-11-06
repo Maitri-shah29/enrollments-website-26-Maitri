@@ -88,6 +88,17 @@ const currentHostFromPointer = (tabData: TabData) => {
   return "";
 };
 
+const requestFullscreen = () => {
+  const elem = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch((err) => {
+        console.log("Error attempting to enable fullscreen:", err);
+      });
+    }
+  }
+};
+
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
@@ -114,6 +125,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
+
+    // Request fullscreen when navigating
+    requestFullscreen();
 
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
