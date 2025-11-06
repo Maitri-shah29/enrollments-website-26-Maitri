@@ -90,8 +90,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
       className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-hidden"
       aria-label="Research sidebar"
     >
-      <div className="flex flex-col h-full p-2">
-        <div className="space-y-0">
+      <div className="flex flex-col h-full p-2 overflow-auto pr-5">
+        <div className="space-y-0 mb-10">
           <button
             type="button"
             aria-label="Go to Home"
@@ -193,7 +193,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                             onQuestionSelect?.(qIdx);
                             onSelect("Round 1");
                           }}
-                          className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D37D] flex items-center justify-between text-sm transition-colors cursor-pointer`}
+                          className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D3]/50 flex items-center justify-between text-sm transition-colors cursor-pointer`}
                         >
                           <span className="text-left">{qText}</span>
                           {effectiveQuestionIdx === qIdx && (

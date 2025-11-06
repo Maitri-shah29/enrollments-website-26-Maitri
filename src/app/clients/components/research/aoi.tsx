@@ -122,7 +122,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
         d3
           .forceLink<NodeType, LinkType>(links)
           .id((d) => d.id)
-          .distance(320),
+          .distance(250),
       )
       .force("charge", d3.forceManyBody().strength(-500))
       .force("center", d3.forceCenter(width / 2, height / 2));
@@ -213,7 +213,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
   }, [onSelect]);
 
   return (
-    <div className="flex justify-center items-center h-full w-full bg-[#1a1a1a] overflow-hidden">
+    <div className="flex justify-center items-center h-full w-full bg-[#1a1a1a]">
       <svg ref={svgRef} className="w-full h-full" />
     </div>
   );

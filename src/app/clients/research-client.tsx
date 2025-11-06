@@ -50,10 +50,7 @@ const ResearchClient = () => {
   };
 
   return (
-    <div
-      className="flex w-full border border-black text-black bg-[#1a1a1a]"
-      style={{ height: "calc(100vh - 160px)" }}
-    >
+    <div className="flex h-full w-full bg-[#1a1a1a]">
       <ResearchNavbar
         selected={selectedPanel}
         onSelect={setSelectedPanel}

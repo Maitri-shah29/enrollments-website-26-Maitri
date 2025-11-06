@@ -328,7 +328,6 @@ const Questions: React.FC<QuestionsProps> = ({
   const lastSubmitted = lastSubmittedAnswers[getAnswerKey()] || "";
   const isJustSubmitted = justSubmitted[getAnswerKey()] || false;
 
-  // Check if answer has changed since last submission
   const hasChangedSinceSubmit = currentAnswer !== lastSubmitted;
 
   const handleAnswerChange = (value: string) => {
@@ -336,7 +335,6 @@ const Questions: React.FC<QuestionsProps> = ({
       ...prev,
       [getAnswerKey()]: value,
     }));
-    // Reset submitted state when user types after submitting
     if (isJustSubmitted) {
       setJustSubmitted((prev) => ({
         ...prev,
@@ -367,31 +365,20 @@ const Questions: React.FC<QuestionsProps> = ({
 
   return (
     <div className="w-full h-full bg-[#1a1a1a] p-6 overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="flex-shrink-0" style={{ marginBottom: "25px" }}>
-        <h1
-          className="text-white break-words leading-tight"
-          style={{
-            fontFamily: "SF Pro, -apple-system, BlinkMacSystemFont, sans-serif",
-            fontWeight: "bold",
-            fontSize: "18px",
-          }}
-        >
+      <div className="flex-shrink-0 mb-6">
+        <h1 className="text-white break-words leading-tight">
           Question {safeIndex + 1}: {currentQuestion?.content}
         </h1>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col" style={{ paddingBottom: "100px" }}>
-        {/* Textarea */}
-        <div className="relative flex-1">
+      <div className="h-full flex flex-col">
+        <div className="relative h-full">
           <div
             className="relative h-full rounded-lg p-4 transition-colors"
             style={{
               border: `2px solid ${isFocused ? "#7D5BED" : "#C8B7FF"}`,
             }}
           >
-            {/* Edit icon */}
             <button
               type="button"
               aria-label="Edit"
@@ -415,7 +402,6 @@ const Questions: React.FC<QuestionsProps> = ({
               </svg>
             </button>
 
-            {/* Textarea */}
             <textarea
               className="
                 w-full 
@@ -434,28 +420,17 @@ const Questions: React.FC<QuestionsProps> = ({
               onChange={(e) => handleAnswerChange(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              style={{
-                fontFamily:
-                  "SF Pro, -apple-system, BlinkMacSystemFont, sans-serif",
-                fontSize: "16px",
-                lineHeight: "1.6",
-              }}
             />
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end flex-shrink-0 mt-4">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="text-white font-medium transition-all duration-200 flex-shrink-0"
+            className={`text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[${buttonColor}] border-1 hover:cursor-pointer`}
             style={{
-              width: "10.3125rem",
-              height: "2.25rem",
-              borderRadius: "0.25rem",
-              background: buttonColor,
               opacity: canSubmit ? 1 : 0.5,
               cursor: canSubmit ? "pointer" : "not-allowed",
             }}
