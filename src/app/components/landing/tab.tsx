@@ -74,6 +74,7 @@ export interface TabData {
 interface TabProps {
   tabData: TabData;
   onUpdateTab: (updatedTab: TabData) => void;
+  onAddTabWithUrl: (url: string) => void;
 }
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
@@ -99,7 +100,7 @@ const requestFullscreen = () => {
   }
 };
 
-const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
+const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
 
@@ -115,6 +116,18 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     setNavInput(v);
     setHomeInput(v);
   }, [tabData]);
+
+  //for link navigation
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "NAVIGATE_TO" && event.data?.url) {
+        onAddTabWithUrl(event.data.url);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onAddTabWithUrl]);
 
   const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setNavInput(stripProtocol(e.target.value));

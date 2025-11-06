@@ -78,16 +78,20 @@ const Instructions: React.FC = () => {
                 <div className="absolute inset-0 bg-black/40" />
 
                 <div className="absolute bottom-6 left-6">
-                  <a
-                    href={r.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.parent.postMessage(
+                        { type: "NAVIGATE_TO", url: r.href },
+                        "*",
+                      );
+                    }}
                     aria-label={`Open ${r.title}`}
-                    className="flex items-center gap-3 bg-white/10 text-white px-6 py-3 rounded-full backdrop-blur-sm hover:bg-white/20 transition font-ShareTechMono"
+                    className="flex items-center gap-3 bg-white/10 text-white px-6 py-3 rounded-full backdrop-blur-sm hover:bg-white/20 transition font-ShareTechMono cursor-pointer"
                   >
                     <span className="text-lg">▶</span>
                     <span className="text-sm">{r.title}</span>
-                  </a>
+                  </button>
                 </div>
               </div>
             );
