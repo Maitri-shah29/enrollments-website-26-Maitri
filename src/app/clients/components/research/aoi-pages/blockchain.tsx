@@ -1,8 +1,7 @@
-"use client";
 import Image from "next/image";
 import type React from "react";
 
-const AIMLPage: React.FC = () => {
+const blockchainPage: React.FC = () => {
   return (
     <div className="relative flex w-full h-full">
       <Image
@@ -13,7 +12,7 @@ const AIMLPage: React.FC = () => {
         className="object-cover object-bottom z-0 opacity-80"
       />
       <div className="absolute top-0 p-10">
-        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">AI/ML</h1>
+        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">Blockchain</h1>
         <p className="text-white">
           lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
           ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
@@ -33,4 +32,4 @@ const AIMLPage: React.FC = () => {
   );
 };
 
-export default AIMLPage;
+export default blockchainPage;

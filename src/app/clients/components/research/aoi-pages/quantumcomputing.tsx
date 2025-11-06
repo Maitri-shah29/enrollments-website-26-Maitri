@@ -1,8 +1,7 @@
-"use client";
 import Image from "next/image";
 import type React from "react";
 
-const cybersecPage: React.FC = () => {
+const quantumcomputingPage: React.FC = () => {
   return (
     <div className="relative flex w-full h-full">
       <Image
@@ -14,7 +13,7 @@ const cybersecPage: React.FC = () => {
       />
       <div className="absolute top-0 p-10">
         <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">
-          Cybersecurity
+          Quantum Computing
         </h1>
         <p className="text-white">
           lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
@@ -35,4 +34,4 @@ const cybersecPage: React.FC = () => {
   );
 };
 
-export default cybersecPage;
+export default quantumcomputingPage;
