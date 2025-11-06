@@ -395,12 +395,12 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           </div>
 
           <div className="flex flex-1 items-center gap-3">
-            <div className="flex flex-1 items-center h-10 rounded-lg bg-gradient-to-b from-[#585858] to-[#bdbdbd] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+            <div className="flex flex-1 items-center h-10 rounded-lg bg-gradient-to-b from-[#c5c5c5] to-[#d7d7d7] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
               <span className="text-neutral-100 select-none font-medium tracking-tight">
                 https://
               </span>
               <input
-                className="flex-1 bg-transparent outline-none text-neutral-50 placeholder-neutral-200 tracking-tight"
+                className="flex-1 bg-transparent outline-none text-black placeholder-neutral-200 tracking-tight"
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}
