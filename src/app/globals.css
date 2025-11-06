@@ -183,3 +183,7 @@ body {
 .animate-about-drift {
   animation: about-drift 14s ease-in-out infinite alternate;
 }
+
+.figma-cursor {
+  cursor: url("/images/design/figma_cursor.png") 0 0, auto;
+}
