@@ -111,7 +111,7 @@ const DesignClient = () => {
   }, [formRound]);
 
   return (
-    <div className="flex flex-col w-full h-full border border-black text-white">
+    <div className="flex flex-col w-full h-full border border-black text-white figma-cursor">
       <Image
         src="/images/design/background.svg"
         alt="About Design"

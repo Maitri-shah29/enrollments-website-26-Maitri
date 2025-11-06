@@ -4,7 +4,7 @@ import type React from "react";
 
 const Home: React.FC = () => {
   return (
-    <div className="w-full h-full flex items-center justify-center -z-9 overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center overflow-hidden">
       <Image
         src="/images/design/landing-background.svg"
         alt="Home Design"
@@ -12,7 +12,7 @@ const Home: React.FC = () => {
         height={1080}
         className="w-full h-full object-cover absolute top-0"
       />
-      <div className="flex flex-col h-screen w-full justify-center items-center">
+      <div className="flex flex-col h-screen w-full justify-center items-center figma-cursor">
         <Image
           src="/images/design/welcome.svg"
           alt="Home Design Foreground"
@@ -28,56 +28,56 @@ const Home: React.FC = () => {
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/xd.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/premirepro.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/aftereffects.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/photoshop.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/illustrator.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/blender.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
           <Image
             src="/images/design/app_icons/canva.webp"
             alt="after effects"
             width={50}
             height={50}
-            className="col-start-2 relative w-12 h-12 mx-auto"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
           />
         </div>
       </div>
