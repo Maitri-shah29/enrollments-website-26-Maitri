@@ -14,15 +14,59 @@ import Interview from "@/app/clients/components/research/interview";
 import Questions from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
 
+const AOI_KEYS = [
+  "AIML",
+  "CYBERSECURITY",
+  "BLOCKCHAIN",
+  "BIOINFORMATICS",
+  "QUANTUMCOMPUTING",
+  "IOT",
+] as const;
+type AoiKey = (typeof AOI_KEYS)[number];
+
+const keyToLabel: Record<AoiKey, string> = {
+  AIML: "AI/ML",
+  CYBERSECURITY: "Cybersecurity",
+  BLOCKCHAIN: "Blockchain",
+  BIOINFORMATICS: "Bioinformatics",
+  QUANTUMCOMPUTING: "Quantum Computing",
+  IOT: "IoT",
+};
+
+const labelToKey: Record<string, AoiKey> = Object.fromEntries(
+  (Object.keys(keyToLabel) as AoiKey[]).map((k) => [
+    keyToLabel[k].toLowerCase(),
+    k,
+  ]),
+) as Record<string, AoiKey>;
+
+function toAoiKey(input: string): AoiKey | null {
+  if (!input) return null;
+  const trimmed = input.trim();
+  const upper = trimmed.toUpperCase().replace(/\s+/g, "");
+  const keyMatch = (AOI_KEYS as readonly string[]).find(
+    (k) => k === upper || k === trimmed.toUpperCase(),
+  ) as AoiKey | undefined;
+  if (keyMatch) return keyMatch;
+
+  const labelMatch = labelToKey[trimmed.toLowerCase()];
+  return labelMatch ?? null;
+}
+
 const ResearchClient = () => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [selectedAOI, setSelectedAOI] = useState<string>("Blockchain");
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
 
   const handleAOISelect = (aoi: string) => {
-    setSelectedAOI(aoi);
-    setSelectedQuestionIdx(0);
-    setSelectedPanel("Round 1");
+    const key = toAoiKey(aoi);
+    if (key) {
+      setSelectedAOI(keyToLabel[key]);
+      setSelectedPanel(key);
+      setSelectedQuestionIdx(0);
+    } else {
+      setSelectedPanel("AOIs");
+    }
   };
 
   const handleQuestionSelect = (idx: number) => {
@@ -31,29 +75,22 @@ const ResearchClient = () => {
   };
 
   const handlePanelSelect = (panelName: string) => {
-    const aoiMap: Record<string, string> = {
-      BLOCKCHAIN: "Blockchain",
-      QUANTUMCOMPUTING: "Quantum Computing",
-      AIML: "AI/ML",
-      BIOINFORMATICS: "BioInformatics",
-      CYBERSECURITY: "Cyber Security",
-      IOT: "IoT",
-    };
-
-    if (aoiMap[panelName]) {
-      setSelectedAOI(aoiMap[panelName]);
+    const key = toAoiKey(panelName);
+    if (key) {
+      setSelectedAOI(keyToLabel[key]);
       setSelectedQuestionIdx(0);
-      setSelectedPanel("Round 1");
-    } else {
-      setSelectedPanel(panelName);
+      setSelectedPanel(key);
+      return;
     }
+
+    setSelectedPanel(panelName);
   };
 
   return (
     <div className="flex h-full w-full bg-[#1a1a1a]">
       <ResearchNavbar
         selected={selectedPanel}
-        onSelect={setSelectedPanel}
+        onSelect={handlePanelSelect}
         selectedAOI={selectedAOI}
         selectedQuestionIdx={selectedQuestionIdx}
         onAOISelect={handleAOISelect}
@@ -74,6 +111,7 @@ const ResearchClient = () => {
           />
         )}
         {selectedPanel === "Interview" && <Interview />}
+
         {selectedPanel === "AIML" && <AIML />}
         {selectedPanel === "CYBERSECURITY" && <Cybersecurity />}
         {selectedPanel === "BLOCKCHAIN" && <Blockchain />}
