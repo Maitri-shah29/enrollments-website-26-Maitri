@@ -6,10 +6,11 @@ const Instructions: React.FC = () => {
   return (
     <>
       <div></div>
-      <NeonSection title="Instructions">
+      <NeonSection title="INSTRUCTIONS">
         <ul className="list-disc pl-6 space-y-2 text-white">
+          <li>Answer all the questions in the form round.</li>
           <li>Next round will be a CC contest round.</li>
-          <li>It will be organised on Sunday, 30th March, 2025.</li>
+          <li>It will be organised on Sunday, 14th December, 2025.</li>
           <li>Timings will be 9:00 pm to 11:00 pm.</li>
           <li>
             Contest link is{" "}
@@ -25,7 +26,7 @@ const Instructions: React.FC = () => {
         </ul>
       </NeonSection>
 
-      <NeonSection title="Resources">
+      <NeonSection title="RESOURCES">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             {

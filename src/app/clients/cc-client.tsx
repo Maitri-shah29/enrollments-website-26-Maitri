@@ -53,7 +53,7 @@ const Page = () => {
 
   return (
     <div className="w-full h-full relative overflow-y-auto">
-      <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between px-16">
+      <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between">
         <CCNavBar selected={selectedPanel} onSelect={setSelectedPanel} />
       </div>
       {selectedPanel === "Home" && (
@@ -61,7 +61,7 @@ const Page = () => {
       )}
       {selectedPanel !== "Home" && (
         <div className="w-full min-h-full bg-[#121216] pt-28 pb-16">
-          <div className="w-full space-y-8 px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32 mt-[45px]">
+          <div className="w-full space-y-8 md:px-6 lg:px-11 xl:px-15 2xl:px-20 mt-[45px]">
             {selectedPanel === "About" && <About />}
             {selectedPanel === "Instructions" && <Instructions />}
             {selectedPanel === "Contest" && <Contest />}
