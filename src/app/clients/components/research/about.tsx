@@ -4,7 +4,7 @@ import NetworkGraph from "./network-graph";
 
 const About = () => {
   return (
-    <div className="relative w-full min-h-screen bg-[#0E0E0E] text-white overflow-hidden">
+    <div className="relative w-full min-h-screen bg-[#1A1A1A] text-white overflow-hidden">
       <NetworkGraph />
 
       <div className="relative z-10 px-16 py-20 max-w-5xl">
