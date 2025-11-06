@@ -11,7 +11,7 @@ interface DesignNavbarProps {
 const DesignNavbar: React.FC<DesignNavbarProps> = ({
   selected,
   onSelect,
-  disableQuestions = false,
+  disableQuestions = true,
 }) => {
   const items = [
     "Home",
