@@ -10,9 +10,9 @@ import TechWebsite from "@/app/clients/tech-client";
 import { signIn } from "@/lib/auth-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
-import HomePage from "./home-page";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
+import HomePage from "./home-page";
 
 interface PageHistory {
   id: number;
@@ -58,6 +58,17 @@ const currentHostFromPointer = (tabData: TabData) => {
   return "";
 };
 
+const requestFullscreen = () => {
+  const elem = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch((err) => {
+        console.log("Error attempting to enable fullscreen:", err);
+      });
+    }
+  }
+};
+
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
@@ -84,6 +95,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
+
+    // Request fullscreen when navigating
+    requestFullscreen();
 
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
