@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { Suspense } from "react";
-import { getAllowedEmailList } from "@/lib/allowed-emails";
+import { isEmailAllowed } from "@/lib/allowed-emails";
 import { auth } from "@/lib/auth";
 import AccessDenied from "./components/access-denied";
 import Landing from "./components/landing";
@@ -29,11 +29,7 @@ async function HomeContent() {
   }
 
   const email = session.user?.email ?? null;
-  const allowedEmails = getAllowedEmailList();
-  const normalizedEmail = email?.trim().toLowerCase() ?? null;
-  const isAllowed =
-    allowedEmails.length === 0 ||
-    (normalizedEmail ? allowedEmails.includes(normalizedEmail) : false);
+  const isAllowed = isEmailAllowed(email);
 
   if (!isAllowed) {
     return (

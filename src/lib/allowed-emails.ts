@@ -3,6 +3,10 @@ const EMAIL_ENV_KEYS = [
   "ALLOWED_EMAILS",
   "NEXT_PUBLIC_GATED_ALLOWED_EMAILS",
   "NEXT_PUBLIC_ALLOWED_EMAILS",
+  "gated_allowed_emails",
+  "allowed_emails",
+  "next_public_gated_allowed_emails",
+  "next_public_allowed_emails",
 ] as const;
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -24,7 +28,7 @@ export const getAllowedEmailList = () => {
 
 export const isEmailAllowed = (email?: string | null) => {
   const allowedEmails = getAllowedEmailList();
-  if (allowedEmails.length === 0) return true;
   if (!email) return false;
+  if (allowedEmails.length === 0) return false;
   return allowedEmails.includes(normalizeEmail(email));
 };
