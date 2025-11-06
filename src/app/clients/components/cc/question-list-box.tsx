@@ -39,12 +39,12 @@ function QuestionListBox({
     >
       <div className="flex items-center justify-between bg-[#16171B] w-full h-fit sm:h-16 border-[0.2px] border-[#C9EB3E]">
         <div className="flex flex-col justify-center space-y-0.5 px-4">
-          <div className="text-[#C9EB3E] font-ShareTechMono text-lg font-normal leading-normal">
+          <div className="text-[#C9EB3E] font-ShareTechMono text-md font-normal leading-normal text-left w-full">
             Question {slNo}
           </div>
-          {/* <div className="text-white font-ShareTechMono text-[16px] font-normal leading-normal">
+          <div className="text-white font-ShareTechMono text-xl font-normal leading-normal text-left w-full">
             {title}
-          </div> */}
+          </div>
         </div>
         <div className="flex flex-col items-center justify-center space-y-0.5 w-28 sm:w-28">
           <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal text-center">

@@ -47,40 +47,22 @@ export type RoundUserExtended = Prisma.RoundUserGetPayload<{
 
 type QuestionsProps = {
   roundUser?: RoundUserExtended;
+  loading?: boolean;
+  error?: string | null;
 };
 
-// import fetchRoundUser from "../../actions/fetch-round-user";
-
-const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
+const Questions = ({
+  roundUser,
+  loading = false,
+  error = null,
+}: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
-  const [roundUser, setRoundUser] = useState<RoundUserExtended | undefined>(
-    initialRoundUser,
-  );
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!initialRoundUser) {
-      setLoading(true);
-      fetch("/api/round-user?domain=cc")
-        .then(async (res) => {
-          if (!res.ok) throw new Error("Failed to fetch round user data");
-          const data = await res.json();
-          setRoundUser(data);
-          setLoading(false);
-        })
-        .catch(() => {
-          setError("Failed to fetch round user data");
-          setLoading(false);
-        });
-    }
-  }, [initialRoundUser]);
 
   useEffect(() => {
     if (roundUser?.formSubmission?.responses) {
@@ -149,7 +131,7 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
   const questionsForList = subjectiveQuestions.map((question) => ({
     id: question.id,
     serial: question.serial,
-    title: question.question,
+    title: question.helpText || "CC Question",
     difficulty: question.varName,
   }));
 
@@ -243,8 +225,8 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
               <div className="w-full flex flex-col space-y-3">
                 <div className="">
                   <QuestionBox
-                    subject={activeQuestion.question}
-                    body={activeQuestion.helpText || ""}
+                    subject={activeQuestion.helpText || "CC Question"}
+                    body={activeQuestion.question}
                   />
                 </div>
                 <div className="flex-1 min-h-[300px] sm:min-h-[420px]">
