@@ -4,8 +4,8 @@ import type React from "react";
 
 const AOIs: React.FC = () => {
   return (
-    <div className="h-full w-full flex items-center justify-start flex-col px-[5%] py-[3%] overflow-y-auto">
-      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[3%] mt-[2%]">
+    <div className="h-full w-full flex items-center flex-col">
+      <h1 className="text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0">
         Areas of Interest
       </h1>
       <div className="flex flex-col lg:flex-row px-[3%] gap-[3%] mb-[3%]">

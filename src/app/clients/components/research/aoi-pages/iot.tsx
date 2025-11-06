@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type React from "react";
 
-const about: React.FC = () => {
+const iotPage: React.FC = () => {
   return (
     <div className="relative flex w-full h-full">
       <Image
@@ -12,9 +12,7 @@ const about: React.FC = () => {
         className="object-cover object-bottom z-0 opacity-80"
       />
       <div className="absolute top-0 p-10">
-        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">
-          About Research
-        </h1>
+        <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">IOT</h1>
         <p className="text-white">
           lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
           ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
@@ -34,4 +32,4 @@ const about: React.FC = () => {
   );
 };
 
-export default about;
+export default iotPage;

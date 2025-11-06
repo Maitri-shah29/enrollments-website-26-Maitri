@@ -65,6 +65,30 @@ body {
   font-display: swap;
 }
 
+@font-face {
+  font-family: "PoppinsReg";
+  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PoppinsBlack";
+  src: url("/fonts/Poppins-Black.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-poppins {
+  font-family: "PoppinsBlack", monospace;
+}
+
+.font-poppinsReg {
+  font-family: "PoppinsReg", monospace;
+}
+
 .font-georgia {
   font-family: "Georgia", monospace;
 }
@@ -145,4 +169,17 @@ body {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@keyframes about-drift {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-22%);
+  }
+}
+
+.animate-about-drift {
+  animation: about-drift 14s ease-in-out infinite alternate;
 }

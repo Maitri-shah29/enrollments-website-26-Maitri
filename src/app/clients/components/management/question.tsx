@@ -72,13 +72,24 @@ export default function Question({
               <span className="text-gray-500 italic">Saved draft</span>
             </p>
           </div>
-          <textarea
-            value={answer}
-            onChange={(e) => onChangeAnswer(question.id, e.target.value)}
-            style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-            placeholder="Type your answer here..."
-            className="text-black w-full min-h-20 outline-none"
-          />
+          <div className="max-h-[325px] overflow-y-auto">
+            <textarea
+              value={answer}
+              onChange={(e) => onChangeAnswer(question.id, e.target.value)}
+              style={{
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
+                overflowY: "hidden",
+              }}
+              placeholder="Type your answer here..."
+              className="text-black w-full min-h-20 outline-none resize-none bg-transparent"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = target.scrollHeight + "px";
+              }}
+            />
+          </div>
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
           {successMessage && (
             <p className="text-green-600 text-sm mt-2">{successMessage}</p>

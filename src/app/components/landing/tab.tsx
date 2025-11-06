@@ -1,13 +1,56 @@
 "use client";
+import Image from "next/image";
 // change
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
 import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
+import { signIn } from "@/lib/auth-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
+import { useSessionContext } from "../session-provider"; // Adjust path as needed
+import SignupPage from "../sign-up";
+import HomePage from "./home-page";
+
+const INTERNAL_KEYWORDS = new Set([
+  "cc",
+  "management",
+  "tech",
+  "design",
+  "research",
+]);
+
+interface HomePageNavbarProps {
+  onNavigate: (keyword: string) => void;
+}
+
+const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
+  return (
+    <nav className="w-full bg-[#555] text-white py-2">
+      <ul className="flex items-center justify-center gap-6 text-sm font-semibold">
+        {Array.from(INTERNAL_KEYWORDS).map((item, index) => (
+          <React.Fragment key={item}>
+            <li>
+              <button
+                type="button"
+                onClick={() => onNavigate(item)}
+                className="hover:text-gray-300 transition-colors"
+              >
+                {item}
+              </button>
+            </li>
+
+            {index < item.length - 1 && (
+              <span className="h-4 w-px bg-gray-300 opacity-40" />
+            )}
+          </React.Fragment>
+        ))}
+      </ul>
+    </nav>
+  );
+};
 
 interface PageHistory {
   id: number;
@@ -25,7 +68,6 @@ export interface TabData {
   showResearch: boolean;
   history: PageHistory[];
   pointer: number;
-  // last-typed (not-yet-committed) value for this tab's address bar
   pendingUrl?: string;
 }
 
@@ -33,14 +75,6 @@ interface TabProps {
   tabData: TabData;
   onUpdateTab: (updatedTab: TabData) => void;
 }
-
-const INTERNAL_KEYWORDS = new Set([
-  "cc",
-  "management",
-  "tech",
-  "design",
-  "research",
-]);
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
 const ensureHttps = (hostOrUrl: string) =>
@@ -54,8 +88,21 @@ const currentHostFromPointer = (tabData: TabData) => {
   return "";
 };
 
+const requestFullscreen = () => {
+  const elem = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch((err) => {
+        console.log("Error attempting to enable fullscreen:", err);
+      });
+    }
+  }
+};
+
 const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
-  // Separate inputs for top navbar and home card so typing in one doesn't mirror the other
+  // Get session from context
+  const { session, isPending } = useSessionContext();
+
   const [navInput, setNavInput] = useState<string>(() =>
     currentHostFromPointer(tabData),
   );
@@ -63,7 +110,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     currentHostFromPointer(tabData),
   );
 
-  // Sync inputs when active page changes (keep UX consistent)
   useEffect(() => {
     const v = currentHostFromPointer(tabData);
     setNavInput(v);
@@ -75,23 +121,22 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setHomeInput(stripProtocol(e.target.value));
 
-  // Centralized commit logic used by either input
   const commitFrom = (raw: string) => {
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
 
-    // Handle internal sections
+    // Request fullscreen when navigating
+    requestFullscreen();
+
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
         id: Date.now(),
         title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         url: trimmed,
       };
-
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
       newHistory.push(newPage);
-
       onUpdateTab({
         ...tabData,
         showCc: trimmed === "cc",
@@ -110,17 +155,14 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       return;
     }
 
-    // Handle regular URL navigation
     const formatted = ensureHttps(inputValue);
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
       url: formatted,
     };
-
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
     newHistory.push(newPage);
-
     onUpdateTab({
       ...tabData,
       history: newHistory,
@@ -140,12 +182,12 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       commitFrom(navInput);
       return;
     }
-
     if (e.key === "Tab" && !navInput.trim()) {
       e.preventDefault();
       commitFrom("acmvit.in");
     }
   };
+
   const handleHomeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       commitFrom(homeInput);
@@ -160,7 +202,27 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   const goPrevious = () => {
     if (tabData.pointer > 0) {
       const newPointer = tabData.pointer - 1;
-      const v = stripProtocol(tabData.history[newPointer].url);
+      const entry = tabData.history[newPointer];
+      const rawUrl = entry.url;
+      const v = stripProtocol(rawUrl);
+
+      if (!rawUrl) {
+        onUpdateTab({
+          ...tabData,
+          pointer: newPointer,
+          pendingUrl: undefined,
+          title: entry.title || "Home",
+          showCc: false,
+          showManagement: false,
+          showTech: false,
+          showDesign: false,
+          showResearch: false,
+        });
+        setNavInput("");
+        setHomeInput("");
+        return;
+      }
+
       onUpdateTab({
         ...tabData,
         pointer: newPointer,
@@ -175,12 +237,57 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       setNavInput(v);
       setHomeInput(v);
     }
+  };
+
+  const goHome = () => {
+    const newHistory = tabData.history.slice(0, tabData.pointer + 1);
+    newHistory.push({
+      id: Date.now(),
+      title: "Home",
+      url: "",
+    });
+
+    onUpdateTab({
+      ...tabData,
+      history: newHistory,
+      pointer: newHistory.length - 1,
+      pendingUrl: undefined,
+      title: "Home",
+      showCc: false,
+      showManagement: false,
+      showTech: false,
+      showDesign: false,
+      showResearch: false,
+    });
+
+    setNavInput("");
+    setHomeInput("");
   };
 
   const goNext = () => {
     if (tabData.pointer < tabData.history.length - 1) {
       const newPointer = tabData.pointer + 1;
-      const v = stripProtocol(tabData.history[newPointer].url);
+      const entry = tabData.history[newPointer];
+      const rawUrl = entry.url;
+      const v = stripProtocol(rawUrl);
+
+      if (!rawUrl) {
+        onUpdateTab({
+          ...tabData,
+          pointer: newPointer,
+          pendingUrl: undefined,
+          title: entry.title || "Home",
+          showCc: false,
+          showManagement: false,
+          showTech: false,
+          showDesign: false,
+          showResearch: false,
+        });
+        setNavInput("");
+        setHomeInput("");
+        return;
+      }
+
       onUpdateTab({
         ...tabData,
         pointer: newPointer,
@@ -197,131 +304,188 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     }
   };
 
+  // Show loading state while checking session
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-blue-900">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Render authenticated content
   const activePageData = tabData.history[tabData.pointer];
+  const navIconButtonBase =
+    "flex items-center justify-center text-neutral-500 rounded-md border border-transparent transition duration-150 hover:text-neutral-900 hover:bg-white/70 hover:border-white/80 active:bg-white active:border-white focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent";
+  const navIconButton = `${navIconButtonBase} px-2.5 py-1`;
+  const navIconButtonCompact = `${navIconButtonBase} px-2 py-1`;
+  const navIconButtonDisabled =
+    "opacity-40 cursor-not-allowed pointer-events-none hover:text-neutral-500";
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Navigation Bar */}
-      <div className="w-full bg-blue-800 h-10 flex items-center py-1 px-10 gap-2">
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            className="hover:bg-white/10 rounded-full p-2"
-            onClick={goPrevious}
-            disabled={tabData.pointer <= 0}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              aria-label="left arrow"
-              viewBox="0 0 512 512"
-              width="15"
-              height="15"
-              fill={tabData.pointer > 0 ? "white" : "grey"}
+      <div className="w-full bg-[#ffffff]">
+        <div className="flex items-center gap-2.5 px-4 py-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              className={`${navIconButton} ${
+                tabData.pointer <= 0 ? navIconButtonDisabled : ""
+              }`}
+              onClick={goPrevious}
+              disabled={tabData.pointer <= 0}
             >
-              <title>Previous</title>
-              <path d="M512 224H147.3l136.4-136.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L147.3 288H512c17.7 0 32-14.3 32-32s-14.3-32-32-32z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="hover:bg-white/10 rounded-full p-2"
-            onClick={goNext}
-            disabled={tabData.pointer >= tabData.history.length - 1}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              aria-label="right arrow"
-              viewBox="0 0 512 512"
-              width="15"
-              height="15"
-              fill={
-                tabData.pointer < tabData.history.length - 1 ? "white" : "grey"
-              }
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15.25 19.25 8.75 12l6.5-7.25" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={`${navIconButton} ${
+                tabData.pointer >= tabData.history.length - 1
+                  ? navIconButtonDisabled
+                  : ""
+              }`}
+              onClick={goNext}
+              disabled={tabData.pointer >= tabData.history.length - 1}
             >
-              <title>Next</title>
-              <path d="M0 288h364.7l-136.4 136.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3l-192-192c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L364.7 224H0c-17.7 0-32 14.3-32 32s14.3 32 32 32z" />
-            </svg>
-          </button>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m8.75 4.75 6.5 7.25-6.5 7.25" />
+              </svg>
+            </button>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <RefreshButton className="p-2 rounded hover:bg-white/10" />
-        </div>
+          <div className="flex items-center gap-1.5">
+            <RefreshButton className={navIconButtonCompact} />
+            <button
+              type="button"
+              className={navIconButton}
+              onClick={goHome}
+              aria-label="Home"
+            >
+              <Image
+                src="/home-button.svg"
+                alt="Home"
+                width={18}
+                height={18}
+                className="w-4 h-4"
+              />
+            </button>
+          </div>
 
-        <div className="flex items-center w-full h-full bg-blue-700 border-2 border-white rounded-full px-3 text-white justify-center">
-          <span className="text-gray-300 select-none">https://</span>
-          <input
-            className="bg-transparent w-full outline-none text-white"
-            value={navInput}
-            onChange={handleNavChange}
-            onKeyDown={handleNavKeyPress}
-            placeholder="acmvit.in"
-          />
-        </div>
+          <div className="flex flex-1 items-center gap-3">
+            <div className="flex flex-1 items-center h-10 rounded-lg bg-gradient-to-b from-[#585858] to-[#bdbdbd] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+              <span className="text-neutral-100 select-none font-medium tracking-tight">
+                https://
+              </span>
+              <input
+                className="flex-1 bg-transparent outline-none text-neutral-50 placeholder-neutral-200 tracking-tight"
+                value={navInput}
+                onChange={handleNavChange}
+                onKeyDown={handleNavKeyPress}
+                placeholder="ocs.acmvit.in"
+              />
+              <button
+                type="button"
+                aria-label="Search"
+                className="flex min-w-[34px] items-center justify-center rounded-lg bg-white px-3 py-1.5 text-neutral-600 shadow-[0_1px_3px_rgba(0,0,0,0.18)] transition duration-150 hover:bg-white hover:text-neutral-800 hover:shadow-[0_3px_8px_rgba(0,0,0,0.24)] active:bg-neutral-100 active:shadow-[0_1px_2px_rgba(0,0,0,0.2)] focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent"
+                onClick={() => commitFrom(navInput)}
+              >
+                <svg
+                  aria-label="Search"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <title>Search icon</title>
+                  <circle cx="11" cy="11" r="5.5" />
+                  <path strokeLinecap="round" d="m15.5 15.5 3 3" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-        <div className="ml-auto mb-1">
-          <ProfileButton />
+          <div className="ml-3">
+            <ProfileButton />
+          </div>
         </div>
       </div>
-
       {/* Content Area */}
-      <div className="flex-1 w-full overflow-hidden bg-blue-900 flex flex-col items-center justify-center text-white gap-6 relative">
-        {tabData.showManagement ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+      <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808]">
+        {!session?.data &&
+        (tabData.showManagement ||
+          tabData.showCc ||
+          tabData.showDesign ||
+          tabData.showResearch ||
+          tabData.showTech) ? (
+          <SignupPage onSignIn={signIn} />
+        ) : tabData.showManagement ? (
+          <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <Management />
             </div>
           </div>
         ) : tabData.showCc ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+          <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <CCClient />
             </div>
           </div>
         ) : tabData.showTech ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+          <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <TechWebsite />
             </div>
           </div>
         ) : tabData.showDesign ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+          <div className="w-full h-full bg-white overflow-auto relative">
             <DesignClient />
           </div>
         ) : tabData.showResearch ? (
-          <div className="w-full h-full bg-white rounded-b-xl overflow-auto relative">
+          <div className="w-full h-full bg-white overflow-auto relative">
             <ResearchClient />
           </div>
         ) : activePageData?.url ? (
           <iframe
             key={activePageData.url}
-            className="w-full h-full rounded-b-xl"
+            className="w-full h-full"
             src={activePageData.url}
             title="Browser Tab"
             allowFullScreen
           ></iframe>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-6 w-full">
-            <h1 className="text-6xl font-semibold">ACM-OCS'26</h1>
-
-            <div className="flex items-center w-170 min-w-[400px] h-10 bg-white rounded-full px-3 text-black shadow-md">
-              <span className="select-none">https://</span>
-              <input
-                className="bg-transparent w-full outline-none"
-                value={homeInput}
-                onChange={handleHomeChange}
-                onKeyDown={handleHomeKeyPress}
-                placeholder="acmvit.in"
-              />
-            </div>
-
-            <div className="flex gap-4 flex-wrap justify-center mt-4">
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-              <div className="w-40 h-25 bg-white/70 rounded-xl"></div>
-            </div>
+          <div>
+            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
+            <HomePage
+              query={homeInput}
+              onQueryChange={handleHomeChange}
+              onQueryKeyDown={handleHomeKeyPress}
+              onNavigateKeyword={(keyword) => commitFrom(keyword)}
+            />
           </div>
         )}
       </div>

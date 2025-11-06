@@ -1,77 +1,73 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import type { UserAuthDisplayProps } from "../../lib/types";
 import ProfileMenu from "./profile-menu";
+import { useSessionContext } from "./session-provider";
 
 const ProfileButton: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<UserAuthDisplayProps["user"]>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Checks the current authentication status cuz
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (session?.data?.user) {
-          setIsAuthenticated(true);
-          setUser({
-            name: session.data.user.name || "Unknown User",
-            email: session.data.user.email || "",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch session:", error);
-      } finally {
-        setIsLoading(false);
+  // ✅ Get session from global context
+  const { session, isPending } = useSessionContext();
+
+  // ✅ derived auth state
+  const isAuthenticated = !!session?.data?.user;
+
+  const user = isAuthenticated
+    ? {
+        name: session.data.user.name || "Unknown User",
+        email: session.data.user.email || "",
       }
-    };
+    : null;
 
-    checkAuth();
-  }, []);
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  // logout and close the menu
+  // ✅ Logout now syncs across ALL tabs + this tab
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      setIsAuthenticated(false);
-      setUser(null);
+
+      // same-tab update
+      window.dispatchEvent(new Event("better-auth-session-change"));
+
+      // cross-tab update
+      localStorage.setItem(
+        "better-auth-session-trigger",
+        Date.now().toString(),
+      );
+
       setIsMenuOpen(false);
     } catch (error) {
       console.error("Failed to sign out:", error);
     }
   };
 
-  // loading animation as given by gpt
-  if (isLoading) {
+  // ✅ Show loading spinner from session context
+  if (isPending) {
     return (
-      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 rounded-full border border-neutral-300 bg-white flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.12)]">
+        <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="relative">
+      {/* Profile icon button */}
       <button
         type="button"
         onClick={toggleMenu}
-        className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white hover:bg-gray-500 transition-colors"
+        className="w-10 h-10 rounded-full border border-neutral-300 bg-white flex items-center justify-center text-neutral-600 shadow-[0_1px_3px_rgba(0,0,0,0.12)] hover:bg-neutral-100 transition-colors"
       >
         {isAuthenticated && user ? (
           <span className="text-sm font-semibold">
             {user.name.charAt(0).toUpperCase()}
           </span>
         ) : (
+          /* Guest icon */
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <title>Profile icon</title>
-            {/* default guest profile icon as given by gpt my lord and saviour, would prefer custom made svg*/}
             <path
               fillRule="evenodd"
               d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -81,6 +77,7 @@ const ProfileButton: React.FC = () => {
         )}
       </button>
 
+      {/* Dropdown menu */}
       {isMenuOpen && (
         <ProfileMenu
           isAuthenticated={isAuthenticated}

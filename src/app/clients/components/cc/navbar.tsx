@@ -19,7 +19,7 @@ const CCNavBar = ({ selected, onSelect }: CCNavBarProps) => {
     <div className="flex justify-center items-center w-full">
       <div className="flex justify-center items-center ml-15 mr-1">
         <Image
-          src="/images/ACM-VIT-Logo.png"
+          src="/images/ACM-VIT-Logo.svg"
           height={100}
           width={100}
           alt="ACM-logo"

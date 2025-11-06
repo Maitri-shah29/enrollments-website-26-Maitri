@@ -16,14 +16,14 @@ const handleGoogleSignIn = async () => {
 };
 
 const unauthenticatedView = () => (
-  <div className="flex flex-col items-center py-8 px-6">
-    <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center mb-4">
+  <div className="flex flex-col items-center gap-4 px-8 py-10 text-white">
+    <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white/15">
+      <div className="absolute inset-0 rounded-full border-2 border-white/50" />
       <svg
-        className="w-10 h-10 text-white"
+        className="relative z-10 h-9 w-9 text-white"
         fill="currentColor"
         viewBox="0 0 20 20"
       >
-        {/* Guest profile icon, this code is AI */}
         <title>User icon</title>
         <path
           fillRule="evenodd"
@@ -32,14 +32,16 @@ const unauthenticatedView = () => (
         />
       </svg>
     </div>
-    <h3 className="text-white text-lg font-medium mb-2">Guest User</h3>
-    <p className="text-gray-400 text-sm text-center mb-6">
-      Sign in to access all features.
-    </p>
+    <div className="text-center space-y-1">
+      <h3 className="text-lg font-semibold">Guest User</h3>
+      <p className="text-sm text-white/70 max-w-[14rem]">
+        Sign in with Google to access all ACM resources.
+      </p>
+    </div>
     <button
       type="button"
       onClick={handleGoogleSignIn}
-      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full transition-colors"
+      className="rounded-full bg-white/15 px-6 py-2 text-sm font-medium text-white transition hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
     >
       Sign in using Google
     </button>
@@ -50,25 +52,26 @@ const authenticatedView = (
   user: UserAuthDisplayProps["user"],
   onLogout: () => void,
 ) => (
-  <div className="flex flex-col">
-    <div className="flex flex-col items-center py-6 px-6 border-b border-gray-700">
-      <div className="w-16 h-16 rounded-full bg-gray-600 flex items-center justify-center mb-3">
-        <span className="text-2xl text-white font-semibold">
+  <div className="flex flex-col items-center gap-6 px-8 py-10 text-white">
+    <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white/15">
+      <div className="absolute inset-0 rounded-full border-2 border-white/50" />
+      <div className="relative z-10 flex h-[60%] w-[60%] items-center justify-center rounded-full bg-white/10">
+        <span className="text-xl font-semibold text-white">
           {user?.name.charAt(0).toUpperCase()}
         </span>
       </div>
-      <h3 className="text-white text-lg font-medium">{user?.name}</h3>
-      <p className="text-gray-400 text-sm">{user?.email}</p>
     </div>
-    <div className="p-2">
-      <button
-        type="button"
-        onClick={onLogout}
-        className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded transition-colors"
-      >
-        Sign out
-      </button>
+    <div className="text-center space-y-1">
+      <h3 className="text-lg font-semibold leading-tight">{user?.name}</h3>
+      <p className="text-sm text-white/70 leading-tight">{user?.email}</p>
     </div>
+    <button
+      type="button"
+      onClick={onLogout}
+      className="text-sm font-semibold text-white underline underline-offset-4 transition hover:text-white/80 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
+    >
+      Sign out
+    </button>
   </div>
 );
 
@@ -88,7 +91,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
         onClick={onClose}
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       />
-      <div className="absolute right-0 top-12 w-80 bg-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
+      <div className="absolute right-0 top-12 w-72 rounded-3xl bg-[#585858] text-white shadow-[0_12px_40px_rgba(0,0,0,0.45)] z-50 overflow-hidden border border-white/10">
         {isAuthenticated
           ? authenticatedView(user, onLogout)
           : unauthenticatedView()}

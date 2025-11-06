@@ -19,6 +19,10 @@ const Vault = "/images/research/vault.svg";
 interface ResearchNavbarProps {
   selected: string;
   onSelect: (panel: string) => void;
+  selectedAOI?: string;
+  selectedQuestionIdx?: number | null;
+  onAOISelect?: (aoi: string) => void;
+  onQuestionSelect?: (idx: number) => void;
 }
 //test
 const Icon = {
@@ -43,10 +47,20 @@ const questions = [
 const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   selected,
   onSelect,
+  selectedAOI,
+  selectedQuestionIdx,
+  onAOISelect,
+  onQuestionSelect,
 }) => {
   const [expandedRound, setExpandedRound] = useState<boolean>(false);
-  const [AOI, setAoi] = useState<string>(""); // current expanded AOI
-  const [question, setQuestion] = useState<number | null>(null); // selected question index
+  const [AOIState, setAoiState] = useState<string>("");
+  const [questionState, setQuestionState] = useState<number | null>(null);
+
+  const effectiveAOI = selectedAOI ?? AOIState;
+  const effectiveQuestionIdx =
+    typeof selectedQuestionIdx === "number"
+      ? selectedQuestionIdx
+      : questionState;
 
   const items = [
     {
@@ -65,7 +79,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   const roundAOIs = [
     "Blockchain",
     "Quantum Computing",
-    "AIML",
+    "AI/ML",
     "BioInformatics",
     "Cyber Security",
     "IoT",
@@ -73,11 +87,11 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
   return (
     <aside
-      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-y-auto"
+      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-hidden"
       aria-label="Research sidebar"
     >
-      <div className="flex flex-col h-full p-2">
-        <div className="space-y-0">
+      <div className="flex flex-col h-full p-2 overflow-auto pr-5">
+        <div className="space-y-0 mb-10">
           <button
             type="button"
             aria-label="Go to Home"
@@ -143,8 +157,10 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        setAoi((prev) => (prev === aoi ? "" : aoi));
-                        setQuestion(null);
+                        const next = aoi;
+                        setAoiState(next);
+                        setQuestionState(null);
+                        onAOISelect?.(next);
                         onSelect("Round 1");
                       }}
                       className="flex items-center gap-3 text-left w-full cursor-pointer"
@@ -160,26 +176,27 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                     <div className="inline-flex items-center">
                       <div
                         className={`w-4 h-4 border-white border-1 rounded-[25%] ${
-                          aoi === AOI ? "bg-[#C8B7FF]" : ""
+                          aoi === effectiveAOI ? "bg-[#C8B7FF]" : ""
                         }`}
                       ></div>
                     </div>
                   </div>
 
-                  {AOI === aoi && (
+                  {effectiveAOI === aoi && (
                     <div className="pl-6 space-y-1">
                       {questions.map((qText, qIdx) => (
                         <button
-                          key={`${AOI}-${qText}`}
+                          key={`${aoi}-${qText}`}
                           type="button"
                           onClick={() => {
-                            setQuestion(qIdx);
+                            setQuestionState(qIdx);
+                            onQuestionSelect?.(qIdx);
                             onSelect("Round 1");
                           }}
-                          className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D37D] flex items-center justify-between text-sm transition-colors cursor-pointer`}
+                          className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D3]/50 flex items-center justify-between text-sm transition-colors cursor-pointer`}
                         >
                           <span className="text-left">{qText}</span>
-                          {question === qIdx && (
+                          {effectiveQuestionIdx === qIdx && (
                             <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
                           )}
                         </button>
@@ -220,7 +237,10 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </button>
           </div>
         </div>
-        <div className="flex flex-col items-start mt-auto">
+        <div
+          className="flex flex-col items-start mt-auto"
+          style={{ marginBottom: "-0px" }}
+        >
           <button
             className="p-2 hover:scale-105 transition-transform"
             type="button"
