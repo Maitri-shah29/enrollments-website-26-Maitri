@@ -4,6 +4,8 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
+import Domains from "@/app/clients/domains-client";
+import Events from "@/app/clients/events-client";
 import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
@@ -20,6 +22,8 @@ const INTERNAL_KEYWORDS = new Set([
   "tech",
   "design",
   "research",
+  "events",
+  "domains",
 ]);
 
 interface HomePageNavbarProps {
@@ -66,6 +70,8 @@ export interface TabData {
   showTech: boolean;
   showDesign: boolean;
   showResearch: boolean;
+  showEvents: boolean;
+  showDomains: boolean;
   history: PageHistory[];
   pointer: number;
   pendingUrl?: string;
@@ -144,6 +150,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showTech: trimmed === "tech",
         showDesign: trimmed === "design",
         showResearch: trimmed === "research",
+        showEvents: trimmed === "events",
+        showDomains: trimmed === "domains",
         title:
           trimmed === "cc"
             ? "CC"
@@ -173,6 +181,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       showTech: false,
       showDesign: false,
       showResearch: false,
+      showEvents: false,
+      showDomains: false,
       pendingUrl: inputValue,
     });
   };
@@ -216,6 +226,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showManagement: false,
           showTech: false,
           showDesign: false,
+          showDomains: false,
+          showEvents: false,
           showResearch: false,
         });
         setNavInput("");
@@ -233,6 +245,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showTech: v === "tech",
         showDesign: v === "design",
         showResearch: v === "research",
+        showEvents: v === "events",
+        showDomains: v === "domains",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -253,6 +267,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       pointer: newHistory.length - 1,
       pendingUrl: undefined,
       title: "Home",
+      showEvents: false,
+      showDomains: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -281,6 +297,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           showManagement: false,
           showTech: false,
           showDesign: false,
+          showDomains: false,
+          showEvents: false,
           showResearch: false,
         });
         setNavInput("");
@@ -298,6 +316,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
         showTech: v === "tech",
         showDesign: v === "design",
         showResearch: v === "research",
+        showDomains: v === "domains",
+        showEvents: v === "events",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -438,6 +458,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
       <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808]">
         {!session?.data &&
         (tabData.showManagement ||
+          tabData.showDomains ||
+          tabData.showEvents ||
           tabData.showCc ||
           tabData.showDesign ||
           tabData.showResearch ||
@@ -447,6 +469,18 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <Management />
+            </div>
+          </div>
+        ) : tabData.showEvents ? (
+          <div className="w-full h-full bg-white overflow-auto relative">
+            <div className="h-full flex items-center justify-center">
+              <Events />
+            </div>
+          </div>
+        ) : tabData.showDomains ? (
+          <div className="w-full h-full bg-white overflow-auto hide-scrollbar relative">
+            <div className="min-h-screen flex items-center justify-center">
+              <Domains />
             </div>
           </div>
         ) : tabData.showCc ? (
