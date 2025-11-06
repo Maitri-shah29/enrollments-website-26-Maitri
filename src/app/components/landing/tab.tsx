@@ -116,6 +116,22 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     setHomeInput(v);
   }, [tabData]);
 
+  //for link navigation
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "NAVIGATE_TO" && event.data?.url) {
+        // Forward the message to the parent (landing.tsx) to create a new tab
+        window.postMessage(
+          { type: "CREATE_NEW_TAB", url: event.data.url },
+          "*",
+        );
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
   const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setNavInput(stripProtocol(e.target.value));
   const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>

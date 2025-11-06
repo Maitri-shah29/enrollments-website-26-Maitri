@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, useState } from "react";
+import { type DragEvent, useEffect, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
@@ -22,6 +22,63 @@ const Landing: React.FC = () => {
   ]);
   const [activeTabId, setActiveTabId] = useState<number>(initialId);
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
+  const [processingUrl, setProcessingUrl] = useState<string | null>(null);
+
+  // for new tabs from redirection
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "CREATE_NEW_TAB" && event.data?.url) {
+        const url = event.data.url;
+
+        if (processingUrl === url) {
+          return;
+        }
+
+        setProcessingUrl(url);
+
+        setTimeout(() => {
+          setTabs((prevTabs) => {
+            const existingTab = prevTabs.find((tab) =>
+              tab.history.some((h) => h.url === url),
+            );
+
+            if (existingTab) {
+              setActiveTabId(existingTab.id);
+              setProcessingUrl(null);
+              return prevTabs;
+            }
+
+            const newId = Date.now() + Math.random(); // Ensure unique ID
+            const newTab: TabData = {
+              id: newId,
+              title: url.replace(/^https?:\/\//, "").split("/")[0],
+              showCc: false,
+              showManagement: false,
+              showTech: false,
+              showDesign: false,
+              showResearch: false,
+              history: [
+                {
+                  id: Date.now(),
+                  title: url,
+                  url: url,
+                },
+              ],
+              pointer: 0,
+              pendingUrl: url,
+            };
+
+            setActiveTabId(newId);
+            setProcessingUrl(null);
+            return [...prevTabs, newTab];
+          });
+        }, 50);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [processingUrl]);
 
   if (isPending) return null;
 
