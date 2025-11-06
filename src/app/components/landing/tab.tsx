@@ -7,7 +7,6 @@ import DesignClient from "@/app/clients/design-client";
 import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
-import { signIn } from "@/lib/auth-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
@@ -455,7 +454,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           tabData.showDesign ||
           tabData.showResearch ||
           tabData.showTech) ? (
-          <SignupPage onSignIn={signIn} />
+          <SignupPage />
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
