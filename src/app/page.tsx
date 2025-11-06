@@ -1,6 +1,3 @@
-"use client";
-import { useEffect, useState } from "react";
-import { authClient, signIn } from "@/lib/auth-client";
 import Landing from "./components/landing";
 import { SessionProvider } from "./components/session-provider";
 
