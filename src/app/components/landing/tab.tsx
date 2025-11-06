@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 // change
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
 import Management from "@/app/clients/management-client";
@@ -10,9 +10,47 @@ import TechWebsite from "@/app/clients/tech-client";
 import { signIn } from "@/lib/auth-client";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
-import HomePage from "./home-page";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
+import HomePage from "./home-page";
+
+const INTERNAL_KEYWORDS = new Set([
+  "cc",
+  "management",
+  "tech",
+  "design",
+  "research",
+]);
+
+interface HomePageNavbarProps {
+  onNavigate: (keyword: string) => void;
+}
+
+const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
+  return (
+    <nav className="w-full bg-[#555] text-white py-2">
+      <ul className="flex items-center justify-center gap-6 text-sm font-semibold">
+        {Array.from(INTERNAL_KEYWORDS).map((item, index) => (
+          <React.Fragment key={item}>
+            <li>
+              <button
+                type="button"
+                onClick={() => onNavigate(item)}
+                className="hover:text-gray-300 transition-colors"
+              >
+                {item}
+              </button>
+            </li>
+
+            {index < item.length - 1 && (
+              <span className="h-4 w-px bg-gray-300 opacity-40" />
+            )}
+          </React.Fragment>
+        ))}
+      </ul>
+    </nav>
+  );
+};
 
 interface PageHistory {
   id: number;
@@ -37,14 +75,6 @@ interface TabProps {
   tabData: TabData;
   onUpdateTab: (updatedTab: TabData) => void;
 }
-
-const INTERNAL_KEYWORDS = new Set([
-  "cc",
-  "management",
-  "tech",
-  "design",
-  "research",
-]);
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
 const ensureHttps = (hostOrUrl: string) =>
@@ -434,12 +464,15 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
             allowFullScreen
           ></iframe>
         ) : (
-          <HomePage
-            query={homeInput}
-            onQueryChange={handleHomeChange}
-            onQueryKeyDown={handleHomeKeyPress}
-            onNavigateKeyword={(keyword) => commitFrom(keyword)}
-          />
+          <div>
+            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
+            <HomePage
+              query={homeInput}
+              onQueryChange={handleHomeChange}
+              onQueryKeyDown={handleHomeKeyPress}
+              onNavigateKeyword={(keyword) => commitFrom(keyword)}
+            />
+          </div>
         )}
       </div>
     </div>
