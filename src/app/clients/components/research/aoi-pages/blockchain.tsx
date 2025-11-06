@@ -1,9 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import type React from "react";
+import NetworkGraph from "../network-graph";
 
 const blockchainPage: React.FC = () => {
   return (
-    <div className="relative flex w-full h-full">
+    <div className="relative flex w-full h-full bg-[#1A1A1A]">
+      <NetworkGraph />
+
       <Image
         src="/images/research/background.svg"
         alt="background image"
@@ -11,7 +16,7 @@ const blockchainPage: React.FC = () => {
         height={500}
         className="object-cover object-bottom z-0 opacity-80"
       />
-      <div className="absolute top-0 p-10">
+      <div className="absolute top-0 p-10 z-10">
         <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">Blockchain</h1>
         <p className="text-white">
           lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
@@ -22,7 +27,7 @@ const blockchainPage: React.FC = () => {
           wbcusbdvy8gwefesdbjckusbdvywegvwbvhbvjsbvduv8wgvbvhjbvjhsdv sd
           yugrvehvbwehbvhewbvhsdbvbvyweguewbewbvhbvyubvuywegvubhvbvweyfwe8hfbf
           fugo8wegvobv bvuwewe eubo8wegowyebvuybewuybvuvb kjhbv wbefiyug
-          djkfvbkuebvuyre kjfbviyuerbi8yr i’ll kill myself wkjehbiwfyw
+          djkfvbkuebvuyre kjfbviyuerbi8yr i'll kill myself wkjehbiwfyw
           kwhbvwuyvb8wey khvbygrv8owgvo8wegfw wuebo8wegfo8we7gew
           uvbowvogwe789fwe jhvbouwgvo8gwvo8vo8 kfubhvouego8rgv
           huvboygv8gf87wef87wefrvb ubvygvo8gfo8we7

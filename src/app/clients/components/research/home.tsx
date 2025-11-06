@@ -1,5 +1,7 @@
 "use client";
 
+import NetworkGraph from "./network-graph";
+
 function StaticFaintLines() {
   const BASE_W = 1366;
   const BASE_H = 944;
@@ -54,6 +56,8 @@ function StaticFaintLines() {
 export default function Home() {
   return (
     <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex items-center justify-center">
+      <NetworkGraph />
+
       <div className="absolute inset-0 z-0 pointer-events-none">
         <StaticFaintLines />
       </div>

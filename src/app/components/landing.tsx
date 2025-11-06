@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, useState } from "react";
+import { type DragEvent, useEffect, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
@@ -38,6 +38,40 @@ const Landing: React.FC = () => {
       showResearch: false,
       history: [],
       pointer: -1,
+    };
+    setTabs([...tabs, newTab]);
+    setActiveTabId(newId);
+  };
+
+  const addTabWithUrl = (url: string) => {
+    // Check if tab with same URL already exists
+    const existingTab = tabs.find((tab) =>
+      tab.history.some((h) => h.url === url),
+    );
+
+    if (existingTab) {
+      setActiveTabId(existingTab.id);
+      return;
+    }
+
+    const newId = Date.now() + Math.random(); // Ensure unique ID
+    const newTab: TabData = {
+      id: newId,
+      title: url.replace(/^https?:\/\//, "").split("/")[0],
+      showCc: false,
+      showManagement: false,
+      showTech: false,
+      showDesign: false,
+      showResearch: false,
+      history: [
+        {
+          id: Date.now(),
+          title: url,
+          url: url,
+        },
+      ],
+      pointer: 0,
+      pendingUrl: url,
     };
     setTabs([...tabs, newTab]);
     setActiveTabId(newId);
@@ -246,7 +280,11 @@ const Landing: React.FC = () => {
             key={tab.id}
             className={activeTabId === tab.id ? "block h-full" : "hidden"}
           >
-            <Tab tabData={tab} onUpdateTab={updateTab} />
+            <Tab
+              tabData={tab}
+              onUpdateTab={updateTab}
+              onAddTabWithUrl={addTabWithUrl}
+            />
           </div>
         ))}
       </div>
