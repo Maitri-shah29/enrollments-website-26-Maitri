@@ -121,8 +121,8 @@ const Questions: React.FC<QuestionsProps> = ({
   };
 
   return (
-    <div className="h-full w-full flex items-center flex-col">
-      <h1 className="text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0">
+    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-[3%]">
+      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
         Questions
       </h1>
       <div className="flex flex-col lg:flex-row w-full px-[3%] gap-[3%]">
@@ -144,7 +144,7 @@ const Questions: React.FC<QuestionsProps> = ({
                     }`}
                   ></div>
                   <p
-                    className={`font-georgia truncate ${
+                    className={`font-coolvetica truncate ${
                       selectedAoi?.name === aoi.name ? "font-bold" : ""
                     }`}
                   >
@@ -172,7 +172,7 @@ const Questions: React.FC<QuestionsProps> = ({
                     }`}
                   ></div>
                   <p
-                    className={`font-georgia truncate ${
+                    className={`font-coolvetica truncate ${
                       selectedQuestion?.header === question.header
                         ? "font-bold"
                         : ""
@@ -189,14 +189,14 @@ const Questions: React.FC<QuestionsProps> = ({
         <div className="w-full h-full min-h-140 bg-[#302E2E] rounded-xl p-10 text-white flex flex-col">
           {selectedQuestion ? (
             <div className="flex flex-col flex-1">
-              <h2 className="text-lg lg:text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
+              <h2 className="text-lg lg:text-xl font-coolvetica mb-1 font-bold text-[#EA86B5]">
                 {selectedQuestion.header}
               </h2>
-              <p className="text-base lg:text-lg font-georgia">
+              <p className="text-base lg:text-lg font-coolvetica">
                 {selectedQuestion.content}
               </p>
               <div className="h-[1px] my-3 lg:my-5 w-full bg-white"></div>
-              <h2 className="text-lg lg:text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
+              <h2 className="text-lg lg:text-xl font-coolvetica mb-1 font-bold text-[#EA86B5]">
                 Answer
               </h2>
 
@@ -213,7 +213,7 @@ const Questions: React.FC<QuestionsProps> = ({
                         w-full h-full
                         resize-none
                         bg-transparent
-                        font-georgia
+                        font-coolvetica
                         text-white
                         text-sm lg:text-base
                         outline-none
@@ -233,9 +233,9 @@ const Questions: React.FC<QuestionsProps> = ({
                     !answers[selectedQuestion.questionId]?.trim() ||
                     !formSubmissionId
                   }
-                  className="px-10 py-4 border-2 border-white font-georgia rounded-lg "
+                  className="px-10 py-4 border-2 border-white font-coolvetica rounded-lg hover:bg-[#F55F4B] hover:border-[#F55F4B] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white"
                 >
-                  {isSaving ? "Saving..." : "Save Answer"}
+                  {isSaving ? "Saving..." : "Submit"}
                 </button>
               </div>
             </div>

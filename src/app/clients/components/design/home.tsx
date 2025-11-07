@@ -30,62 +30,110 @@ const Home: React.FC = () => {
         <div className="w-210 h-0.5 rounded-full bg-white opacity-99 mt-10"></div>
 
         <div className="flex gap-15 mt-10">
-          <Image
-            src="/images/design/app_icons/figma.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 "
-          />
-          <Image
-            src="/images/design/app_icons/xd.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
-          <Image
-            src="/images/design/app_icons/premirepro.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
-          <Image
-            src="/images/design/app_icons/aftereffects.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
-          <Image
-            src="/images/design/app_icons/photoshop.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
-          <Image
-            src="/images/design/app_icons/illustrator.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
-          <Image
-            src="/images/design/app_icons/blender.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
-          <Image
-            src="/images/design/app_icons/canva.webp"
-            alt="after effects"
-            width={50}
-            height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
-          />
+          <a
+            href="https://www.figma.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/figma.webp"
+              alt="figma"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.adobe.com/products/xd.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/xd.webp"
+              alt="adobe xd"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.adobe.com/products/premiere.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/premirepro.webp"
+              alt="premiere pro"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.adobe.com/products/aftereffects.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/aftereffects.webp"
+              alt="after effects"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.adobe.com/products/photoshop.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/photoshop.webp"
+              alt="photoshop"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.adobe.com/products/illustrator.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/illustrator.webp"
+              alt="illustrator"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.blender.org"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/blender.webp"
+              alt="blender"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
+          <a
+            href="https://www.canva.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              src="/images/design/app_icons/canva.webp"
+              alt="canva"
+              width={50}
+              height={50}
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+            />
+          </a>
         </div>
       </div>
     </div>

@@ -4,8 +4,8 @@ import type React from "react";
 
 const AOIs: React.FC = () => {
   return (
-    <div className="h-full w-full flex items-center flex-col">
-      <h1 className="text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0">
+    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-[3%]">
+      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
         Areas of Interest
       </h1>
       <div className="flex flex-col lg:flex-row px-[3%] gap-[3%] mb-[3%]">
@@ -19,7 +19,7 @@ const AOIs: React.FC = () => {
           />
         </div>
         <div className="flex w-full lg:w-[50%] items-center">
-          <p className="font-georgia text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
+          <p className="font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
@@ -32,7 +32,7 @@ const AOIs: React.FC = () => {
       </div>
       <div className="flex flex-col-reverse lg:flex-row px-[3%] gap-[3%] mb-[3%]">
         <div className="flex w-full lg:w-[50%] items-center">
-          <p className="font-georgia text-[clamp(0.875rem,1vw,1.125rem)] lg:text-end leading-relaxed">
+          <p className="font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] lg:text-end leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
@@ -63,7 +63,7 @@ const AOIs: React.FC = () => {
           />
         </div>
         <div className="flex w-full lg:w-[50%] items-center">
-          <p className="font-georgia text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
+          <p className="font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
@@ -76,7 +76,7 @@ const AOIs: React.FC = () => {
       </div>
       <div className="flex flex-col-reverse lg:flex-row px-[3%] gap-[3%] mb-[3%]">
         <div className="flex w-full lg:w-[50%] items-center">
-          <p className="font-georgia text-[clamp(0.875rem,1vw,1.125rem)] lg:text-end leading-relaxed">
+          <p className="font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] lg:text-end leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
@@ -99,7 +99,7 @@ const AOIs: React.FC = () => {
       <div className="flex flex-col lg:flex-row px-[3%] gap-[3%] mb-[3%]">
         <div className="w-full lg:w-[50%]">
           <Image
-            src="/images/design/aoi_banners/3d_banner.svg"
+            src="/images/design/aoi_banners/3d-banner-fixed.svg"
             alt="Home Design Foreground"
             width={500}
             height={500}
@@ -107,7 +107,7 @@ const AOIs: React.FC = () => {
           />
         </div>
         <div className="flex w-full lg:w-[50%] items-center">
-          <p className="font-georgia text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
+          <p className="font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
