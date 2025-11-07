@@ -62,13 +62,13 @@ const Landing: React.FC = () => {
     const newTab: TabData = {
       id: newId,
       title: url.replace(/^https?:\/\//, "").split("/")[0],
-      showCc: false,
-      showManagement: false,
-      showTech: false,
-      showDesign: false,
-      showResearch: false,
-      showEvents: false,
-      showDomains: false,
+      showCc: url === "cc",
+      showManagement: url === "management",
+      showTech: url === "tech",
+      showDesign: url === "design",
+      showResearch: url === "research",
+      showEvents: url === "events",
+      showDomains: url === "domains",
       history: [
         {
           id: Date.now(),
@@ -79,6 +79,7 @@ const Landing: React.FC = () => {
       pointer: 0,
       pendingUrl: url,
     };
+
     setTabs([...tabs, newTab]);
     setActiveTabId(newId);
   };

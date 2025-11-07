@@ -1,6 +1,9 @@
 import Image from "next/image";
 
 const Events = () => {
+  const handleNavigate = (url: string) => {
+    window.parent.postMessage({ type: "NAVIGATE_TO", url: url }, "*");
+  };
   return (
     <div className="bg-black w-full min-h-screen text-white font-poppins overflow-hidden hide-scrollbar p-20">
       <header className="px-8 pt-8">
@@ -15,7 +18,10 @@ const Events = () => {
           <span>Events and Projects</span>
         </h2>
 
-        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
+        <section
+          className="flex flex-row items-center mb-20 gap-[7.5rem]"
+          onClick={() => handleNavigate("https://c2c.acmvit.in")}
+        >
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl overflow-hidden relative h-55">
               <Image
@@ -35,7 +41,10 @@ const Events = () => {
           </div>
         </section>
 
-        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
+        <section
+          className="flex flex-row items-center mb-20 gap-[7.5rem]"
+          onClick={() => handleNavigate("https://cryptichunt.acmvit.in")}
+        >
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
@@ -55,7 +64,10 @@ const Events = () => {
           </div>
         </section>
 
-        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
+        <section
+          className="flex flex-row items-center mb-20 gap-[7.5rem]"
+          onClick={() => handleNavigate("https://rcpc.acmvit.in/")}
+        >
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl  -400 overflow-hidden relative h-55">
               <Image
@@ -74,7 +86,10 @@ const Events = () => {
             </p>
           </div>
         </section>
-        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
+        <section
+          className="flex flex-row items-center mb-20 gap-[7.5rem]"
+          onClick={() => handleNavigate("https://examcooker.acmvit.in")}
+        >
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
@@ -94,7 +109,10 @@ const Events = () => {
           </div>
         </section>
 
-        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
+        <section
+          className="flex flex-row items-center mb-20 gap-[7.5rem]"
+          onClick={() => handleNavigate("https://unipool.acmvit.in")}
+        >
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl overflow-hidden relative h-55 ">
               <Image
