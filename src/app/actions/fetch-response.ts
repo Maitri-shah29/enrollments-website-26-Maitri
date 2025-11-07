@@ -19,9 +19,28 @@ export default async function getResponse(questionId: string, formId: string) {
           formId: formId,
         },
       },
+      select: {
+        id: true,
+        questionId: true,
+        formId: true,
+        response: true,
+        submission: {
+          select: {
+            roundUser: { select: { userId: true } },
+          },
+        },
+      },
     });
-
-    return response;
+    if (!response) return null;
+    if (response.submission.roundUser.userId !== user.session.userId) {
+      throw new Error("Forbidden");
+    }
+    return {
+      id: response.id,
+      questionId: response.questionId,
+      formId: response.formId,
+      response: response.response,
+    } as const;
   } catch (e) {
     console.error("Error: ", e);
     throw new Error("Could not fetch the response");

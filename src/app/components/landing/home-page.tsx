@@ -123,7 +123,9 @@ const HomePage: React.FC<HomePageProps> = ({
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6s ease-in-out ${index * 0.4}s infinite alternate`,
+                    animation: `eventsOscillate 6s ease-in-out ${
+                      index * 0.4
+                    }s infinite alternate`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -166,7 +168,9 @@ const HomePage: React.FC<HomePageProps> = ({
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6.5s ease-in-out ${index * 0.5}s infinite alternate-reverse`,
+                    animation: `eventsOscillate 6.5s ease-in-out ${
+                      index * 0.5
+                    }s infinite alternate-reverse`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -192,17 +196,21 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </button>
 
-          <section className="relative col-span-12 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)] lg:col-span-3 lg:col-start-1 lg:row-start-2">
+          <section className="relative w-full col-span-12 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)] lg:col-span-3 lg:col-start-1 lg:row-start-2">
+            {/* Spotify Player Container with fixed height */}
+            <div className="relative w-full h-[380px] overflow-hidden rounded-xl">
+              <iframe
+                data-testid="embed-iframe"
+                title="Spotify Player"
+                src="https://open.spotify.com/embed/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ?utm_source=generator&theme=0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                className="absolute inset-0 w-full h-full rounded-xl"
+              ></iframe>
+            </div>
+
+            {/* Optional gradient overlay */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" />
-            <iframe
-              data-testid="embed-iframe"
-              title="Spotify Player"
-              src="https://open.spotify.com/embed/playlist/3KpxwfwW6Bc0pfWAvk6ulo?utm_source=generator&theme=0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="absolute inset-0 h-full w-full"
-              style={{ border: 0 }}
-            ></iframe>
           </section>
 
           <section className="relative col-span-12 cursor-default flex h-full flex-col bg-gradient-to-br from-white/25 via-white/5 to-black/40 items-center justify-between rounded-xl border border-white/10 bg-white/16 px-2 py-2 text-center shadow-[0_18px_40px_rgba(0,0,0,0.4)] transition hover:bg-white/24 hover:shadow-[0_28px_70px_rgba(0,0,0,0.55)] focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] lg:col-span-6 lg:col-start-4 lg:row-start-2">
@@ -272,15 +280,15 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </div>
       <style jsx>{`
-							@keyframes eventsOscillate {
-								0% {
-									transform: translateX(-12%);
-								}
-								100% {
-									transform: translateX(12%);
-								}
-							}
-						`}</style>
+        @keyframes eventsOscillate {
+          0% {
+            transform: translateX(-12%);
+          }
+          100% {
+            transform: translateX(12%);
+          }
+        }
+      `}</style>
     </div>
   );
 };

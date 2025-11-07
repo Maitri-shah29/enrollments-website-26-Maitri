@@ -11,6 +11,7 @@ interface QuestionsProps {
   questions: QuestionPayload[];
   answers: Record<string, string>;
   errors: Record<string, string>;
+  successMessages: Record<string, string>;
   onChangeAnswer: (qid: string, value: string) => void;
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
 }
@@ -19,6 +20,7 @@ export default function QuestionsList({
   questions,
   answers,
   errors,
+  successMessages,
   onChangeAnswer,
   onSubmitAnswer,
 }: QuestionsProps) {
@@ -51,6 +53,7 @@ export default function QuestionsList({
         question={questionData}
         answer={answers[questionData.id] || ""}
         error={errors[questionData.id]}
+        successMessage={successMessages[questionData.id]}
         onChangeAnswer={onChangeAnswer}
         onSubmitAnswer={onSubmitAnswer}
         goBack={() => setActiveIndex(null)}

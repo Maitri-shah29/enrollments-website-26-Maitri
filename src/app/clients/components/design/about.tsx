@@ -5,21 +5,21 @@ import type React from "react";
 
 const About: React.FC = () => {
   return (
-    <div className="w-full h-full flex items-center justify-center flex-col px-20">
-      <h1 className="text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0">
+    <div className="w-full h-full flex items-center justify-start flex-col px-[5%] py-[3%] overflow-y-auto">
+      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[3%] mt-[2%]">
         About
       </h1>
 
-      <div className="flex justify-center items-center gap-10">
-        <div className="relative">
+      <div className="flex flex-col lg:flex-row justify-center items-center gap-[3%] w-full">
+        <div className="relative flex-1 w-full lg:w-auto">
           <Image
             src="/images/design/about_graphic.svg"
             alt="About Graphic"
             width={500}
             height={500}
-            className="w-[10%] top-[35%] left-20"
+            className="w-[8%] lg:w-[10%] absolute -top-[30%] left-[3%] lg:left-[5%]"
           />
-          <p className="px-20 font-georgia">
+          <p className="px-[5%] lg:px-[8%] pt-[5%] font-georgia text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
@@ -42,7 +42,7 @@ const About: React.FC = () => {
           alt="About Graphic"
           width={500}
           height={500}
-          className="w-[30%] mr-10"
+          className="w-[60%] lg:w-[30%] mx-auto lg:mx-0 lg:mr-[3%] mt-[3%] lg:mt-0"
         />
       </div>
     </div>
