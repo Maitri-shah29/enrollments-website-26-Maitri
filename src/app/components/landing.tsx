@@ -1,7 +1,19 @@
 "use client";
-import { type DragEvent, useEffect, useState } from "react";
+import { type DragEvent, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
+
+const buildMaskUrl = (path: string) =>
+  `url("data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`,
+  )}")`;
+
+const TAB_MASK_IMAGE = buildMaskUrl(
+  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z",
+);
+const PLUS_BUTTON_MASK_IMAGE = buildMaskUrl(
+  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z",
+);
 
 // Main Landing Component
 const Landing: React.FC = () => {
@@ -161,49 +173,6 @@ const Landing: React.FC = () => {
 
   return (
     <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
-      <svg
-        width="0"
-        height="0"
-        aria-label="SVG Clip Paths"
-        style={{ position: "absolute" }}
-      >
-        <title>Clip path definitions for landing tabs</title>
-        <defs>
-          <clipPath id="tabShape" clipPathUnits="objectBoundingBox">
-            <path
-              d="
-              M 0,1
-              L 0.08,0.15
-              Q 0.09,0.03 0.11,0.01
-              Q 0.13,0 0.16,0
-              L 0.84,0
-              Q 0.87,0 0.89,0.01
-              Q 0.91,0.03 0.92,0.15
-              L 1,1
-              Z
-            "
-            />
-          </clipPath>
-          <clipPath id="plusButtonShape" clipPathUnits="objectBoundingBox">
-            <path
-              d="
-              M 0.08,0.08
-              Q 0.07,0 0.10,0
-              L 0.66,0
-              Q 0.70,0 0.72,0.03
-              L 0.95,0.95
-              Q 0.97,1 0.92,1
-              L 0.34,1
-              Q 0.30,1 0.28,0.97
-              L 0.08,0.13
-              Q 0.07,0.10 0.08,0.08
-              Z
-            "
-            />
-          </clipPath>
-        </defs>
-      </svg>
-
       <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
         <div className="flex items-end">
           <div className="flex items-end overflow-x-auto overflow-y-visible">
@@ -222,20 +191,25 @@ const Landing: React.FC = () => {
                   className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
                     isActive
                       ? "z-40 text-neutral-900 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.35)]"
-                      : "z-20 text-neutral-200 bg-gradient-to-b from-[#9d9d9d] to-[#d7d7d7] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      : "z-20 text-neutral-200 bg-gradient-to-b from-[#585858] to-[#BDBDBD] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
                   } ${index > 0 ? "-ml-6" : ""} ${
                     draggingTabId === tab.id ? "opacity-70" : ""
                   }`}
                   style={{
-                    clipPath: "url(#tabShape)",
-                    WebkitClipPath: "url(#tabShape)",
+                    WebkitMaskImage: TAB_MASK_IMAGE,
+                    maskImage: TAB_MASK_IMAGE,
+                    WebkitMaskSize: "100% 100%",
+                    maskSize: "100% 100%",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskRepeat: "no-repeat",
                   }}
                 >
                   <span
-                    className="absolute inset-0 rounded-t-xl"
-                    style={{ clipPath: "url(#tabShape)" }}
-                  />
-                  <span className="truncate pr-4 relative z-10">
+                    className="truncate pr-4 relative z-10 font-poppinsReg"
+                    style={{
+                      color: isActive ? "#454545" : "#ffffff",
+                    }}
+                  >
                     {tab.title}
                   </span>
                   {/* biome-ignore lint/a11y/useSemanticElements: inner close button cannot be a nested button*/}
@@ -274,8 +248,12 @@ const Landing: React.FC = () => {
                 : "cursor-pointer text-neutral-200 bg-gradient-to-b from-[#585858] to-[#bdbdbd] hover:from-neutral-500/90 hover:to-neutral-600/90"
             } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
             style={{
-              clipPath: "url(#plusButtonShape)",
-              WebkitClipPath: "url(#plusButtonShape)",
+              WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,
+              maskImage: PLUS_BUTTON_MASK_IMAGE,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
             }}
           >
             <span className="relative z-10 text-xl leading-none">+</span>
