@@ -181,10 +181,9 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     const v = currentHostFromPointer(tabData);
     setNavInput(v);
     setHomeInput(v);
-    setIframeError(false); // Reset error state when navigating
+    setIframeError(false);
   }, [tabData]);
 
-  // Blur search input when 404 game is shown
   useEffect(() => {
     const activePageData = tabData.history[tabData.pointer];
     const show404Game =
@@ -196,7 +195,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     }
   }, [iframeError, tabData.pointer, tabData.history]);
 
-  //for link navigation
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "NAVIGATE_TO" && event.data?.url) {
@@ -220,7 +218,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
 
     requestFullscreen();
 
-    // ✅ Handle internal navigation FIRST (cc, tech, design, etc.)
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
         id: Date.now(),
@@ -252,10 +249,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       return;
     }
 
-    // ✅ If NOT internal, treat as external URL
     const formatted = ensureHttps(inputValue);
 
-    // Check if URL is whitelisted - if not, show 404 immediately
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
@@ -280,8 +275,13 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       showDomains: false,
     });
 
-    // Set iframe error immediately if not whitelisted
-    setIframeError(!isWhitelisted(formatted));
+    if (!isWhitelisted(formatted)) {
+      setTimeout(() => {
+        setIframeError(true);
+      }, 2000);
+    } else {
+      setIframeError(false);
+    }
   };
 
   const handleNavKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
