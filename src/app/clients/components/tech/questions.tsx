@@ -87,7 +87,7 @@ export default function Questions({
           </span>
           <textarea
             style={{ height: "calc(7 * 1.25rem)" }}
-            className={`flex-1 bg-transparent text-[#E097CE] font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+            className={`flex-1 bg-transparent text-[#E097CE] selection:bg-[#993C7A] selection:text-white font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
               isSubmitted
                 ? "border-gray-500 text-gray-500 cursor-not-allowed"
                 : "border-[#993C7A]"
