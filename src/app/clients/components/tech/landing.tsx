@@ -8,14 +8,14 @@ type TechLandingProps = {
 const TechLanding = ({ onGetStarted }: TechLandingProps) => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
+      <Image
+        src="/images/ascii-art-tech.svg"
+        alt="tech image"
+        width={500}
+        height={500}
+        className="absolute bottom-10 right-10 pointer-events-none"
+      />
       <div className="overflow-hidden relative">
-        <Image
-          src="/images/ascii-art-tech.svg"
-          alt="tech image"
-          width={500}
-          height={500}
-          className="absolute bottom-10 right-10 pointer-events-none"
-        />
         <Image
           src="/images/welcome-tech.svg"
           alt="welcome image"

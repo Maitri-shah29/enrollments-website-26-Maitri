@@ -82,7 +82,7 @@ export default function Question({
                 overflowY: "hidden",
               }}
               placeholder="Type your answer here..."
-              className="text-black w-full min-h-20 outline-none resize-none bg-transparent"
+              className="text-black w-full min-h-20 outline-none resize-none bg-transparent selection:bg-[#AA302E] selection:text-white"
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
                 target.style.height = "auto";

@@ -112,16 +112,21 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </section>
 
-          <section className="relative col-span-12 flex h-full flex-col items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-white/14 px-2 py-2 text-center shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-10 lg:row-span-2">
+          <button
+            type="button"
+            onClick={handleKeyword("events")}
+            className="group relative col-span-12 flex h-full flex-col items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-white/14 px-2 py-2 text-center shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-10 lg:row-span-2"
+          >
+            {/* Gradient overlay for normal and hover state */}
+            <div className="pointer-events-none absolute inset-0 transition-all duration-300 bg-gradient-to-br from-white/30 via-white/7 to-black/40 opacity-50 group-hover:from-white/25 group-hover:via-white/5 group-hover:to-black/40 group-hover:opacity-100" />
+
             <div className="relative z-10 flex w-full flex-col font-bold gap-3 whitespace-nowrap text-2xl uppercase tracking-[0.1em] text-white/85">
               {topEventNames.map((label, index) => (
                 <span
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6s ease-in-out ${
-                      index * 0.4
-                    }s infinite alternate`,
+                    animation: `eventsOscillate 6s ease-in-out ${index * 0.4}s infinite alternate`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -145,25 +150,25 @@ const HomePage: React.FC<HomePageProps> = ({
                 </span>
               ))}
             </div>
-            <h3
-              className="text-5xl font-poppins"
-              style={{
-                color: "transparent",
-                WebkitTextStroke: "2px white",
-                textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-              }}
-            >
-              Events and Projects
-            </h3>
+            <div>
+              <h3
+                className="text-5xl font-poppins"
+                style={{
+                  color: "transparent",
+                  WebkitTextStroke: "2px white",
+                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
+                }}
+              >
+                Events and Projects
+              </h3>
+            </div>
             <div className="relative z-10 flex w-full flex-col font-bold gap-3 whitespace-nowrap text-2xl uppercase tracking-[0.1em] text-white/85">
               {bottomEventNames.map((label, index) => (
                 <span
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6.5s ease-in-out ${
-                      index * 0.5
-                    }s infinite alternate-reverse`,
+                    animation: `eventsOscillate 6.5s ease-in-out ${index * 0.5}s infinite alternate-reverse`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -187,7 +192,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 </span>
               ))}
             </div>
-          </section>
+          </button>
 
           <section className="relative w-full col-span-12 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)] lg:col-span-3 lg:col-start-1 lg:row-start-2">
             {/* Spotify Player Container with fixed height */}
@@ -206,7 +211,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" />
           </section>
 
-          <section className="relative col-span-12 flex h-full flex-col items-center justify-between rounded-xl border border-white/10 bg-white/16 px-2 py-2 text-center shadow-[0_18px_40px_rgba(0,0,0,0.4)] lg:col-span-6 lg:col-start-4 lg:row-start-2">
+          <section className="relative col-span-12 cursor-default flex h-full flex-col bg-gradient-to-br from-white/25 via-white/5 to-black/40 items-center justify-between rounded-xl border border-white/10 bg-white/16 px-2 py-2 text-center shadow-[0_18px_40px_rgba(0,0,0,0.4)] transition hover:bg-white/24 hover:shadow-[0_28px_70px_rgba(0,0,0,0.55)] focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] lg:col-span-6 lg:col-start-4 lg:row-start-2">
             <div className="flex w-full items-center justify-between gap-6">
               {domainLinks.slice(0, 2).map(({ label, keyword, variant }) => (
                 <button
@@ -231,16 +236,18 @@ const HomePage: React.FC<HomePageProps> = ({
                 </button>
               ))}
             </div>
-            <h3
+            <button
+              type="button"
               className="text-6xl font-poppins"
               style={{
                 color: "transparent",
                 WebkitTextStroke: "2px white",
                 textShadow: "0 8px 24px rgba(0,0,0,0.45)",
               }}
+              onClick={handleKeyword("domains")}
             >
               Domains
-            </h3>
+            </button>
             <div className="flex w-full flex-col gap-6">
               <div className="flex w-full items-center justify-between gap-6">
                 {domainLinks.slice(2).map(({ label, keyword, variant }) => (

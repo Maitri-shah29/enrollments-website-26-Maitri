@@ -4,17 +4,49 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
+import Domains from "@/app/clients/domains-client";
+import Events from "@/app/clients/events-client";
 import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
 import { signIn } from "@/lib/auth-client";
+import BlacklistedLanding from "../blacklistedlanding";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 
-const ROTATING_WEBSITES = ["ocs.acmvit.in", "fast.com", "acmvit.in"];
+const ROTATING_WEBSITES = [
+  "ocs.acmvit.in",
+  "fast.com",
+  "acmvit.in",
+  "krunker.io",
+  "slither.io",
+  "comick.live",
+];
+
+const IFRAME_WHITELIST = new Set([
+  "os.acmvit.in",
+  "localhost.acmvit.in",
+  "rcpc.acmvit.in",
+  "codeplusplus.acmvit.in",
+  "fast.com",
+  "acmvit.in",
+  "krunker.io",
+  "slither.io",
+  "comick.live",
+  "icpc.global",
+]);
+
+const isWhitelisted = (url: string) => {
+  try {
+    const host = new URL(ensureHttps(url)).hostname; // normalize
+    return IFRAME_WHITELIST.has(host);
+  } catch {
+    return false;
+  }
+};
 
 const useRotatingPlaceholder = (
   websites: string[],
@@ -39,6 +71,8 @@ const INTERNAL_KEYWORDS = new Set([
   "tech",
   "design",
   "research",
+  "events",
+  "domains",
 ]);
 
 interface HomePageNavbarProps {
@@ -93,6 +127,8 @@ export interface TabData {
   showTech: boolean;
   showDesign: boolean;
   showResearch: boolean;
+  showEvents: boolean;
+  showDomains: boolean;
   history: PageHistory[];
   pointer: number;
   pendingUrl?: string;
@@ -169,17 +205,19 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
 
-    // Request fullscreen when navigating
     requestFullscreen();
 
+    // ✅ Handle internal navigation FIRST (cc, tech, design, etc.)
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
         id: Date.now(),
         title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         url: trimmed,
       };
+
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
       newHistory.push(newPage);
+
       onUpdateTab({
         ...tabData,
         showCc: trimmed === "cc",
@@ -187,36 +225,46 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         showTech: trimmed === "tech",
         showDesign: trimmed === "design",
         showResearch: trimmed === "research",
+        showEvents: trimmed === "events",
+        showDomains: trimmed === "domains",
+        history: newHistory,
+        pointer: newHistory.length - 1,
         title:
           trimmed === "cc"
             ? "CC"
             : trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         pendingUrl: trimmed,
-        history: newHistory,
-        pointer: newHistory.length - 1,
+
       });
+
       return;
     }
 
+    // ✅ If NOT internal, treat as external URL and update history
     const formatted = ensureHttps(inputValue);
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
       url: formatted,
     };
+
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
     newHistory.push(newPage);
+
     onUpdateTab({
       ...tabData,
       history: newHistory,
       pointer: newHistory.length - 1,
       title: inputValue,
+      pendingUrl: inputValue,
       showManagement: false,
       showCc: false,
       showTech: false,
       showDesign: false,
       showResearch: false,
-      pendingUrl: inputValue,
+      showEvents: false,
+      showDomains: false,
+      
     });
   };
 
@@ -259,6 +307,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           showManagement: false,
           showTech: false,
           showDesign: false,
+          showDomains: false,
+          showEvents: false,
           showResearch: false,
         });
         setNavInput("");
@@ -276,6 +326,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         showTech: v === "tech",
         showDesign: v === "design",
         showResearch: v === "research",
+        showEvents: v === "events",
+        showDomains: v === "domains",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -296,6 +348,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       pointer: newHistory.length - 1,
       pendingUrl: undefined,
       title: "Home",
+      showEvents: false,
+      showDomains: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -324,6 +378,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           showManagement: false,
           showTech: false,
           showDesign: false,
+          showDomains: false,
+          showEvents: false,
           showResearch: false,
         });
         setNavInput("");
@@ -341,6 +397,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         showTech: v === "tech",
         showDesign: v === "design",
         showResearch: v === "research",
+        showDomains: v === "domains",
+        showEvents: v === "events",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -456,11 +514,11 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
 
           <div className="flex flex-1 items-center gap-3">
             <div className="flex flex-1 items-center h-10 rounded-lg bg-gradient-to-b from-[#c5c5c5] to-[#d7d7d7] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
-              <span className="text-neutral-100 select-none font-medium tracking-tight">
+              <span className="text-neutral-150 select-none font-medium tracking-tight">
                 https://
               </span>
               <input
-                className="flex-1 bg-transparent outline-none text-black placeholder-neutral-200 tracking-tight"
+                className="flex-1 bg-transparent outline-none text-white placeholder-neutral-100 tracking-tight"
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}
@@ -502,11 +560,23 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           tabData.showDesign ||
           tabData.showResearch ||
           tabData.showTech) ? (
-          <SignupPage onSignIn={signIn} />
+          <SignupPage />
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
               <Management key={refreshKey} />
+            </div>
+          </div>
+        ) : tabData.showEvents ? (
+          <div className="w-full h-full bg-white overflow-auto hide-scrollbar relative">
+            <div className="min-h-screen flex items-center justify-center">
+              <Events />
+            </div>
+          </div>
+        ) : tabData.showDomains ? (
+          <div className="w-full h-full bg-white overflow-auto hide-scrollbar relative">
+            <div className="min-h-screen flex items-center justify-center">
+              <Domains />
             </div>
           </div>
         ) : tabData.showCc ? (
@@ -530,13 +600,17 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             <ResearchClient key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
-          <iframe
-            key={activePageData.url}
-            className="w-full h-full"
-            src={activePageData.url}
-            title="Browser Tab"
-            allowFullScreen
-          ></iframe>
+          isWhitelisted(activePageData.url) ? (
+            <iframe
+              key={activePageData.url}
+              className="w-full h-full"
+              src={activePageData.url}
+              title="Browser Tab"
+              allowFullScreen
+            ></iframe>
+          ) : (
+            <BlacklistedLanding url={activePageData.url} />
+          )
         ) : (
           <div>
             <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
