@@ -80,7 +80,7 @@ export default function Management() {
         }
 
         const qs = (qres.questions ?? []).sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0)
+          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
         ) as QuestionPayload[];
 
         setQuestions(qs);
@@ -107,7 +107,7 @@ export default function Management() {
         if (ensureRes && "error" in ensureRes && ensureRes.error) {
           // If we cannot ensure mapping, allow viewing but warn about saving
           setFormWarning(
-            "Could not link you to this round automatically; you can view questions but cannot save answers."
+            "Could not link you to this round automatically; you can view questions but cannot save answers.",
           );
         }
 
@@ -137,7 +137,7 @@ export default function Management() {
           createRes.error === "User does not exist for this round"
         ) {
           setFormWarning(
-            "You're not registered for this round yet; you can view questions but cannot save answers."
+            "You're not registered for this round yet; you can view questions but cannot save answers.",
           );
         }
       } catch (e) {
@@ -324,14 +324,35 @@ export default function Management() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center items-center px-8">
-        <div className="w-full flex justify-center h-[8%]">
-          {/* made this centered */}
+        <div className="w-full flex justify-between items-center h-[8%] px-4">
+          {/* Empty left spacer for layout balance */}
+          <div className="w-[100px]" />
+
+          {/* Search bar centered */}
           <div className="p-2 gap-2 flex flex-row items-center bg-white/40 w-[50%] rounded-full mt-2">
             <Search />
             <input
               type="text"
               placeholder="Search"
               className="outline-none flex-1 text-white placeholder-white-500"
+            />
+          </div>
+
+          {/* Settings and Profile buttons on the right */}
+          <div className="flex gap-4 items-center mt-2">
+            <Image
+              src="/images/management/settings.svg"
+              alt="Settings"
+              width={26}
+              height={27}
+              className="cursor-pointer"
+            />
+            <Image
+              src="/images/management/person-circle-outline.svg"
+              alt="Profile"
+              width={45}
+              height={45}
+              className="cursor-pointer"
             />
           </div>
         </div>
