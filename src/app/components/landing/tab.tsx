@@ -489,8 +489,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808]">
         {!session?.data &&
         (tabData.showManagement ||
-          tabData.showDomains ||
-          tabData.showEvents ||
           tabData.showCc ||
           tabData.showDesign ||
           tabData.showResearch ||
