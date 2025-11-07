@@ -325,10 +325,8 @@ export default function Management() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center items-center px-8">
         <div className="w-full flex justify-between items-center h-[8%] px-4">
-          {/* Empty left spacer for layout balance */}
-          <div className="w-[100px]" />
+          <div className="w-[70px]" />
 
-          {/* Search bar centered */}
           <div className="p-2 gap-2 flex flex-row items-center bg-white/40 w-[50%] rounded-full mt-2">
             <Search />
             <input
@@ -338,7 +336,6 @@ export default function Management() {
             />
           </div>
 
-          {/* Settings and Profile buttons on the right */}
           <div className="flex gap-4 items-center mt-2">
             <Image
               src="/images/management/settings.svg"
