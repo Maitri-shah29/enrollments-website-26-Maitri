@@ -560,7 +560,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           tabData.showDesign ||
           tabData.showResearch ||
           tabData.showTech) ? (
-          <SignupPage />
+          <SignupPage onSignIn={signIn} />
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
