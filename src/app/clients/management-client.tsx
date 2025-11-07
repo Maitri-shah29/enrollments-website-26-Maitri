@@ -332,6 +332,7 @@ export default function Management() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center items-center px-8">
         <div className="w-full flex justify-center h-[8%]">
+          {/* made this centered */}
           <div className="p-2 gap-2 flex flex-row items-center bg-white/40 w-[50%] rounded-full mt-2">
             <Search />
             <input
