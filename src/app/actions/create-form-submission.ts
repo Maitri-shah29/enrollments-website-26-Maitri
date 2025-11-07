@@ -22,10 +22,22 @@ export default async function createFormSubmission(roundId: string) {
           userId: user.session.userId,
         },
       },
+      select: {
+        id: true,
+        status: true,
+        round: { select: { active: true, hidden: true } },
+      },
     });
 
     if (!roundDetail) {
       return { error: "User does not exist for this round" };
+    }
+
+    if (!roundDetail.round.active || roundDetail.round.hidden) {
+      return { error: "Round is not open" };
+    }
+    if (roundDetail.status !== "pending") {
+      return { error: "Submissions are not allowed for your status" };
     }
 
     const userSubmission = await prisma.formSubmission.findUnique({

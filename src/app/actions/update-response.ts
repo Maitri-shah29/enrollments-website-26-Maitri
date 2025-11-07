@@ -16,6 +16,42 @@ export default async function updateResponse(
       return "user not logged in!";
     }
 
+    const meta = await prisma.response.findUnique({
+      where: {
+        questionId_formId: {
+          questionId: questionId,
+          formId: formId,
+        },
+      },
+      select: {
+        submission: {
+          select: {
+            roundUser: {
+              select: {
+                userId: true,
+                status: true,
+                round: { select: { active: true, hidden: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!meta) {
+      throw new Error("Response not found");
+    }
+    const owner = meta.submission.roundUser;
+    if (owner.userId !== user.session.userId) {
+      throw new Error("Forbidden");
+    }
+    if (!owner.round.active || owner.round.hidden) {
+      throw new Error("Round is not open");
+    }
+    if (owner.status !== "pending") {
+      throw new Error("Edits are not allowed for your status");
+    }
+
     const updateResponse = await prisma.response.update({
       where: {
         questionId_formId: {

@@ -47,11 +47,24 @@ export default async function saveFormResponse(
     where: { id: formId },
     select: {
       id: true,
-      roundUser: { select: { id: true, userId: true, roundId: true } },
+      roundUser: {
+        select: {
+          id: true,
+          userId: true,
+          roundId: true,
+          status: true,
+          round: { select: { active: true, hidden: true } },
+        },
+      },
     },
   });
   if (!form) throw new Error("Form not found");
   if (form.roundUser.userId !== userId) throw new Error("Forbidden");
+
+  if (!form.roundUser.round.active || form.roundUser.round.hidden)
+    throw new Error("Round is not open");
+  if (form.roundUser.status !== "pending")
+    throw new Error("Edits are not allowed for your status");
 
   const question = await prisma.question.findUnique({
     where: { id: questionId },

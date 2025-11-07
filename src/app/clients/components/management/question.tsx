@@ -9,6 +9,7 @@ interface Props {
   question: QuestionPayload;
   answer: string;
   error?: string;
+  successMessage?: string;
   onChangeAnswer: (qid: string, value: string) => void;
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
   goBack?: () => void;
@@ -18,6 +19,7 @@ export default function Question({
   question,
   answer,
   error,
+  successMessage,
   onChangeAnswer,
   onSubmitAnswer,
   goBack,
@@ -89,15 +91,20 @@ export default function Question({
             />
           </div>
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {successMessage && (
+            <p className="text-green-600 text-sm mt-2">{successMessage}</p>
+          )}
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!answer.trim() || submitting}
-            className="ml-[90%] px-5 py-1 mt-2 rounded-full bg-[#AD3232CC] text-white hover:bg-[#AD3232CC]/70 disabled:bg-gray-400"
-          >
-            {submitting ? "Submitting..." : "Submit"}
-          </button>
+          <div className="flex justify-end mt-2">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!answer.trim() || submitting}
+              className="px-5 py-1 rounded-full bg-[#AD3232CC] text-white hover:bg-[#AD3232CC]/70 disabled:bg-gray-400"
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
