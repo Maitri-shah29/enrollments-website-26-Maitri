@@ -8,12 +8,12 @@ import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
 import { signIn } from "@/lib/auth-client";
+import BlacklistedLanding from "../blacklistedlanding";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
-import BlacklistedLanding from "../blacklistedlanding";
 
 const ROTATING_WEBSITES = [
   "ocs.acmvit.in",
@@ -25,12 +25,16 @@ const ROTATING_WEBSITES = [
 ];
 
 const IFRAME_WHITELIST = new Set([
-  "ocs.acmvit.in",
+  "os.acmvit.in",
+  "localhost.acmvit.in",
+  "rcpc.acmvit.in",
+  "codeplusplus.acmvit.in",
   "fast.com",
   "acmvit.in",
   "krunker.io",
   "slither.io",
   "comick.live",
+  "icpc.global",
 ]);
 
 const isWhitelisted = (url: string) => {
@@ -44,7 +48,7 @@ const isWhitelisted = (url: string) => {
 
 const useRotatingPlaceholder = (
   websites: string[],
-  interval: number = 5000
+  interval: number = 5000,
 ) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -119,6 +123,7 @@ export interface TabData {
 interface TabProps {
   tabData: TabData;
   onUpdateTab: (updatedTab: TabData) => void;
+  onAddTabWithUrl: (url: string) => void;
 }
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
@@ -144,15 +149,15 @@ const requestFullscreen = () => {
   }
 };
 
-const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
+const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [homeInput, setHomeInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -163,6 +168,18 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
     setNavInput(v);
     setHomeInput(v);
   }, [tabData]);
+
+  //for link navigation
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "NAVIGATE_TO" && event.data?.url) {
+        onAddTabWithUrl(event.data.url);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onAddTabWithUrl]);
 
   const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setNavInput(stripProtocol(e.target.value));
@@ -364,7 +381,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
 
     // Also reload iframe if present
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]'
+      'iframe[title="Browser Tab"]',
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
