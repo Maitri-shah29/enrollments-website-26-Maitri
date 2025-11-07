@@ -11,7 +11,6 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
   return (
     <div className="w-full h-full relative overflow-hidden">
       <div className="w-full h-full bg-[#121216]">
-        {}
         <div className="absolute inset-x-0 top-[22%] z-0 hidden sm:grid grid-cols-2 grid-rows-4 gap-x-0 gap-y-0 w-full h-[75%]">
           {cells.map((id, i) => (
             <div
@@ -51,7 +50,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
             Welcome to
           </h1>
           <h1
-            className="text-6xl sm:text-8xl md:text-[18vh] font-bold leading-none"
+            className="text-6xl sm:text-8xl md:text-[18vh] font-bold leading-none mb-8"
             style={{
               fontFamily: "'Share Tech Mono', monospace",
               color: "#C9EB3E",
@@ -102,16 +101,12 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
               &gt;
             </span>
           </h1>
+          <Button
+            label="Get Started →"
+            onClick={onGetStarted}
+            buttonClassName="py-3 !px-[30px] text-lg"
+          />
         </div>
-      </div>
-
-      {}
-      <div className="fixed bottom-[13%] left-1/2 -translate-x-1/2 z-20">
-        <Button
-          label="Get Started →"
-          onClick={onGetStarted}
-          buttonClassName="py-3 !px-[30px] text-lg"
-        />
       </div>
     </div>
   );
