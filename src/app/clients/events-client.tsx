@@ -5,7 +5,7 @@ const Events = () => {
     window.parent.postMessage({ type: "NAVIGATE_TO", url: url }, "*");
   };
   return (
-    <div className="bg-black w-full min-h-screen text-white font-poppins overflow-hidden hide-scrollbar p-20">
+    <div className="bg-black w-full min-h-screen text-white font-doppio overflow-hidden hide-scrollbar p-20">
       <header className="px-8 pt-8">
         <h1 className="text-5xl font-bold drop-shadow-sm">ACM - VIT</h1>
       </header>
