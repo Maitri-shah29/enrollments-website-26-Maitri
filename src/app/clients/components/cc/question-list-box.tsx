@@ -38,11 +38,11 @@ function QuestionListBox({
       onClick={onClick}
     >
       <div className="flex items-center justify-between bg-[#16171B] w-full h-fit sm:h-16 border-[0.2px] border-[#C9EB3E]">
-        <div className="flex flex-col justify-center space-y-0.5 px-4">
+        <div className="flex flex-col justify-center space-y-0.5 px-4 w-3/5">
           <div className="text-[#C9EB3E] font-ShareTechMono text-md font-normal leading-normal text-left w-full">
             Question {slNo}
           </div>
-          <div className="text-white font-ShareTechMono text-xl font-normal leading-normal text-left w-full">
+          <div className="text-white font-ShareTechMono text-xl font-normal leading-normal text-left w-full whitespace-nowrap">
             {title}
           </div>
         </div>

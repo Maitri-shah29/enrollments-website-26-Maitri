@@ -1,6 +1,8 @@
 "use client";
 import type { Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import saveFormResponse from "@/app/actions/save-form-response";
 import AnswerBox from "./answer-box";
 import Button from "./button";
 import QuestionBox from "./question-box";
@@ -63,6 +65,7 @@ const Questions = ({
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (roundUser?.formSubmission?.responses) {
@@ -95,12 +98,48 @@ const Questions = ({
     setActiveQuestionId(questionId);
   };
 
+  const autoSaveResponse = useCallback(
+    async (questionId: string, response: string) => {
+      if (!roundUser?.formSubmission?.id) return;
+
+      try {
+        await saveFormResponse(
+          roundUser.formSubmission.id,
+          questionId,
+          response,
+        );
+      } catch (err) {
+        console.error("Auto-save error:", err);
+      }
+    },
+    [roundUser?.formSubmission?.id],
+  );
+
   const handleResponseChange = (questionId: string, response: string) => {
     setResponses((prev) => ({
       ...prev,
       [questionId]: response,
     }));
+
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer for auto-save after 5 seconds
+    debounceTimerRef.current = setTimeout(() => {
+      autoSaveResponse(questionId, response);
+    }, 5000);
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -152,48 +191,25 @@ const Questions = ({
 
     setSubmitting(true);
     setNotification(null);
-    console.log("Submitting response:", {
-      formId: roundUser.formSubmission.id,
-      questionId: activeQuestion.id,
-      response: currentResponse,
-    });
 
     try {
-      const res = await fetch("/api/save-form-response", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formId: roundUser.formSubmission.id,
-          questionId: activeQuestion.id,
-          response: currentResponse,
-        }),
-      });
-
-      const result = await res.json();
-      console.log("Response status:", res.status, "Result:", result);
-
-      if (!res.ok) {
-        setNotificationType("error");
-        const errorMsg = result?.error || `HTTP ${res.status} error`;
-        setNotification(errorMsg);
-      } else if (result?.error) {
-        setNotificationType("error");
-        const errorMsg =
-          typeof result.error === "string" ? result.error : "Submission failed";
-        setNotification(errorMsg);
-      } else {
-        setNotificationType("success");
-        setNotification("Answer submitted successfully!");
-        setTimeout(() => setNotification(null), 3000);
-      }
+      await saveFormResponse(
+        roundUser.formSubmission.id,
+        activeQuestion.id,
+        currentResponse,
+      );
+      setNotificationType("success");
+      setNotification("Answer submitted successfully!");
+      setTimeout(() => setNotification(null), 3000);
     } catch (err) {
       console.error("Submit error:", err);
       setNotificationType("error");
       const errorMsg =
-        err instanceof Error ? err.message : "Network error - please try again";
+        err instanceof Error ? err.message : "Failed to save response";
       setNotification(errorMsg);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return (
