@@ -226,11 +226,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             ? "CC"
             : trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         pendingUrl: trimmed,
-        showCc: trimmed === "cc",
-        showManagement: trimmed === "management",
-        showTech: trimmed === "tech",
-        showDesign: trimmed === "design",
-        showResearch: trimmed === "research",
+
       });
 
       return;
@@ -260,7 +256,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       showResearch: false,
       showEvents: false,
       showDomains: false,
-      pendingUrl: inputValue,
+      
     });
   };
 
