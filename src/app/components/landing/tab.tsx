@@ -131,7 +131,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
   );
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Use rotating placeholder hook
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
   useEffect(() => {
