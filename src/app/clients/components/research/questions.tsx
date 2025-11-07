@@ -366,7 +366,7 @@ const Questions: React.FC<QuestionsProps> = ({
   return (
     <div className="w-full h-full bg-[#1a1a1a] p-6 overflow-hidden flex flex-col">
       <div className="flex-shrink-0 mb-6">
-        <h1 className="text-white break-words leading-tight">
+        <h1 className="text-white break-words leading-tight font-bold text-[18px]">
           Question {safeIndex + 1}: {currentQuestion?.content}
         </h1>
       </div>
