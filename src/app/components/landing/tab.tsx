@@ -13,12 +13,38 @@ import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
+import BlacklistedLanding from "../blacklistedlanding";
 
-const ROTATING_WEBSITES = ["ocs.acmvit.in", "fast.com", "acmvit.in"];
+const ROTATING_WEBSITES = [
+  "ocs.acmvit.in",
+  "fast.com",
+  "acmvit.in",
+  "krunker.io",
+  "slither.io",
+  "comick.live",
+];
+
+const IFRAME_WHITELIST = new Set([
+  "ocs.acmvit.in",
+  "fast.com",
+  "acmvit.in",
+  "krunker.io",
+  "slither.io",
+  "comick.live",
+]);
+
+const isWhitelisted = (url: string) => {
+  try {
+    const host = new URL(ensureHttps(url)).hostname; // normalize
+    return IFRAME_WHITELIST.has(host);
+  } catch {
+    return false;
+  }
+};
 
 const useRotatingPlaceholder = (
   websites: string[],
-  interval: number = 5000,
+  interval: number = 5000
 ) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -93,7 +119,6 @@ export interface TabData {
 interface TabProps {
   tabData: TabData;
   onUpdateTab: (updatedTab: TabData) => void;
-  onAddTabWithUrl: (url: string) => void;
 }
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
@@ -119,15 +144,15 @@ const requestFullscreen = () => {
   }
 };
 
-const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
+const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData),
+    currentHostFromPointer(tabData)
   );
   const [homeInput, setHomeInput] = useState<string>(() =>
-    currentHostFromPointer(tabData),
+    currentHostFromPointer(tabData)
   );
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -139,18 +164,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     setHomeInput(v);
   }, [tabData]);
 
-  //for link navigation
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "NAVIGATE_TO" && event.data?.url) {
-        onAddTabWithUrl(event.data.url);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [onAddTabWithUrl]);
-
   const handleNavChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setNavInput(stripProtocol(e.target.value));
   const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -161,54 +174,60 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
 
-    // Request fullscreen when navigating
     requestFullscreen();
 
+    // ✅ Handle internal navigation FIRST (cc, tech, design, etc.)
     if (INTERNAL_KEYWORDS.has(trimmed)) {
       const newPage: PageHistory = {
         id: Date.now(),
         title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         url: trimmed,
       };
+
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
       newHistory.push(newPage);
+
       onUpdateTab({
         ...tabData,
-        showCc: trimmed === "cc",
-        showManagement: trimmed === "management",
-        showTech: trimmed === "tech",
-        showDesign: trimmed === "design",
-        showResearch: trimmed === "research",
+        history: newHistory,
+        pointer: newHistory.length - 1,
         title:
           trimmed === "cc"
             ? "CC"
             : trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         pendingUrl: trimmed,
-        history: newHistory,
-        pointer: newHistory.length - 1,
+        showCc: trimmed === "cc",
+        showManagement: trimmed === "management",
+        showTech: trimmed === "tech",
+        showDesign: trimmed === "design",
+        showResearch: trimmed === "research",
       });
+
       return;
     }
 
+    // ✅ If NOT internal, treat as external URL and update history
     const formatted = ensureHttps(inputValue);
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
       url: formatted,
     };
+
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
     newHistory.push(newPage);
+
     onUpdateTab({
       ...tabData,
       history: newHistory,
       pointer: newHistory.length - 1,
       title: inputValue,
+      pendingUrl: inputValue,
       showManagement: false,
       showCc: false,
       showTech: false,
       showDesign: false,
       showResearch: false,
-      pendingUrl: inputValue,
     });
   };
 
@@ -345,7 +364,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
 
     // Also reload iframe if present
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]',
+      'iframe[title="Browser Tab"]'
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
@@ -448,11 +467,11 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
 
           <div className="flex flex-1 items-center gap-3">
             <div className="flex flex-1 items-center h-10 rounded-lg bg-gradient-to-b from-[#c5c5c5] to-[#d7d7d7] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
-              <span className="text-neutral-100 select-none font-medium tracking-tight">
+              <span className="text-neutral-150 select-none font-medium tracking-tight">
                 https://
               </span>
               <input
-                className="flex-1 bg-transparent outline-none text-black placeholder-neutral-200 tracking-tight"
+                className="flex-1 bg-transparent outline-none text-white placeholder-neutral-100 tracking-tight"
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}
@@ -522,13 +541,17 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             <ResearchClient key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
-          <iframe
-            key={activePageData.url}
-            className="w-full h-full"
-            src={activePageData.url}
-            title="Browser Tab"
-            allowFullScreen
-          ></iframe>
+          isWhitelisted(activePageData.url) ? (
+            <iframe
+              key={activePageData.url}
+              className="w-full h-full"
+              src={activePageData.url}
+              title="Browser Tab"
+              allowFullScreen
+            ></iframe>
+          ) : (
+            <BlacklistedLanding url={activePageData.url} />
+          )
         ) : (
           <div>
             <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />

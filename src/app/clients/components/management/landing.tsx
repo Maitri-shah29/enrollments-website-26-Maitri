@@ -7,15 +7,14 @@ type ManagementLandingProps = {
 
 const ManagementLanding = ({ onGetStarted }: ManagementLandingProps) => {
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-y-auto">
+    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-y-auto px-6">
       <div className="w-full mt-4">
-        <div className="p-10">
-          <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">
-            WELCOME
+        <div className="">
+          <h1 className="text-2xl text-black mb-5">
+            Welcome to ACM's Management Domain
           </h1>
 
-          {/* Email Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center space-x-3">
               <Image
                 src="/profile-icon.svg"
@@ -33,12 +32,14 @@ const ManagementLanding = ({ onGetStarted }: ManagementLandingProps) => {
             </div>
           </div>
 
-          <div className="text-black leading-relaxed space-y-4 text-base">
-            <p>You've recieved a mail from Management.</p>
-          </div>
+          <Image
+            src="/images/banner.svg"
+            alt="Banner"
+            width={1920}
+            height={1080}
+          />
 
-          {/* Get Started Button */}
-          <div className="w-full mt-8 flex justify-start">
+          <div className="w-full mt-5 flex justify-center">
             <button
               type="button"
               onClick={onGetStarted}
