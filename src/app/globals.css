@@ -185,5 +185,7 @@ body {
 }
 
 .figma-cursor {
-  cursor: url("/images/design/figma_cursor.png") 0 0, auto;
+  cursor:
+    url("/images/design/figma_cursor.png") 0 0,
+    auto;
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import Image from "next/image";
 
 const Domains = () => {
   return (
@@ -12,16 +12,17 @@ const Domains = () => {
           className="text-center text-6xl font-bold mb-20 text-black [text-shadow:2px_2px_0_#fff,2px_-2px_0_#fff,-2px_2px_0_#fff,-2px_-2px_0_#fff,4px_4px_0_#fff,-4px_-4px_0_#fff,4px_-4px_0_#fff,-4px_4px_0_#fff]
 "
         >
-          <span className="  ">Domains</span>
+          <span>Domains</span>
         </h2>
 
-        <section className="flex flex-row items-center mb-20 gap-30">
+        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl border-4 border-lime-300 overflow-hidden relative h-60">
-              <img
+              <Image
+                fill
                 src="/images/domains/cc.png"
                 alt="Competitive Coding"
-                className="w-full object-cover h-full opacity-60"
+                className="object-cover opacity-60"
               />
               <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
                 Competitive Coding
@@ -37,7 +38,7 @@ const Domains = () => {
           </div>
         </section>
 
-        <section className="flex flex-row items-center mb-20 gap-30">
+        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
@@ -47,10 +48,11 @@ const Domains = () => {
           </div>
           <div className="w-1/2 mb-6 ml-6">
             <div className="rounded-xl border-4 border-[#013D62] overflow-hidden relative h-60">
-              <img
+              <Image
+                fill
                 src="/images/domains/design.png"
                 alt="Design"
-                className="w-full object-cover h-full opacity-60"
+                className="object-cover opacity-60"
               />
               <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
                 Design
@@ -59,13 +61,14 @@ const Domains = () => {
           </div>
         </section>
 
-        <section className="flex flex-row items-center mb-20 gap-30">
+        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl border-4 border-red-400 overflow-hidden relative h-60">
-              <img
+              <Image
+                fill
                 src="/images/domains/management.png"
                 alt="Management"
-                className="w-full object-cover h-full opacity-60"
+                className="object-cover opacity-60"
               />
               <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
                 Management
@@ -80,7 +83,7 @@ const Domains = () => {
             </p>
           </div>
         </section>
-        <section className="flex flex-row items-center mb-20 gap-30">
+        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
@@ -90,10 +93,11 @@ const Domains = () => {
           </div>
           <div className="w-1/2 mb-6 ml-6">
             <div className="rounded-xl border-4 border-[#521D4E] overflow-hidden relative h-60">
-              <img
+              <Image
                 src="/images/domains/research.png"
-                alt="Design"
-                className="w-full object-cover h-full opacity-60"
+                alt="Research"
+                fill
+                className="object-cover opacity-60"
               />
               <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
                 Research
@@ -102,13 +106,14 @@ const Domains = () => {
           </div>
         </section>
 
-        <section className="flex flex-row items-center mb-20 gap-30">
+        <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl border-4 border-[#FF53A7] overflow-hidden relative h-60 ">
-              <img
+              <Image
                 src="/images/domains/tech.png"
-                alt="Management"
-                className="w-full object-cover h-full opacity-60"
+                alt="Tech"
+                fill
+                className="object-cover opacity-60"
               />
               <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
                 Tech
