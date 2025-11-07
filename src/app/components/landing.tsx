@@ -191,7 +191,7 @@ const Landing: React.FC = () => {
                   className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
                     isActive
                       ? "z-40 text-neutral-900 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.35)]"
-                      : "z-20 text-neutral-200 bg-gradient-to-b from-[#9d9d9d] to-[#d7d7d7] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      : "z-20 text-neutral-200 bg-gradient-to-b from-[#585858] to-[#BDBDBD] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
                   } ${index > 0 ? "-ml-6" : ""} ${
                     draggingTabId === tab.id ? "opacity-70" : ""
                   }`}
@@ -204,7 +204,12 @@ const Landing: React.FC = () => {
                     maskRepeat: "no-repeat",
                   }}
                 >
-                  <span className="truncate pr-4 relative z-10">
+                  <span
+                    className="truncate pr-4 relative z-10 font-poppinsReg"
+                    style={{
+                      color: isActive ? "#454545" : "#ffffff",
+                    }}
+                  >
                     {tab.title}
                   </span>
                   {/* biome-ignore lint/a11y/useSemanticElements: inner close button cannot be a nested button*/}
