@@ -187,3 +187,16 @@ body {
 .figma-cursor {
   cursor: url("/images/design/figma_cursor.png") 0 0, auto;
 }
+
+@keyframes spin-once {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-once {
+  animation: spin-once 0.5s ease-in-out;
+}
