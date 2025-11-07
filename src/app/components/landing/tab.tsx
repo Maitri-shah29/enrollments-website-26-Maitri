@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 // change
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
 import Domains from "@/app/clients/domains-client";
@@ -9,8 +9,7 @@ import Events from "@/app/clients/events-client";
 import Management from "@/app/clients/management-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
-import { signIn } from "@/lib/auth-client";
-import BlacklistedLanding from "../blacklistedlanding";
+import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
@@ -174,6 +173,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     currentHostFromPointer(tabData),
   );
   const [refreshKey, setRefreshKey] = useState(0);
+  const [iframeError, setIframeError] = useState(false);
+  const navInputRef = useRef<HTMLInputElement>(null);
 
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
@@ -181,7 +182,20 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     const v = currentHostFromPointer(tabData);
     setNavInput(v);
     setHomeInput(v);
+    setIframeError(false); // Reset error state when navigating
   }, [tabData]);
+
+  // Blur search input when 404 game is shown
+  useEffect(() => {
+    const activePageData = tabData.history[tabData.pointer];
+    const show404Game =
+      iframeError ||
+      (activePageData?.url && !isWhitelisted(activePageData.url));
+
+    if (show404Game && navInputRef.current) {
+      navInputRef.current.blur();
+    }
+  }, [iframeError, tabData.pointer, tabData.history]);
 
   //for link navigation
   useEffect(() => {
@@ -200,7 +214,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
   const handleHomeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setHomeInput(stripProtocol(e.target.value));
 
-  const commitFrom = (raw: string) => {
+  const commitFrom = async (raw: string) => {
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
@@ -234,14 +248,15 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             ? "CC"
             : trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         pendingUrl: trimmed,
-
       });
 
       return;
     }
 
-    // ✅ If NOT internal, treat as external URL and update history
+    // ✅ If NOT internal, treat as external URL
     const formatted = ensureHttps(inputValue);
+
+    // Check if URL is whitelisted - if not, show 404 immediately
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
@@ -264,8 +279,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       showResearch: false,
       showEvents: false,
       showDomains: false,
-      
     });
+
+    // Set iframe error immediately if not whitelisted
+    setIframeError(!isWhitelisted(formatted));
   };
 
   const handleNavKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -518,6 +535,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
                 https://
               </span>
               <input
+                ref={navInputRef}
                 className="flex-1 bg-transparent outline-none text-white placeholder-neutral-100 tracking-tight"
                 value={navInput}
                 onChange={handleNavChange}
@@ -560,7 +578,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           tabData.showDesign ||
           tabData.showResearch ||
           tabData.showTech) ? (
-          <SignupPage onSignIn={signIn} />
+          <SignupPage onSignIn={() => {}} />
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
@@ -600,16 +618,17 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             <ResearchClient key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
-          isWhitelisted(activePageData.url) ? (
+          iframeError || !isWhitelisted(activePageData.url) ? (
+            <BrickGame404 key={refreshKey} onExit={goHome} />
+          ) : (
             <iframe
               key={activePageData.url}
               className="w-full h-full"
               src={activePageData.url}
               title="Browser Tab"
               allowFullScreen
+              onError={() => setIframeError(true)}
             ></iframe>
-          ) : (
-            <BlacklistedLanding url={activePageData.url} />
           )
         ) : (
           <div>

@@ -1,10 +1,13 @@
 "use client";
-import { type DragEvent, useEffect, useState } from "react";
+import { type DragEvent, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
 // Main Landing Component
-const Landing: React.FC = () => {
+const Landing: React.FC<{
+  session: unknown;
+  isAllowed: boolean;
+}> = ({ session: _session, isAllowed: _isAllowed }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
