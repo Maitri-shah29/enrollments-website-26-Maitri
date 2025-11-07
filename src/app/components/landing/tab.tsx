@@ -14,6 +14,25 @@ import { useSessionContext } from "../session-provider"; // Adjust path as neede
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 
+const ROTATING_WEBSITES = ["ocs.acmvit.in", "fast.com", "acmvit.in"];
+
+const useRotatingPlaceholder = (
+  websites: string[],
+  interval: number = 5000,
+) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % websites.length);
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [websites.length, interval]);
+
+  return websites[currentIndex];
+};
+
 const INTERNAL_KEYWORDS = new Set([
   "cc",
   "management",
@@ -111,6 +130,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     currentHostFromPointer(tabData),
   );
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
   useEffect(() => {
     const v = currentHostFromPointer(tabData);
@@ -435,7 +456,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}
-                placeholder="ocs.acmvit.in"
+                placeholder={rotatingPlaceholder}
               />
               <button
                 type="button"
