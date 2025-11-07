@@ -186,7 +186,7 @@ const Questions: React.FC<QuestionsProps> = ({
           </div>
         </div>
 
-        <div className="w-full lg:flex-1 min-h-[60vh] lg:min-h-0 bg-[#302E2E] rounded-xl p-6 lg:p-10 text-white flex flex-col">
+        <div className="w-full h-full min-h-140 bg-[#302E2E] rounded-xl p-10 text-white flex flex-col">
           {selectedQuestion ? (
             <div className="flex flex-col flex-1">
               <h2 className="text-lg lg:text-xl font-georgia mb-1 font-bold text-[#EA86B5]">
