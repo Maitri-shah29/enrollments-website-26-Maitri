@@ -82,6 +82,14 @@ body {
   font-display: swap;
 }
 
+@font-face {
+  font-family: "DoppioOne";
+  src: url("/fonts/DoppioOne-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-poppins {
   font-family: "PoppinsBlack", monospace;
 }
@@ -102,6 +110,10 @@ body {
 }
 .font-ShareTechMono {
   font-family: "ShareTechMono", monospace;
+}
+
+.font-doppio {
+  font-family: "DoppioOne", monospace;
 }
 
 /* Container for the checkbox and text */
