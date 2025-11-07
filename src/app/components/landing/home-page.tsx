@@ -45,11 +45,18 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1500px] flex-col gap-10 px-4 py-8 sm:px-6 lg:px-10">
-        <div className="flex flex-col items-center gap-8">
-          <h1 className="text-4xl font-extrabold uppercase tracking-[0.24em] text-white whitespace-nowrap [text-shadow:_0px_3px_2px_rgb(131_131_132_/_1.00)]">
-            ACM-VIT
-          </h1>
-          <div className="flex w-full max-w-2xl items-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
+        <div className="grid w-full gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+          <div className="relative h-16 w-44 justify-self-start sm:h-20 sm:w-56">
+            <Image
+              src="/images/acmlogo.svg"
+              alt="ACM-VIT logo"
+              fill
+              priority
+              sizes="(min-width: 640px) 14rem, 11rem"
+              className="object-contain"
+            />
+          </div>
+          <div className="flex w-full min-w-[240px] max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <input
               className="w-full bg-transparent text-lg font-medium outline-none placeholder:text-neutral-400"
               placeholder="Search"
@@ -58,6 +65,10 @@ const HomePage: React.FC<HomePageProps> = ({
               onKeyDown={onQueryKeyDown}
             />
           </div>
+          <div
+            className="hidden h-16 w-44 justify-self-end sm:block sm:h-20 sm:w-56"
+            aria-hidden="true"
+          />
         </div>
 
         <div className="grid gap-5 lg:auto-rows-[240px] lg:grid-cols-12">
