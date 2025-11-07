@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-// change
 import React, { useEffect, useRef, useState } from "react";
 import CCClient from "@/app/clients/cc-client";
 import DesignClient from "@/app/clients/design-client";
