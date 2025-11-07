@@ -503,8 +503,8 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             </div>
           </div>
         ) : tabData.showEvents ? (
-          <div className="w-full h-full bg-white overflow-auto relative">
-            <div className="h-full flex items-center justify-center">
+          <div className="w-full h-full bg-white overflow-auto hide-scrollbar relative">
+            <div className="min-h-screen flex items-center justify-center">
               <Events />
             </div>
           </div>

@@ -115,17 +115,18 @@ const HomePage: React.FC<HomePageProps> = ({
           <button
             type="button"
             onClick={handleKeyword("events")}
-            className="relative col-span-12 flex h-full flex-col items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-white/14 px-2 py-2 text-center shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-10 lg:row-span-2"
+            className="group relative col-span-12 flex h-full flex-col items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-white/14 px-2 py-2 text-center shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-10 lg:row-span-2"
           >
+            {/* Gradient overlay for normal and hover state */}
+            <div className="pointer-events-none absolute inset-0 transition-all duration-300 bg-gradient-to-br from-white/30 via-white/7 to-black/40 opacity-50 group-hover:from-white/25 group-hover:via-white/5 group-hover:to-black/40 group-hover:opacity-100" />
+
             <div className="relative z-10 flex w-full flex-col font-bold gap-3 whitespace-nowrap text-2xl uppercase tracking-[0.1em] text-white/85">
               {topEventNames.map((label, index) => (
                 <span
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6s ease-in-out ${
-                      index * 0.4
-                    }s infinite alternate`,
+                    animation: `eventsOscillate 6s ease-in-out ${index * 0.4}s infinite alternate`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -161,16 +162,13 @@ const HomePage: React.FC<HomePageProps> = ({
                 Events and Projects
               </h3>
             </div>
-
             <div className="relative z-10 flex w-full flex-col font-bold gap-3 whitespace-nowrap text-2xl uppercase tracking-[0.1em] text-white/85">
               {bottomEventNames.map((label, index) => (
                 <span
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6.5s ease-in-out ${
-                      index * 0.5
-                    }s infinite alternate-reverse`,
+                    animation: `eventsOscillate 6.5s ease-in-out ${index * 0.5}s infinite alternate-reverse`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
