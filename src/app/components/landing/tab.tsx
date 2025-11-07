@@ -46,9 +46,17 @@ interface HomePageNavbarProps {
 }
 
 const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
+  const bookmarkLabels: Record<string, string> = {
+    cc: "CC",
+    management: "Management",
+    tech: "Tech",
+    design: "Design",
+    research: "Research",
+  };
+
   return (
     <nav className="w-full bg-[#555] text-white py-2">
-      <ul className="flex items-center justify-center gap-6 text-sm font-semibold">
+      <ul className="flex items-start justify-start pl-8 gap-6 text-sm font-semibold">
         {Array.from(INTERNAL_KEYWORDS).map((item, index) => (
           <React.Fragment key={item}>
             <li>
@@ -57,7 +65,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate(item)}
                 className="hover:text-gray-300 transition-colors"
               >
-                {item}
+                {bookmarkLabels[item] || item}
               </button>
             </li>
 
@@ -487,7 +495,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         </div>
       </div>
       {/* Content Area */}
-      <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808]">
+      <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {!session?.data &&
         (tabData.showManagement ||
           tabData.showCc ||
