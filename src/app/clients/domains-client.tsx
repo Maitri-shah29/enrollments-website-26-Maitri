@@ -20,7 +20,7 @@ const Domains = () => {
             <div className="rounded-xl border-4 border-lime-300 overflow-hidden relative h-60">
               <Image
                 fill
-                src="/images/domains/cc.png"
+                src="/images/domains/cc.svg"
                 alt="Competitive Coding"
                 className="object-cover opacity-60"
               />
@@ -50,7 +50,7 @@ const Domains = () => {
             <div className="rounded-xl border-4 border-[#013D62] overflow-hidden relative h-60">
               <Image
                 fill
-                src="/images/domains/design.png"
+                src="/images/domains/design.svg"
                 alt="Design"
                 className="object-cover opacity-60"
               />
@@ -66,7 +66,7 @@ const Domains = () => {
             <div className="rounded-xl border-4 border-red-400 overflow-hidden relative h-60">
               <Image
                 fill
-                src="/images/domains/management.png"
+                src="/images/domains/management.svg"
                 alt="Management"
                 className="object-cover opacity-60"
               />
@@ -94,7 +94,7 @@ const Domains = () => {
           <div className="w-1/2 mb-6 ml-6">
             <div className="rounded-xl border-4 border-[#521D4E] overflow-hidden relative h-60">
               <Image
-                src="/images/domains/research.png"
+                src="/images/domains/research.svg"
                 alt="Research"
                 fill
                 className="object-cover opacity-60"
@@ -110,7 +110,7 @@ const Domains = () => {
           <div className="w-2/5 mb-6 mr-6">
             <div className="rounded-xl border-4 border-[#FF53A7] overflow-hidden relative h-60 ">
               <Image
-                src="/images/domains/tech.png"
+                src="/images/domains/tech.svg"
                 alt="Tech"
                 fill
                 className="object-cover opacity-60"
