@@ -40,7 +40,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
 
         <div className="flex flex-col justify-center items-center h-full w-full relative z-10 translate-y-[75px]">
           <h1
-            className="text-xl sm:text-2xl font-bold mb-4"
+            className="text-xl sm:text-2xl font-normal mb-4 text-center"
             style={{
               fontFamily: "'Share Tech Mono', monospace",
               color: "#C9EB3E",
@@ -50,7 +50,7 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
             Welcome to
           </h1>
           <h1
-            className="text-6xl sm:text-8xl md:text-[18vh] font-bold leading-none mb-8"
+            className="text-6xl sm:text-8xl md:text-[228px] font-normal leading-none mb-8 text-center"
             style={{
               fontFamily: "'Share Tech Mono', monospace",
               color: "#C9EB3E",
