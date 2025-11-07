@@ -89,6 +89,7 @@ const AnswerBox = (props: AnswerBoxProps) => {
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value;
+    setSelectedLanguage(newLanguage);
     props.onLanguageChange?.(newLanguage);
   };
 
