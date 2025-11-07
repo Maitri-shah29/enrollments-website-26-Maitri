@@ -1,6 +1,8 @@
 "use client";
 import type { Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import saveFormResponse from "@/app/actions/save-form-response";
 import AnswerBox from "./answer-box";
 import Button from "./button";
 import QuestionBox from "./question-box";
@@ -47,42 +49,44 @@ export type RoundUserExtended = Prisma.RoundUserGetPayload<{
 
 type QuestionsProps = {
   roundUser?: RoundUserExtended;
+  loading?: boolean;
+  error?: string | null;
+  responses?: Record<string, string>; // lifted state from parent
+  setResponses?: React.Dispatch<React.SetStateAction<Record<string, string>>>; // setter from parent
 };
 
-// import fetchRoundUser from "../../actions/fetch-round-user";
-
-const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
+const Questions = ({
+  roundUser,
+  loading = false,
+  error = null,
+  responses,
+  setResponses,
+}: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
-  const [roundUser, setRoundUser] = useState<RoundUserExtended | undefined>(
-    initialRoundUser,
-  );
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
-  const [responses, setResponses] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!initialRoundUser) {
-      setLoading(true);
-      fetch("/api/round-user?domain=cc")
-        .then(async (res) => {
-          if (!res.ok) throw new Error("Failed to fetch round user data");
-          const data = await res.json();
-          setRoundUser(data);
-          setLoading(false);
-        })
-        .catch(() => {
-          setError("Failed to fetch round user data");
-          setLoading(false);
-        });
+  const [internalResponses, setInternalResponses] = useState<
+    Record<string, string>
+  >({});
+  const useExternal = !!responses && !!setResponses;
+  const effectiveResponses = useExternal ? responses! : internalResponses;
+  const updateResponses: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  > = (value) => {
+    if (useExternal) {
+      setResponses!(value);
+    } else {
+      setInternalResponses(value);
     }
-  }, [initialRoundUser]);
+  };
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("plaintext");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    if (useExternal) return;
     if (roundUser?.formSubmission?.responses) {
       const initialResponses: Record<string, string> = {};
       roundUser.formSubmission.responses.forEach((response) => {
@@ -90,9 +94,9 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
           initialResponses[response.questionId] = response.response;
         }
       });
-      setResponses(initialResponses);
+      setInternalResponses(initialResponses);
     }
-  }, [roundUser?.formSubmission?.responses]);
+  }, [roundUser?.formSubmission?.responses, useExternal]);
 
   useEffect(() => {
     if (
@@ -113,12 +117,52 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
     setActiveQuestionId(questionId);
   };
 
+  const autoSaveResponse = useCallback(
+    async (questionId: string, response: string) => {
+      if (!roundUser?.formSubmission?.id) return;
+
+      try {
+        await saveFormResponse(
+          roundUser.formSubmission.id,
+          questionId,
+          response,
+        );
+      } catch (err) {
+        console.error("Auto-save error:", err);
+        if (err instanceof Error) {
+          console.error("Auto-save error details:", err.message);
+        }
+      }
+    },
+    [roundUser?.formSubmission?.id],
+  );
+
   const handleResponseChange = (questionId: string, response: string) => {
-    setResponses((prev) => ({
+    updateResponses((prev) => ({
       ...prev,
       [questionId]: response,
     }));
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      autoSaveResponse(questionId, response).catch((err) => {
+        // Extra error handling layer
+        console.error("Debounced auto-save error:", err);
+      });
+    }, 5000);
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -149,7 +193,7 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
   const questionsForList = subjectiveQuestions.map((question) => ({
     id: question.id,
     serial: question.serial,
-    title: question.question,
+    title: question.helpText || "CC Question",
     difficulty: question.varName,
   }));
 
@@ -158,8 +202,23 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
   );
 
   const currentResponse = activeQuestionId
-    ? responses[activeQuestionId] || ""
+    ? effectiveResponses[activeQuestionId] || ""
     : "";
+
+  const getSubmitMessage = (language: string): string => {
+    const messages: Record<string, string> = {
+      plaintext: "Still using notepad? Answer Submitted",
+      cpp: "Still hand-cranking those memory allocations? Answer Submitted",
+      c: "Still trusting yourself with pointers? Answer Submitted",
+      java: "Still waiting for the Garbage Collector?  Answer Submitted",
+      python: "Still relying on dynamic typing? Answer Submitted",
+      javascript: "Still managing callback hell? Answer Submitted",
+      typescript: "TypeScript solution compiled and submitted! 💙",
+      rust: "Still fighting the borrow checker? Answer Submitted",
+      go: "Still waiting on generics? Wait, you got 'em now! Answer Submitted",
+    };
+    return messages[language] || "Answer submitted successfully!";
+  };
 
   const handleSubmit = async () => {
     if (!activeQuestion || !roundUser?.formSubmission?.id) {
@@ -170,56 +229,33 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
 
     setSubmitting(true);
     setNotification(null);
-    console.log("Submitting response:", {
-      formId: roundUser.formSubmission.id,
-      questionId: activeQuestion.id,
-      response: currentResponse,
-    });
 
     try {
-      const res = await fetch("/api/save-form-response", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formId: roundUser.formSubmission.id,
-          questionId: activeQuestion.id,
-          response: currentResponse,
-        }),
-      });
-
-      const result = await res.json();
-      console.log("Response status:", res.status, "Result:", result);
-
-      if (!res.ok) {
-        setNotificationType("error");
-        const errorMsg = result?.error || `HTTP ${res.status} error`;
-        setNotification(errorMsg);
-      } else if (result?.error) {
-        setNotificationType("error");
-        const errorMsg =
-          typeof result.error === "string" ? result.error : "Submission failed";
-        setNotification(errorMsg);
-      } else {
-        setNotificationType("success");
-        setNotification("Answer submitted successfully!");
-        setTimeout(() => setNotification(null), 3000);
-      }
+      await saveFormResponse(
+        roundUser.formSubmission.id,
+        activeQuestion.id,
+        currentResponse,
+      );
+      setNotificationType("success");
+      setNotification(getSubmitMessage(selectedLanguage));
+      setTimeout(() => setNotification(null), 3000);
     } catch (err) {
       console.error("Submit error:", err);
       setNotificationType("error");
       const errorMsg =
-        err instanceof Error ? err.message : "Network error - please try again";
+        err instanceof Error ? err.message : "Failed to save response";
       setNotification(errorMsg);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return (
     <div className="flex flex-col space-y-6 min-h-full">
       {notification && (
         <div
-          className={`fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white ${
-            notificationType === "success" ? "bg-green-600" : "bg-red-600"
+          className={`fixed top-30 right-8 px-4 py-2 font-ShareTechMono shadow-lg z-50 text-white border-[0.2px] border-[#C9EB3E] ${
+            notificationType === "success" ? "bg-[#16171B]" : "bg-[#16171B]"
           }`}
         >
           {notification}
@@ -243,8 +279,8 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
               <div className="w-full flex flex-col space-y-3">
                 <div className="">
                   <QuestionBox
-                    subject={activeQuestion.question}
-                    body={activeQuestion.helpText || ""}
+                    subject={activeQuestion.helpText || "CC Question"}
+                    body={activeQuestion.question}
                   />
                 </div>
                 <div className="flex-1 min-h-[300px] sm:min-h-[420px]">
@@ -252,7 +288,8 @@ const Questions = ({ roundUser: initialRoundUser }: QuestionsProps) => {
                     key={activeQuestion.id}
                     subject="Answer"
                     body={currentResponse}
-                    language="plaintext"
+                    language={selectedLanguage}
+                    onLanguageChange={setSelectedLanguage}
                     onChange={(value) =>
                       activeQuestionId &&
                       handleResponseChange(activeQuestionId, value)

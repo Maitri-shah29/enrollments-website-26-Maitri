@@ -86,7 +86,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
       {/* Backdrop to close menu on clicking outside the menu and escape */}
       <button
         type="button"
-        className="fixed inset-0 z-40 focus:outline-none"
+        className="fixed inset-0 z-40 focus:outline-none backdrop-blur-sm bg-black/20"
         aria-label="Close profile menu"
         onClick={onClose}
         onKeyDown={(e) => e.key === "Escape" && onClose()}

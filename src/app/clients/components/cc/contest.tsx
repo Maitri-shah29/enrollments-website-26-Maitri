@@ -4,7 +4,7 @@ import NeonSection from "./neon-section";
 
 const Contest: React.FC = () => {
   return (
-    <NeonSection title="Contest">
+    <NeonSection title="CONTEST">
       <p>
         Join our weekly coding competition and test your skills against other
         developers.
