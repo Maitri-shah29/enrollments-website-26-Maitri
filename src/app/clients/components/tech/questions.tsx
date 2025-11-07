@@ -28,7 +28,7 @@ export default function Questions({
 }: Props) {
   if (!activeRoundFolder) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold">
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
         <h1>Round 1 Overview</h1>
         <p className="mt-4 text-lg text-white">
           Choose a folder from the sidebar to get started.
@@ -39,7 +39,7 @@ export default function Questions({
 
   if (!activeQuestion) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold">
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
         <h1>{activeRoundFolder} </h1>
         <p className="mt-4 text-lg text-white">
           Select a question to get started with {""}
@@ -51,7 +51,6 @@ export default function Questions({
 
   const questionNumber = Number(activeQuestion.replace("question", ""));
   const questionKey = `${activeRoundFolder}-${activeQuestion}`;
-  const isSubmitted = submittedQuestions.has(questionKey);
 
   const currentQuestion = questionsData[activeRoundFolder]?.[questionNumber];
   const questionTitle = currentQuestion?.title || `Question ${questionNumber}`;
@@ -87,17 +86,11 @@ export default function Questions({
           </span>
           <textarea
             style={{ height: "calc(7 * 1.25rem)" }}
-            className={`flex-1 bg-transparent text-[#E097CE] selection:bg-[#993C7A] selection:text-white font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-              isSubmitted
-                ? "border-gray-500 text-gray-500 cursor-not-allowed"
-                : "border-[#993C7A]"
-            }`}
-            placeholder={
-              isSubmitted ? "Answer submitted" : "Type your answer here..."
-            }
+            className="flex-1 bg-transparent text-[#E097CE] selection:bg-[#993C7A] selection:text-white font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border-[#993C7A]"
+            placeholder="Type your answer here..."
             value={answers[questionKey] || ""}
             onChange={(e) => {
-              if (!isSubmitted) onChangeAnswer(questionKey, e.target.value);
+              onChangeAnswer(questionKey, e.target.value);
             }}
             onWheel={(e) => {
               e.preventDefault();
@@ -109,21 +102,15 @@ export default function Questions({
               const nextLine = currentLine + direction;
               target.scrollTop = nextLine * lineHeight;
             }}
-            disabled={isSubmitted}
-            readOnly={isSubmitted}
           />
         </div>
 
         <div className="flex justify-end">
           <TechButton
             type="button"
-            className={`bg-transparent border px-10 py-2 mt-6 font-jetbrains text-sm transition-colors ${
-              isSubmitted
-                ? "border-gray-500 text-gray-500 cursor-not-allowed"
-                : "border-[#993C7A] hover:bg-[#993C7A]"
-            }`}
+            className="bg-transparent border border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors"
             onClick={() => {
-              if (!isSubmitted && (answers[questionKey] || "").trim()) {
+              if ((answers[questionKey] || "").trim()) {
                 onSubmit(questionKey);
                 console.log(
                   "Answer submitted for question",
@@ -133,9 +120,9 @@ export default function Questions({
                 );
               }
             }}
-            disabled={isSubmitted || !(answers[questionKey] || "").trim()}
+            disabled={!(answers[questionKey] || "").trim()}
           >
-            {isSubmitted ? "submitted" : "submit"}
+            submit
           </TechButton>
         </div>
       </div>

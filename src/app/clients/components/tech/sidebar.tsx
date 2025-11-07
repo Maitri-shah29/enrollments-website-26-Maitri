@@ -41,14 +41,16 @@ export default function Sidebar({
 }: Props) {
   return (
     <div className="min-w-45 w-[16%] overflow-hidden border-r-2 border-[#993C7A] h-full p-2 overflow-y-auto font-jetbrains [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
-      <Image
-        src="/images/acmlogo.svg"
-        alt="acm logo"
-        width={200}
-        height={120}
-        className="hover:cursor-pointer"
-        onClick={onLogoClick}
-      />
+      <div className="flex justify-center items-center mb-4 mt-4">
+        <Image
+          src="/images/acmlogo.svg"
+          alt="acm logo"
+          width={150}
+          height={90}
+          className="hover:cursor-pointer"
+          onClick={onLogoClick}
+        />
+      </div>
 
       <div className="w-full h-fit mt-5 font-jetbrains">
         {(
