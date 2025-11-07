@@ -13,6 +13,8 @@ const Page = () => {
   const [roundUsers, setRoundUsers] = useState<RoundUserExtended[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRoundUsers = async () => {
@@ -23,7 +25,6 @@ const Page = () => {
         if (!res.ok) throw new Error("Failed to fetch round user data");
         const data = await res.json();
 
-        // Handle both single roundUser and array of roundUsers
         if (Array.isArray(data)) {
           setRoundUsers(data);
         } else if (data && typeof data === "object") {
@@ -51,6 +52,23 @@ const Page = () => {
     (ru) => ru.formSubmission !== null && ru.formSubmission !== undefined,
   );
 
+  useEffect(() => {
+    if (!roundUserWithFormSubmission?.formSubmission) return;
+
+    const currentFsId = roundUserWithFormSubmission.formSubmission.id;
+
+    if (formSubmissionId !== currentFsId) {
+      const initial: Record<string, string> = {};
+      const serverResponses =
+        roundUserWithFormSubmission.formSubmission.responses ?? [];
+      serverResponses.forEach((r) => {
+        if (r.response) initial[r.questionId] = r.response;
+      });
+      setResponses(initial);
+      setFormSubmissionId(currentFsId);
+    }
+  }, [roundUserWithFormSubmission?.formSubmission, formSubmissionId]);
+
   return (
     <div className="w-full h-full relative overflow-y-auto">
       <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between">
@@ -71,6 +89,8 @@ const Page = () => {
                 roundUser={roundUserWithFormSubmission}
                 loading={loading}
                 error={error}
+                responses={responses}
+                setResponses={setResponses}
               />
             )}
           </div>

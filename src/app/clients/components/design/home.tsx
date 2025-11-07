@@ -6,11 +6,18 @@ const Home: React.FC = () => {
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden">
       <Image
-        src="/images/design/landing-background.svg"
+        src="/images/design/flower.svg"
         alt="Home Design"
-        width={1920}
-        height={1080}
-        className="w-full h-full object-cover absolute top-0"
+        width={250}
+        height={250}
+        className="object-cover absolute top-20 -right-20 animate-spin-slow"
+      />
+      <Image
+        src="/images/design/disc.svg"
+        alt="Home Design"
+        width={175}
+        height={175}
+        className="object-cover absolute bottom-20 -left-15 animate-spin-slow"
       />
       <div className="flex flex-col h-screen w-full justify-center items-center figma-cursor">
         <Image
@@ -28,7 +35,7 @@ const Home: React.FC = () => {
             alt="after effects"
             width={50}
             height={50}
-            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
+            className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 "
           />
           <Image
             src="/images/design/app_icons/xd.webp"
@@ -86,3 +93,7 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
+{
+  /*/images/ACM-VIT-Logo.svg*/
+}

@@ -414,6 +414,7 @@ const Questions: React.FC<QuestionsProps> = ({
                 border-none
                 p-0
                 placeholder-gray-500
+                selection:bg-[#7D5BED]
               "
               placeholder="Type your answer here..."
               value={currentAnswer}

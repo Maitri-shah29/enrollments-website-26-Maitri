@@ -4,12 +4,12 @@ import NeonSection from "./neon-section";
 
 const Interview: React.FC = () => {
   return (
-    <NeonSection title="Interview">
+    <NeonSection title="INTERVIEW">
       <p>
-        Join our weekly coding competition and test your skills against other
-        developers.
+        Simulate the interview experience to guarantee a confident,
+        well-prepared, strong showing.
       </p>
-      <Button label="Register Now"></Button>
+      <Button label="Practice Now"></Button>
     </NeonSection>
   );
 };

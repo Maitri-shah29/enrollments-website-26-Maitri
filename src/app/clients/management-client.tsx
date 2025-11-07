@@ -43,7 +43,6 @@ export default function Management() {
     return map;
   }, [questions, answers]);
 
-  // Load Management Round 1 data when the section is opened the first time
   useEffect(() => {
     const load = async () => {
       if (roundInitDone || loading || activeSection !== "Round 1") return;
@@ -52,10 +51,8 @@ export default function Management() {
       try {
         const domain: Domain = "management";
 
-        // Fetch rounds with better error handling
         const rounds = await fetchRound(domain);
 
-        // Check if user is not logged in
         if (!Array.isArray(rounds)) {
           setInitError("Please sign in to view Management rounds.");
           setLoading(false);
@@ -63,7 +60,6 @@ export default function Management() {
           return;
         }
 
-        // Check if rounds exist
         if (rounds.length === 0) {
           setInitError("No active rounds found for Management.");
           setLoading(false);
@@ -74,7 +70,6 @@ export default function Management() {
         const r = rounds[0];
         setRoundId(r.id);
 
-        // Fetch questions with error handling
         const qres = await getRoundQuestions(r.id);
 
         if (!qres || !qres.questions) {
@@ -85,7 +80,7 @@ export default function Management() {
         }
 
         const qs = (qres.questions ?? []).sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
+          (a, b) => (a.serial ?? 0) - (b.serial ?? 0)
         ) as QuestionPayload[];
 
         setQuestions(qs);
@@ -96,7 +91,6 @@ export default function Management() {
         });
         setAnswers(initialAnswers);
 
-        // Ensure the current user is mapped to this round so form submission can be created
         const ensureRes = await ensureRoundUser(r.id);
 
         if (
@@ -113,7 +107,7 @@ export default function Management() {
         if (ensureRes && "error" in ensureRes && ensureRes.error) {
           // If we cannot ensure mapping, allow viewing but warn about saving
           setFormWarning(
-            "Could not link you to this round automatically; you can view questions but cannot save answers.",
+            "Could not link you to this round automatically; you can view questions but cannot save answers."
           );
         }
 
@@ -143,7 +137,7 @@ export default function Management() {
           createRes.error === "User does not exist for this round"
         ) {
           setFormWarning(
-            "You're not registered for this round yet; you can view questions but cannot save answers.",
+            "You're not registered for this round yet; you can view questions but cannot save answers."
           );
         }
       } catch (e) {
@@ -306,8 +300,7 @@ export default function Management() {
           className="mb-8"
         />
 
-        {/* Compose Button */}
-        <div className="flex mb-5 items-center w-[80%] h-[10%] gap-2 bg-[#d7aaaa] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-lg/40 cursor-pointer hover:bg-[#cfa0a0] transition">
+        <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#d7aaaa] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-lg/40 ">
           <Pencil /> <span className="font-medium">Compose</span>
         </div>
 
@@ -331,15 +324,13 @@ export default function Management() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center items-center px-8">
-        <div className="w-full flex justify-start h-[8%] ml-[10%] ">
-          <div className="p-2 gap-2 flex flex-row bg-white/40 w-[50%] rounded-full mt-2">
-            <Search />
-            <input
-              type="text"
-              placeholder="Search Domain"
-              className="outline-none flex-1 text-white placeholder-white-500"
-            />
-          </div>
+        <div className="px-5 py-2 gap-2 flex flex-row bg-white/40 w-[90%] justify-center items-center rounded-full mt-2">
+          <Search />
+          <input
+            type="text"
+            placeholder="Search Mail"
+            className="outline-none flex-1 text-white placeholder-white-500"
+          />
         </div>
 
         <div className="h-[90%] w-full flex items-center justify-center">
