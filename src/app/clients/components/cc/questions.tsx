@@ -51,24 +51,42 @@ type QuestionsProps = {
   roundUser?: RoundUserExtended;
   loading?: boolean;
   error?: string | null;
+  responses?: Record<string, string>; // lifted state from parent
+  setResponses?: React.Dispatch<React.SetStateAction<Record<string, string>>>; // setter from parent
 };
 
 const Questions = ({
   roundUser,
   loading = false,
   error = null,
+  responses,
+  setResponses,
 }: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
-  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [internalResponses, setInternalResponses] = useState<
+    Record<string, string>
+  >({});
+  const useExternal = !!responses && !!setResponses;
+  const effectiveResponses = useExternal ? responses! : internalResponses;
+  const updateResponses: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  > = (value) => {
+    if (useExternal) {
+      setResponses!(value);
+    } else {
+      setInternalResponses(value);
+    }
+  };
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("plaintext");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    if (useExternal) return;
     if (roundUser?.formSubmission?.responses) {
       const initialResponses: Record<string, string> = {};
       roundUser.formSubmission.responses.forEach((response) => {
@@ -76,9 +94,9 @@ const Questions = ({
           initialResponses[response.questionId] = response.response;
         }
       });
-      setResponses(initialResponses);
+      setInternalResponses(initialResponses);
     }
-  }, [roundUser?.formSubmission?.responses]);
+  }, [roundUser?.formSubmission?.responses, useExternal]);
 
   useEffect(() => {
     if (
@@ -111,25 +129,29 @@ const Questions = ({
         );
       } catch (err) {
         console.error("Auto-save error:", err);
+        if (err instanceof Error) {
+          console.error("Auto-save error details:", err.message);
+        }
       }
     },
     [roundUser?.formSubmission?.id],
   );
 
   const handleResponseChange = (questionId: string, response: string) => {
-    setResponses((prev) => ({
+    updateResponses((prev) => ({
       ...prev,
       [questionId]: response,
     }));
 
-    // Clear existing timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Set new timer for auto-save after 5 seconds
     debounceTimerRef.current = setTimeout(() => {
-      autoSaveResponse(questionId, response);
+      autoSaveResponse(questionId, response).catch((err) => {
+        // Extra error handling layer
+        console.error("Debounced auto-save error:", err);
+      });
     }, 5000);
   };
 
@@ -180,7 +202,7 @@ const Questions = ({
   );
 
   const currentResponse = activeQuestionId
-    ? responses[activeQuestionId] || ""
+    ? effectiveResponses[activeQuestionId] || ""
     : "";
 
   const getSubmitMessage = (language: string): string => {
