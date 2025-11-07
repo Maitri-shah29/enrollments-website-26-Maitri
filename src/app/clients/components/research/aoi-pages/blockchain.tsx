@@ -9,13 +9,6 @@ const blockchainPage: React.FC = () => {
     <div className="relative flex w-full h-full bg-[#1A1A1A]">
       <NetworkGraph />
 
-      <Image
-        src="/images/research/background.svg"
-        alt="background image"
-        width={1920}
-        height={500}
-        className="object-cover object-bottom z-0 opacity-80"
-      />
       <div className="absolute top-0 p-10 z-10">
         <h1 className="text-2xl font-bold text-[#C8B7FF] mb-10">Blockchain</h1>
         <p className="text-white">
