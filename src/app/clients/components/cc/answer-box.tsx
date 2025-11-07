@@ -7,6 +7,7 @@ export type AnswerBoxProps = {
   body: string;
   onChange?: (value: string) => void;
   language?: string;
+  onLanguageChange?: (language: string) => void;
 };
 
 // Add more languages if u need
@@ -25,9 +26,7 @@ const LANGUAGE_OPTIONS = [
 const AnswerBox = (props: AnswerBoxProps) => {
   const initialBody = typeof props.body === "string" ? props.body : "";
   const [code, setCode] = useState(initialBody);
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    props.language || "plaintext",
-  );
+  const selectedLanguage = props.language || "plaintext";
   const monaco = useMonaco();
 
   useEffect(() => {
@@ -67,7 +66,8 @@ const AnswerBox = (props: AnswerBoxProps) => {
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedLanguage(e.target.value);
+    const newLanguage = e.target.value;
+    props.onLanguageChange?.(newLanguage);
   };
 
   return (

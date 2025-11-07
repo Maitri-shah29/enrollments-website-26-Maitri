@@ -110,6 +110,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
   const [homeInput, setHomeInput] = useState<string>(() =>
     currentHostFromPointer(tabData),
   );
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const v = currentHostFromPointer(tabData);
@@ -317,6 +318,20 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
     }
   };
 
+  const handleRefresh = () => {
+    // Increment refresh key to force re-render of client components
+    setRefreshKey((prev) => prev + 1);
+
+    // Also reload iframe if present
+    const iframe = document.querySelector(
+      'iframe[title="Browser Tab"]',
+    ) as HTMLIFrameElement;
+    if (iframe?.src) {
+      const currentSrc = iframe.src;
+      iframe.src = currentSrc;
+    }
+  };
+
   // Show loading state while checking session
   if (isPending) {
     return (
@@ -390,7 +405,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <RefreshButton className={navIconButtonCompact} />
+            <RefreshButton
+              className={navIconButtonCompact}
+              onRefresh={handleRefresh}
+            />
             <button
               type="button"
               className={navIconButton}
@@ -402,7 +420,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
                 alt="Home"
                 width={18}
                 height={18}
-                className="w-4 h-4"
+                className="w-4 h-4 transition-transform duration-200 hover:scale-110"
               />
             </button>
           </div>
@@ -459,28 +477,28 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
-              <Management />
+              <Management key={refreshKey} />
             </div>
           </div>
         ) : tabData.showCc ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
-              <CCClient />
+              <CCClient key={refreshKey} />
             </div>
           </div>
         ) : tabData.showTech ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
-              <TechWebsite />
+              <TechWebsite key={refreshKey} />
             </div>
           </div>
         ) : tabData.showDesign ? (
           <div className="w-full h-full bg-white overflow-auto relative">
-            <DesignClient />
+            <DesignClient key={refreshKey} />
           </div>
         ) : tabData.showResearch ? (
           <div className="w-full h-full bg-white overflow-auto relative">
-            <ResearchClient />
+            <ResearchClient key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
           <iframe
