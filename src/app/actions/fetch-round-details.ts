@@ -30,6 +30,7 @@ export default async function fetchRound(domain: Domain) {
       where: {
         domain: domain,
         hidden: false,
+        active: true,
       },
       include: {
         Question: {

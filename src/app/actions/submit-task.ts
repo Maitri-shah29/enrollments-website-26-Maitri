@@ -1,5 +1,7 @@
 "use server";
 
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export default async function submitTask(
@@ -11,13 +13,32 @@ export default async function submitTask(
   }
 
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    const userId = session?.session?.userId;
+    if (!userId) throw new Error("Not logged in");
+
+    const ru = await prisma.roundUser.findUnique({
+      where: { id: roundUserId },
+      select: {
+        userId: true,
+        status: true,
+        round: { select: { active: true, hidden: true } },
+      },
+    });
+    if (!ru) throw new Error("Round User does not exist");
+    if (ru.userId !== userId) throw new Error("Forbidden");
+    if (!ru.round.active || ru.round.hidden)
+      throw new Error("Round is not open");
+    if (ru.status !== "pending")
+      throw new Error("Submissions are not allowed for your status");
+
     const task = await prisma.task.findUnique({
       where: {
         roundUserId: roundUserId,
       },
     });
 
-    if (!task) throw new Error("Round User does not exist");
+    if (!task) throw new Error("Task not found");
 
     if (task.deadline < new Date()) {
       throw new Error("Deadline already passed");
