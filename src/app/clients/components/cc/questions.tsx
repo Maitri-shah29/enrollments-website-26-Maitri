@@ -65,6 +65,7 @@ const Questions = ({
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("plaintext");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -182,6 +183,21 @@ const Questions = ({
     ? responses[activeQuestionId] || ""
     : "";
 
+  const getSubmitMessage = (language: string): string => {
+    const messages: Record<string, string> = {
+      plaintext: "Still using notepad? Answer Submitted",
+      cpp: "Still hand-cranking those memory allocations? Answer Submitted",
+      c: "Still trusting yourself with pointers? Answer Submitted",
+      java: "Still waiting for the Garbage Collector?  Answer Submitted",
+      python: "Still relying on dynamic typing? Answer Submitted",
+      javascript: "Still managing callback hell? Answer Submitted",
+      typescript: "TypeScript solution compiled and submitted! 💙",
+      rust: "Still fighting the borrow checker? Answer Submitted",
+      go: "Still waiting on generics? Wait, you got 'em now! Answer Submitted",
+    };
+    return messages[language] || "Answer submitted successfully!";
+  };
+
   const handleSubmit = async () => {
     if (!activeQuestion || !roundUser?.formSubmission?.id) {
       setNotificationType("error");
@@ -199,7 +215,7 @@ const Questions = ({
         currentResponse,
       );
       setNotificationType("success");
-      setNotification("Answer submitted successfully!");
+      setNotification(getSubmitMessage(selectedLanguage));
       setTimeout(() => setNotification(null), 3000);
     } catch (err) {
       console.error("Submit error:", err);
@@ -216,8 +232,8 @@ const Questions = ({
     <div className="flex flex-col space-y-6 min-h-full">
       {notification && (
         <div
-          className={`fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white ${
-            notificationType === "success" ? "bg-green-600" : "bg-red-600"
+          className={`fixed top-30 right-8 px-4 py-2 font-ShareTechMono shadow-lg z-50 text-white border-[0.2px] border-[#C9EB3E] ${
+            notificationType === "success" ? "bg-[#16171B]" : "bg-[#16171B]"
           }`}
         >
           {notification}
@@ -250,7 +266,8 @@ const Questions = ({
                     key={activeQuestion.id}
                     subject="Answer"
                     body={currentResponse}
-                    language="plaintext"
+                    language={selectedLanguage}
+                    onLanguageChange={setSelectedLanguage}
                     onChange={(value) =>
                       activeQuestionId &&
                       handleResponseChange(activeQuestionId, value)
