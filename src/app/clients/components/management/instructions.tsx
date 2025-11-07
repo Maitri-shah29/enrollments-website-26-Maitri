@@ -6,7 +6,7 @@ export default function Instructions() {
     <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
       <Header />
       <div className="p-10 overflow-y-auto h-full">
-        <h1 className="text-2xl sm:text-3xl font-bold text-black text-center mb-8">
+        <h1 className="text-2xl sm:text-3xl font-medium text-black text-left mb-8">
           Instructions
         </h1>
 

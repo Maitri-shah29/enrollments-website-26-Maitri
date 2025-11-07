@@ -324,13 +324,15 @@ export default function Management() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center items-center px-8">
-        <div className="px-5 py-2 gap-2 flex flex-row bg-white/40 w-[90%] justify-center items-center rounded-full mt-2">
-          <Search />
-          <input
-            type="text"
-            placeholder="Search Mail"
-            className="outline-none flex-1 text-white placeholder-white-500"
-          />
+        <div className="w-full flex justify-center h-[8%]">
+          <div className="p-2 gap-2 flex flex-row items-center bg-white/40 w-[50%] rounded-full mt-2">
+            <Search />
+            <input
+              type="text"
+              placeholder="Search"
+              className="outline-none flex-1 text-white placeholder-white-500"
+            />
+          </div>
         </div>
 
         <div className="h-[90%] w-full flex items-center justify-center">

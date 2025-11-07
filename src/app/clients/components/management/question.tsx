@@ -100,7 +100,7 @@ export default function Question({
               type="button"
               onClick={handleSubmit}
               disabled={!answer.trim() || submitting}
-              className="px-5 py-1 rounded-full bg-[#AD3232CC] text-white hover:bg-[#AD3232CC]/70 disabled:bg-gray-400"
+              className="px-5 py-1 rounded-full bg-[#AD3232CC] text-white hover:bg-[#8B2828] disabled:bg-gray-400"
             >
               {submitting ? "Submitting..." : "Submit"}
             </button>

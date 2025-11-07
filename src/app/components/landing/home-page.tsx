@@ -15,7 +15,7 @@ const bottomEventNames = ["Forktober", "Unipool", "Code 2 Create"];
 
 const domainLinks = [
   { label: "Design", keyword: "design", variant: "outline" as const },
-  { label: "Competitive Coding", keyword: "cc", variant: "solid" as const },
+  { label: "CC", keyword: "cc", variant: "solid" as const },
   { label: "Research", keyword: "research", variant: "solid" as const },
   { label: "Tech", keyword: "tech", variant: "outline" as const },
   { label: "Management", keyword: "management", variant: "solid" as const },
@@ -32,7 +32,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
 
   return (
-    <div className="relative min-h-full w-full bg-[#080808] text-white">
+    <div className="relative min-h-full w-full bg-[#080808] text-white overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
       <div className="pointer-events-none absolute inset-0">
         <Image
@@ -45,11 +45,11 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1500px] flex-col gap-10 px-4 py-8 sm:px-6 lg:px-10">
-        <div className="flex flex-col items-start gap-4">
-          <h1 className="text-4xl font-extrabold uppercase tracking-[0.24em] text-white drop-shadow-[0_6px_12px_rgba(0,0,0,0.65)] whitespace-nowrap">
+        <div className="flex flex-col items-center gap-8">
+          <h1 className="text-4xl font-extrabold uppercase tracking-[0.24em] text-white whitespace-nowrap [text-shadow:_0px_3px_2px_rgb(131_131_132_/_1.00)]">
             ACM-VIT
           </h1>
-          <div className="mx-auto flex w-full max-w-2xl items-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
+          <div className="flex w-full max-w-2xl items-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <input
               className="w-full bg-transparent text-lg font-medium outline-none placeholder:text-neutral-400"
               placeholder="Search"
@@ -95,7 +95,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   textShadow: "0 8px 24px rgba(0,0,0,0.45)",
                 }}
               >
-                About acm
+                About ACM
               </h2>
             </div>
           </button>
@@ -108,7 +108,7 @@ const HomePage: React.FC<HomePageProps> = ({
               <span className="absolute right-0 bottom-0 h-5 w-5 border-b-[7px] border-r-[7px] border-white" />
             </div>
             <div className="relative z-10 flex h-full flex-col items-center justify-center gap-4 text-center">
-              <h3 className="text-xl font-semibold text-white">Photos</h3>
+              <h3 className="text-5xl font-semibold text-white">Photos</h3>
             </div>
           </section>
 
