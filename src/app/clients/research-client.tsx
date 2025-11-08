@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
 import AIML from "@/app/clients/components/research/aoi-pages/aiml";
@@ -58,7 +58,8 @@ const ResearchClient = () => {
   const [selectedAOI, setSelectedAOI] = useState<string>("Blockchain");
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
 
-  const handleAOISelect = (aoi: string) => {
+  // ✅ Memoized so it never re-creates between renders
+  const handleAOISelect = useCallback((aoi: string) => {
     const key = toAoiKey(aoi);
     if (key) {
       setSelectedAOI(keyToLabel[key]);
@@ -67,14 +68,10 @@ const ResearchClient = () => {
     } else {
       setSelectedPanel("AOIs");
     }
-  };
+  }, []);
 
-  const handleQuestionSelect = (idx: number) => {
-    setSelectedQuestionIdx(idx);
-    setSelectedPanel("Round 1");
-  };
-
-  const handlePanelSelect = (panelName: string) => {
+  // ✅ Memoized to keep `onSelect` stable for AOIs
+  const handlePanelSelect = useCallback((panelName: string) => {
     const key = toAoiKey(panelName);
     if (key) {
       setSelectedAOI(keyToLabel[key]);
@@ -84,7 +81,12 @@ const ResearchClient = () => {
     }
 
     setSelectedPanel(panelName);
-  };
+  }, []);
+
+  const handleQuestionSelect = useCallback((idx: number) => {
+    setSelectedQuestionIdx(idx);
+    setSelectedPanel("Round 1");
+  }, []);
 
   return (
     <div className="flex h-full w-full bg-[#1a1a1a]">
