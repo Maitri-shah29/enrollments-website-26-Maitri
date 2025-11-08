@@ -3,10 +3,16 @@ import Image from "next/image";
 import type React from "react";
 import { signIn } from "@/lib/auth-client";
 
-const SignupPage: React.FC = () => {
+interface SignupPageProps {
+  onSignIn: () => void;
+}
+
+const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
   const handleGoogleSignIn = async () => {
     await signIn();
     window.dispatchEvent(new Event("better-auth-session-change"));
+
+    // onSignIn();
   };
   return (
     <div className="relative w-full h-full bg-black overflow-hidden flex  items-center justify-center">

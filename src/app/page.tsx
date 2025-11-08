@@ -1,11 +1,8 @@
 import { headers } from "next/headers";
 import { Suspense } from "react";
-import { isEmailAllowed } from "@/lib/allowed-emails";
 import { auth } from "@/lib/auth";
-import AccessDenied from "./components/access-denied";
 import Landing from "./components/landing";
 import { SessionProvider } from "./components/session-provider";
-import SignupPage from "./components/sign-up";
 
 export default function Home() {
   return (
@@ -20,29 +17,10 @@ async function HomeContent() {
     headers: await headers(),
   });
 
-  if (!session?.session) {
-    return (
-      <div className="h-screen w-screen">
-        <SignupPage />
-      </div>
-    );
-  }
-
-  const email = session.user?.email ?? null;
-  const isAllowed = isEmailAllowed(email);
-
-  if (!isAllowed) {
-    return (
-      <div className="h-screen w-screen">
-        <AccessDenied email={email} />
-      </div>
-    );
-  }
-
   return (
     <div className="h-screen w-screen">
       <SessionProvider>
-        <Landing />
+        <Landing session={session} isAllowed={true} />
       </SessionProvider>
     </div>
   );
