@@ -86,6 +86,8 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
     tech: "Tech",
     design: "Design",
     research: "Research",
+    events: "Events",
+    domains: "Domains",
   };
 
   return (
@@ -103,7 +105,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
               </button>
             </li>
 
-            {index < item.length - 1 && (
+            {index < Array.from(INTERNAL_KEYWORDS).length - 1 && (
               <span className="h-4 w-px bg-gray-300 opacity-40" />
             )}
           </React.Fragment>
@@ -234,7 +236,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
             ? "CC"
             : trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
         pendingUrl: trimmed,
-
       });
 
       return;
@@ -264,7 +265,6 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       showResearch: false,
       showEvents: false,
       showDomains: false,
-      
     });
   };
 
