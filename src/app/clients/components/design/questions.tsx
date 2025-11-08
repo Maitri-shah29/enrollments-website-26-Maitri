@@ -59,7 +59,6 @@ const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
 
 const Questions: React.FC<QuestionsProps> = ({
   questions,
-  // 🐛 FIX 3: Use _roundId to mark as intentionally unused
   roundId: _roundId,
   formSubmissionId,
   savedResponses,
@@ -183,7 +182,6 @@ const Questions: React.FC<QuestionsProps> = ({
     } finally {
       setIsSaving(false);
     }
-    // 🐛 FIX 2: Added showToast to dependencies array
   }, [formSubmissionId, selectedQuestion, answers, showToast]);
 
   const getToastClasses = (type: "success" | "error") => {
@@ -212,7 +210,6 @@ const Questions: React.FC<QuestionsProps> = ({
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
             <div className="bg-[#43A363] p-4 lg:p-6 rounded-xl flex flex-col gap-2">
               {aoiData.map((aoi) => (
-                // 🐛 FIX 1: Use <button> for clickable items to fix a11y/noStaticElementInteractions and a11y/useKeyWithClickEvents
                 <button
                   type="button" // Important for buttons not in a form
                   className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
