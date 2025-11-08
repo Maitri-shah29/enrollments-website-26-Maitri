@@ -30,7 +30,7 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center min-h-16 z-20 font-georgia">
+    <div className="flex items-center justify-center min-h-16 z-20 font-coolvetica">
       <div className="flex gap-10">
         {items.map((item) => {
           const isDisabled = item === "Questions" && disableQuestions;

@@ -4,12 +4,14 @@ import Image from "next/image";
 export default function About() {
   return (
     <div className="bg-[#08111D] p-4 rounded-lg">
-      <Image
-        src="/images/about-tech.svg"
-        alt="acm logo"
-        width={700}
-        height={700}
-      />
+      <div className="flex justify-center -mt-8">
+        <Image
+          src="/images/about-tech.svg"
+          alt="acm logo"
+          width={700}
+          height={700}
+        />
+      </div>
       <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
         <pre className="text-right pr-4 select-none text-[#993C7A]">
           {Array.from({ length: 6 }, (_, i) => (

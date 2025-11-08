@@ -134,7 +134,7 @@ const DesignClient = () => {
       />
       <div
         key={selectedPanel}
-        className="flex overflow-y-auto z-10 animate-panel-transition"
+        className="flex overflow-y-auto z-10 animate-panel-transition [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {selectedPanel === "Home" && <Home />}
         {selectedPanel === "About" && <About />}

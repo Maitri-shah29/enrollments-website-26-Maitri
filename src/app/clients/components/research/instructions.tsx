@@ -11,8 +11,8 @@ export default function Instructions() {
       </div>
 
       {/* Foreground Content */}
-      <div className="relative z-10 px-16 py-20 max-w-5xl">
-        <h1 className="text-3xl md:text-4xl font-semibold text-purple-400 mb-4">
+      <div className="relative z-10 px-16 py-20 max-w-7xl">
+        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4">
           Instructions
         </h1>
 

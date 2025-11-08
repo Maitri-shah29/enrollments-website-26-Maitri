@@ -5,8 +5,8 @@ import type React from "react";
 
 const About: React.FC = () => {
   return (
-    <div className="w-full h-full flex items-center justify-start flex-col px-[5%] py-[3%] overflow-y-auto">
-      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[3%] mt-[2%]">
+    <div className="w-full h-full flex items-center justify-start flex-col px-[5%] py-[3%] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
         About
       </h1>
 
@@ -19,7 +19,7 @@ const About: React.FC = () => {
             height={500}
             className="w-[8%] lg:w-[10%] absolute -top-[30%] left-[3%] lg:left-[5%]"
           />
-          <p className="px-[5%] lg:px-[8%] pt-[5%] font-georgia text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
+          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
             nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
             scelerisque vulputate Lorem ipsum dolor sit amet, consectetur

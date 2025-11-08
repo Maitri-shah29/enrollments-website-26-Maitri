@@ -90,7 +90,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
       className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-hidden"
       aria-label="Research sidebar"
     >
-      <div className="flex flex-col h-full p-2 overflow-auto pr-5">
+      <div className="flex flex-col h-full p-2 overflow-auto pr-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="space-y-0 mb-10">
           <button
             type="button"
@@ -108,24 +108,18 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               onClick={() => {
                 onSelect(it.key);
               }}
-              className={`w-full flex items-center gap-3 pl-3 py-0.5 text-left transition-colors cursor-pointer ${
-                selected !== it.key ? "hover:bg-white/3" : ""
+              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors cursor-pointer rounded ${
+                selected === it.key ? "bg-[#7d5bed]" : "hover:bg-white/3"
               }`}
             >
               <span className="w-5 h-full text-white/90">{it.icon}</span>
-              <div
-                className={`w-full flex items-center py-1 pl-1 text-left transition-colors cursor-pointer ${
-                  selected === it.key ? "bg-[#7d5bed]" : ""
-                }`}
-              >
-                <span className="text-sm">{it.key}</span>
-              </div>
+              <span className="text-sm">{it.key}</span>
             </button>
           ))}
 
           <button
-            className={`mt-1 w-full flex items-center justify-end pl-3  py-0.5 rounded-sm cursor-pointer transition-colors ${
-              selected === "Round 1" ? "" : "hover:bg-white/3"
+            className={`mt-1 w-full flex items-center justify-end pl-3 py-2 rounded cursor-pointer transition-colors ${
+              selected === "Round 1" ? "bg-[#7d5bed]" : "hover:bg-white/3"
             }`}
             onClick={(e) => {
               setExpandedRound((s) => !s);
@@ -139,13 +133,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               <div className="w-5 h-full relative">
                 <Image src={Round} alt="Round" width={20} height={20} />
               </div>
-              <div
-                className={`flex w-full h-full pl-1 py-1 ${
-                  selected === "Round 1" ? "bg-[#7D5BED] text-white" : ""
-                }`}
-              >
-                <span className={`text-sm text-left`}>Round 1</span>
-              </div>
+              <span className={`text-sm text-left`}>Round 1</span>
             </div>
           </button>
 
@@ -214,8 +202,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               onClick={() => {
                 onSelect("Interview");
               }}
-              className={`w-full flex items-center gap-3 pl-3 py-1 text-left transition-colors cursor-pointer ${
-                selected !== "Interview" ? "hover:bg-white/3" : ""
+              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors cursor-pointer rounded ${
+                selected === "Interview" ? "bg-[#7d5bed]" : "hover:bg-white/3"
               }`}
             >
               <span className="w-5 h-full text-white/90">
@@ -227,13 +215,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                   className="w-5 h-5"
                 />
               </span>
-              <div
-                className={`w-full flex items-center py-1 pl-1 text-left transition-colors cursor-pointer ${
-                  selected === "Interview" ? "bg-[#7d5bed]" : ""
-                }`}
-              >
-                <span className="text-sm">Interview</span>
-              </div>
+              <span className="text-sm">Interview</span>
             </button>
           </div>
         </div>

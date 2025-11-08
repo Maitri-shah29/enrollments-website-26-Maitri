@@ -16,13 +16,13 @@ export default function AOIContent({ activeAOI }: Props) {
     }
   > = {
     app: {
-      text: "The App Development domain focuses on building robust mobile and desktop applications. Members learn technologies like React Native, Flutter, and Kotlin to design apps that are user-centric and scalable.",
+      text: "The App Development domain focuses on building robust mobile and desktop applications. Members learn cutting-edge technologies like React Native, Flutter, and Kotlin to design apps that are not only user-centric but also highly scalable and performant. We explore platform-specific features, learn about cross-platform development strategies, and understand how to optimize apps for different screen sizes and device capabilities. The domain also covers essential topics like state management, API integration, local storage, push notifications, and app store deployment, preparing members to launch production-ready applications.",
       image: "/images/tech-aois/app.svg",
       width: 500,
       height: 500,
     },
     web: {
-      text: "The Web Development domain emphasizes creating full-stack web solutions. Participants gain skills in frameworks like Next.js, Express, and databases like PostgreSQL and MongoDB to build high-performance, modern websites.",
+      text: "The Web Development domain emphasizes creating full-stack web solutions. Participants gain comprehensive skills in both frontend and backend technologies, mastering frameworks like Next.js, React, Express, and databases like PostgreSQL and MongoDB to build high-performance, modern websites and web applications. We cover responsive design principles and accessibility standards to RESTful API development and server-side rendering. The domain also delves into modern web practices including Progressive Web Apps (PWAs), WebSockets for real-time communication, GraphQL for efficient data fetching, and containerization with Docker.",
       image: "/images/tech-aois/web.svg",
       width: 500,
       height: 500,

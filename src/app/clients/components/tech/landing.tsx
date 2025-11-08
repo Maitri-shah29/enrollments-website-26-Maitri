@@ -7,15 +7,24 @@ type TechLandingProps = {
 
 const TechLanding = ({ onGetStarted }: TechLandingProps) => {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center">
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+      {/* botm left tornado*/}
       <Image
         src="/images/ascii-art-tech.svg"
-        alt="tech image"
-        width={500}
-        height={500}
-        className="absolute bottom-10 right-10 pointer-events-none"
+        alt="tech asciitornado bottom left"
+        width={280}
+        height={280}
+        className="absolute bottom-0 left-0 pointer-events-none opacity-50"
       />
-      <div className="overflow-hidden relative">
+      {/* botm right tornado*/}
+      <Image
+        src="/images/ascii-art-tech.svg"
+        alt="tech ascii tornado bottom right"
+        width={360}
+        height={360}
+        className="absolute bottom-20 right-16 pointer-events-none opacity-55"
+      />
+      <div className="overflow-hidden relative z-10">
         <Image
           src="/images/welcome-tech.svg"
           alt="welcome image"

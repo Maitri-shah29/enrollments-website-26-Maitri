@@ -7,8 +7,8 @@ const About = () => {
     <div className="relative w-full min-h-screen bg-[#1A1A1A] text-white overflow-hidden">
       <NetworkGraph />
 
-      <div className="relative z-10 px-16 py-20 max-w-5xl">
-        <h1 className="text-4xl font-semibold text-purple-400 mb-4">
+      <div className="relative z-10 px-16 py-20 max-w-7xl">
+        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4">
           About Research
         </h1>
         <p className="text-gray-300 leading-relaxed text-justify">
