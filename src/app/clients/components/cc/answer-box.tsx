@@ -1,5 +1,5 @@
 "use client";
-
+//test
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { useEffect, useState } from "react";
 
@@ -28,7 +28,7 @@ const AnswerBox = (props: AnswerBoxProps) => {
   const initialBody = typeof props.body === "string" ? props.body : "";
   const [code, setCode] = useState(initialBody);
   const [selectedLanguage, setSelectedLanguage] = useState(
-    props.language || "plaintext"
+    props.language || "plaintext",
   );
   const monaco = useMonaco();
 
@@ -89,6 +89,7 @@ const AnswerBox = (props: AnswerBoxProps) => {
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value;
+    setSelectedLanguage(newLanguage);
     props.onLanguageChange?.(newLanguage);
   };
 

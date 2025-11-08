@@ -54,7 +54,7 @@ const DesignClient = () => {
 
   // active form round
   const formRound = rounds.find(
-    (round) => round.type === "form" && round.active && round.number === 1
+    (round) => round.type === "form" && round.active && round.number === 1,
   );
 
   // get questions from the form round
@@ -82,19 +82,19 @@ const DesignClient = () => {
         ) {
           console.error(
             "Failed to create form submission:",
-            formSubmissionResult
+            formSubmissionResult,
           );
           return;
         }
         setFormSubmissionId(formSubmissionResult.formSubmission.id);
         console.log(
           "Form submission created/fetched:",
-          formSubmissionResult.formSubmission.id
+          formSubmissionResult.formSubmission.id,
         );
 
         // fetch saved responses from db
         const responsesResult = await fetchFormResponses(
-          formSubmissionResult.formSubmission.id
+          formSubmissionResult.formSubmission.id,
         );
         if ("responses" in responsesResult && responsesResult.responses) {
           setSavedResponses(responsesResult.responses);

@@ -80,7 +80,7 @@ export default function Management() {
         }
 
         const qs = (qres.questions ?? []).sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0)
+          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
         ) as QuestionPayload[];
 
         setQuestions(qs);
@@ -107,7 +107,7 @@ export default function Management() {
         if (ensureRes && "error" in ensureRes && ensureRes.error) {
           // If we cannot ensure mapping, allow viewing but warn about saving
           setFormWarning(
-            "Could not link you to this round automatically; you can view questions but cannot save answers."
+            "Could not link you to this round automatically; you can view questions but cannot save answers.",
           );
         }
 
@@ -137,7 +137,7 @@ export default function Management() {
           createRes.error === "User does not exist for this round"
         ) {
           setFormWarning(
-            "You're not registered for this round yet; you can view questions but cannot save answers."
+            "You're not registered for this round yet; you can view questions but cannot save answers.",
           );
         }
       } catch (e) {

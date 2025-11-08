@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 interface BlacklistedLandingProps {
   url?: string;
@@ -23,6 +23,7 @@ const BlacklistedLanding: React.FC<BlacklistedLandingProps> = ({ url }) => {
       </p>
 
       <button
+        type="button"
         onClick={() => window.location.reload()}
         className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
       >

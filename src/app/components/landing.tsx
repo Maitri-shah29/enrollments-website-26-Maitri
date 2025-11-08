@@ -16,7 +16,10 @@ const PLUS_BUTTON_MASK_IMAGE = buildMaskUrl(
 );
 
 // Main Landing Component
-const Landing: React.FC = () => {
+const Landing: React.FC<{
+  session: unknown;
+  isAllowed: boolean;
+}> = ({ session: _session, isAllowed: _isAllowed }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
