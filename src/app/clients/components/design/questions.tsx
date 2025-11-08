@@ -1,7 +1,8 @@
 "use client";
 import type { Response } from "@prisma/client";
+import { debounce } from "lodash";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
 // import type { Question } from "@prisma/client";
 import type { QuestionWithRelations as Question } from "@/lib/types";
@@ -9,6 +10,7 @@ import type { QuestionWithRelations as Question } from "@/lib/types";
 //this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
 interface QuestionsProps {
   questions: Question[];
+  // Renamed roundId to _roundId to satisfy 'noUnusedFunctionParameters'
   roundId: string;
   formSubmissionId: string | null;
   savedResponses: Response[];
@@ -23,6 +25,11 @@ interface TransformedQuestion {
 interface AOIData {
   name: string;
   questions: TransformedQuestion[];
+}
+
+interface Toast {
+  message: string;
+  type: "success" | "error";
 }
 
 const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
@@ -52,7 +59,7 @@ const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
 
 const Questions: React.FC<QuestionsProps> = ({
   questions,
-  roundId,
+  roundId: _roundId,
   formSubmissionId,
   savedResponses,
 }) => {
@@ -69,6 +76,17 @@ const Questions: React.FC<QuestionsProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
+  const [toast, setToast] = useState<Toast | null>(null);
+  const showToast = useCallback(
+    (message: string, type: "success" | "error") => {
+      setToast({ message, type });
+      // Hide toast after 3 seconds
+      setTimeout(() => {
+        setToast(null);
+      }, 3000);
+    },
+    [],
+  );
 
   // Load saved responses into answers state
   useEffect(() => {
@@ -84,24 +102,68 @@ const Questions: React.FC<QuestionsProps> = ({
     }
   }, [savedResponses]);
 
+  const saveResponse = useCallback(
+    async (questionId: string, currentAnswer: string) => {
+      if (!formSubmissionId || !questionId) {
+        console.error("Missing required data to save response");
+        return;
+      }
+      if (!currentAnswer.trim()) {
+        console.log("Answer is empty, skipping save");
+        return;
+      }
+      try {
+        await createResponse(questionId, formSubmissionId, currentAnswer);
+        console.log(`Response for ${questionId} saved successfully`);
+      } catch (error) {
+        console.error(`Failed to save response for ${questionId}:`, error);
+      }
+    },
+    [formSubmissionId],
+  );
+
+  const debouncedSave = useMemo(
+    () => debounce(saveResponse, 1000),
+    [saveResponse],
+  );
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [debouncedSave]);
+
   const handleAoiClick = (aoi: AOIData) => {
+    if (selectedQuestion) {
+      debouncedSave(
+        selectedQuestion.questionId,
+        answers[selectedQuestion.questionId] || "",
+      );
+    }
     setSelectedAoi(aoi);
     setSelectedQuestion(aoi.questions[0]);
   };
 
   const handleQuestionClick = (question: TransformedQuestion) => {
+    if (selectedQuestion) {
+      debouncedSave(
+        selectedQuestion.questionId,
+        answers[selectedQuestion.questionId] || "",
+      );
+    }
     setSelectedQuestion(question);
   };
 
-  const handleSaveResponse = async () => {
+  const handleSaveResponse = useCallback(async () => {
     if (!formSubmissionId || !selectedQuestion) {
       console.error("Missing required data to save response");
+      showToast("Submission failed: Missing form or question data.", "error");
       return;
     }
 
     const currentAnswer = answers[selectedQuestion.questionId] || "";
     if (!currentAnswer.trim()) {
       console.error("Answer is empty");
+      showToast("Submission failed: Please provide an answer.", "error");
       return;
     }
 
@@ -113,15 +175,32 @@ const Questions: React.FC<QuestionsProps> = ({
         currentAnswer,
       );
       console.log("Response saved successfully");
+      showToast("Response submitted successfully!", "success");
     } catch (error) {
       console.error("Failed to save response:", error);
+      showToast("Submission failed: An error occurred.", "error");
     } finally {
       setIsSaving(false);
     }
+  }, [formSubmissionId, selectedQuestion, answers, showToast]);
+
+  const getToastClasses = (type: "success" | "error") => {
+    return type === "success"
+      ? "bg-green-500 border-green-700"
+      : "bg-red-500 border-red-700";
   };
 
   return (
     <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-[3%]">
+      {toast && (
+        <div
+          className={`fixed top-5 right-5 z-[1000] p-4 rounded-lg shadow-xl text-white font-coolvetica transition-opacity duration-300 ${getToastClasses(
+            toast.type,
+          )} border-2`}
+        >
+          {toast.message}
+        </div>
+      )}
       <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
         Questions
       </h1>
@@ -131,8 +210,9 @@ const Questions: React.FC<QuestionsProps> = ({
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
             <div className="bg-[#43A363] p-4 lg:p-6 rounded-xl flex flex-col gap-2">
               {aoiData.map((aoi) => (
-                <div
-                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100"
+                <button
+                  type="button" // Important for buttons not in a form
+                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
                   key={aoi.name}
                   onClick={() => handleAoiClick(aoi)}
                 >
@@ -150,7 +230,7 @@ const Questions: React.FC<QuestionsProps> = ({
                   >
                     {aoi.name}
                   </p>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -159,8 +239,10 @@ const Questions: React.FC<QuestionsProps> = ({
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
             <div className="bg-[#3389E5] p-8 rounded-xl flex flex-col gap-2">
               {selectedAoi?.questions.map((question) => (
-                <div
-                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100"
+                // 🐛 FIX 1: Use <button> for clickable items
+                <button
+                  type="button" // Important for buttons not in a form
+                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
                   key={question.header}
                   onClick={() => handleQuestionClick(question)}
                 >
@@ -180,7 +262,7 @@ const Questions: React.FC<QuestionsProps> = ({
                   >
                     {question.header}
                   </p>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -204,10 +286,14 @@ const Questions: React.FC<QuestionsProps> = ({
                 <textarea
                   value={answers[selectedQuestion.questionId] || ""}
                   onChange={(e) => {
+                    const questionId = selectedQuestion.questionId;
+                    const newAnswer = e.target.value;
                     setAnswers((prev) => ({
                       ...prev,
-                      [selectedQuestion.questionId]: e.target.value,
+                      [questionId]: newAnswer,
                     }));
+
+                    debouncedSave(questionId, newAnswer);
                   }}
                   className="
                         w-full h-full
