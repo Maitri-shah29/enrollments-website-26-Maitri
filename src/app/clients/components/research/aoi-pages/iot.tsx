@@ -23,7 +23,7 @@ const iotPage: React.FC = () => {
             wbcusbdvy8gwefesdbjckusbdvywegvwbvhbvjsbvduv8wgvbvhjbvjhsdv sd
             yugrvehvbwehbvhewbvhsdbvbvyweguewbewbvhbvyubvuywegvubhvbvweyfwe8hfbf
             fugo8wegvobv bvuwewe eubo8wegowyebvuybewuybvuvb kjhbv wbefiyug
-            djkfvbkuebvuyre kjfbviyuerbi8yr i'll kill myself wkjehbiwfyw
+            djkfvbkuebvuyre kjfbviyuerbi8yr lorem ipsum dolor sit amet wkjehbiwfyw
             kwhbvwuyvb8wey khvbygrv8owgvo8wegfw wuebo8wegfo8we7gew
             uvbowvogwe789fwe jhvbouwgvo8gwvo8vo8 kfubhvouego8rgv
             huvboygv8gf87wef87wefrvb ubvygvo8gfo8we7
