@@ -33,6 +33,7 @@ const Landing: React.FC<{
       showResearch: false,
       showEvents: false,
       showDomains: false,
+      showPintooRun: false,
       history: [],
       pointer: -1,
     },
@@ -55,6 +56,7 @@ const Landing: React.FC<{
       showResearch: false,
       showEvents: false,
       showDomains: false,
+      showPintooRun: false,
       history: [],
       pointer: -1,
     };
@@ -63,7 +65,6 @@ const Landing: React.FC<{
   };
 
   const addTabWithUrl = (url: string) => {
-    // Check if tab with same URL already exists
     const existingTab = tabs.find((tab) =>
       tab.history.some((h) => h.url === url),
     );
@@ -73,7 +74,7 @@ const Landing: React.FC<{
       return;
     }
 
-    const newId = Date.now() + Math.random(); // Ensure unique ID
+    const newId = Date.now() + Math.random();
     const newTab: TabData = {
       id: newId,
       title: url.replace(/^https?:\/\//, "").split("/")[0],
@@ -84,6 +85,7 @@ const Landing: React.FC<{
       showResearch: url === "research",
       showEvents: url === "events",
       showDomains: url === "domains",
+      showPintooRun: url === "pintoorun",
       history: [
         {
           id: Date.now(),
@@ -112,6 +114,7 @@ const Landing: React.FC<{
           showResearch: false,
           showEvents: false,
           showDomains: false,
+          showPintooRun: false,
           history: [],
           pointer: -1,
         },

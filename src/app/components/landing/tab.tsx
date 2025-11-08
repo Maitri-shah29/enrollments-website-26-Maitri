@@ -6,6 +6,7 @@ import DesignClient from "@/app/clients/design-client";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import Management from "@/app/clients/management-client";
+import PintooRun from "@/app/clients/PintooRun-client";
 import ResearchClient from "@/app/clients/research-client";
 import TechWebsite from "@/app/clients/tech-client";
 import BrickGame404 from "../brick-game-404";
@@ -71,6 +72,7 @@ const INTERNAL_KEYWORDS = new Set([
   "research",
   "events",
   "domains",
+  "pintoorun",
 ]);
 
 interface HomePageNavbarProps {
@@ -130,6 +132,7 @@ export interface TabData {
   history: PageHistory[];
   pointer: number;
   pendingUrl?: string;
+  showPintooRun: boolean;
 }
 
 interface TabProps {
@@ -237,6 +240,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         showResearch: trimmed === "research",
         showEvents: trimmed === "events",
         showDomains: trimmed === "domains",
+        showPintooRun: trimmed === "pintoorun",
         history: newHistory,
         pointer: newHistory.length - 1,
         title:
@@ -271,6 +275,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       showTech: false,
       showDesign: false,
       showResearch: false,
+      showPintooRun: false,
       showEvents: false,
       showDomains: false,
     });
@@ -326,6 +331,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           showDomains: false,
           showEvents: false,
           showResearch: false,
+          showPintooRun: false,
         });
         setNavInput("");
         setHomeInput("");
@@ -371,6 +377,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
       showTech: false,
       showDesign: false,
       showResearch: false,
+      showPintooRun: false,
     });
 
     setNavInput("");
@@ -397,6 +404,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
           showDomains: false,
           showEvents: false,
           showResearch: false,
+          showPintooRun: false,
         });
         setNavInput("");
         setHomeInput("");
@@ -575,6 +583,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         (tabData.showManagement ||
           tabData.showCc ||
           tabData.showDesign ||
+          tabData.showPintooRun ||
           tabData.showResearch ||
           tabData.showTech) ? (
           <SignupPage onSignIn={() => {}} />
@@ -615,6 +624,10 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         ) : tabData.showResearch ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <ResearchClient key={refreshKey} />
+          </div>
+        ) : tabData.showPintooRun ? (
+          <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
+            <PintooRun key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
           iframeError || !isWhitelisted(activePageData.url) ? (
