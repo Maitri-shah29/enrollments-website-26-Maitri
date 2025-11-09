@@ -34,9 +34,8 @@ const Events = () => {
           </div>
           <div className="w-1/2 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Code2Create, a 36 hour long hackathon, is ACM-VIT's flagship event
+              and one of the grandest annual events hosted in VIT.
             </p>
           </div>
         </section>
@@ -47,9 +46,8 @@ const Events = () => {
         >
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              graVITas’ most participated event, Cryptic Hunt is ACM’s elaborate
+              scavenger hunt which mastery of logic and tech.
             </p>
           </div>
           <div className="w-1/2 mb-6 ml-6">
@@ -80,9 +78,8 @@ const Events = () => {
           </div>
           <div className="w-1/2 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Competitive coding event with a twist, ACM's Reverse Coding
+              requires participants to quirkily reverse engineer solutions.
             </p>
           </div>
         </section>
@@ -92,9 +89,9 @@ const Events = () => {
         >
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Your one-stop solution to Cram before Exams with its curated
+              resources, notes and previous year question papers. Perfect for
+              last minute revision!
             </p>
           </div>
           <div className="w-1/2 mb-6 ml-6">
@@ -125,9 +122,8 @@ const Events = () => {
           </div>
           <div className="w-1/2 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Simplistic app for VITians to share cab rides and split costs
+              during travel.
             </p>
           </div>
         </section>

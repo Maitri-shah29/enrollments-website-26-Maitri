@@ -36,9 +36,10 @@ const Domains: React.FC = () => {
           </div>
           <div className="w-1/2 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Master algorithmic thinking and problem-solving through rigorous
+              competitive coding. Our members tackle complex data structures and
+              algorithms while building speed and precision in high-stakes
+              programming contests.
             </p>
           </div>
         </section>
@@ -46,9 +47,9 @@ const Domains: React.FC = () => {
         <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Craft beautiful digital experiences through design. From UI/UX to
+              motion graphics, illustrations to 3D design, our designers bring
+              creative visions to life with stunning visual storytelling.
             </p>
           </div>
           <div className="w-1/2 mb-6 ml-6">
@@ -88,9 +89,10 @@ const Domains: React.FC = () => {
           </div>
           <div className="w-1/2 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Transform big ideas into unforgettable events. We handle
+              everything from brainstorming and sponsorships to logistics and
+              content creation. We're the extroverts ensuring every event is
+              smooth, well-organized, and unforgettable.
             </p>
           </div>
         </section>
@@ -98,9 +100,10 @@ const Domains: React.FC = () => {
         <section className="flex flex-row items-center mb-20 gap-[7.5rem]">
           <div className="w-3/5 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Foster curiosity and innovation across cutting-edge fields. From
+              AI and Blockchain to Quantum Computing and Bioinformatics, we
+              bridge theory and real-world application through collaboration and
+              continuous learning.
             </p>
           </div>
           <div className="w-1/2 mb-6 ml-6">
@@ -140,9 +143,9 @@ const Domains: React.FC = () => {
           </div>
           <div className="w-1/2 text-gray-300 text-2xl">
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              vel nisi at nisi luctus tincidunt. Aliquam semper erat et nibh
-              scelerisque vulputate.
+              Build the future with cutting-edge technology. From web and app
+              development to DevOps and open-source contribution, our members
+              master full-stack solutions and modern development practices.
             </p>
           </div>
         </section>
