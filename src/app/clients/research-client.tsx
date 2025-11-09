@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
 import AIML from "@/app/clients/components/research/aoi-pages/aiml";
@@ -11,10 +11,13 @@ import QuantumComputing from "@/app/clients/components/research/aoi-pages/quantu
 import ResearchHome from "@/app/clients/components/research/home";
 import Instructions from "@/app/clients/components/research/instructions";
 import Interview from "@/app/clients/components/research/interview";
-import Questions from "@/app/clients/components/research/questions";
+import Questions, {
+  type RoundUserExtended,
+} from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
 
 const AOI_KEYS = [
+  "COMMON",
   "AIML",
   "CYBERSECURITY",
   "BLOCKCHAIN",
@@ -25,6 +28,7 @@ const AOI_KEYS = [
 type AoiKey = (typeof AOI_KEYS)[number];
 
 const keyToLabel: Record<AoiKey, string> = {
+  COMMON: "Common",
   AIML: "AI/ML",
   CYBERSECURITY: "Cybersecurity",
   BLOCKCHAIN: "Blockchain",
@@ -53,10 +57,66 @@ function toAoiKey(input: string): AoiKey | null {
   return labelMatch ?? null;
 }
 
-const ResearchClient = () => {
+type ResearchClientProps = {
+  initialRoundUser?: RoundUserExtended | null;
+};
+
+const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
-  const [selectedAOI, setSelectedAOI] = useState<string>("Blockchain");
+  const [selectedAOI, setSelectedAOI] = useState<string>("Common");
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
+  const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
+    initialRoundUser ?? null,
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
+  const roundHidden = !!roundUser?.round?.hidden;
+
+  const initializeRoundUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/round-user?domain=research");
+      if (!res.ok) throw new Error("Failed to initialize round user");
+      const data = await res.json();
+
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        setRoundUser(data as RoundUserExtended);
+      } else if (Array.isArray(data) && data.length > 0) {
+        setRoundUser(data[0] as RoundUserExtended);
+      } else {
+        setRoundUser(null);
+        throw new Error("No round user returned");
+      }
+
+      setSelectedPanel("About");
+    } catch (err) {
+      console.error("Error initializing round user:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize round user",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!roundUser?.formSubmission) return;
+
+    const currentFsId = roundUser.formSubmission.id;
+
+    if (formSubmissionId !== currentFsId) {
+      const initial: Record<string, string> = {};
+      const serverResponses = roundUser.formSubmission.responses ?? [];
+      serverResponses.forEach((r) => {
+        if (r.response) initial[r.questionId] = r.response;
+      });
+      setResponses(initial);
+      setFormSubmissionId(currentFsId);
+    }
+  }, [roundUser?.formSubmission, formSubmissionId]);
 
   // ✅ Memoized so it never re-creates between renders
   const handleAOISelect = useCallback((aoi: string) => {
@@ -97,21 +157,33 @@ const ResearchClient = () => {
         selectedQuestionIdx={selectedQuestionIdx}
         onAOISelect={handleAOISelect}
         onQuestionSelect={handleQuestionSelect}
+        roundUser={roundUser}
       />
 
       <div className="flex-1 min-w-0 h-full overflow-hidden">
-        {selectedPanel === "Home" && <ResearchHome />}
+        {selectedPanel === "Home" && (
+          <ResearchHome onGetStarted={initializeRoundUser} />
+        )}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
         {selectedPanel === "AOIs" && <AOIs onSelect={handlePanelSelect} />}
-        {selectedPanel === "Round 1" && (
+        {selectedPanel === "Round 1" && roundHidden ? (
+          <div className="text-center text-white text-xl py-12">
+            This round is currently hidden and cannot be accessed.
+          </div>
+        ) : selectedPanel === "Round 1" ? (
           <Questions
+            roundUser={roundUser ?? undefined}
+            loading={loading}
+            error={error}
+            responses={responses}
+            setResponses={setResponses}
             selectedAOI={selectedAOI}
             selectedQuestionIdx={selectedQuestionIdx}
             onAOIChange={setSelectedAOI}
             onQuestionChange={setSelectedQuestionIdx}
           />
-        )}
+        ) : null}
         {selectedPanel === "Interview" && <Interview />}
 
         {selectedPanel === "AIML" && <AIML />}

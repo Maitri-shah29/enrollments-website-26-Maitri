@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import React from "react";
-import { questionsList, round1Folders } from "@/lib/constants";
+import React, { useMemo } from "react";
+import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { round1Folders } from "@/lib/constants";
 import type { AOI, QuestionId } from "@/lib/types";
 import TechButton from "./button";
 
@@ -11,6 +12,8 @@ type Props = {
   onSelectFolder: (folder: AOI) => void;
   onSelectQuestion: (q: QuestionId) => void;
   submittedQuestions: Set<string>;
+  roundUser?: RoundUserExtended | null;
+  joinedAOIs: Set<AOI>;
 };
 
 export default function Round1List({
@@ -19,10 +22,35 @@ export default function Round1List({
   onSelectFolder,
   onSelectQuestion,
   submittedQuestions,
+  roundUser,
+  joinedAOIs,
 }: Props) {
+  const availableFolders = useMemo(
+    () => round1Folders.filter((folder) => joinedAOIs.has(folder)),
+    [joinedAOIs],
+  );
+
+  const getQuestionsForFolder = (folder: AOI): QuestionId[] => {
+    if (!roundUser?.round?.Question) return [];
+    const folderQuestions = roundUser.round.Question.filter(
+      (q) => q.varName === folder,
+    ).sort((a, b) => a.serial - b.serial);
+    return folderQuestions.map(
+      (_, index) => `question${index + 1}` as QuestionId,
+    );
+  };
+
+  if (availableFolders.length === 0) {
+    return (
+      <div className="ml-4 mt-2 text-gray-400 text-sm py-2">
+        No AOIs joined yet. Visit the Explore section to join AOIs.
+      </div>
+    );
+  }
+
   return (
     <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
-      {round1Folders.map((folder) => {
+      {availableFolders.map((folder) => {
         const isFolderActive = activeRoundFolder === folder;
         return (
           <React.Fragment key={folder}>
@@ -45,10 +73,9 @@ export default function Round1List({
               />
               {folder}
             </TechButton>
-
             {isFolderActive && (
               <div className="ml-6 mt-1 flex flex-col gap-1 text-[#993C7A]">
-                {questionsList.map((q) => {
+                {getQuestionsForFolder(folder).map((q) => {
                   const isQuestionActive = activeQuestion === q;
                   const questionKey = `${folder}-${q}`;
                   const isQuestionSubmitted =

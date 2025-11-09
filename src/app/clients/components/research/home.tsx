@@ -53,9 +53,13 @@ function StaticFaintLines() {
   );
 }
 
-export default function Home() {
+type Props = {
+  onGetStarted?: () => void;
+};
+
+export default function Home({ onGetStarted }: Props) {
   return (
-    <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex flex-col items-center justify-center">
       <NetworkGraph />
 
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -81,6 +85,16 @@ export default function Home() {
         <br />
         Research
       </h1>
+
+      {onGetStarted && (
+        <button
+          type="button"
+          onClick={onGetStarted}
+          className="mt-8 px-8 py-3 bg-[#7D5BED] text-white font-medium rounded-md hover:bg-[#6B4DD1] transition-colors relative z-10"
+        >
+          Get Started →
+        </button>
+      )}
     </div>
   );
 }

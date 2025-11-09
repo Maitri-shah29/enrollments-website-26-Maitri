@@ -19,9 +19,9 @@ export default async function ensureRoundUser(roundId: string) {
     });
     if (existing) return { success: true as const, roundUserId: existing.id };
 
-    if (!round.active || round.hidden) {
-      return { error: "Round is not open" } as const;
-    }
+    // if (!round.active || round.hidden) {
+    //   return { error: "Round is not open" } as const;
+    // }
 
     const created = await prisma.roundUser.create({
       data: { roundId, userId },

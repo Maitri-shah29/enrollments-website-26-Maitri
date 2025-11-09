@@ -17,7 +17,21 @@ import ManagementLanding from "./components/management/landing";
 import QuestionsList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
 
-export default function Management() {
+interface ManagementClientProps {
+  initialRoundId?: string | null;
+  initialQuestions?: QuestionPayload[];
+  initialFormId?: string | null;
+  initialInitError?: string | null;
+  initialFormWarning?: string | null;
+}
+
+export default function Management({
+  initialRoundId,
+  initialQuestions,
+  initialFormId,
+  initialInitError,
+  initialFormWarning,
+}: ManagementClientProps) {
   const [activeSection, setActiveSection] = useState("Landing");
   const [loading, setLoading] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
@@ -46,6 +60,31 @@ export default function Management() {
   useEffect(() => {
     const load = async () => {
       if (roundInitDone || loading || activeSection !== "Round 1") return;
+      // If server provided initial data, hydrate and short-circuit
+      if (
+        (initialRoundId ||
+          initialQuestions ||
+          initialFormId ||
+          initialInitError ||
+          initialFormWarning) &&
+        !roundInitDone
+      ) {
+        if (initialRoundId) setRoundId(initialRoundId);
+        if (initialQuestions && initialQuestions.length > 0) {
+          setQuestions(initialQuestions);
+          const initialAnswers: Record<string, string> = {};
+          initialQuestions.forEach((q) => {
+            initialAnswers[q.id] = "";
+          });
+          setAnswers(initialAnswers);
+        }
+        if (initialFormId) setFormId(initialFormId);
+        if (initialInitError) setInitError(initialInitError);
+        if (initialFormWarning) setFormWarning(initialFormWarning);
+        setRoundInitDone(true);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setInitError(null);
       try {
@@ -149,7 +188,16 @@ export default function Management() {
       }
     };
     load();
-  }, [activeSection, loading, roundInitDone]);
+  }, [
+    activeSection,
+    loading,
+    roundInitDone,
+    initialRoundId,
+    initialQuestions,
+    initialFormId,
+    initialInitError,
+    initialFormWarning,
+  ]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {

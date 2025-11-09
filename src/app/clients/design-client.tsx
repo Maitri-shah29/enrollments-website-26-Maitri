@@ -6,15 +6,9 @@ TODOS
 4) Adding a varname guard, right now a question with any varname will be rendered, we can hardcode a list of allowed varnames inside question submission so stoopid questions dont get rendered 
 */
 "use client";
-import type { Response } from "@prisma/client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import createFormSubmission from "../actions/create-form-submission";
-import ensureRoundUser from "../actions/ensure-round-user";
-import fetchFormResponses from "../actions/fetch-form-responses";
-import fetchRound, {
-  type RoundWithRelations,
-} from "../actions/fetch-round-details";
+import { useState } from "react";
+import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import About from "./components/design/about";
 import AOIs from "./components/design/aoi";
 import DesignNavbar from "./components/design/design-navbar";
@@ -23,92 +17,49 @@ import Instructions from "./components/design/instructions";
 import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
 
-const DesignClient = () => {
+interface DesignClientProps {
+  initialRoundUser?: RoundUserExtended | null;
+}
+
+const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
-  const [rounds, setRounds] = useState<RoundWithRelations[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [roundUserId, setRoundUserId] = useState<string | null>(null);
-  const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
-  const [savedResponses, setSavedResponses] = useState<Response[]>([]);
-
-  useEffect(() => {
-    const fetchDesignRounds = async () => {
-      try {
-        setIsLoading(true);
-        const roundsData = await fetchRound("design");
-        if (!("error" in roundsData)) {
-          setRounds(roundsData);
-          console.log("Design rounds:", roundsData);
-        } else {
-          console.error("Error fetching rounds:", roundsData.error);
-        }
-      } catch (error) {
-        console.error("Failed to fetch design rounds:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDesignRounds();
-  }, []);
-
-  // active form round
-  const formRound = rounds.find(
-    (round) => round.type === "form" && round.active && round.number === 1,
+  const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
+    initialRoundUser ?? null,
   );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const roundHidden = !!roundUser?.round?.hidden;
 
-  // get questions from the form round
-  const formQuestions = formRound?.Question || [];
+  const initializeRoundUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/round-user?domain=design");
+      if (!res.ok) throw new Error("Failed to initialize round user");
+      const data = await res.json();
 
-  useEffect(() => {
-    const setupFormData = async () => {
-      if (!formRound) return;
-
-      try {
-        // Ensure round user
-        const roundUserResult = await ensureRoundUser(formRound.id);
-        if (!("success" in roundUserResult) || !roundUserResult.success) {
-          console.error("Failed to ensure round user:", roundUserResult);
-          return;
-        }
-        setRoundUserId(roundUserResult.roundUserId);
-        console.log("Round user ensured:", roundUserResult.roundUserId);
-
-        // create/fetch form submission
-        const formSubmissionResult = await createFormSubmission(formRound.id);
-        if (
-          !("success" in formSubmissionResult) ||
-          !formSubmissionResult.formSubmission
-        ) {
-          console.error(
-            "Failed to create form submission:",
-            formSubmissionResult,
-          );
-          return;
-        }
-        setFormSubmissionId(formSubmissionResult.formSubmission.id);
-        console.log(
-          "Form submission created/fetched:",
-          formSubmissionResult.formSubmission.id,
-        );
-
-        // fetch saved responses from db
-        const responsesResult = await fetchFormResponses(
-          formSubmissionResult.formSubmission.id,
-        );
-        if ("responses" in responsesResult && responsesResult.responses) {
-          setSavedResponses(responsesResult.responses);
-          console.log("Loaded saved responses:", responsesResult.responses);
-        } else {
-          console.error("Failed to fetch responses:", responsesResult);
-        }
-      } catch (error) {
-        console.error("Error setting up form data:", error);
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        setRoundUser(data as RoundUserExtended);
+      } else if (Array.isArray(data) && data.length > 0) {
+        setRoundUser(data[0] as RoundUserExtended);
+      } else {
+        setRoundUser(null);
+        throw new Error("No round user returned");
       }
-    };
 
-    setupFormData();
-  }, [formRound]);
+      setSelectedPanel("About");
+    } catch (err) {
+      console.error("Error initializing round user:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize round user",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // get questions from the round
+  const formQuestions = roundUser?.round?.Question || [];
 
   return (
     <div className="flex flex-col w-full h-full border border-black text-white figma-cursor">
@@ -130,27 +81,32 @@ const DesignClient = () => {
       <DesignNavbar
         selected={selectedPanel}
         onSelect={setSelectedPanel}
-        disableQuestions={isLoading || !formSubmissionId}
+        roundUser={roundUser}
       />
       <div
         key={selectedPanel}
         className="flex overflow-y-auto z-10 animate-panel-transition [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
-        {selectedPanel === "Home" && <Home />}
+        {selectedPanel === "Home" && (
+          <Home onGetStarted={initializeRoundUser} loading={loading} />
+        )}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
         {selectedPanel === "AOIs" && <AOIs />}
-        {selectedPanel === "Questions" &&
-          !isLoading &&
-          formRound &&
-          formSubmissionId && (
-            <Questions
-              questions={formQuestions}
-              roundId={formRound.id}
-              formSubmissionId={formSubmissionId}
-              savedResponses={savedResponses}
-            />
-          )}
+        {selectedPanel === "Questions" && roundHidden ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-center text-white text-xl py-12">
+              <h1 className="text-2xl font-bold mb-4">Round Hidden</h1>
+              <p>This round is currently hidden and cannot be accessed.</p>
+            </div>
+          </div>
+        ) : (
+          selectedPanel === "Questions" &&
+          roundUser &&
+          roundUser.formSubmission && (
+            <Questions questions={formQuestions} roundUser={roundUser} />
+          )
+        )}
         {selectedPanel === "Interview" && <Interview />}
       </div>
     </div>

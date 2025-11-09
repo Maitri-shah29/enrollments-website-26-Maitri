@@ -1,17 +1,18 @@
 "use client";
 import Image from "next/image";
 import type React from "react";
+import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 
 interface DesignNavbarProps {
   selected: string;
   onSelect: (panel: string) => void;
-  disableQuestions?: boolean;
+  roundUser?: RoundUserExtended | null;
 }
 
 const DesignNavbar: React.FC<DesignNavbarProps> = ({
   selected,
   onSelect,
-  disableQuestions = true,
+  roundUser,
 }) => {
   const items = [
     "Home",
@@ -22,8 +23,10 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
     "Interview",
   ];
 
+  const isDisabled = !roundUser;
+
   const handleItemClick = (item: string) => {
-    if (item === "Questions" && disableQuestions) {
+    if (isDisabled && item !== "Home") {
       return;
     }
     onSelect(item);
@@ -33,16 +36,18 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
     <div className="flex items-center justify-center min-h-16 z-20 font-coolvetica">
       <div className="flex gap-10">
         {items.map((item) => {
-          const isDisabled = item === "Questions" && disableQuestions;
+          const isItemDisabled = isDisabled && item !== "Home";
 
           return (
             <button
               key={item}
               type="button"
               onClick={() => handleItemClick(item)}
-              disabled={isDisabled}
+              disabled={isItemDisabled}
               className={`relative text-white w-[120px] h-[40px] flex items-center justify-center ${
-                isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                isItemDisabled
+                  ? "opacity-40 cursor-not-allowed"
+                  : "cursor-pointer"
               }`}
             >
               {selected === item && (

@@ -2,7 +2,14 @@
 import { useCallback, useState } from "react";
 import type { AOI, QuestionId } from "@/lib/types";
 
-export type Section = "welcome" | "about" | "aoi" | "instructions" | "round1";
+// FIX: Make sure "explore" is included in Section
+export type Section =
+  | "welcome"
+  | "about"
+  | "aoi"
+  | "explore"
+  | "instructions"
+  | "round1";
 
 export function useTechNavigation() {
   const [activeSection, setActiveSection] = useState<Section>("welcome");

@@ -1,18 +1,54 @@
 "use client";
+import type { Prisma } from "@prisma/client";
 import type React from "react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import saveFormResponse from "@/app/actions/save-form-response";
 
-interface Question {
-  header: string;
-  content: string;
-}
-
-interface AOIData {
-  header: string;
-  questions: Question[];
-}
+export type RoundUserExtended = Prisma.RoundUserGetPayload<{
+  include: {
+    round: {
+      select: {
+        id: true;
+        number: true;
+        domain: true;
+        active: true;
+        type: true;
+        eliminates: true;
+        announced: true;
+        hidden: true;
+        Question: true;
+      };
+    };
+    formSubmission: {
+      select: {
+        id: true;
+        createdAt: true;
+        updatedAt: true;
+        formSubmittedAt: true;
+        valid: true;
+        responses: {
+          select: {
+            id: true;
+            questionId: true;
+            response: true;
+            error: true;
+            updatedAt: true;
+          };
+        };
+      };
+    };
+    Task: true;
+    Meet_User: true;
+    user: true;
+  };
+}>;
 
 interface QuestionsProps {
+  roundUser?: RoundUserExtended;
+  loading?: boolean;
+  error?: string | null;
+  responses?: Record<string, string>;
+  setResponses?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   selectedAOI?: string;
   selectedQuestionIdx?: number;
   onAOIChange?: (aoi: string) => void;
@@ -20,354 +56,247 @@ interface QuestionsProps {
 }
 
 const Questions: React.FC<QuestionsProps> = ({
+  roundUser,
+  loading = false,
+  error = null,
+  responses,
+  setResponses,
   selectedAOI: propSelectedAOI = "Blockchain",
   selectedQuestionIdx: propSelectedQuestionIdx = 0,
   onAOIChange,
   onQuestionChange,
 }) => {
-  const aoiData: AOIData[] = [
-    {
-      header: "Blockchain",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What is a blockchain and how does it work?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain the concept of consensus mechanisms.",
-        },
-        {
-          header: "Question 3",
-          content: "What is the difference between Bitcoin and Ethereum?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe what a smart contract is.",
-        },
-        {
-          header: "Question 5",
-          content: "What is cryptocurrency and its role in blockchain?",
-        },
-        {
-          header: "Question 6",
-          content: "Explain public and private blockchains.",
-        },
-        {
-          header: "Question 7",
-          content: "What is proof of work?",
-        },
-        {
-          header: "Question 8",
-          content: "Describe the concept of distributed ledger technology.",
-        },
-        {
-          header: "Question 9",
-          content:
-            "What are the applications of blockchain beyond cryptocurrency?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain the trilemma in blockchain design.",
-        },
-      ],
-    },
-    {
-      header: "Quantum Computing",
-      questions: [
-        {
-          header: "Question 1",
-          content:
-            "What is quantum computing and how does it differ from classical computing?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain quantum bits (qubits) and superposition.",
-        },
-        {
-          header: "Question 3",
-          content: "What is quantum entanglement?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe quantum gates and their functions.",
-        },
-        {
-          header: "Question 5",
-          content: "What is quantum error correction?",
-        },
-        {
-          header: "Question 6",
-          content: "Explain Shor's algorithm and its significance.",
-        },
-        {
-          header: "Question 7",
-          content: "What are quantum simulators?",
-        },
-        {
-          header: "Question 8",
-          content: "Describe the challenges in building quantum computers.",
-        },
-        {
-          header: "Question 9",
-          content: "What are the potential applications of quantum computing?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain decoherence in quantum systems.",
-        },
-      ],
-    },
-    {
-      header: "AI/ML",
-      questions: [
-        {
-          header: "Question 1",
-          content:
-            "What is the difference between machine learning and deep learning?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain supervised and unsupervised learning.",
-        },
-        {
-          header: "Question 3",
-          content: "What are neural networks and how do they work?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe the backpropagation algorithm.",
-        },
-        {
-          header: "Question 5",
-          content: "What are convolutional neural networks (CNNs)?",
-        },
-        {
-          header: "Question 6",
-          content: "Explain recurrent neural networks (RNNs).",
-        },
-        {
-          header: "Question 7",
-          content: "What is transfer learning?",
-        },
-        {
-          header: "Question 8",
-          content: "Describe the concepts of overfitting and underfitting.",
-        },
-        {
-          header: "Question 9",
-          content: "What are attention mechanisms?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain transformer models and their significance.",
-        },
-      ],
-    },
-    {
-      header: "BioInformatics",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What is bioinformatics and its importance?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain DNA sequencing and its applications.",
-        },
-        {
-          header: "Question 3",
-          content: "What is genome assembly?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe protein structure prediction.",
-        },
-        {
-          header: "Question 5",
-          content: "What is sequence alignment?",
-        },
-        {
-          header: "Question 6",
-          content: "Explain BLAST and its use in bioinformatics.",
-        },
-        {
-          header: "Question 7",
-          content: "What are phylogenetic trees?",
-        },
-        {
-          header: "Question 8",
-          content: "Describe gene expression analysis.",
-        },
-        {
-          header: "Question 9",
-          content: "What is structural bioinformatics?",
-        },
-        {
-          header: "Question 10",
-          content:
-            "Explain the applications of machine learning in drug discovery.",
-        },
-      ],
-    },
-    {
-      header: "Cyber Security",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What are the main types of cyber attacks?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain encryption and its types.",
-        },
-        {
-          header: "Question 3",
-          content: "What is a firewall and how does it work?",
-        },
-        {
-          header: "Question 4",
-          content:
-            "Describe the difference between authentication and authorization.",
-        },
-        {
-          header: "Question 5",
-          content: "What is a VPN and its importance?",
-        },
-        {
-          header: "Question 6",
-          content: "Explain penetration testing.",
-        },
-        {
-          header: "Question 7",
-          content: "What is malware and its classifications?",
-        },
-        {
-          header: "Question 8",
-          content: "Describe SSL/TLS protocols.",
-        },
-        {
-          header: "Question 9",
-          content: "What is network segmentation?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain zero-day vulnerabilities and their implications.",
-        },
-      ],
-    },
-    {
-      header: "IoT",
-      questions: [
-        {
-          header: "Question 1",
-          content: "What is the Internet of Things (IoT) and its applications?",
-        },
-        {
-          header: "Question 2",
-          content: "Explain IoT architecture and its layers.",
-        },
-        {
-          header: "Question 3",
-          content: "What are IoT protocols and communication standards?",
-        },
-        {
-          header: "Question 4",
-          content: "Describe MQTT and its use in IoT.",
-        },
-        {
-          header: "Question 5",
-          content: "What are IoT sensors and actuators?",
-        },
-        {
-          header: "Question 6",
-          content: "Explain edge computing in IoT systems.",
-        },
-        {
-          header: "Question 7",
-          content: "What is IoT security and its challenges?",
-        },
-        {
-          header: "Question 8",
-          content: "Describe smart homes and their implementation.",
-        },
-        {
-          header: "Question 9",
-          content: "What is industrial IoT (IIoT)?",
-        },
-        {
-          header: "Question 10",
-          content: "Explain the role of 5G in IoT.",
-        },
-      ],
-    },
-  ];
-
-  const selectedAOI = propSelectedAOI;
-  const selectedQuestionIdx = propSelectedQuestionIdx;
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [lastSubmittedAnswers, setLastSubmittedAnswers] = useState<
+  const [notification, setNotification] = useState<string | null>(null);
+  const [notificationType, setNotificationType] = useState<"success" | "error">(
+    "success",
+  );
+  const [internalResponses, setInternalResponses] = useState<
     Record<string, string>
   >({});
-  const [justSubmitted, setJustSubmitted] = useState<Record<string, boolean>>(
-    {},
-  );
+  const useExternal = !!responses && !!setResponses;
+  const effectiveResponses = useExternal ? responses! : internalResponses;
+  const updateResponses: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  > = (value) => {
+    if (useExternal) {
+      setResponses!(value);
+    } else {
+      setInternalResponses(value);
+    }
+  };
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentAOI =
-    aoiData.find((aoi) => aoi.header === selectedAOI) ?? aoiData[0];
-  const safeIndex =
-    selectedQuestionIdx >= 0 &&
-    selectedQuestionIdx < currentAOI.questions.length
-      ? selectedQuestionIdx
-      : 0;
-  const currentQuestion = currentAOI.questions[safeIndex];
+  // Initialize responses from server data
+  useEffect(() => {
+    if (useExternal) return;
+    if (roundUser?.formSubmission?.responses) {
+      const initialResponses: Record<string, string> = {};
+      roundUser.formSubmission.responses.forEach((response) => {
+        if (response.response) {
+          initialResponses[response.questionId] = response.response;
+        }
+      });
+      setInternalResponses(initialResponses);
+    }
+  }, [roundUser?.formSubmission?.responses, useExternal]);
 
-  const getAnswerKey = () => `${currentAOI.header}-Q${safeIndex + 1}`;
-  const currentAnswer = answers[getAnswerKey()] || "";
-  const lastSubmitted = lastSubmittedAnswers[getAnswerKey()] || "";
-  const isJustSubmitted = justSubmitted[getAnswerKey()] || false;
+  const autoSaveResponse = useCallback(
+    async (questionId: string, response: string) => {
+      if (!roundUser?.formSubmission?.id) return;
 
-  const hasChangedSinceSubmit = currentAnswer !== lastSubmitted;
+      try {
+        await saveFormResponse(
+          roundUser.formSubmission.id,
+          questionId,
+          response,
+        );
+      } catch (err) {
+        console.error("Auto-save error:", err);
+      }
+    },
+    [roundUser?.formSubmission?.id],
+  );
 
-  const handleAnswerChange = (value: string) => {
-    setAnswers((prev) => ({
+  const handleResponseChange = (questionId: string, response: string) => {
+    updateResponses((prev) => ({
       ...prev,
-      [getAnswerKey()]: value,
+      [questionId]: response,
     }));
-    if (isJustSubmitted) {
-      setJustSubmitted((prev) => ({
-        ...prev,
-        [getAnswerKey()]: false,
-      }));
+
+    // Only auto-save if user is authenticated
+    if (!roundUser?.formSubmission?.id) return;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      autoSaveResponse(questionId, response).catch((err) => {
+        console.error("Debounced auto-save error:", err);
+      });
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        Loading questions...
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-lg text-center py-8">{error}</div>;
+  }
+
+  if (!roundUser) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        No round user data found. Please click "Get Started" from the Home page.
+      </div>
+    );
+  }
+
+  if (!roundUser.round) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        No round data found. Please contact support.
+      </div>
+    );
+  }
+
+  if (!Array.isArray(roundUser.round.Question)) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        No questions found in this round.
+      </div>
+    );
+  }
+
+  const subjectiveQuestions = roundUser.round.Question.filter(
+    (question) => question.type === "stq" || question.type === "ltq",
+  );
+
+  if (subjectiveQuestions.length === 0) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        No subjective questions available for this round.
+      </div>
+    );
+  }
+
+  // Map AOI names to varName prefixes
+  const aoiToPrefixMap: Record<string, string> = {
+    Common: "common",
+    "AI/ML": "aiml",
+    Cybersecurity: "cybersec",
+    Blockchain: "blockchain",
+    Bioinformatics: "bioinfo",
+    "Quantum Computing": "quantum",
+    IoT: "iot",
+  };
+
+  // Filter questions based on selected AOI
+  const aoiPrefix = aoiToPrefixMap[propSelectedAOI] || "common";
+  const aoiQuestions = subjectiveQuestions.filter((q) =>
+    q.varName?.toLowerCase().startsWith(aoiPrefix),
+  );
+
+  // Debug logging
+  console.log("Selected AOI:", propSelectedAOI);
+  console.log("AOI Prefix:", aoiPrefix);
+  console.log("Total subjective questions:", subjectiveQuestions.length);
+  console.log("Filtered AOI questions:", aoiQuestions.length);
+  console.log(
+    "Question varNames:",
+    subjectiveQuestions.map((q) => q.varName),
+  );
+
+  if (aoiQuestions.length === 0) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        <p>No questions available for {propSelectedAOI}.</p>
+        <p className="text-sm mt-2">
+          Looking for questions with prefix: {aoiPrefix}
+        </p>
+        <p className="text-sm mt-2">
+          Total questions in round: {subjectiveQuestions.length}
+        </p>
+      </div>
+    );
+  }
+
+  const safeIndex =
+    propSelectedQuestionIdx >= 0 &&
+    propSelectedQuestionIdx < aoiQuestions.length
+      ? propSelectedQuestionIdx
+      : 0;
+  const currentQuestion = aoiQuestions[safeIndex];
+  const currentResponse = currentQuestion
+    ? effectiveResponses[currentQuestion.id] || ""
+    : "";
+
+  const handleSubmit = async () => {
+    if (!currentQuestion || !roundUser?.formSubmission?.id) {
+      setNotificationType("error");
+      setNotification("No active question or form submission found");
+      return;
+    }
+
+    setSubmitting(true);
+    setNotification(null);
+
+    try {
+      await saveFormResponse(
+        roundUser.formSubmission.id,
+        currentQuestion.id,
+        currentResponse,
+      );
+      setNotificationType("success");
+      setNotification("Answer submitted successfully!");
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      console.error("Submit error:", err);
+      setNotificationType("error");
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to save response";
+      setNotification(errorMsg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleSubmit = () => {
-    if (currentAnswer.trim()) {
-      setJustSubmitted((prev) => ({
-        ...prev,
-        [getAnswerKey()]: true,
-      }));
-      setLastSubmittedAnswers((prev) => ({
-        ...prev,
-        [getAnswerKey()]: currentAnswer,
-      }));
-      console.log("Submitted answer:", currentAnswer);
-    }
-  };
-
-  const canSubmit =
-    currentAnswer.trim() && (!isJustSubmitted || hasChangedSinceSubmit);
-  const buttonText =
-    isJustSubmitted && !hasChangedSinceSubmit ? "Submitted" : "Submit";
+  const canSubmit = currentResponse.trim() && !submitting;
+  const buttonText = submitting ? "Submitting..." : "Submit";
   const buttonColor = canSubmit ? "#7D5BED" : "#4A4A4A";
 
   return (
     <div className="w-full h-full bg-[#1a1a1a] p-6 overflow-hidden flex flex-col">
+      {notification && (
+        <div
+          className={`fixed top-30 right-8 px-4 py-2 font-mono shadow-lg z-50 text-white border ${
+            notificationType === "success"
+              ? "bg-[#16171B] border-[#7D5BED]"
+              : "bg-[#16171B] border-red-500"
+          }`}
+        >
+          {notification}
+        </div>
+      )}
+
       <div className="flex-shrink-0 mb-6">
         <h1 className="text-white break-words leading-tight font-bold text-[18px]">
-          Question {safeIndex + 1}: {currentQuestion?.content}
+          Question {safeIndex + 1}: {currentQuestion?.question}
         </h1>
       </div>
 
@@ -417,8 +346,11 @@ const Questions: React.FC<QuestionsProps> = ({
                 selection:bg-[#7D5BED]
               "
               placeholder="Type your answer here..."
-              value={currentAnswer}
-              onChange={(e) => handleAnswerChange(e.target.value)}
+              value={currentResponse}
+              onChange={(e) =>
+                currentQuestion &&
+                handleResponseChange(currentQuestion.id, e.target.value)
+              }
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />

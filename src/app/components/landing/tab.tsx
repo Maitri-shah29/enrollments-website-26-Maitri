@@ -36,6 +36,11 @@ const IFRAME_WHITELIST = new Set([
   "slither.io",
   "comick.live",
   "icpc.global",
+  "c2c.acmvit.in",
+  "cryptichunt.acmvit.in",
+  "examcooker.acmvit.in",
+  "unipool.acmvit.in",
+  "cli-rpg.acmvit.in",
 ]);
 
 const isWhitelisted = (url: string) => {
@@ -142,6 +147,12 @@ interface TabProps {
   tabData: TabData;
   onUpdateTab: (updatedTab: TabData) => void;
   onAddTabWithUrl: (url: string) => void;
+  children?: React.ReactNode;
+  ccChildren?: React.ReactNode;
+  designChildren?: React.ReactNode;
+  managementChildren?: React.ReactNode;
+  techChildren?: React.ReactNode;
+  researchChildren?: React.ReactNode;
 }
 
 const stripProtocol = (s: string) => s.replace(/^https?:\/\//i, "");
@@ -167,7 +178,17 @@ const requestFullscreen = () => {
   }
 };
 
-const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
+const Tab: React.FC<TabProps> = ({
+  tabData,
+  onUpdateTab,
+  onAddTabWithUrl,
+  children,
+  ccChildren,
+  designChildren,
+  managementChildren,
+  techChildren,
+  researchChildren,
+}) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
 
@@ -593,7 +614,7 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         ) : tabData.showManagement ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
-              <Management key={refreshKey} />
+              {managementChildren}
             </div>
           </div>
         ) : tabData.showEvents ? (
@@ -611,22 +632,22 @@ const Tab: React.FC<TabProps> = ({ tabData, onUpdateTab, onAddTabWithUrl }) => {
         ) : tabData.showCc ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
-              <CCClient key={refreshKey} />
+              {ccChildren}
             </div>
           </div>
         ) : tabData.showTech ? (
           <div className="w-full h-full bg-white overflow-auto relative">
             <div className="h-full flex items-center justify-center">
-              <TechWebsite key={refreshKey} />
+              {techChildren}
             </div>
           </div>
         ) : tabData.showDesign ? (
           <div className="w-full h-full bg-white overflow-auto relative">
-            <DesignClient key={refreshKey} />
+            {designChildren}
           </div>
         ) : tabData.showResearch ? (
           <div className="w-full h-full bg-white overflow-auto relative">
-            <ResearchClient key={refreshKey} />
+            {researchChildren}
           </div>
         ) : tabData.showPintooRun ? (
           <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">

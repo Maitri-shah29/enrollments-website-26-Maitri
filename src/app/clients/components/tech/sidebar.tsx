@@ -1,14 +1,15 @@
 "use client";
 import Image from "next/image";
 import React from "react";
-import type { AOI, QuestionId } from "@/lib/types";
+import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import type { AOI, QuestionId, Section } from "@/lib/types";
 import AoiList from "./aoi-list";
 import NavItem from "./nav-item";
 import Round1List from "./round1-list";
 
 type Props = {
-  activeSection: "welcome" | "about" | "aoi" | "instructions" | "round1";
-  onChangeSection: (s: Props["activeSection"]) => void;
+  activeSection: Section;
+  onChangeSection: (s: Section) => void;
   aoiExpanded: boolean;
   onToggleAoi: () => void;
   roundExpanded: boolean;
@@ -21,6 +22,8 @@ type Props = {
   onSelectQuestion: (q: QuestionId) => void;
   submittedQuestions: Set<string>;
   onLogoClick: () => void;
+  roundUser?: RoundUserExtended | null;
+  joinedAOIs: Set<AOI>;
 };
 
 export default function Sidebar({
@@ -38,6 +41,8 @@ export default function Sidebar({
   onSelectQuestion,
   submittedQuestions,
   onLogoClick,
+  roundUser,
+  joinedAOIs,
 }: Props) {
   return (
     <div className="min-w-45 w-[16%] overflow-hidden border-r-2 border-[#993C7A] h-full p-2 overflow-y-auto font-jetbrains [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
@@ -51,12 +56,12 @@ export default function Sidebar({
           onClick={onLogoClick}
         />
       </div>
-
       <div className="w-full h-fit mt-5 font-jetbrains">
         {(
           [
             { name: "About", key: "about" },
             { name: "AOI", key: "aoi" },
+            { name: "Explore", key: "explore" },
             { name: "Instructions", key: "instructions" },
             { name: "Round 1", key: "round1" },
           ] as const
@@ -67,6 +72,7 @@ export default function Sidebar({
               iconSrc="/images/folder.svg"
               isActive={activeSection === item.key}
               hasBottomBorder={item.key === "round1"}
+              disabled={!roundUser}
               onClick={() => {
                 if (item.key === "aoi") {
                   onToggleAoi();
@@ -81,11 +87,9 @@ export default function Sidebar({
                 onChangeSection(item.key);
               }}
             />
-
             {item.key === "aoi" && activeSection === "aoi" && aoiExpanded && (
               <AoiList activeAOI={activeAOI} onSelectAOI={onSelectAOI} />
             )}
-
             {item.key === "round1" &&
               activeSection === "round1" &&
               roundExpanded && (
@@ -95,6 +99,8 @@ export default function Sidebar({
                   onSelectFolder={onSelectFolder}
                   onSelectQuestion={onSelectQuestion}
                   submittedQuestions={submittedQuestions}
+                  roundUser={roundUser}
+                  joinedAOIs={joinedAOIs}
                 />
               )}
           </React.Fragment>

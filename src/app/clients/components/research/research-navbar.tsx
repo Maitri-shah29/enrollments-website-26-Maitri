@@ -4,6 +4,7 @@
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
+import type { RoundUserExtended } from "@/app/clients/components/research/questions";
 
 const About = "/images/research/about.svg";
 const ACM = "/images/research/acm-logo.svg";
@@ -23,6 +24,7 @@ interface ResearchNavbarProps {
   selectedQuestionIdx?: number | null;
   onAOISelect?: (aoi: string) => void;
   onQuestionSelect?: (idx: number) => void;
+  roundUser?: RoundUserExtended | null;
 }
 //test
 const Icon = {
@@ -31,19 +33,6 @@ const Icon = {
   ),
 };
 
-const questions = [
-  "This is question 1",
-  "This is question 2",
-  "This is question 3",
-  "This is question 4",
-  "This is question 5",
-  "This is question 6",
-  "This is question 7",
-  "This is question 8",
-  "This is question 9",
-  "This is question 10",
-];
-
 const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   selected,
   onSelect,
@@ -51,6 +40,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   selectedQuestionIdx,
   onAOISelect,
   onQuestionSelect,
+  roundUser,
 }) => {
   const [expandedRound, setExpandedRound] = useState<boolean>(false);
   const [AOIState, setAoiState] = useState<string>("");
@@ -61,6 +51,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     typeof selectedQuestionIdx === "number"
       ? selectedQuestionIdx
       : questionState;
+
+  const isDisabled = !roundUser;
 
   const items = [
     {
@@ -77,13 +69,17 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   ];
 
   const roundAOIs = [
-    "Blockchain",
-    "Quantum Computing",
+    "Common",
     "AI/ML",
-    "BioInformatics",
-    "Cyber Security",
+    "Cybersecurity",
+    "Blockchain",
+    "Bioinformatics",
+    "Quantum Computing",
     "IoT",
   ];
+
+  // 4 questions per AOI
+  const questionsPerAOI = 4;
 
   return (
     <aside
@@ -106,10 +102,17 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               key={it.key}
               type="button"
               onClick={() => {
-                onSelect(it.key);
+                if (!isDisabled) {
+                  onSelect(it.key);
+                }
               }}
-              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors cursor-pointer rounded ${
-                selected === it.key ? "bg-[#7d5bed]" : "hover:bg-white/3"
+              disabled={isDisabled}
+              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors rounded ${
+                isDisabled
+                  ? "cursor-not-allowed opacity-40"
+                  : selected === it.key
+                    ? "bg-[#7d5bed] cursor-pointer"
+                    : "hover:bg-white/3 cursor-pointer"
               }`}
             >
               <span className="w-5 h-full text-white/90">{it.icon}</span>
@@ -118,14 +121,21 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
           ))}
 
           <button
-            className={`mt-1 w-full flex items-center justify-end pl-3 py-2 rounded cursor-pointer transition-colors ${
-              selected === "Round 1" ? "bg-[#7d5bed]" : "hover:bg-white/3"
+            className={`mt-1 w-full flex items-center justify-end pl-3 py-2 rounded transition-colors ${
+              isDisabled
+                ? "cursor-not-allowed opacity-40"
+                : selected === "Round 1"
+                  ? "bg-[#7d5bed] cursor-pointer"
+                  : "hover:bg-white/3 cursor-pointer"
             }`}
             onClick={(e) => {
-              setExpandedRound((s) => !s);
-              onSelect(expandedRound ? "" : "Round 1");
+              if (!isDisabled) {
+                setExpandedRound((s) => !s);
+                onSelect(expandedRound ? "" : "Round 1");
+              }
               e.stopPropagation();
             }}
+            disabled={isDisabled}
             type="button"
             tabIndex={0}
           >
@@ -172,9 +182,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
                   {effectiveAOI === aoi && (
                     <div className="pl-6 space-y-1">
-                      {questions.map((qText, qIdx) => (
+                      {Array.from({ length: questionsPerAOI }, (_, qIdx) => (
                         <button
-                          key={`${aoi}-${qText}`}
+                          key={`${aoi}-q${qIdx + 1}`}
                           type="button"
                           onClick={() => {
                             setQuestionState(qIdx);
@@ -183,7 +193,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                           }}
                           className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D3]/50 flex items-center justify-between text-sm transition-colors cursor-pointer`}
                         >
-                          <span className="text-left">{qText}</span>
+                          <span className="text-left">Question {qIdx + 1}</span>
                           {effectiveQuestionIdx === qIdx && (
                             <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
                           )}
@@ -200,10 +210,17 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             <button
               type="button"
               onClick={() => {
-                onSelect("Interview");
+                if (!isDisabled) {
+                  onSelect("Interview");
+                }
               }}
-              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors cursor-pointer rounded ${
-                selected === "Interview" ? "bg-[#7d5bed]" : "hover:bg-white/3"
+              disabled={isDisabled}
+              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors rounded ${
+                isDisabled
+                  ? "cursor-not-allowed opacity-40"
+                  : selected === "Interview"
+                    ? "bg-[#7d5bed] cursor-pointer"
+                    : "hover:bg-white/3 cursor-pointer"
               }`}
             >
               <span className="w-5 h-full text-white/90">

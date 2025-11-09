@@ -1,19 +1,15 @@
 "use client";
-import type { Response } from "@prisma/client";
+import type { Question } from "@prisma/client";
 import { debounce } from "lodash";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
-// import type { Question } from "@prisma/client";
-import type { QuestionWithRelations as Question } from "@/lib/types";
+import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 
 //this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
 interface QuestionsProps {
   questions: Question[];
-  // Renamed roundId to _roundId to satisfy 'noUnusedFunctionParameters'
-  roundId: string;
-  formSubmissionId: string | null;
-  savedResponses: Response[];
+  roundUser: RoundUserExtended;
 }
 
 interface TransformedQuestion {
@@ -57,12 +53,7 @@ const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
   }));
 };
 
-const Questions: React.FC<QuestionsProps> = ({
-  questions,
-  roundId: _roundId,
-  formSubmissionId,
-  savedResponses,
-}) => {
+const Questions: React.FC<QuestionsProps> = ({ questions, roundUser }) => {
   const aoiData = useMemo(
     () => groupQuestionsByVarName(questions),
     [questions],
@@ -87,6 +78,9 @@ const Questions: React.FC<QuestionsProps> = ({
     },
     [],
   );
+
+  const formSubmissionId = roundUser?.formSubmission?.id || null;
+  const savedResponses = roundUser?.formSubmission?.responses || [];
 
   // Load saved responses into answers state
   useEffect(() => {

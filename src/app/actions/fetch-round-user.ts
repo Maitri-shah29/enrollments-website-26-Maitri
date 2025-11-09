@@ -32,8 +32,6 @@ export default async function fetchRoundUser(domain: string) {
         round: {
           domain: enumDomain,
           type: "form",
-          active: true,
-          hidden: false,
         },
         userId: user.session.userId,
       },

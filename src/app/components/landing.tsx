@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, useState } from "react";
+import { type DragEvent, type ReactNode, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
@@ -19,7 +19,21 @@ const PLUS_BUTTON_MASK_IMAGE = buildMaskUrl(
 const Landing: React.FC<{
   session: unknown;
   isAllowed: boolean;
-}> = ({ session: _session, isAllowed: _isAllowed }) => {
+  children?: React.ReactNode; // legacy
+  ccChild?: React.ReactNode;
+  designChild?: React.ReactNode;
+  managementChild?: React.ReactNode;
+  techChild?: React.ReactNode;
+  researchChild?: React.ReactNode;
+}> = ({
+  session: _session,
+  isAllowed: _isAllowed,
+  ccChild,
+  designChild,
+  managementChild,
+  techChild,
+  researchChild,
+}) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
   const [tabs, setTabs] = useState<TabData[]>([
@@ -277,6 +291,11 @@ const Landing: React.FC<{
               tabData={tab}
               onUpdateTab={updateTab}
               onAddTabWithUrl={addTabWithUrl}
+              ccChildren={ccChild}
+              designChildren={designChild}
+              managementChildren={managementChild}
+              techChildren={techChild}
+              researchChildren={researchChild}
             />
           </div>
         ))}

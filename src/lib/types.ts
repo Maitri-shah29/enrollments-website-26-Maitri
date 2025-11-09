@@ -1,6 +1,13 @@
 import type { Prisma } from "@prisma/client";
 
 export type AOI = "app" | "web" | "gamedev" | "foss" | "devops";
+export type Section =
+  | "welcome"
+  | "about"
+  | "aoi"
+  | "explore"
+  | "instructions"
+  | "round1";
 
 export type QuestionId =
   | "question1"

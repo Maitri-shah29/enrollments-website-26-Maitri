@@ -1,8 +1,15 @@
 "use client";
 import Image from "next/image";
-import { aoiList } from "@/lib/constants";
 import type { AOI } from "@/lib/types";
 import TechButton from "./button";
+
+const AOI_LABELS: { aoi: AOI; label: string }[] = [
+  { aoi: "app", label: "App" },
+  { aoi: "web", label: "Web" },
+  { aoi: "gamedev", label: "GameDev" },
+  { aoi: "foss", label: "FOSS" },
+  { aoi: "devops", label: "DevOps" },
+];
 
 type Props = {
   activeAOI: AOI;
@@ -12,7 +19,7 @@ type Props = {
 export default function AoiList({ activeAOI, onSelectAOI }: Props) {
   return (
     <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
-      {aoiList.map((aoi) => {
+      {AOI_LABELS.map(({ aoi, label }) => {
         const isActive = activeAOI === aoi;
         return (
           <TechButton
@@ -33,7 +40,7 @@ export default function AoiList({ activeAOI, onSelectAOI }: Props) {
               width={16}
               height={16}
             />
-            {aoi}
+            {label}
           </TechButton>
         );
       })}

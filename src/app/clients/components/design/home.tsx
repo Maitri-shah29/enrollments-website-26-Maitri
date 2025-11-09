@@ -2,7 +2,12 @@
 import Image from "next/image";
 import type React from "react";
 
-const Home: React.FC = () => {
+interface HomeProps {
+  onGetStarted?: () => void;
+  loading?: boolean;
+}
+
+const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden">
       <Image
@@ -28,6 +33,17 @@ const Home: React.FC = () => {
           className="relative w-[60%]"
         />
         <div className="w-210 h-0.5 rounded-full bg-white opacity-99 mt-10"></div>
+
+        {onGetStarted && (
+          <button
+            onClick={onGetStarted}
+            disabled={loading}
+            className="mt-8 px-8 py-3 bg-white text-black font-coolvetica text-lg rounded-lg hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+          >
+            {loading ? "Loading..." : "Get Started"}
+          </button>
+        )}
 
         <div className="flex gap-15 mt-10">
           <a
