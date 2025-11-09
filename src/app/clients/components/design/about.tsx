@@ -19,7 +19,7 @@ const About: React.FC = () => {
             height={500}
             className="w-[8%] lg:w-[10%] absolute -top-[30%] left-[3%] lg:left-[5%]"
           />
-          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
+          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl break-words">
             Design is where creativity meets purpose. It’s not just about how
             something looks, but how it feels and functions. Our team blends
             creativity with clarity, shaping visuals, stories, and experiences
