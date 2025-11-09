@@ -134,6 +134,54 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   };
 
   const renderContent = () => {
+    const roundUserStatus = roundUser?.status || "pending";
+
+    // Status-based rendering for evaluate, promoted, rejected
+    if (roundUserStatus === "evaluate") {
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+              Your responses are being evaluated
+            </h2>
+            <p className="text-white text-lg">
+              Please wait while we review your submission.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (roundUserStatus === "promoted") {
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+              Congratulations! 🎉
+            </h2>
+            <p className="text-white text-lg">
+              You are promoted to the next round
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (roundUserStatus === "rejected") {
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-red-500 text-3xl font-jetbrains mb-4">
+              Unfortunately, you could not pass this round
+            </h2>
+            <p className="text-white text-lg">
+              Thank you for participating. Better luck next time!
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (activeSection === "about") return <About />;
     if (activeSection === "aoi") {
       if (activeAOI) return <AOIContent activeAOI={activeAOI} />;
@@ -223,6 +271,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         onLogoClick={() => setSection("welcome")}
         roundUser={roundUser}
         joinedAOIs={joinedAOIs}
+        currentAnswers={answers}
       />
       <div className="w-full h-full p-7 relative font-jetbrains">
         <div className="w-full h-full border-2 border-[#993C7A] flex flex-col justify-center items-center p-10 relative overflow-y-auto">

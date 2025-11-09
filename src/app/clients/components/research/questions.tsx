@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
+import submitForm from "@/app/actions/submit-form";
 import type { ResearchAOI } from "@/lib/research-navigation";
 
 export type RoundUserExtended = Prisma.RoundUserGetPayload<{
@@ -88,6 +89,8 @@ const Questions: React.FC<QuestionsProps> = ({
     }
   };
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submittingForm, setSubmittingForm] = useState<boolean>(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -335,6 +338,124 @@ const Questions: React.FC<QuestionsProps> = ({
     }
   };
 
+  const handleSubmitForm = () => {
+    // Frontend validation before showing confirm dialog
+    const questionsToValidate = accessibleQuestions;
+
+    // Check if all required questions are answered
+    const unansweredQuestions = questionsToValidate.filter(
+      (q) =>
+        !effectiveResponses[q.id] || effectiveResponses[q.id].trim() === "",
+    );
+
+    if (unansweredQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please answer all questions. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!roundUser?.id) {
+      setNotificationType("error");
+      setNotification("No round user found");
+      setShowConfirmDialog(false);
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    // Build effective responses for joined AOIs and common questions
+    const effectiveResponsesToSubmit: Record<string, string> = {};
+    for (const question of accessibleQuestions) {
+      effectiveResponsesToSubmit[question.id] =
+        effectiveResponses[question.id] || "";
+    }
+
+    setSubmittingForm(true);
+    setShowConfirmDialog(false);
+    setNotification(null);
+
+    try {
+      const result = await submitForm(roundUser.id, effectiveResponsesToSubmit);
+      if (result.error) {
+        setNotificationType("error");
+        setNotification(result.error);
+      } else {
+        setNotificationType("success");
+        setNotification(
+          "Form submitted successfully! Your responses are now being evaluated.",
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Submit form error:", err);
+      setNotificationType("error");
+      setNotification("Failed to submit form");
+    } finally {
+      setSubmittingForm(false);
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmDialog(false);
+  };
+
+  const roundUserStatus = roundUser?.status || "pending";
+
+  // Status-based rendering
+  if (roundUserStatus === "evaluate") {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+            Your responses are being evaluated
+          </h2>
+          <p className="text-white text-lg">
+            Please wait while we review your submission.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "promoted") {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+            Congratulations! 🎉
+          </h2>
+          <p className="text-white text-lg">
+            You are promoted to the next round
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "rejected") {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-red-500 text-3xl font-bold mb-4">
+            Unfortunately, you could not pass this round
+          </h2>
+          <p className="text-white text-lg">
+            Thank you for participating. Better luck next time!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const canSubmit = currentResponse.trim() && !submitting;
   const buttonText = submitting ? "Submitting..." : "Submit";
   const buttonColor = canSubmit ? "#7D5BED" : "#4A4A4A";
@@ -345,11 +466,41 @@ const Questions: React.FC<QuestionsProps> = ({
         <div
           className={`fixed top-30 right-8 px-4 py-2 font-mono shadow-lg z-50 text-white border ${
             notificationType === "success"
-              ? "bg-[#16171B] border-[#7D5BED]"
-              : "bg-[#16171B] border-red-500"
+              ? "bg-[#1a1a1a] border-[#7D5BED]"
+              : "bg-[#1a1a1a] border-red-500"
           }`}
         >
           {notification}
+        </div>
+      )}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+          <div className="bg-[#1a1a1a] border-2 border-[#7D5BED] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#7D5BED] text-2xl font-bold mb-4">
+              Confirm Submission
+            </h3>
+            <p className="text-white text-lg mb-6">
+              You won't be able to edit your responses after this. Are you sure
+              you want to submit?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelSubmit}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-6 py-2 bg-[#7D5BED] text-white hover:bg-[#6a4dd4] transition-colors"
+                type="button"
+                disabled={submittingForm}
+              >
+                {submittingForm ? "Submitting..." : "Confirm"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -423,7 +574,7 @@ const Questions: React.FC<QuestionsProps> = ({
           </p>
         </div>
 
-        <div className="flex justify-end flex-shrink-0 mt-4">
+        <div className="flex justify-end flex-shrink-0 mt-4 space-x-4">
           <button
             type="button"
             onClick={handleSubmit}
@@ -436,6 +587,16 @@ const Questions: React.FC<QuestionsProps> = ({
           >
             {buttonText}
           </button>
+          {roundUser?.status === "pending" && (
+            <button
+              type="button"
+              onClick={handleSubmitForm}
+              disabled={submittingForm}
+              className="text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[#7D5BED] border-1 hover:bg-[#6a4dd4] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submittingForm ? "Submitting..." : "Submit Form"}
+            </button>
+          )}
         </div>
       </div>
     </div>

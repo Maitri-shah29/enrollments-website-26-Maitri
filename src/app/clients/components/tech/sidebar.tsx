@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
+import submitForm from "@/app/actions/submit-form";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { AOI, QuestionId, Section } from "@/lib/types";
 import AoiList from "./aoi-list";
@@ -24,6 +25,7 @@ type Props = {
   onLogoClick: () => void;
   roundUser?: RoundUserExtended | null;
   joinedAOIs: Set<AOI>;
+  currentAnswers: Record<string, string>;
 };
 
 export default function Sidebar({
@@ -43,9 +45,127 @@ export default function Sidebar({
   onLogoClick,
   roundUser,
   joinedAOIs,
+  currentAnswers,
 }: Props) {
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [submittingForm, setSubmittingForm] = useState<boolean>(false);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [notificationType, setNotificationType] = useState<"success" | "error">(
+    "success",
+  );
+
+  const handleSubmitForm = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!roundUser?.id) {
+      setNotificationType("error");
+      setNotification("No round user found");
+      setShowConfirmDialog(false);
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    // Get all question IDs for joined AOIs only
+    const joinedAOIsArray = Array.from(joinedAOIs);
+    const allQuestions = roundUser.round?.Question || [];
+    const relevantQuestions = allQuestions.filter(
+      (q) =>
+        (q.type === "stq" || q.type === "ltq") &&
+        joinedAOIsArray.includes(q.varName as AOI),
+    );
+
+    // Build effective responses only for joined AOIs
+    const effectiveResponses: Record<string, string> = {};
+    for (const question of relevantQuestions) {
+      const folderQuestions = allQuestions
+        .filter((q) => q.varName === question.varName)
+        .sort((a, b) => a.serial - b.serial);
+      const questionIndex = folderQuestions.findIndex(
+        (q) => q.id === question.id,
+      );
+      if (questionIndex !== -1) {
+        const questionKey = `${question.varName}-question${questionIndex + 1}`;
+        effectiveResponses[question.id] = currentAnswers[questionKey] || "";
+      }
+    }
+
+    setSubmittingForm(true);
+    setShowConfirmDialog(false);
+    setNotification(null);
+
+    try {
+      const result = await submitForm(roundUser.id, effectiveResponses);
+      if (result.error) {
+        setNotificationType("error");
+        setNotification(result.error);
+      } else {
+        setNotificationType("success");
+        setNotification(
+          "Form submitted successfully! Your responses are now being evaluated.",
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Submit form error:", err);
+      setNotificationType("error");
+      setNotification("Failed to submit form");
+    } finally {
+      setSubmittingForm(false);
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmDialog(false);
+  };
+
+  const roundUserStatus = roundUser?.status || "pending";
   return (
     <div className="min-w-45 w-[16%] overflow-hidden border-r-2 border-[#993C7A] h-full p-2 overflow-y-auto font-jetbrains [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
+      {notification && (
+        <div
+          className={`fixed top-8 right-8 px-4 py-2 font-jetbrains shadow-lg z-50 text-white border ${
+            notificationType === "success"
+              ? "bg-[#08111D] border-[#993C7A]"
+              : "bg-[#08111D] border-red-500"
+          }`}
+        >
+          {notification}
+        </div>
+      )}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-[#08111D] border-2 border-[#993C7A] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#993C7A] text-2xl font-jetbrains mb-4">
+              Confirm Submission
+            </h3>
+            <p className="text-white text-lg mb-6 font-jetbrains">
+              You won't be able to edit your responses after this. Are you sure
+              you want to submit?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelSubmit}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-jetbrains hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors"
+                type="button"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-center items-center mb-4 mt-4">
         <Image
           src="/images/acmlogo.svg"
@@ -106,6 +226,18 @@ export default function Sidebar({
           </React.Fragment>
         ))}
       </div>
+      {roundUser && roundUserStatus === "pending" && (
+        <div className="mt-6 px-2">
+          <button
+            onClick={handleSubmitForm}
+            disabled={submittingForm}
+            className="w-full bg-transparent border-2 border-[#993C7A] text-[#993C7A] hover:bg-[#993C7A] hover:text-white px-4 py-2 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+          >
+            {submittingForm ? "Submitting..." : "Submit Form"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

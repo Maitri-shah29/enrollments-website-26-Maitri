@@ -7,6 +7,7 @@ import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import saveFormResponse from "../actions/save-form-response";
+import submitForm from "../actions/submit-form";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
 import ManagementLanding from "./components/management/landing";
@@ -32,6 +33,12 @@ export default function Management({
   const [successMessages, setSuccessMessages] = useState<
     Record<string, string>
   >({});
+  const [submittingForm, setSubmittingForm] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [notificationType, setNotificationType] = useState<"success" | "error">(
+    "success",
+  );
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const debounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
   const roundHidden = !!roundUser?.round?.hidden;
@@ -190,6 +197,73 @@ export default function Management({
     }
   }
 
+  const handleSubmitForm = () => {
+    // Frontend validation - check all questions are answered
+    const unansweredQuestions = questions.filter((q) => !answers[q.id]?.trim());
+
+    if (unansweredQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!roundUser?.id || !formId) {
+      setNotificationType("error");
+      setNotification("Form not initialized");
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    setSubmittingForm(true);
+    setShowConfirmDialog(false);
+
+    try {
+      // Build currentResponses with all question IDs
+      const currentResponses = questions.reduce(
+        (acc, q) => {
+          acc[q.id] = answers[q.id] || "";
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+
+      await submitForm(roundUser.id, currentResponses);
+
+      setNotificationType("success");
+      setNotification("Form submitted successfully!");
+
+      // Refresh the round user data to get updated status
+      const response = await fetch("/api/round-user?domain=management");
+      if (response.ok) {
+        const data = await response.json();
+        if (data && typeof data === "object" && !Array.isArray(data)) {
+          setRoundUser(data as RoundUserExtended);
+        }
+      }
+
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      setNotificationType("error");
+      setNotification(
+        error instanceof Error ? error.message : "Failed to submit form",
+      );
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setSubmittingForm(false);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmDialog(false);
+  };
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case "Landing":
@@ -220,6 +294,49 @@ export default function Management({
             </div>
           );
         }
+
+        // Status-based rendering
+        if (roundUser?.status === "evaluate") {
+          return (
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                Form Submitted Successfully!
+              </h2>
+              <p className="text-lg text-gray-700 text-center">
+                Your responses have been submitted and are under evaluation.
+                You'll be notified about the results soon.
+              </p>
+            </div>
+          );
+        }
+
+        if (roundUser?.status === "promoted") {
+          return (
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+              <h2 className="text-3xl font-bold text-green-700 mb-4">
+                Congratulations! 🎉
+              </h2>
+              <p className="text-lg text-gray-700 text-center">
+                You have been promoted to the next round!
+              </p>
+            </div>
+          );
+        }
+
+        if (roundUser?.status === "rejected") {
+          return (
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+              <h2 className="text-3xl font-bold text-red-700 mb-4">
+                Thank You for Participating
+              </h2>
+              <p className="text-lg text-gray-700 text-center">
+                Unfortunately, you haven't been selected for the next round. We
+                appreciate your effort!
+              </p>
+            </div>
+          );
+        }
+
         return roundId && questions.length > 0 ? (
           <QuestionsList
             questions={questions}
@@ -230,6 +347,9 @@ export default function Management({
             onChangeAnswer={onChangeAnswer}
             onSubmitAnswer={onSubmitAnswer}
             wallpaper={wallpaper}
+            onSubmitForm={handleSubmitForm}
+            roundUser={roundUser}
+            submittingForm={submittingForm}
           />
         ) : (
           <p className="text-gray-700">No questions available.</p>
@@ -259,6 +379,47 @@ export default function Management({
 
   return (
     <div className="h-full flex w-full overflow-hidden font-helvetica">
+      {notification && (
+        <div
+          className={`fixed top-8 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
+            notificationType === "success"
+              ? "bg-green-600 border-green-500"
+              : "bg-red-600 border-red-500"
+          }`}
+        >
+          {notification}
+        </div>
+      )}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+          <div className="bg-white border-2 border-gray-300 p-8 rounded-2xl max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-gray-800 text-2xl font-bold mb-4">
+              Confirm Submission
+            </h3>
+            <p className="text-gray-700 text-lg mb-6">
+              You won't be able to edit your responses after this. Are you sure
+              you want to submit?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelSubmit}
+                className="px-6 py-2 bg-transparent border-2 border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors rounded-lg font-medium"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg font-medium"
+                type="button"
+                disabled={submittingForm}
+              >
+                {submittingForm ? "Submitting..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Image
         src={`/images/management/wallpapers/${wallpaper}.svg`}
         width={1920}

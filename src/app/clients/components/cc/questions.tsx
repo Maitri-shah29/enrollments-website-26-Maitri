@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
+import submitForm from "@/app/actions/submit-form";
 import AnswerBox from "./answer-box";
 import Button from "./button";
 import QuestionBox from "./question-box";
@@ -45,8 +46,10 @@ export type RoundUserExtended = Prisma.RoundUserGetPayload<{
     Meet_User: true;
     user: true;
   };
-}>;
-
+}> & {
+  id: string;
+  status: "pending" | "evaluate" | "promoted" | "rejected";
+};
 type QuestionsProps = {
   roundUser?: RoundUserExtended;
   loading?: boolean;
@@ -84,6 +87,8 @@ const Questions = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("plaintext");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [submittingForm, setSubmittingForm] = useState<boolean>(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
 
   useEffect(() => {
     if (useExternal) return;
@@ -250,6 +255,120 @@ const Questions = ({
     }
   };
 
+  const handleSubmitForm = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!roundUser?.id) {
+      setNotificationType("error");
+      setNotification("No round user found");
+      setShowConfirmDialog(false);
+      return;
+    }
+
+    setSubmittingForm(true);
+    setShowConfirmDialog(false);
+    setNotification(null);
+
+    try {
+      const result = await submitForm(roundUser.id, effectiveResponses);
+      if (result.error) {
+        setNotificationType("error");
+        setNotification(result.error);
+      } else {
+        setNotificationType("success");
+        setNotification(
+          "Form submitted successfully! Your responses are now being evaluated.",
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Submit form error:", err);
+      setNotificationType("error");
+      setNotification("Failed to submit form");
+    } finally {
+      setSubmittingForm(false);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmDialog(false);
+  };
+
+  // Check round user status
+  const roundUserStatus = roundUser?.status || "pending";
+
+  if (loading) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        Loading questions...
+      </div>
+    );
+  }
+  if (error) {
+    return <div className="text-red-500 text-lg text-center py-8">{error}</div>;
+  }
+  if (
+    !roundUser ||
+    !roundUser.round ||
+    !Array.isArray(roundUser.round.Question)
+  ) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        No round user data found.
+      </div>
+    );
+  }
+
+  // Status-based rendering
+  if (roundUserStatus === "evaluate") {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center">
+          <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
+            Your responses are being evaluated
+          </h2>
+          <p className="text-white text-lg">
+            Please wait while we review your submission.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "promoted") {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center">
+          <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
+            Congratulations! 🎉
+          </h2>
+          <p className="text-white text-lg">
+            You are promoted to the next round
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "rejected") {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center">
+          <h2 className="text-red-500 text-3xl font-ShareTechMono mb-4">
+            Unfortunately, you could not pass this round
+          </h2>
+          <p className="text-white text-lg">
+            Thank you for participating. Better luck next time!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-6 min-h-full">
       {notification && (
@@ -259,6 +378,35 @@ const Questions = ({
           }`}
         >
           {notification}
+        </div>
+      )}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-[#16171B] border-2 border-[#C9EB3E] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#C9EB3E] text-2xl font-ShareTechMono mb-4">
+              Confirm Submission
+            </h3>
+            <p className="text-white text-lg mb-6 font-ShareTechMono">
+              You won't be able to edit your responses after this. Are you sure
+              you want to submit?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelSubmit}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-ShareTechMono hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-6 py-2 bg-[#C9EB3E] text-black font-ShareTechMono hover:bg-[#a8c932] transition-colors"
+                type="button"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {subjectiveQuestions.length === 0 ? (
@@ -296,10 +444,16 @@ const Questions = ({
                     }
                   />
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end space-x-4">
                   <Button
-                    label={submitting ? "Submitting..." : "Submit"}
+                    label={submitting ? "Submitting..." : "Submit Answer"}
                     onClick={handleSubmit}
+                  />
+                  <Button
+                    label={
+                      submittingForm ? "Submitting Form..." : "Submit Form"
+                    }
+                    onClick={handleSubmitForm}
                   />
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { debounce } from "lodash";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
+import submitForm from "@/app/actions/submit-form";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { DesignAOI } from "@/lib/types";
 
@@ -101,6 +102,8 @@ const Questions: React.FC<QuestionsProps> = ({
   const [selectedQuestion, setSelectedQuestion] =
     useState<TransformedQuestion | null>(aoiData[0]?.questions[0] || null);
   const [isSaving, setIsSaving] = useState(false);
+  const [submittingForm, setSubmittingForm] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
   const [toast, setToast] = useState<Toast | null>(null);
@@ -214,11 +217,140 @@ const Questions: React.FC<QuestionsProps> = ({
     }
   }, [formSubmissionId, selectedQuestion, answers, showToast]);
 
+  const handleSubmitForm = () => {
+    // Frontend validation before showing confirm dialog
+    const joinedVarNames = Array.from(joinedAOIs).map(
+      (aoi) => designAOIToVarName[aoi],
+    );
+
+    // Get questions for joined AOIs and common
+    const questionsToValidate = filteredQuestions.filter(
+      (q) =>
+        (q.type === "stq" || q.type === "ltq") &&
+        (joinedVarNames.includes(q.varName) || q.varName === "common"),
+    );
+
+    // Check if all required questions are answered
+    const unansweredQuestions = questionsToValidate.filter(
+      (q) => !answers[q.id] || answers[q.id].trim() === "",
+    );
+
+    if (unansweredQuestions.length > 0) {
+      showToast(
+        `Please answer all questions. ${unansweredQuestions.length} question(s) remaining.`,
+        "error",
+      );
+      return;
+    }
+
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!roundUser?.id) {
+      showToast("No round user found", "error");
+      setShowConfirmDialog(false);
+      return;
+    }
+
+    // Get all question IDs for joined AOIs and common questions
+    const joinedVarNames = Array.from(joinedAOIs).map(
+      (aoi) => designAOIToVarName[aoi],
+    );
+
+    const effectiveResponses: Record<string, string> = {};
+    for (const question of filteredQuestions) {
+      // Include questions from joined AOIs and common
+      if (
+        (question.type === "stq" || question.type === "ltq") &&
+        (joinedVarNames.includes(question.varName) ||
+          question.varName === "common")
+      ) {
+        effectiveResponses[question.id] = answers[question.id] || "";
+      }
+    }
+
+    setSubmittingForm(true);
+    setShowConfirmDialog(false);
+
+    try {
+      const result = await submitForm(roundUser.id, effectiveResponses);
+      if (result.error) {
+        showToast(result.error, "error");
+      } else {
+        showToast(
+          "Form submitted successfully! Your responses are now being evaluated.",
+          "success",
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Submit form error:", err);
+      showToast("Failed to submit form", "error");
+    } finally {
+      setSubmittingForm(false);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmDialog(false);
+  };
+
   const getToastClasses = (type: "success" | "error") => {
     return type === "success"
       ? "bg-green-500 border-green-700"
       : "bg-red-500 border-red-700";
   };
+
+  const roundUserStatus = roundUser?.status || "pending";
+
+  // Status-based rendering
+  if (roundUserStatus === "evaluate") {
+    return (
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+        <div className="text-center">
+          <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
+            Your responses are being evaluated
+          </h2>
+          <p className="text-white text-lg font-coolvetica">
+            Please wait while we review your submission.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "promoted") {
+    return (
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+        <div className="text-center">
+          <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
+            Congratulations! 🎉
+          </h2>
+          <p className="text-white text-lg font-coolvetica">
+            You are promoted to the next round
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "rejected") {
+    return (
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+        <div className="text-center">
+          <h2 className="text-red-500 text-3xl font-brushwell mb-4">
+            Unfortunately, you could not pass this round
+          </h2>
+          <p className="text-white text-lg font-coolvetica">
+            Thank you for participating. Better luck next time!
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // If no AOIs are joined, show a message
   if (joinedAOIs.size === 0) {
@@ -266,6 +398,35 @@ const Questions: React.FC<QuestionsProps> = ({
           )} border-2`}
         >
           {toast.message}
+        </div>
+      )}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+          <div className="bg-[#302E2E] border-2 border-[#F55F4B] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#F55F4B] text-2xl font-brushwell mb-4">
+              Confirm Submission
+            </h3>
+            <p className="text-white text-lg mb-6 font-coolvetica">
+              You won't be able to edit your responses after this. Are you sure
+              you want to submit?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelSubmit}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-coolvetica hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-6 py-2 bg-[#F55F4B] text-white font-coolvetica hover:bg-[#d64f3a] transition-colors"
+                type="button"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
       )}
       <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
@@ -384,7 +545,7 @@ const Questions: React.FC<QuestionsProps> = ({
                 characters left
               </p>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end gap-4 pt-4">
                 <button
                   type="button"
                   onClick={handleSaveResponse}
@@ -396,6 +557,14 @@ const Questions: React.FC<QuestionsProps> = ({
                   className="px-10 py-4 border-2 border-white font-coolvetica rounded-lg hover:bg-[#F55F4B] hover:border-[#F55F4B] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white"
                 >
                   {isSaving ? "Saving..." : "Submit"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmitForm}
+                  disabled={submittingForm}
+                  className="px-10 py-4 border-2 border-white font-coolvetica rounded-lg hover:bg-[#F55F4B] hover:border-[#F55F4B] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white"
+                >
+                  {submittingForm ? "Submitting Form..." : "Submit Form"}
                 </button>
               </div>
             </div>

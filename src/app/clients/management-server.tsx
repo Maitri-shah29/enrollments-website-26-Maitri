@@ -14,7 +14,7 @@ export default async function ManagementServer() {
     console.error("Failed to fetch round user on server:", e);
   }
 
-  console.log(initialRoundUser);
+  //console.log(initialRoundUser);
 
   return <ManagementClient initialRoundUser={initialRoundUser} />;
 }
