@@ -5,11 +5,13 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import type { DesignAOI } from "@/lib/types";
 
 //this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
 interface QuestionsProps {
   questions: Question[];
   roundUser: RoundUserExtended;
+  joinedAOIs: Set<DesignAOI>;
 }
 
 interface TransformedQuestion {
@@ -53,10 +55,44 @@ const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
   }));
 };
 
-const Questions: React.FC<QuestionsProps> = ({ questions, roundUser }) => {
+const Questions: React.FC<QuestionsProps> = ({
+  questions,
+  roundUser,
+  joinedAOIs,
+}) => {
+  // Map DesignAOI to varName prefixes (these should match the question varNames in your database)
+  const designAOIToVarName: Record<DesignAOI, string> = {
+    uiux: "uiux",
+    videoediting: "videoediting",
+    illustrations: "illustrations",
+    motiongraphics: "motiongraphics",
+    "3d": "3d",
+  };
+
+  // Filter questions based on joined AOIs
+  const filteredQuestions = useMemo(() => {
+    if (joinedAOIs.size === 0) {
+      return [];
+    }
+
+    const allowedVarNames = new Set<string>();
+    // Always include common questions if any AOI is joined
+    allowedVarNames.add("common");
+
+    for (const aoi of joinedAOIs) {
+      allowedVarNames.add(designAOIToVarName[aoi]);
+    }
+
+    return questions.filter((q) =>
+      Array.from(allowedVarNames).some((varName) =>
+        q.varName?.toLowerCase().includes(varName.toLowerCase()),
+      ),
+    );
+  }, [questions, joinedAOIs]);
+
   const aoiData = useMemo(
-    () => groupQuestionsByVarName(questions),
-    [questions],
+    () => groupQuestionsByVarName(filteredQuestions),
+    [filteredQuestions],
   );
 
   const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
@@ -183,6 +219,43 @@ const Questions: React.FC<QuestionsProps> = ({ questions, roundUser }) => {
       ? "bg-green-500 border-green-700"
       : "bg-red-500 border-red-700";
   };
+
+  // If no AOIs are joined, show a message
+  if (joinedAOIs.size === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+        <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
+          Questions
+        </h1>
+        <div className="text-white text-center max-w-2xl px-8">
+          <p className="text-2xl font-coolvetica mb-4">No AOIs Selected</p>
+          <p className="text-lg font-coolvetica text-white/70">
+            Please visit the AOIs page to join at least one Area of Interest to
+            access questions.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no questions available for joined AOIs
+  if (aoiData.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+        <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
+          Questions
+        </h1>
+        <div className="text-white text-center max-w-2xl px-8">
+          <p className="text-2xl font-coolvetica mb-4">
+            No Questions Available
+          </p>
+          <p className="text-lg font-coolvetica text-white/70">
+            No questions found for your joined AOIs. Please check back later.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">

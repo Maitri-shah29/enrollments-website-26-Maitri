@@ -8,6 +8,7 @@ import Blockchain from "@/app/clients/components/research/aoi-pages/blockchain";
 import Cybersecurity from "@/app/clients/components/research/aoi-pages/cybersecurity";
 import IoT from "@/app/clients/components/research/aoi-pages/iot";
 import QuantumComputing from "@/app/clients/components/research/aoi-pages/quantumcomputing";
+import ExploreResearchAOIs from "@/app/clients/components/research/explore";
 import ResearchHome from "@/app/clients/components/research/home";
 import Instructions from "@/app/clients/components/research/instructions";
 import Interview from "@/app/clients/components/research/interview";
@@ -15,6 +16,7 @@ import Questions, {
   type RoundUserExtended,
 } from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
+import type { ResearchAOI } from "@/lib/research-navigation";
 
 const AOI_KEYS = [
   "COMMON",
@@ -26,6 +28,8 @@ const AOI_KEYS = [
   "IOT",
 ] as const;
 type AoiKey = (typeof AOI_KEYS)[number];
+
+const AOI_JOIN_LIMIT = 3;
 
 const keyToLabel: Record<AoiKey, string> = {
   COMMON: "Common",
@@ -72,7 +76,46 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
+  const [joinedAOIs, setJoinedAOIs] = useState<Set<ResearchAOI>>(new Set());
+  const [aoisLoaded, setAoisLoaded] = useState(false);
   const roundHidden = !!roundUser?.round?.hidden;
+
+  // Load joined AOIs from localStorage on mount
+  useEffect(() => {
+    const savedAOIs = localStorage.getItem("research-joined-aois");
+    if (savedAOIs) {
+      try {
+        const parsed = JSON.parse(savedAOIs) as ResearchAOI[];
+        console.log("Restored Research AOIs from localStorage:", parsed);
+        setJoinedAOIs(new Set(parsed));
+      } catch (err) {
+        console.error("Failed to parse saved Research AOIs:", err);
+      }
+    }
+    setAoisLoaded(true);
+  }, []);
+
+  // Save joined AOIs to localStorage when they change
+  useEffect(() => {
+    if (!aoisLoaded) return;
+    const aoiArray = [...joinedAOIs];
+    console.log("Saving Research AOIs to localStorage:", aoiArray);
+    localStorage.setItem("research-joined-aois", JSON.stringify(aoiArray));
+  }, [joinedAOIs, aoisLoaded]);
+
+  const handleJoinAOI = (aoi: ResearchAOI) => {
+    if (joinedAOIs.size < AOI_JOIN_LIMIT) {
+      setJoinedAOIs((prev) => new Set([...prev, aoi]));
+    }
+  };
+
+  const handleLeaveAOI = (aoi: ResearchAOI) => {
+    setJoinedAOIs((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(aoi);
+      return newSet;
+    });
+  };
 
   const initializeRoundUser = async () => {
     setLoading(true);
@@ -158,6 +201,7 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
         onAOISelect={handleAOISelect}
         onQuestionSelect={handleQuestionSelect}
         roundUser={roundUser}
+        joinedAOIs={joinedAOIs}
       />
 
       <div className="flex-1 min-w-0 h-full overflow-hidden">
@@ -167,6 +211,13 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
         {selectedPanel === "AOIs" && <AOIs onSelect={handlePanelSelect} />}
+        {selectedPanel === "Explore" && (
+          <ExploreResearchAOIs
+            joinedAOIs={joinedAOIs}
+            onJoinAOI={handleJoinAOI}
+            onLeaveAOI={handleLeaveAOI}
+          />
+        )}
         {selectedPanel === "Round 1" && roundHidden ? (
           <div className="text-center text-white text-xl py-12">
             This round is currently hidden and cannot be accessed.
@@ -182,6 +233,7 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
             selectedQuestionIdx={selectedQuestionIdx}
             onAOIChange={setSelectedAOI}
             onQuestionChange={setSelectedQuestionIdx}
+            joinedAOIs={joinedAOIs}
           />
         ) : null}
         {selectedPanel === "Interview" && <Interview />}
