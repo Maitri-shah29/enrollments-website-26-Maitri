@@ -17,20 +17,7 @@ export default function Interview() {
         </h1>
 
         <p className="text-gray-300 leading-relaxed text-justify">
-          Lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum.
-          <br />
-          <br />
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin
-          vulputate ex in urna interdum, sed faucibus sem maximus. Integer
-          blandit, purus ac sodales vestibulum, erat est tincidunt augue, a
-          fermentum velit nisl id nisl. Vivamus blandit arcu at lectus
-          dignissim, sed cursus ex elementum. Suspendisse ac justo nec eros
-          suscipit malesuada. Duis ac ex sed justo tempor convallis ut id mi.
+          This page will be available after round 1.
         </p>
       </div>
     </div>

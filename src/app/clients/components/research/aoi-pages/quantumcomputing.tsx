@@ -15,18 +15,38 @@ const quantumcomputingPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
-            lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-            ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-            lorem ipsum lorem ipsum lorem ipsum v lorem ipsum eugfuw
-            kurfuwbfhweb rbfuyrgp4ugfhfiuwe psiuhfouwgfiewb bwiubfiuwgfwegf7gw
-            uwebcuhsdbvouwg8 wegf87gf wegfo8wegf9w7ef
-            wbcusbdvy8gwefesdbjckusbdvywegvwbvhbvjsbvduv8wgvbvhjbvjhsdv sd
-            yugrvehvbwehbvhewbvhsdbvbvyweguewbewbvhbvyubvuywegvubhvbvweyfwe8hfbf
-            fugo8wegvobv bvuwewe eubo8wegowyebvuybewuybvuvb kjhbv wbefiyug
-            djkfvbkuebvuyre kjfbviyuerbi8yr lorem ipsum wkjehbiwfyw
-            kwhbvwuyvb8wey khvbygrv8owgvo8wegfw wuebo8wegfo8we7gew
-            uvbowvogwe789fwe jhvbouwgvo8gwvo8vo8 kfubhvouego8rgv
-            huvboygv8gf87wef87wefrvb ubvygvo8gfo8we7
+            The Quantum Computing AOI explores the future of computation beyond
+            classical boundaries. Members learn about qubits, entanglement, and
+            quantum algorithms, experimenting with cutting-edge research that is
+            redefining how we approach complex problem-solving.
+            <br />
+            Key Focus Areas:
+            <br />
+            1. Quantum Mechanics: Superposition, entanglement, and quantum
+            interference principles
+            <br />
+            2. Qubit Technologies: Superconducting qubits, trapped ions, and
+            photonic computing
+            <br />
+            3. Quantum Gates & Circuits: Single and multi-qubit gates and
+            circuit design
+            <br />
+            4. Quantum Algorithms: Shor's algorithm, Grover's algorithm, VQE,
+            and QAOA
+            <br />
+            5. Quantum Programming: Qiskit, Cirq, Q#, and hands-on circuit
+            development
+            <br />
+            6. Error Correction: Dealing with decoherence and fault-tolerant
+            computing
+            <br />
+            7. Quantum Cryptography: QKD and post-quantum security
+            <br />
+            8. Quantum Simulation: Molecular modeling and quantum chemistry
+            <br />
+            9. Hardware Platforms: IBM Quantum, Google Quantum AI, and cloud
+            access
+            <br />
           </p>
         </div>
       </div>
