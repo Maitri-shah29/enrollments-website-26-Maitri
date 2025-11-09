@@ -14,9 +14,5 @@ export default function PintooRunClient() {
     return null;
   }
 
-  return (
-    <div className="w-full h-screen bg-[#1A1A1A]">
-      <PintooRun />
-    </div>
-  );
+  return <PintooRun />;
 }
