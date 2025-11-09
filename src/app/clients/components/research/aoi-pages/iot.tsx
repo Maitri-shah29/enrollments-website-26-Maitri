@@ -15,18 +15,11 @@ const iotPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
-            lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-            ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-            lorem ipsum lorem ipsum lorem ipsum v lorem ipsum eugfuw
-            kurfuwbfhweb rbfuyrgp4ugfhfiuwe psiuhfouwgfiewb bwiubfiuwgfwegf7gw
-            uwebcuhsdbvouwg8 wegf87gf wegfo8wegf9w7ef
-            wbcusbdvy8gwefesdbjckusbdvywegvwbvhbvjsbvduv8wgvbvhjbvjhsdv sd
-            yugrvehvbwehbvhewbvhsdbvbvyweguewbewbvhbvyubvuywegvubhvbvweyfwe8hfbf
-            fugo8wegvobv bvuwewe eubo8wegowyebvuybewuybvuvb kjhbv wbefiyug
-            djkfvbkuebvuyre kjfbviyuerbi8yr lorem ipsum dolor sit amet wkjehbiwfyw
-            kwhbvwuyvb8wey khvbygrv8owgvo8wegfw wuebo8wegfo8we7gew
-            uvbowvogwe789fwe jhvbouwgvo8gwvo8vo8 kfubhvouego8rgv
-            huvboygv8gf87wef87wefrvb ubvygvo8gfo8we7
+            The IoT AOI connects the digital and physical worlds through smart
+            devices and data-driven automation. From developing sensor-based
+            systems to creating interconnected ecosystems, members design
+            solutions that make everyday technology more intelligent and
+            responsive.
           </p>
         </div>
       </div>
