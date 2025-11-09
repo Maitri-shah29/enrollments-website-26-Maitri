@@ -17,22 +17,22 @@ export default function Instructions() {
         </h1>
 
         <p className="text-gray-300 leading-relaxed text-justify">
-          Lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
-          lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-          ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum.
+          Welcome to the first round of ACM-VIT's Research Domain recruitment!
+          In this round, you'll have the opportunity to demonstrate your
+          analytical thinking, curiosity, and passion for exploring cutting-edge
+          topics in computer science. You'll be presented with a series of
+          questions that assess your research aptitude, critical thinking
+          skills, and ability to engage with complex technical concepts.
           <br />
           <br />
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin
-          vulputate ex in urna interdum, sed faucibus sem maximus. Integer
-          blandit, purus ac sodales vestibulum, erat est tincidunt augue, a
-          fermentum velit nisl id nisl. Vivamus blandit arcu at lectus
-          dignissim, sed cursus ex elementum. Suspendisse ac justo nec eros
-          suscipit malesuada. Duis ac ex sed justo tempor convallis ut id mi.
+          You can select a maximum of 2 Areas of Interest (AOIs) that resonate
+          with your research aspirations and academic goals. These AOIs will
+          help us understand your focus areas and may guide the research
+          projects you'll contribute to if selected. Once you've completed all
+          the questions, review your answers thoroughly and click submit. We're
+          looking for individuals who demonstrate genuine curiosity, strong
+          analytical skills, and the dedication to contribute meaningfully to
+          the advancement of knowledge in their chosen fields. Good luck!
         </p>
       </div>
     </div>
