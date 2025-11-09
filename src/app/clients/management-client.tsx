@@ -1,7 +1,7 @@
 "use client";
 
 import type { Domain } from "@prisma/client";
-import { Pencil, Search } from "lucide-react";
+import { Pencil, Search, Settings } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { QuestionPayload } from "@/lib/validation";
@@ -38,25 +38,27 @@ export default function Management({
   const [roundInitDone, setRoundInitDone] = useState(false);
   const [roundId, setRoundId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({}); // key: questionId
-  const [errors, setErrors] = useState<Record<string, string>>({}); // key: questionId
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessages, setSuccessMessages] = useState<
     Record<string, string>
-  >({}); // key: questionId
+  >({});
   const [formWarning, setFormWarning] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  // Memoize answers by varName
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
     for (const q of questions) {
-      const name = q.varName ?? undefined;
-      if (name) {
-        map[name] = answers[q.id] ?? "";
+      if (q.varName) {
+        map[q.varName] = answers[q.id] || "";
       }
     }
     return map;
   }, [questions, answers]);
 
+  // ✅ Proper initialization logic
   useEffect(() => {
     const load = async () => {
       if (roundInitDone || loading || activeSection !== "Round 1") return;
@@ -87,21 +89,13 @@ export default function Management({
       }
       setLoading(true);
       setInitError(null);
+
       try {
         const domain: Domain = "management";
-
         const rounds = await fetchRound(domain);
 
-        if (!Array.isArray(rounds)) {
-          setInitError("Please sign in to view Management rounds.");
-          setLoading(false);
-          setRoundInitDone(true);
-          return;
-        }
-
-        if (rounds.length === 0) {
+        if (!Array.isArray(rounds) || rounds.length === 0) {
           setInitError("No active rounds found for Management.");
-          setLoading(false);
           setRoundInitDone(true);
           return;
         }
@@ -109,74 +103,52 @@ export default function Management({
         const r = rounds[0];
         setRoundId(r.id);
 
+        // Fetch questions
         const qres = await getRoundQuestions(r.id);
-
-        if (!qres || !qres.questions) {
-          setInitError("Failed to load questions. Please try again.");
-          setLoading(false);
+        if (!qres?.questions) {
+          setInitError("Failed to load questions. Try again.");
           setRoundInitDone(true);
           return;
         }
 
-        const qs = (qres.questions ?? []).sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
+        const qs = [...(qres.questions || [])].sort(
+          (a, b) => (a.serial ?? 0) - (b.serial ?? 0)
         ) as QuestionPayload[];
 
         setQuestions(qs);
 
-        const initialAnswers: Record<string, string> = {};
-        qs.forEach((q) => {
-          initialAnswers[q.id] = "";
-        });
-        setAnswers(initialAnswers);
+        // Initialize answers as empty strings
+        const initial: Record<string, string> = {};
+        qs.forEach((q) => (initial[q.id] = ""));
+        setAnswers(initial);
 
+        // Ensure user is part of round
         const ensureRes = await ensureRoundUser(r.id);
-
-        if (
-          ensureRes &&
-          "error" in ensureRes &&
-          ensureRes.error === "Not logged in"
-        ) {
+        if (ensureRes?.error === "Not logged in") {
           setInitError("Please sign in to answer questions.");
-          setLoading(false);
           setRoundInitDone(true);
           return;
         }
 
-        if (ensureRes && "error" in ensureRes && ensureRes.error) {
-          // If we cannot ensure mapping, allow viewing but warn about saving
+        if (ensureRes?.error) {
           setFormWarning(
-            "Could not link you to this round automatically; you can view questions but cannot save answers.",
+            "Could not link you to this round; you can view questions but cannot save answers."
           );
         }
 
-        // Create form submission
+        // Create or fetch form submission
         const createRes = await createFormSubmission(r.id);
-
-        // Accept both freshly created and already existing submission
         const fid =
           createRes && "formSubmission" in createRes
             ? createRes.formSubmission?.id
             : undefined;
 
-        if (fid) {
-          setFormId(fid);
-        } else if (
-          createRes &&
-          "error" in createRes &&
-          createRes.error === "Not logged in"
-        ) {
+        if (fid) setFormId(fid);
+        else if (createRes?.error === "Not logged in") {
           setInitError("Please sign in to answer questions.");
-          setLoading(false);
-          setRoundInitDone(true);
-          return;
-        } else if (
-          createRes &&
-          "error" in createRes &&
-          createRes.error === "User does not exist for this round"
-        ) {
+        } else if (createRes?.error === "User does not exist for this round") {
           setFormWarning(
-            "You're not registered for this round yet; you can view questions but cannot save answers.",
+            "You're not registered for this round yet; you can view questions but cannot save answers."
           );
         }
       } catch (e) {
@@ -199,7 +171,7 @@ export default function Management({
     initialFormWarning,
   ]);
 
-  // Cleanup timeouts on unmount
+  // Clear timeouts on unmount
   useEffect(() => {
     return () => {
       Object.values(timeoutRef.current).forEach(clearTimeout);
@@ -208,7 +180,6 @@ export default function Management({
 
   function onChangeAnswer(qid: string, value: string) {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
-    // Clear both errors and success messages when user types
     if (errors[qid]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -224,14 +195,15 @@ export default function Management({
       });
     }
   }
+
   async function onSubmitAnswer(q: QuestionPayload) {
-    const current = answers[q.id] ?? "";
+    const current = answers[q.id] || "";
     const vres = validateAnswer(current, q.validators, { answersByVar });
+
     if (!vres.valid) {
       setErrors((prev) => ({ ...prev, [q.id]: vres.error || "Invalid value" }));
       return;
     }
-
     if (!formId) {
       setErrors((prev) => ({ ...prev, [q.id]: "Form not initialized" }));
       return;
@@ -239,53 +211,34 @@ export default function Management({
 
     try {
       await saveFormResponse(formId, q.id, current || null);
-
-      // Clear any error for this question
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[q.id];
-        return next;
-      });
-
-      // Set success message
       setSuccessMessages((prev) => ({
         ...prev,
         [q.id]: "Saved successfully!",
       }));
-
-      // Clear any existing timeout for this question
-      if (timeoutRef.current[q.id]) {
-        clearTimeout(timeoutRef.current[q.id]);
-      }
-
-      // Clear success message after 2 seconds
+      if (timeoutRef.current[q.id]) clearTimeout(timeoutRef.current[q.id]);
       timeoutRef.current[q.id] = setTimeout(() => {
         setSuccessMessages((prev) => {
           const next = { ...prev };
           delete next[q.id];
           return next;
         });
-        delete timeoutRef.current[q.id];
       }, 2000);
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to save";
-      // Clear success message and set error
-      setSuccessMessages((prev) => {
-        const next = { ...prev };
-        delete next[q.id];
-        return next;
-      });
-      setErrors((prev) => ({ ...prev, [q.id]: message }));
+      setErrors((prev) => ({ ...prev, [q.id]: "Failed to save" }));
     }
   }
 
-  const handleGetStarted = () => {
-    setActiveSection("About");
-  };
+  const handleGetStarted = () => setActiveSection("About");
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case "Landing":
-        return <ManagementLanding onGetStarted={handleGetStarted} />;
+        return (
+          <ManagementLanding
+            onGetStarted={handleGetStarted}
+            wallpaper={wallpaper}
+          />
+        );
       case "About":
         return <About />;
       case "What we do":
@@ -293,27 +246,16 @@ export default function Management({
       case "Instructions":
         return <Instructions />;
       case "Round 1":
-        if (loading) {
-          return (
-            <div className="text-center">
-              <p className="text-white">Loading round...</p>
-            </div>
-          );
-        }
-        if (initError) {
-          return (
-            <div className="text-center">
-              <p className="text-red-600 font-semibold">{initError}</p>
-            </div>
-          );
-        }
+        if (loading) return <p className="text-white">Loading round...</p>;
+        if (initError)
+          return <p className="text-red-600 font-semibold">{initError}</p>;
         return roundId && questions.length > 0 ? (
           <>
-            {formWarning ? (
+            {formWarning && (
               <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-yellow-800">
                 {formWarning}
               </div>
-            ) : null}
+            )}
             <QuestionsList
               questions={questions}
               answers={answers}
@@ -321,25 +263,57 @@ export default function Management({
               successMessages={successMessages}
               onChangeAnswer={onChangeAnswer}
               onSubmitAnswer={onSubmitAnswer}
+              wallpaper={wallpaper}
             />
           </>
         ) : (
-          <div className="text-center">
-            <p className="text-gray-700">No questions available.</p>
-          </div>
+          <p className="text-gray-700">No questions available.</p>
         );
       default:
         return null;
     }
   };
 
+  const [settings, setSettings] = useState(false);
+  const [wallpaper, setWallpaper] = useState("big sur");
+  const [fade, setFade] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedWallpaper");
+    if (saved) setWallpaper(saved);
+  }, []);
+
+  const handleWallpaperChange = (wall: string) => {
+    setFade(true);
+    setTimeout(() => {
+      setWallpaper(wall);
+      localStorage.setItem("selectedWallpaper", wall);
+      setFade(false);
+    }, 300);
+  };
+
   return (
-    <div
-      className="h-full flex flex-row bg-cover bg-center bg-no-repeat w-full overflow-x-hidden"
-      style={{ backgroundImage: "url('/images/red-pattern.jpg')" }}
-    >
+    <div className="h-full flex w-full overflow-hidden font-helvetica">
+      {/* Background image */}
+      <Image
+        src={`/images/management/wallpapers/${wallpaper}.svg`}
+        width={1920}
+        height={1080}
+        alt="bg"
+        className={`absolute top-0 left-0 object-cover w-full h-full transition-opacity duration-500 ${
+          fade ? "opacity-60" : "opacity-100"
+        }`}
+      />
+
+      {/* Dark overlay during fade */}
+      <div
+        className={`absolute top-0 left-0 w-full h-full bg-black/60 transition-opacity duration-500 pointer-events-none ${
+          fade ? "opacity-100 backdrop-blur-lg" : "opacity-0"
+        }`}
+      />
+
       {/* Sidebar */}
-      <aside className="flex flex-col h-full w-[20vw] p-8 text-white">
+      <aside className="flex flex-col h-full w-[20vw] py-8 px-4 text-white z-10 font-helvetica">
         <Image
           src="/acmviticon.svg"
           alt="ACM VIT icon"
@@ -347,20 +321,17 @@ export default function Management({
           height={180}
           className="mb-8"
         />
-
-        <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#d7aaaa] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-lg/40 ">
+        <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20">
           <Pencil /> <span className="font-medium">Compose</span>
         </div>
-
-        <nav className="flex flex-col space-y-4 text-lg">
+        <nav className="flex flex-col space-y-2 text-lg">
           {["About", "What we do", "Instructions", "Round 1"].map((section) => (
             <button
               key={section}
-              type="button"
               onClick={() => setActiveSection(section)}
               className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
                 activeSection === section
-                  ? "bg-white/50 text-white drop-shadow-lg/50"
+                  ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
                   : "hover:text-gray-200 hover:bg-white/25 text-white"
               }`}
             >
@@ -372,33 +343,57 @@ export default function Management({
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center items-center px-8">
-        <div className="w-full flex justify-between items-center h-[8%] px-4">
-          <div className="w-[70px]" />
-
-          <div className="p-2 gap-2 flex flex-row items-center bg-white/40 w-[50%] rounded-full mt-2">
-            <Search />
+        <div className="flex w-full justify-center items-center relative mt-5">
+          {/* Search bar */}
+          <div className="px-5 py-2 gap-2 flex flex-row bg-white/60 backdrop-blur-xl w-[90%] justify-center items-center rounded-full shadow-md">
+            <Search className="text-black" />
             <input
               type="text"
-              placeholder="Search"
-              className="outline-none flex-1 text-white placeholder-white-500"
+              placeholder="Search Mail"
+              className="outline-none flex-1 text-black placeholder-gray-600 bg-transparent"
             />
           </div>
 
-          <div className="flex gap-4 items-center mt-2">
-            <Image
-              src="/images/management/settings.svg"
-              alt="Settings"
-              width={26}
-              height={27}
-              className="cursor-pointer"
-            />
-            <Image
-              src="/images/management/person-circle-outline.svg"
-              alt="Profile"
-              width={45}
-              height={45}
-              className="cursor-pointer"
-            />
+          {/* Settings Dropdown */}
+          <div className="ml-4 relative">
+            <button
+              onClick={() => setSettings(!settings)}
+              className="w-10 h-10 rounded-full bg-white/60 backdrop-blur-xl flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+            >
+              <Settings className="text-black" />
+            </button>
+
+            {settings && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-0 mt-3 w-48 flex flex-col gap-2 z-100 rounded-2xl bg-white/30 backdrop-blur-xl border border-white/30 shadow-lg p-3 animate-[fadeIn_0.2s_ease-out]"
+              >
+                {["sonoma", "sequoia", "big sur"].map((wall, index) => (
+                  <div
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleWallpaperChange(wall);
+                      setSettings(false);
+                    }}
+                    className="cursor-pointer flex items-center justify-center"
+                  >
+                    <div className="group relative flex items-center justify-center">
+                      <Image
+                        src={`/images/management/wallpapers/${wall}.svg`}
+                        width={500}
+                        height={500}
+                        alt={wall}
+                        className="rounded-lg transition-all duration-300 group-hover:brightness-50"
+                      />
+                      <span className="absolute text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        {wall}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

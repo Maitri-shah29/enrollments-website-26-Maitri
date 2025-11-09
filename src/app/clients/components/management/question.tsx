@@ -13,7 +13,14 @@ interface Props {
   onChangeAnswer: (qid: string, value: string) => void;
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
   goBack?: () => void;
+  wallpaper: string;
 }
+
+const themeButtonClasses: Record<string, string> = {
+  "big sur": "bg-[#AD3232] hover:bg-[#AD3232]/80",
+  sequoia: "bg-[#2E4A7A] hover:bg-[#2E4A7A]/80",
+  sonoma: "bg-[#005B23] hover:bg-[#005B23]/80",
+};
 
 export default function Question({
   question,
@@ -23,6 +30,7 @@ export default function Question({
   onChangeAnswer,
   onSubmitAnswer,
   goBack,
+  wallpaper,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,71 +44,68 @@ export default function Question({
   };
 
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
+    <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col overflow-hidden">
       <Header onClick={goBack} />
-      <div className="p-10 overflow-y-auto h-full ">
+
+      <div className="flex flex-col p-10 h-full overflow-hidden">
         {/* Email Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <Image src="/profile-icon.svg" alt="User" width={50} height={50} />
-            <div>
-              <p className="text-black font-medium">Mgmt</p>
-              <p className="text-sm text-gray-700">
-                &lt;loremipsum@gmail.com&gt;
-              </p>
-              <p className="text-sm text-gray-700">to me ▾</p>
-            </div>
+        <div className="flex items-center space-x-3 mb-6">
+          <Image src="/profile-icon.svg" alt="User" width={50} height={50} />
+          <div>
+            <p className="text-black font-medium">Mgmt</p>
+            <p className="text-sm text-gray-700">
+              &lt;loremipsum@gmail.com&gt;
+            </p>
+            <p className="text-sm text-gray-700">to me ▾</p>
           </div>
         </div>
 
-        <p
-          className="break-words overflow-wrap-anywhere text-black"
-          style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-        >
-          {question.question}
-        </p>
-        {question.helpText && (
-          <p className="text-sm text-gray-600 mt-2">{question.helpText}</p>
-        )}
+        {/* Question Text */}
+        <div className="text-black">
+          <p className="break-all whitespace-pre-wrap">{question.question}</p>
+          {question.helpText && (
+            <p className="text-sm text-gray-600 mt-2">{question.helpText}</p>
+          )}
+        </div>
 
-        {/* Answer Box */}
-        <div className="bg-[#D9D9D9] mt-6 mb-6 rounded-2xl p-5 space-y-3">
-          <div className="flex items-center text-sm text-gray-700 space-x-2">
+        <div className="bg-[#ececec] rounded-2xl p-5 shadow-lg mt-6 flex flex-col flex-1">
+          {/* Reply label */}
+          <div className="flex items-center text-sm text-gray-700 space-x-2 mb-3">
             <Reply size={16} />
             <p>
               mgmt(ew-management@acm.org) -{" "}
               <span className="text-gray-500 italic">Saved draft</span>
             </p>
           </div>
-          <div className="max-h-[325px] overflow-y-auto">
+
+          {/* Textarea */}
+          <div className="flex-1 overflow-y-auto">
             <textarea
               value={answer}
               onChange={(e) => onChangeAnswer(question.id, e.target.value)}
-              style={{
-                wordBreak: "break-word",
-                overflowWrap: "anywhere",
-                overflowY: "hidden",
-              }}
               placeholder="Type your answer here..."
-              className="text-black w-full min-h-20 outline-none resize-none bg-transparent selection:bg-[#AA302E] selection:text-white"
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = "auto";
-                target.style.height = target.scrollHeight + "px";
-              }}
+              className="text-black w-full h-full outline-none bg-transparent resize-none selection:bg-[#AA302E] selection:text-white"
             />
           </div>
+
+          {/* Error + Success */}
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
           {successMessage && (
             <p className="text-green-600 text-sm mt-2">{successMessage}</p>
           )}
 
-          <div className="flex justify-end mt-2">
+          {/* Submit button */}
+          <div className="flex justify-end mt-3">
             <button
               type="button"
               onClick={handleSubmit}
               disabled={!answer.trim() || submitting}
-              className="px-5 py-1 rounded-full bg-[#AD3232CC] text-white hover:bg-[#8B2828] disabled:bg-gray-400"
+              className={`px-5 py-2 rounded-full text-white transition disabled:bg-gray-400 disabled:cursor-not-allowed ${
+                !answer.trim() || submitting
+                  ? "bg-gray-400"
+                  : themeButtonClasses[wallpaper] ||
+                    "bg-[#AD3232] hover:bg-[#AD3232]/80"
+              }`}
             >
               {submitting ? "Submitting..." : "Submit"}
             </button>

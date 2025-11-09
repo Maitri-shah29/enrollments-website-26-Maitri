@@ -14,6 +14,7 @@ interface QuestionsProps {
   successMessages: Record<string, string>;
   onChangeAnswer: (qid: string, value: string) => void;
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
+  wallpaper: string; // ✅ Add this
 }
 
 export default function QuestionsList({
@@ -23,6 +24,7 @@ export default function QuestionsList({
   successMessages,
   onChangeAnswer,
   onSubmitAnswer,
+  wallpaper, // ✅ You forgot to include this!
 }: QuestionsProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [visited, setVisited] = useState<boolean[]>([]);
@@ -35,7 +37,6 @@ export default function QuestionsList({
 
   const handleRevalidate = async () => {
     setRevalidating(true);
-
     try {
       await revalidateHome();
     } catch (error) {
@@ -57,6 +58,7 @@ export default function QuestionsList({
         onChangeAnswer={onChangeAnswer}
         onSubmitAnswer={onSubmitAnswer}
         goBack={() => setActiveIndex(null)}
+        wallpaper={wallpaper} 
       />
     );
   }
@@ -71,9 +73,8 @@ export default function QuestionsList({
   };
 
   return (
-    <div className="relative bg-white opacity-[70%] backdrop-blur-md rounded-2xl w-[90%] h-[90%] shadow-lg overflow-hidden">
+    <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto">
       <Header />
-
       <button
         type="button"
         onClick={handleRevalidate}
@@ -105,9 +106,8 @@ export default function QuestionsList({
             >
               <input
                 type="checkbox"
-                checked={visited[index] || false}
-                tabIndex={-1}
-                className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
+                checked={!!successMessages[q.id]}
+                className="w-4 h-4 mt-0.5 accent-green-600 cursor-not-allowed"
                 readOnly
               />
 

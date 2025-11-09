@@ -83,6 +83,18 @@ body {
 }
 
 @font-face {
+  font-family: "Helvetica";
+  src: url("/fonts/Helvetica.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-helvetica {
+  font-family: "Helvetica", monospace;
+}
+
+@font-face {
   font-family: "DoppioOne";
   src: url("/fonts/DoppioOne-Regular.ttf") format("truetype");
   font-weight: 400;

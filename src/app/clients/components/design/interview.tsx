@@ -5,7 +5,7 @@ import type React from "react";
 
 const Interview: React.FC = () => {
   return (
-    <div className="w-full h-full flex items-center justify-start flex-col px-[5%] py-[3%] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="w-full h-full flex items-center justify-start flex-col px-[5%] pb-[3%] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
         Interviews
       </h1>
