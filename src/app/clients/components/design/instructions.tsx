@@ -20,21 +20,19 @@ const Instructions: React.FC = () => {
             className="w-[8%] lg:w-[10%] absolute -top-[20%] left-[3%] lg:left-[3%]"
           />
           <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
-            nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
-            scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam
-            semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit
-            amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus
-            tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            <br />
-            <br />
-            Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et
-            nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam
-            semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit
-            amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus
-            tincidunt.
+            Welcome to the Design Domain! Before you dive into showcasing your
+            creativity, please take a moment to read the following instructions
+            carefully:
+            <br /> <br />
+            1. After answering a question, click on “Submit.” <br />
+            2. You can submit multiple times and only your most recent
+            submission will be considered. <br />
+            3. You can apply to a maximum of three Areas of Interest (AOIs)
+            within the Design Domain. <br />
+            4. To know more about each AOI, head over to the AOI Page from the
+            navigation bar for detailed information. <br />
+            That’s it! Trust your instincts, play with ideas, and let creativity
+            take the wheel. And hey don’t forget to have fun while you’re at it!
           </p>
         </div>
         <Image

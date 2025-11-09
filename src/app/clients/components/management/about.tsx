@@ -25,21 +25,10 @@ export default function About() {
         {/* Dynamic Content */}
         <div className="text-black leading-relaxed space-y-4 text-base mt-5">
           <p>
-            Welcome to ACM&apos;s (and everyone&apos;s favourite) Management
-            domain, the extroverts of the club.
-          </p>
-          <p>
-            We&apos;re the ones who take up big ideas and turn them into
-            well-executed events. From brainstorming and ideating to the final
-            wrap-up, we make sure everything goes smoothly.
-          </p>
-          <p>
-            We ensure every aspect of an event is handled with finesse, whether
-            it&apos;s securing sponsorships, coordinating logistics or crafting
-            engaging content. We handle the behind-the-scenes madness so that
-            ACM events aren&apos;t just good but unforgettable. If an event
-            feels smooth, well-organized and just right, you can bet we had
-            something to do with it.
+            The Management Domain handles the planning, coordination, and
+            execution of ACM VIT’s events and initiatives. It focuses on
+            organisation, communication, and strategy to ensure every project
+            runs smoothly from idea to impact.
           </p>
         </div>
       </div>
