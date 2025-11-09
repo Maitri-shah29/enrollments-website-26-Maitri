@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
+import type { ResearchAOI } from "@/lib/research-navigation";
 
 export type RoundUserExtended = Prisma.RoundUserGetPayload<{
   include: {
@@ -53,6 +54,7 @@ interface QuestionsProps {
   selectedQuestionIdx?: number;
   onAOIChange?: (aoi: string) => void;
   onQuestionChange?: (idx: number) => void;
+  joinedAOIs?: Set<ResearchAOI>;
 }
 
 const Questions: React.FC<QuestionsProps> = ({
@@ -65,6 +67,7 @@ const Questions: React.FC<QuestionsProps> = ({
   selectedQuestionIdx: propSelectedQuestionIdx = 0,
   onAOIChange,
   onQuestionChange,
+  joinedAOIs = new Set(),
 }) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
@@ -195,6 +198,18 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
+  if (joinedAOIs.size === 0) {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        <p className="mb-4">No AOIs selected.</p>
+        <p className="text-sm text-gray-400">
+          Please visit the Explore page to join at least one Area of Interest to
+          access questions.
+        </p>
+      </div>
+    );
+  }
+
   // Map AOI names to varName prefixes
   const aoiToPrefixMap: Record<string, string> = {
     Common: "common",
@@ -206,20 +221,64 @@ const Questions: React.FC<QuestionsProps> = ({
     IoT: "iot",
   };
 
-  // Filter questions based on selected AOI
+  const researchAOIToLabel: Record<ResearchAOI, string> = {
+    aiml: "AI/ML",
+    cybersecurity: "Cybersecurity",
+    blockchain: "Blockchain",
+    bioinformatics: "Bioinformatics",
+    quantumcomputing: "Quantum Computing",
+    iot: "IoT",
+  };
+
+  const allowedPrefixes = new Set<string>();
+  allowedPrefixes.add("common");
+
+  // Add prefixes for joined AOIs
+  for (const aoi of joinedAOIs) {
+    const label = researchAOIToLabel[aoi];
+    const prefix = aoiToPrefixMap[label];
+    if (prefix) {
+      allowedPrefixes.add(prefix);
+    }
+  }
+
+  console.log("Joined AOIs:", Array.from(joinedAOIs));
+  console.log("Allowed prefixes:", Array.from(allowedPrefixes));
+
+  const accessibleQuestions = subjectiveQuestions.filter((q) => {
+    const varNameLower = q.varName?.toLowerCase() || "";
+    return Array.from(allowedPrefixes).some((prefix) =>
+      varNameLower.startsWith(prefix),
+    );
+  });
+
+  console.log("Total accessible questions:", accessibleQuestions.length);
+
   const aoiPrefix = aoiToPrefixMap[propSelectedAOI] || "common";
-  const aoiQuestions = subjectiveQuestions.filter((q) =>
+
+  if (!allowedPrefixes.has(aoiPrefix) && aoiPrefix !== "common") {
+    return (
+      <div className="text-white text-lg text-center py-8">
+        <p className="mb-4">
+          You haven't joined the {propSelectedAOI} area of interest.
+        </p>
+        <p className="text-sm text-gray-400">
+          Please visit the Explore page to join this AOI.
+        </p>
+      </div>
+    );
+  }
+
+  const aoiQuestions = accessibleQuestions.filter((q) =>
     q.varName?.toLowerCase().startsWith(aoiPrefix),
   );
 
-  // Debug logging
   console.log("Selected AOI:", propSelectedAOI);
   console.log("AOI Prefix:", aoiPrefix);
-  console.log("Total subjective questions:", subjectiveQuestions.length);
   console.log("Filtered AOI questions:", aoiQuestions.length);
   console.log(
     "Question varNames:",
-    subjectiveQuestions.map((q) => q.varName),
+    aoiQuestions.map((q) => q.varName),
   );
 
   if (aoiQuestions.length === 0) {

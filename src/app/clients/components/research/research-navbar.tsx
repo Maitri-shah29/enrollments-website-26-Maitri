@@ -5,10 +5,12 @@ import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/research/questions";
+import type { ResearchAOI } from "@/lib/research-navigation";
 
 const About = "/images/research/about.svg";
 const ACM = "/images/research/acm-logo.svg";
 const Aoi = "/images/research/aoi.svg";
+const Explore = "/images/research/explore.svg"; // Add explore icon
 const Help = "/images/research/help.svg";
 const Instructions = "/images/research/instructions.svg";
 const Interview = "/images/research/interview.svg";
@@ -25,6 +27,7 @@ interface ResearchNavbarProps {
   onAOISelect?: (aoi: string) => void;
   onQuestionSelect?: (idx: number) => void;
   roundUser?: RoundUserExtended | null;
+  joinedAOIs?: Set<ResearchAOI>;
 }
 //test
 const Icon = {
@@ -41,6 +44,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   onAOISelect,
   onQuestionSelect,
   roundUser,
+  joinedAOIs = new Set(),
 }) => {
   const [expandedRound, setExpandedRound] = useState<boolean>(false);
   const [AOIState, setAoiState] = useState<string>("");
@@ -61,6 +65,10 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     },
     { key: "AOIs", icon: <Image src={Aoi} alt="Aoi" width={20} height={20} /> },
     {
+      key: "Explore",
+      icon: <Image src={Aoi} alt="Explore" width={20} height={20} />,
+    },
+    {
       key: "Instructions",
       icon: (
         <Image src={Instructions} alt="Instructions" width={20} height={20} />
@@ -77,6 +85,29 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     "Quantum Computing",
     "IoT",
   ];
+
+  // Map ResearchAOI to display labels
+  const researchAOIToLabel: Record<ResearchAOI, string> = {
+    aiml: "AI/ML",
+    cybersecurity: "Cybersecurity",
+    blockchain: "Blockchain",
+    bioinformatics: "Bioinformatics",
+    quantumcomputing: "Quantum Computing",
+    iot: "IoT",
+  };
+
+  // Filter AOIs to only show joined ones + Common
+  const visibleAOIs = roundAOIs.filter((aoi) => {
+    if (aoi === "Common") {
+      // Show Common only if at least one AOI is joined
+      return joinedAOIs.size > 0;
+    }
+    // Check if this AOI is in the joined set
+    const researchAOI = Object.entries(researchAOIToLabel).find(
+      ([_, label]) => label === aoi,
+    )?.[0] as ResearchAOI | undefined;
+    return researchAOI && joinedAOIs.has(researchAOI);
+  });
 
   // 4 questions per AOI
   const questionsPerAOI = 4;
@@ -149,60 +180,68 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
           {expandedRound && (
             <div className="space-y-1 pl-6">
-              {roundAOIs.map((aoi) => (
-                <div key={aoi} className="space-y-1">
-                  <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-md hover:bg-white/3 transition-colors">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = aoi;
-                        setAoiState(next);
-                        setQuestionState(null);
-                        onAOISelect?.(next);
-                        onSelect("Round 1");
-                      }}
-                      className="flex items-center gap-3 text-left w-full cursor-pointer"
-                    >
-                      <span className="text-white/80">
-                        <Icon.ChevronRight
-                          className={`w-4 h-3.5 transform transition-transform`}
-                        />
-                      </span>
-                      <span className="text-sm">{aoi}</span>
-                    </button>
-
-                    <div className="inline-flex items-center">
-                      <div
-                        className={`w-4 h-4 border-white border-1 rounded-[25%] ${
-                          aoi === effectiveAOI ? "bg-[#C8B7FF]" : ""
-                        }`}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {effectiveAOI === aoi && (
-                    <div className="pl-6 space-y-1">
-                      {Array.from({ length: questionsPerAOI }, (_, qIdx) => (
-                        <button
-                          key={`${aoi}-q${qIdx + 1}`}
-                          type="button"
-                          onClick={() => {
-                            setQuestionState(qIdx);
-                            onQuestionSelect?.(qIdx);
-                            onSelect("Round 1");
-                          }}
-                          className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D3]/50 flex items-center justify-between text-sm transition-colors cursor-pointer`}
-                        >
-                          <span className="text-left">Question {qIdx + 1}</span>
-                          {effectiveQuestionIdx === qIdx && (
-                            <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+              {visibleAOIs.length === 0 ? (
+                <div className="text-white/60 text-sm px-2 py-2">
+                  No AOIs joined. Visit Explore to join AOIs.
                 </div>
-              ))}
+              ) : (
+                visibleAOIs.map((aoi) => (
+                  <div key={aoi} className="space-y-1">
+                    <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-md hover:bg-white/3 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = aoi;
+                          setAoiState(next);
+                          setQuestionState(null);
+                          onAOISelect?.(next);
+                          onSelect("Round 1");
+                        }}
+                        className="flex items-center gap-3 text-left w-full cursor-pointer"
+                      >
+                        <span className="text-white/80">
+                          <Icon.ChevronRight
+                            className={`w-4 h-3.5 transform transition-transform`}
+                          />
+                        </span>
+                        <span className="text-sm">{aoi}</span>
+                      </button>
+
+                      <div className="inline-flex items-center">
+                        <div
+                          className={`w-4 h-4 border-white border-1 rounded-[25%] ${
+                            aoi === effectiveAOI ? "bg-[#C8B7FF]" : ""
+                          }`}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {effectiveAOI === aoi && (
+                      <div className="pl-6 space-y-1">
+                        {Array.from({ length: questionsPerAOI }, (_, qIdx) => (
+                          <button
+                            key={`${aoi}-q${qIdx + 1}`}
+                            type="button"
+                            onClick={() => {
+                              setQuestionState(qIdx);
+                              onQuestionSelect?.(qIdx);
+                              onSelect("Round 1");
+                            }}
+                            className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D3]/50 flex items-center justify-between text-sm transition-colors cursor-pointer`}
+                          >
+                            <span className="text-left">
+                              Question {qIdx + 1}
+                            </span>
+                            {effectiveQuestionIdx === qIdx && (
+                              <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           )}
 
