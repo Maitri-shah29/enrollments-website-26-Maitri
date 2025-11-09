@@ -25,6 +25,10 @@ const PintooRun = () => {
     frameCount: 0,
     gameOver: false,
     gameSpeed: 0,
+    lastTime: 0,
+    animationTimer: 0,
+    gameTime: 0,
+    jumpBuffer: 0,
   });
 
   const assetsRef = useRef({
@@ -72,12 +76,17 @@ const PintooRun = () => {
     const getFloorY = () => canvas.height - 25 * SCALE;
     gameStateRef.current.pintoo.y = getFloorY();
 
+    const JUMP_BUFFER_TIME = 50;
+
     // Jump
     const jump = () => {
       const pintoo = gameStateRef.current.pintoo;
       if (!pintoo.jumping && !gameStateRef.current.gameOver) {
         pintoo.velocityY = JUMP_STRENGTH;
         pintoo.jumping = true;
+        gameStateRef.current.jumpBuffer = 0;
+      } else if (!gameStateRef.current.gameOver) {
+        gameStateRef.current.jumpBuffer = JUMP_BUFFER_TIME;
       }
     };
 
@@ -113,6 +122,10 @@ const PintooRun = () => {
         frameCount: 0,
         gameOver: false,
         gameSpeed: 0,
+        lastTime: performance.now(),
+        animationTimer: 0,
+        gameTime: 0,
+        jumpBuffer: 0,
       };
       setScore(0);
       setGameOver(false);
@@ -130,36 +143,48 @@ const PintooRun = () => {
     };
 
     // Update Pintoo
-    const updatePintoo = () => {
+    const updatePintoo = (deltaTime: number) => {
       const pintoo = gameStateRef.current.pintoo;
       const floor = getFloorY();
 
-      pintoo.velocityY += GRAVITY;
-      pintoo.y += pintoo.velocityY;
+      pintoo.velocityY += GRAVITY * deltaTime;
+      pintoo.y += pintoo.velocityY * deltaTime;
 
       if (pintoo.y >= floor) {
         pintoo.y = floor;
         pintoo.velocityY = 0;
+        const wasJumping = pintoo.jumping;
         pintoo.jumping = false;
+
+        if (wasJumping && gameStateRef.current.jumpBuffer > 0) {
+          pintoo.velocityY = JUMP_STRENGTH;
+          pintoo.jumping = true;
+          gameStateRef.current.jumpBuffer = 0;
+        }
+      }
+
+      if (gameStateRef.current.jumpBuffer > 0) {
+        gameStateRef.current.jumpBuffer -= deltaTime * 16.67;
       }
 
       if (!pintoo.jumping) {
-        if (gameStateRef.current.frameCount % FRAME_RATE === 0) {
+        gameStateRef.current.animationTimer += deltaTime;
+        if (gameStateRef.current.animationTimer >= FRAME_RATE) {
           pintoo.frame = (pintoo.frame + 1) % 2;
+          gameStateRef.current.animationTimer = 0;
         }
       } else {
         pintoo.frame = 2;
       }
     };
 
-    // Update obstacles
-    const updateObstacles = () => {
+    const updateObstacles = (deltaTime: number) => {
       const { gameSpeed } = gameStateRef.current;
       gameStateRef.current.obstacles = gameStateRef.current.obstacles.filter(
         (o) => o.x + o.width > 0,
       );
       gameStateRef.current.obstacles.forEach((o) => {
-        o.x -= gameSpeed; // ✅ fixed assignment outside expression
+        o.x -= gameSpeed * deltaTime;
       });
 
       if (
@@ -288,12 +313,17 @@ const PintooRun = () => {
     };
 
     // Main loop
-    const gameLoop = () => {
+    const gameLoop = (currentTime: number) => {
       const state = gameStateRef.current;
 
+      if (!state.lastTime) state.lastTime = currentTime;
+      const deltaMs = currentTime - state.lastTime;
+      const deltaTime = deltaMs / 16.67;
+      state.lastTime = currentTime;
+
       if (!state.gameOver) {
-        state.frameCount++;
-        state.score = Math.floor(state.frameCount / 10);
+        state.gameTime += deltaMs;
+        state.score = Math.floor(state.gameTime / 166.7);
         setScore(state.score);
 
         const BASE_SPEED = 5 * SCALE;
@@ -305,8 +335,8 @@ const PintooRun = () => {
           MAX_SPEED,
         );
 
-        updatePintoo();
-        updateObstacles();
+        updatePintoo(deltaTime);
+        updateObstacles(deltaTime);
         checkCollision();
       }
 
@@ -328,14 +358,8 @@ const PintooRun = () => {
   }, [highScore]);
 
   return (
-    <div className="w-screen h-screen bg-[#1A1A1A] flex flex-col items-center justify-center overflow-hidden">
-      <canvas
-        ref={canvasRef}
-        className="rounded-lg shadow-lg border border-gray-700 bg-white"
-      />
-      <div className="mt-6 text-gray-400 text-md">
-        Press SPACE or Click to {gameOver ? "Restart" : "Jump"}
-      </div>
+    <div className="w-full h-full bg-[#1A1A1A] flex items-center justify-center overflow-hidden">
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 };

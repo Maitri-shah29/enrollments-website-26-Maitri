@@ -86,6 +86,9 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
     tech: "Tech",
     design: "Design",
     research: "Research",
+    events: "Events",
+    domains: "Domains",
+    pintoorun: "PintooRun",
   };
 
   return (
@@ -103,7 +106,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
               </button>
             </li>
 
-            {index < item.length - 1 && (
+            {index < Array.from(INTERNAL_KEYWORDS).length - 1 && (
               <span className="h-4 w-px bg-gray-300 opacity-40" />
             )}
           </React.Fragment>
