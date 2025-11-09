@@ -17,24 +17,16 @@ const About: React.FC = () => {
             alt="About Graphic"
             width={500}
             height={500}
-            className="w-[8%] lg:w-[10%] absolute -top-[30%] left-[3%] lg:left-[5%]"
+            className="w-[8%] lg:w-[10%] absolute -top-10 left-5"
           />
-          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
-            nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
-            scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam
-            semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit
-            amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus
-            tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            <br />
-            <br />
-            Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et
-            nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam
-            semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit
-            amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus
-            tincidunt.
+          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl break-words">
+            Design is where creativity meets purpose. It’s not just about how
+            something looks, but how it feels and functions. Our team blends
+            creativity with clarity, shaping visuals, stories, and experiences
+            that leave a mark. From clean UI/UX designs to bold motion graphics,
+            from cinematic edits to immersive 3D worlds and expressive
+            illustrations every detail is crafted with purpose. We design to
+            connect, inspire, and bring ideas to life.
           </p>
         </div>
         <Image
