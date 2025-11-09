@@ -122,7 +122,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
         d3
           .forceLink<NodeType, LinkType>(links)
           .id((d) => d.id)
-          .distance(250),
+          .distance(200),
       )
       .force("charge", d3.forceManyBody().strength(-500))
       .force("center", d3.forceCenter(width / 2, height / 2));

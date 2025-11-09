@@ -185,7 +185,7 @@ const Questions: React.FC<QuestionsProps> = ({ questions, roundUser }) => {
   };
 
   return (
-    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-[3%]">
+    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
       {toast && (
         <div
           className={`fixed top-5 right-5 z-[1000] p-4 rounded-lg shadow-xl text-white font-coolvetica transition-opacity duration-300 ${getToastClasses(
