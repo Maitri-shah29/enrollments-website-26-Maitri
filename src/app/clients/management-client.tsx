@@ -38,6 +38,7 @@ export default function Management({
   const [roundInitDone, setRoundInitDone] = useState(false);
   const [roundId, setRoundId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuestionPayload[]>([]);
+  const [searchInput, setSearchInput] = useState<string>("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessages, setSuccessMessages] = useState<
@@ -112,14 +113,16 @@ export default function Management({
         }
 
         const qs = [...(qres.questions || [])].sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0)
+          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
         ) as QuestionPayload[];
 
         setQuestions(qs);
 
         // Initialize answers as empty strings
         const initial: Record<string, string> = {};
-        qs.forEach((q) => (initial[q.id] = ""));
+        qs.forEach((q) => {
+          initial[q.id] = "";
+        });
         setAnswers(initial);
 
         // Ensure user is part of round
@@ -132,7 +135,7 @@ export default function Management({
 
         if (ensureRes?.error) {
           setFormWarning(
-            "Could not link you to this round; you can view questions but cannot save answers."
+            "Could not link you to this round; you can view questions but cannot save answers.",
           );
         }
 
@@ -148,7 +151,7 @@ export default function Management({
           setInitError("Please sign in to answer questions.");
         } else if (createRes?.error === "User does not exist for this round") {
           setFormWarning(
-            "You're not registered for this round yet; you can view questions but cannot save answers."
+            "You're not registered for this round yet; you can view questions but cannot save answers.",
           );
         }
       } catch (e) {
@@ -259,6 +262,7 @@ export default function Management({
             <QuestionsList
               questions={questions}
               answers={answers}
+              searchInput={searchInput}
               errors={errors}
               successMessages={successMessages}
               onChangeAnswer={onChangeAnswer}
@@ -327,6 +331,7 @@ export default function Management({
         <nav className="flex flex-col space-y-2 text-lg">
           {["About", "What we do", "Instructions", "Round 1"].map((section) => (
             <button
+              type="button"
               key={section}
               onClick={() => setActiveSection(section)}
               className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
@@ -349,6 +354,10 @@ export default function Management({
             <Search className="text-black" />
             <input
               type="text"
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+              }}
               placeholder="Search Mail"
               className="outline-none flex-1 text-black placeholder-gray-600 bg-transparent"
             />
@@ -357,6 +366,7 @@ export default function Management({
           {/* Settings Dropdown */}
           <div className="ml-4 relative">
             <button
+              type="button"
               onClick={() => setSettings(!settings)}
               className="w-10 h-10 rounded-full bg-white/60 backdrop-blur-xl flex items-center justify-center shadow-md hover:scale-105 transition-transform"
             >

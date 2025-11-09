@@ -10,6 +10,7 @@ import Question from "./question";
 interface QuestionsProps {
   questions: QuestionPayload[];
   answers: Record<string, string>;
+  searchInput: string;
   errors: Record<string, string>;
   successMessages: Record<string, string>;
   onChangeAnswer: (qid: string, value: string) => void;
@@ -20,6 +21,7 @@ interface QuestionsProps {
 export default function QuestionsList({
   questions,
   answers,
+  searchInput,
   errors,
   successMessages,
   onChangeAnswer,
@@ -58,7 +60,7 @@ export default function QuestionsList({
         onChangeAnswer={onChangeAnswer}
         onSubmitAnswer={onSubmitAnswer}
         goBack={() => setActiveIndex(null)}
-        wallpaper={wallpaper} 
+        wallpaper={wallpaper}
       />
     );
   }
@@ -98,33 +100,40 @@ export default function QuestionsList({
 
       <div className="p-2 h-full w-full overflow-y-auto">
         <div className="space-y-1">
-          {questions.map((q, index) => (
-            <label
-              key={q.id}
-              onClick={() => handleClick(index)}
-              className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
-            >
-              <input
-                type="checkbox"
-                checked={!!successMessages[q.id]}
-                className="w-4 h-4 mt-0.5 accent-green-600 cursor-not-allowed"
-                readOnly
-              />
+          {questions.map(
+            (q, index) =>
+              (searchInput.trim() === "" ||
+                q.question
+                  .toLowerCase()
+                  .includes(searchInput.toLowerCase())) && (
+                <label
+                  key={q.id}
+                  onClick={() => handleClick(index)}
+                  className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={visited[index] || false}
+                    tabIndex={-1}
+                    className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
+                    readOnly
+                  />
 
-              <span
-                className="font-medium flex-1 text-gray-700"
-                style={{
-                  overflowWrap: "anywhere",
-                  wordBreak: "break-word",
-                }}
-              >
-                {index + 1}.{" "}
-                {q.question.length > 50
-                  ? `${q.question.slice(0, 50)}...`
-                  : q.question}
-              </span>
-            </label>
-          ))}
+                  <span
+                    className="font-medium flex-1 text-gray-700"
+                    style={{
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {index + 1}.{" "}
+                    {q.question.length > 50
+                      ? `${q.question.slice(0, 50)}...`
+                      : q.question}
+                  </span>
+                </label>
+              ),
+          )}
         </div>
       </div>
     </div>

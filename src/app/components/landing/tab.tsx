@@ -8,6 +8,7 @@ import Events from "@/app/clients/events-client";
 import Management from "@/app/clients/management-client";
 import PintooRun from "@/app/clients/PintooRun-client";
 import ResearchClient from "@/app/clients/research-client";
+import SnakeClient from "@/app/clients/snake-client";
 import TechWebsite from "@/app/clients/tech-client";
 import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
@@ -233,7 +234,7 @@ const isWhitelisted = (url: string) => {
 
 const useRotatingPlaceholder = (
   websites: string[],
-  interval: number = 1000
+  interval: number = 1000,
 ) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -257,6 +258,7 @@ const INTERNAL_KEYWORDS = new Set([
   "events",
   "domains",
   "pintoorun",
+  "snake",
 ]);
 
 interface HomePageNavbarProps {
@@ -273,6 +275,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
     events: "Events",
     domains: "Domains",
     pintoorun: "PintooRun",
+    snake: "SnakeGame",
   };
 
   return (
@@ -320,6 +323,7 @@ export interface TabData {
   pointer: number;
   pendingUrl?: string;
   showPintooRun: boolean;
+  showSnake: boolean;
 }
 
 interface TabProps {
@@ -372,10 +376,10 @@ const Tab: React.FC<TabProps> = ({
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [homeInput, setHomeInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
@@ -444,6 +448,7 @@ const Tab: React.FC<TabProps> = ({
         showEvents: trimmed === "events",
         showDomains: trimmed === "domains",
         showPintooRun: trimmed === "pintoorun",
+        showSnake: trimmed === "snake",
         history: newHistory,
         pointer: newHistory.length - 1,
         title:
@@ -481,6 +486,7 @@ const Tab: React.FC<TabProps> = ({
       showPintooRun: false,
       showEvents: false,
       showDomains: false,
+      showSnake: false,
     });
 
     if (!isWhitelisted(formatted)) {
@@ -535,6 +541,7 @@ const Tab: React.FC<TabProps> = ({
           showEvents: false,
           showResearch: false,
           showPintooRun: false,
+          showSnake: false,
         });
         setNavInput("");
         setHomeInput("");
@@ -553,6 +560,8 @@ const Tab: React.FC<TabProps> = ({
         showResearch: v === "research",
         showEvents: v === "events",
         showDomains: v === "domains",
+        showSnake: v === "snake",
+        showPintooRun: v === "pintoorun",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -581,6 +590,7 @@ const Tab: React.FC<TabProps> = ({
       showDesign: false,
       showResearch: false,
       showPintooRun: false,
+      showSnake: false,
     });
 
     setNavInput("");
@@ -608,6 +618,7 @@ const Tab: React.FC<TabProps> = ({
           showEvents: false,
           showResearch: false,
           showPintooRun: false,
+          showSnake: false,
         });
         setNavInput("");
         setHomeInput("");
@@ -626,6 +637,8 @@ const Tab: React.FC<TabProps> = ({
         showResearch: v === "research",
         showDomains: v === "domains",
         showEvents: v === "events",
+        showPintooRun: v === "pintoorun",
+        showSnake: v === "snake",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -638,7 +651,7 @@ const Tab: React.FC<TabProps> = ({
 
     // Also reload iframe if present
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]'
+      'iframe[title="Browser Tab"]',
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
@@ -831,6 +844,10 @@ const Tab: React.FC<TabProps> = ({
         ) : tabData.showPintooRun ? (
           <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
             <PintooRun key={refreshKey} />
+          </div>
+        ) : tabData.showSnake ? (
+          <div className="w-full h-full bg-[#1A1A1A] overflow-auto relative">
+            <SnakeClient key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
           iframeError || !isWhitelisted(activePageData.url) ? (

@@ -353,6 +353,9 @@ const Questions: React.FC<QuestionsProps> = ({
                 <textarea
                   value={answers[selectedQuestion.questionId] || ""}
                   onChange={(e) => {
+                    const text = e.target.value;
+                    if (text.length > 1500) return;
+
                     const questionId = selectedQuestion.questionId;
                     const newAnswer = e.target.value;
                     setAnswers((prev) => ({
@@ -376,6 +379,10 @@ const Questions: React.FC<QuestionsProps> = ({
                   placeholder="Type your answer here..."
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {1500 - (answers[selectedQuestion.questionId]?.length ?? 0)}{" "}
+                characters left
+              </p>
 
               <div className="flex justify-end pt-4">
                 <button

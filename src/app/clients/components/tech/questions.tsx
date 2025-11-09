@@ -242,6 +242,10 @@ export default function Questions({
             placeholder="Type your answer here..."
             value={answers[questionKey] || ""}
             onChange={(e) => {
+              const text = e.target.value;
+
+              if (text.length > 1500) return;
+
               handleResponseChange(
                 questionKey,
                 currentQuestion.id,
@@ -260,6 +264,9 @@ export default function Questions({
             }}
           />
         </div>
+        <p className="text-xs text-gray-500 mt-1">
+          {1500 - (answers[questionKey]?.length ?? 0)} characters left
+        </p>
 
         <div className="flex justify-end">
           <TechButton

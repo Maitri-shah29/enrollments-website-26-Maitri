@@ -77,12 +77,21 @@ export default function Question({
               <span className="text-gray-500 italic">Saved draft</span>
             </p>
           </div>
-
-          {/* Textarea */}
           <div className="flex-1 overflow-y-auto">
             <textarea
               value={answer}
-              onChange={(e) => onChangeAnswer(question.id, e.target.value)}
+              onChange={(e) => {
+                const text = e.target.value;
+
+                if (text.length > 1500) return;
+
+                onChangeAnswer(question.id, e.target.value);
+              }}
+              style={{
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
+                overflowY: "hidden",
+              }}
               placeholder="Type your answer here..."
               className="text-black w-full h-full outline-none bg-transparent resize-none selection:bg-[#AA302E] selection:text-white"
             />
@@ -110,6 +119,9 @@ export default function Question({
               {submitting ? "Submitting..." : "Submit"}
             </button>
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {1500 - answer.length} characters left
+          </p>
         </div>
       </div>
     </div>
