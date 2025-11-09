@@ -17,7 +17,7 @@ const About: React.FC = () => {
             alt="About Graphic"
             width={500}
             height={500}
-            className="w-[8%] lg:w-[10%] absolute -top-[30%] left-[3%] lg:left-[5%]"
+            className="w-[8%] lg:w-[10%] absolute -top-10 left-5"
           />
           <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
             Design is where creativity meets purpose. It’s not just about how

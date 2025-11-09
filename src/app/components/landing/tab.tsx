@@ -1,11 +1,8 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
-import CCClient from "@/app/clients/cc-client";
-import DesignClient from "@/app/clients/design-client";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
-import Management from "@/app/clients/management-client";
 import PintooRun from "@/app/clients/PintooRun-client";
 import ResearchClient from "@/app/clients/research-client";
 import SnakeClient from "@/app/clients/snake-client";
@@ -280,7 +277,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
 
   return (
     <nav className="w-full bg-[#555] text-white py-2">
-      <ul className="flex items-start justify-start pl-8 gap-6 text-sm font-semibold">
+      <ul className="flex items-center justify-center pl-8 gap-6 text-sm font-semibold">
         {Array.from(INTERNAL_KEYWORDS).map((item, index) => (
           <React.Fragment key={item}>
             <li>
@@ -753,13 +750,13 @@ const Tab: React.FC<TabProps> = ({
           </div>
 
           <div className="flex flex-1 items-center gap-3">
-            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-gradient-to-b from-[#585858] to-[#BDBDBD] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
-              <span className="text-neutral-150 select-none font-medium tracking-tight">
+            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-gradient-to-b from-[#9e9e9e] to-[#cdcdcd] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+              <span className="text-neutral-50 select-none font-medium tracking-tight">
                 https://
               </span>
               <input
                 ref={navInputRef}
-                className="flex-1 bg-transparent outline-none text-white placeholder-neutral-100 tracking-tight"
+                className="flex-1 bg-transparent outline-none text-white placeholder-neutral-100/70 tracking-tight"
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}

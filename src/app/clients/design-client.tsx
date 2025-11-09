@@ -7,8 +7,9 @@ TODOS
 */
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import type { DesignAOI } from "@/lib/types";
 import About from "./components/design/about";
 import AOIs from "./components/design/aoi";
 import DesignNavbar from "./components/design/design-navbar";
@@ -16,6 +17,8 @@ import Home from "./components/design/home";
 import Instructions from "./components/design/instructions";
 import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
+
+const AOI_JOIN_LIMIT = 3;
 
 interface DesignClientProps {
   initialRoundUser?: RoundUserExtended | null;
@@ -28,7 +31,46 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [joinedAOIs, setJoinedAOIs] = useState<Set<DesignAOI>>(new Set());
+  const [aoisLoaded, setAoisLoaded] = useState(false);
   const roundHidden = !!roundUser?.round?.hidden;
+
+  // Load joined AOIs from localStorage on mount
+  useEffect(() => {
+    const savedAOIs = localStorage.getItem("design-joined-aois");
+    if (savedAOIs) {
+      try {
+        const parsed = JSON.parse(savedAOIs) as DesignAOI[];
+        console.log("Restored Design AOIs from localStorage:", parsed);
+        setJoinedAOIs(new Set(parsed));
+      } catch (err) {
+        console.error("Failed to parse saved Design AOIs:", err);
+      }
+    }
+    setAoisLoaded(true);
+  }, []);
+
+  // Save joined AOIs to localStorage when they change
+  useEffect(() => {
+    if (!aoisLoaded) return;
+    const aoiArray = [...joinedAOIs];
+    console.log("Saving Design AOIs to localStorage:", aoiArray);
+    localStorage.setItem("design-joined-aois", JSON.stringify(aoiArray));
+  }, [joinedAOIs, aoisLoaded]);
+
+  const handleJoinAOI = (aoi: DesignAOI) => {
+    if (joinedAOIs.size < AOI_JOIN_LIMIT) {
+      setJoinedAOIs((prev) => new Set([...prev, aoi]));
+    }
+  };
+
+  const handleLeaveAOI = (aoi: DesignAOI) => {
+    setJoinedAOIs((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(aoi);
+      return newSet;
+    });
+  };
 
   const initializeRoundUser = async () => {
     setLoading(true);
@@ -92,7 +134,14 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
         )}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
-        {selectedPanel === "AOIs" && <AOIs />}
+        {selectedPanel === "AOIs" && (
+          <AOIs
+            joinedAOIs={joinedAOIs}
+            onJoinAOI={handleJoinAOI}
+            onLeaveAOI={handleLeaveAOI}
+            aoiJoinLimit={AOI_JOIN_LIMIT}
+          />
+        )}
         {selectedPanel === "Questions" && roundHidden ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center text-white text-xl py-12">
@@ -104,7 +153,11 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
           selectedPanel === "Questions" &&
           roundUser &&
           roundUser.formSubmission && (
-            <Questions questions={formQuestions} roundUser={roundUser} />
+            <Questions
+              questions={formQuestions}
+              roundUser={roundUser}
+              joinedAOIs={joinedAOIs}
+            />
           )
         )}
         {selectedPanel === "Interview" && <Interview />}
