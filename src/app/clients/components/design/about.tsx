@@ -23,13 +23,10 @@ const About: React.FC = () => {
             Design is where creativity meets purpose. It’s not just about how
             something looks, but how it feels and functions. Our team blends
             creativity with clarity, shaping visuals, stories, and experiences
-            that leave a mark.
-            <br />
-            <br />
-            From clean UI/UX designs to bold motion graphics, from cinematic
-            edits to immersive 3D worlds and expressive illustrations every
-            detail is crafted with purpose. We design to connect, inspire, and
-            bring ideas to life.
+            that leave a mark. From clean UI/UX designs to bold motion graphics,
+            from cinematic edits to immersive 3D worlds and expressive
+            illustrations every detail is crafted with purpose. We design to
+            connect, inspire, and bring ideas to life.
           </p>
         </div>
         <Image

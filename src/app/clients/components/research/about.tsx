@@ -12,10 +12,11 @@ const About = () => {
           About Research
         </h1>
         <p className="text-gray-300 leading-relaxed text-justify">
-          The Research Domain delves into emerging technologies and innovative
-          problem-solving. Members explore areas such as AI/ML, IoT, Blockchain,
-          and Quantum Computing, working on projects that connect research with
-          real-world applications.
+          The Research domain of ACM-VIT is dedicated to fostering an
+          environment of curiosity and innovation. We explore multiple areas of
+          interest ranging from Artificial Intelligence and Blockchain to
+          Quantum Computing and Bioinformatics. Our goal is to bridge theory and
+          real-world application through collaboration and continuous learning.
         </p>
       </div>
     </div>

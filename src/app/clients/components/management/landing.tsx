@@ -38,7 +38,7 @@ const ManagementLanding = ({
               <div>
                 <p className="text-black font-medium text-sm">Management</p>
                 <p className="text-xs text-gray-700">
-                  &lt;management@acmvit.in&gt;
+                  &lt;loremipsum@acmvit.in&gt;
                 </p>
                 <p className="text-xs text-gray-700">to me ▾</p>
               </div>
