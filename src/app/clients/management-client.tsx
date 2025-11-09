@@ -1,15 +1,11 @@
 "use client";
 
-import type { Domain } from "@prisma/client";
 import { Pencil, Search, Settings } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
-import createFormSubmission from "../actions/create-form-submission";
-import ensureRoundUser from "../actions/ensure-round-user";
-import fetchRound from "../actions/fetch-round-details";
-import getRoundQuestions from "../actions/get-round-questions";
 import saveFormResponse from "../actions/save-form-response";
 import About from "./components/management/about";
 import Instructions from "./components/management/instructions";
@@ -18,37 +14,92 @@ import QuestionsList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
 
 interface ManagementClientProps {
-  initialRoundId?: string | null;
-  initialQuestions?: QuestionPayload[];
-  initialFormId?: string | null;
-  initialInitError?: string | null;
-  initialFormWarning?: string | null;
+  initialRoundUser?: RoundUserExtended | null;
 }
 
 export default function Management({
-  initialRoundId,
-  initialQuestions,
-  initialFormId,
-  initialInitError,
-  initialFormWarning,
+  initialRoundUser,
 }: ManagementClientProps) {
   const [activeSection, setActiveSection] = useState("Landing");
   const [loading, setLoading] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
-  const [roundInitDone, setRoundInitDone] = useState(false);
-  const [roundId, setRoundId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<QuestionPayload[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
+    initialRoundUser ?? null,
+  );
   const [searchInput, setSearchInput] = useState<string>("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessages, setSuccessMessages] = useState<
     Record<string, string>
   >({});
-  const [formWarning, setFormWarning] = useState<string | null>(null);
-  const [formId, setFormId] = useState<string | null>(null);
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const debounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const roundHidden = !!roundUser?.round?.hidden;
 
-  // Memoize answers by varName
+  const questions = useMemo(() => {
+    const qs = (roundUser?.round?.Question ||
+      []) as unknown as QuestionPayload[];
+    return [...qs].sort((a, b) => (a.serial ?? 0) - (b.serial ?? 0));
+  }, [roundUser?.round?.Question]);
+
+  const formId = roundUser?.formSubmission?.id;
+  const roundId = roundUser?.round?.id;
+
+  useEffect(() => {
+    if (!roundUser?.formSubmission?.responses) return;
+
+    const savedAnswers: Record<string, string> = {};
+    const serverResponses = roundUser.formSubmission.responses;
+
+    console.log(
+      "[Management] Loading responses from DB:",
+      serverResponses.length,
+    );
+
+    for (const response of serverResponses) {
+      if (response.response && response.questionId) {
+        savedAnswers[response.questionId] = response.response;
+        console.log(
+          `[Management] Restored answer for question ${response.questionId}:`,
+          response.response.substring(0, 50),
+        );
+      }
+    }
+
+    console.log(
+      "[Management] Total restored answers:",
+      Object.keys(savedAnswers).length,
+    );
+    setAnswers(savedAnswers);
+  }, [roundUser]);
+
+  const initializeRoundUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/round-user?domain=management");
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to initialize round user");
+      }
+      const data = await response.json();
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        setRoundUser(data as RoundUserExtended);
+      } else if (Array.isArray(data) && data.length > 0) {
+        setRoundUser(data[0] as RoundUserExtended);
+      } else {
+        setRoundUser(null);
+        throw new Error("No round user returned");
+      }
+      setActiveSection("About");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setRoundUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const answersByVar = useMemo(() => {
     const map: Record<string, string> = {};
     for (const q of questions) {
@@ -59,127 +110,23 @@ export default function Management({
     return map;
   }, [questions, answers]);
 
-  // ✅ Proper initialization logic
-  useEffect(() => {
-    const load = async () => {
-      if (roundInitDone || loading || activeSection !== "Round 1") return;
-      // If server provided initial data, hydrate and short-circuit
-      if (
-        (initialRoundId ||
-          initialQuestions ||
-          initialFormId ||
-          initialInitError ||
-          initialFormWarning) &&
-        !roundInitDone
-      ) {
-        if (initialRoundId) setRoundId(initialRoundId);
-        if (initialQuestions && initialQuestions.length > 0) {
-          setQuestions(initialQuestions);
-          const initialAnswers: Record<string, string> = {};
-          initialQuestions.forEach((q) => {
-            initialAnswers[q.id] = "";
-          });
-          setAnswers(initialAnswers);
-        }
-        if (initialFormId) setFormId(initialFormId);
-        if (initialInitError) setInitError(initialInitError);
-        if (initialFormWarning) setFormWarning(initialFormWarning);
-        setRoundInitDone(true);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setInitError(null);
-
-      try {
-        const domain: Domain = "management";
-        const rounds = await fetchRound(domain);
-
-        if (!Array.isArray(rounds) || rounds.length === 0) {
-          setInitError("No active rounds found for Management.");
-          setRoundInitDone(true);
-          return;
-        }
-
-        const r = rounds[0];
-        setRoundId(r.id);
-
-        // Fetch questions
-        const qres = await getRoundQuestions(r.id);
-        if (!qres?.questions) {
-          setInitError("Failed to load questions. Try again.");
-          setRoundInitDone(true);
-          return;
-        }
-
-        const qs = [...(qres.questions || [])].sort(
-          (a, b) => (a.serial ?? 0) - (b.serial ?? 0),
-        ) as QuestionPayload[];
-
-        setQuestions(qs);
-
-        // Initialize answers as empty strings
-        const initial: Record<string, string> = {};
-        qs.forEach((q) => {
-          initial[q.id] = "";
-        });
-        setAnswers(initial);
-
-        // Ensure user is part of round
-        const ensureRes = await ensureRoundUser(r.id);
-        if (ensureRes?.error === "Not logged in") {
-          setInitError("Please sign in to answer questions.");
-          setRoundInitDone(true);
-          return;
-        }
-
-        if (ensureRes?.error) {
-          setFormWarning(
-            "Could not link you to this round; you can view questions but cannot save answers.",
-          );
-        }
-
-        // Create or fetch form submission
-        const createRes = await createFormSubmission(r.id);
-        const fid =
-          createRes && "formSubmission" in createRes
-            ? createRes.formSubmission?.id
-            : undefined;
-
-        if (fid) setFormId(fid);
-        else if (createRes?.error === "Not logged in") {
-          setInitError("Please sign in to answer questions.");
-        } else if (createRes?.error === "User does not exist for this round") {
-          setFormWarning(
-            "You're not registered for this round yet; you can view questions but cannot save answers.",
-          );
-        }
-      } catch (e) {
-        console.error("[management] init load failed", e);
-        setInitError("Failed to load round/questions. Try again later.");
-      } finally {
-        setLoading(false);
-        setRoundInitDone(true);
-      }
-    };
-    load();
-  }, [
-    activeSection,
-    loading,
-    roundInitDone,
-    initialRoundId,
-    initialQuestions,
-    initialFormId,
-    initialInitError,
-    initialFormWarning,
-  ]);
-
-  // Clear timeouts on unmount
   useEffect(() => {
     return () => {
       Object.values(timeoutRef.current).forEach(clearTimeout);
+      Object.values(debounceTimerRef.current).forEach(clearTimeout);
     };
   }, []);
+
+  const autoSaveAnswer = async (qid: string, value: string) => {
+    if (!formId) return;
+
+    try {
+      await saveFormResponse(formId, qid, value || null);
+      console.log(`[Management] Auto-saved answer for question ${qid}`);
+    } catch (e) {
+      console.error(`[Management] Auto-save failed for question ${qid}:`, e);
+    }
+  };
 
   function onChangeAnswer(qid: string, value: string) {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
@@ -197,6 +144,18 @@ export default function Management({
         return next;
       });
     }
+
+    if (!formId) return;
+
+    if (debounceTimerRef.current[qid]) {
+      clearTimeout(debounceTimerRef.current[qid]);
+    }
+
+    debounceTimerRef.current[qid] = setTimeout(() => {
+      autoSaveAnswer(qid, value).catch((err) => {
+        console.error("[Management] Debounced auto-save error:", err);
+      });
+    }, 3000); // 3 second debounce
   }
 
   async function onSubmitAnswer(q: QuestionPayload) {
@@ -231,14 +190,12 @@ export default function Management({
     }
   }
 
-  const handleGetStarted = () => setActiveSection("About");
-
   const renderActiveSection = () => {
     switch (activeSection) {
       case "Landing":
         return (
           <ManagementLanding
-            onGetStarted={handleGetStarted}
+            onGetStarted={initializeRoundUser}
             wallpaper={wallpaper}
           />
         );
@@ -250,26 +207,30 @@ export default function Management({
         return <Instructions />;
       case "Round 1":
         if (loading) return <p className="text-white">Loading round...</p>;
-        if (initError)
-          return <p className="text-red-600 font-semibold">{initError}</p>;
+        if (error) return <p className="text-red-600 font-semibold">{error}</p>;
+        if (roundHidden) {
+          return (
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold mb-4 text-white">
+                Round Hidden
+              </h1>
+              <p className="text-gray-300">
+                This round is currently hidden and cannot be accessed.
+              </p>
+            </div>
+          );
+        }
         return roundId && questions.length > 0 ? (
-          <>
-            {formWarning && (
-              <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-yellow-800">
-                {formWarning}
-              </div>
-            )}
-            <QuestionsList
-              questions={questions}
-              answers={answers}
-              searchInput={searchInput}
-              errors={errors}
-              successMessages={successMessages}
-              onChangeAnswer={onChangeAnswer}
-              onSubmitAnswer={onSubmitAnswer}
-              wallpaper={wallpaper}
-            />
-          </>
+          <QuestionsList
+            questions={questions}
+            answers={answers}
+            searchInput={searchInput}
+            errors={errors}
+            successMessages={successMessages}
+            onChangeAnswer={onChangeAnswer}
+            onSubmitAnswer={onSubmitAnswer}
+            wallpaper={wallpaper}
+          />
         ) : (
           <p className="text-gray-700">No questions available.</p>
         );
@@ -298,7 +259,6 @@ export default function Management({
 
   return (
     <div className="h-full flex w-full overflow-hidden font-helvetica">
-      {/* Background image */}
       <Image
         src={`/images/management/wallpapers/${wallpaper}.svg`}
         width={1920}
@@ -309,14 +269,12 @@ export default function Management({
         }`}
       />
 
-      {/* Dark overlay during fade */}
       <div
         className={`absolute top-0 left-0 w-full h-full bg-black/60 transition-opacity duration-500 pointer-events-none ${
           fade ? "opacity-100 backdrop-blur-lg" : "opacity-0"
         }`}
       />
 
-      {/* Sidebar */}
       <aside className="flex flex-col h-full w-[20vw] py-8 px-4 text-white z-10 font-helvetica">
         <Image
           src="/acmviticon.svg"
@@ -329,20 +287,26 @@ export default function Management({
           <Pencil /> <span className="font-medium">Compose</span>
         </div>
         <nav className="flex flex-col space-y-2 text-lg">
-          {["About", "What we do", "Instructions", "Round 1"].map((section) => (
-            <button
-              type="button"
-              key={section}
-              onClick={() => setActiveSection(section)}
-              className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
-                activeSection === section
-                  ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
-                  : "hover:text-gray-200 hover:bg-white/25 text-white"
-              }`}
-            >
-              {section}
-            </button>
-          ))}
+          {["About", "What we do", "Instructions", "Round 1"].map((section) => {
+            const isDisabled = !roundUser && section !== "Landing";
+            return (
+              <button
+                type="button"
+                key={section}
+                onClick={() => !isDisabled && setActiveSection(section)}
+                disabled={isDisabled}
+                className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
+                  activeSection === section
+                    ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
+                    : isDisabled
+                      ? "text-gray-500 cursor-not-allowed opacity-50"
+                      : "hover:text-gray-200 hover:bg-white/25 text-white"
+                }`}
+              >
+                {section}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
