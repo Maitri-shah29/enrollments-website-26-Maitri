@@ -8,6 +8,12 @@ export type ResearchAOI =
   | "bioinformatics"
   | "quantumcomputing"
   | "iot";
+export type DesignAOI =
+  | "uiux"
+  | "videoediting"
+  | "illustrations"
+  | "motiongraphics"
+  | "3d";
 export type Section =
   | "welcome"
   | "about"
