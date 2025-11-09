@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import Image from "next/image";
 import type { ChangeEvent, KeyboardEvent } from "react";
 
@@ -32,9 +33,9 @@ const HomePage: React.FC<HomePageProps> = ({
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
 
   return (
-    <div className="relative min-h-full w-full bg-[#080808] text-white overflow-hidden">
+    <div className="min-h-full w-full bg-[#080808] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
-      <div className="pointer-events-none absolute inset-0">
+      <div className="pointer-events-none absolute inset-0 flex h-full w-full">
         <Image
           src="/images/acm-mascot.png"
           alt="ACM mascot illustration"
@@ -58,12 +59,13 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
           <div className="flex w-full min-w-[240px] max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <input
-              className="w-full bg-transparent text-lg font-medium outline-none placeholder:text-neutral-400"
+              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400"
               placeholder="Search"
               value={query}
               onChange={onQueryChange}
               onKeyDown={onQueryKeyDown}
             />
+            <Search className="text-[#525252] p-0.5" />
           </div>
           <div
             className="hidden h-16 w-44 justify-self-end sm:block sm:h-20 sm:w-56"
@@ -119,7 +121,16 @@ const HomePage: React.FC<HomePageProps> = ({
               <span className="absolute right-0 bottom-0 h-5 w-5 border-b-[7px] border-r-[7px] border-white" />
             </div>
             <div className="relative z-10 flex h-full flex-col items-center justify-center gap-4 text-center">
-              <h3 className="text-5xl font-semibold text-white">Photos</h3>
+              <h3
+                className="text-5xl font-semibold"
+                style={{
+                  color: "transparent",
+                  WebkitTextStroke: "2px white",
+                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
+                }}
+              >
+                Photos
+              </h3>
             </div>
           </section>
 
@@ -137,7 +148,9 @@ const HomePage: React.FC<HomePageProps> = ({
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6s ease-in-out ${index * 0.4}s infinite alternate`,
+                    animation: `eventsOscillate 6s ease-in-out ${
+                      index * 0.4
+                    }s infinite alternate`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -179,7 +192,9 @@ const HomePage: React.FC<HomePageProps> = ({
                   key={label}
                   className="inline-flex font-poppins"
                   style={{
-                    animation: `eventsOscillate 6.5s ease-in-out ${index * 0.5}s infinite alternate-reverse`,
+                    animation: `eventsOscillate 6.5s ease-in-out ${
+                      index * 0.5
+                    }s infinite alternate-reverse`,
                   }}
                 >
                   {[0, 1].map((repeat) => (
@@ -205,9 +220,8 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </button>
 
-          <section className="relative w-full col-span-12 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)] lg:col-span-3 lg:col-start-1 lg:row-start-2">
-            {/* Spotify Player Container with fixed height */}
-            <div className="relative w-full h-[380px] overflow-hidden rounded-xl">
+          <section className="flex w-full h-full flex-col gap-2 lg:col-span-3 lg:col-start-1 lg:row-start-2">
+            <div className="relative h-full w-full items-center justify-center  col-span-12 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
@@ -217,9 +231,55 @@ const HomePage: React.FC<HomePageProps> = ({
                 className="absolute inset-0 w-full h-full rounded-xl"
               ></iframe>
             </div>
+            <div className="relative h-30 w-full flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
+              <h1
+                className="font-poppins text-2xl text-center tracking-wider"
+                style={{
+                  color: "transparent",
+                  WebkitTextStroke: "1px white",
+                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
+                }}
+              >
+                Games
+              </h1>
 
-            {/* Optional gradient overlay */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" />
+              <div className="flex gap-3">
+                <Image
+                  onClick={handleKeyword("pintoorun")}
+                  src="/images/addons/ICON.svg"
+                  alt="Pintoo Run"
+                  width={100}
+                  height={100}
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
+                <Image
+                  onClick={handleKeyword("krunker.io")}
+                  src="/images/krunker-logo.png"
+                  alt="Krunker"
+                  width={100}
+                  height={100}
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
+                <Image
+                  onClick={handleKeyword("classic.minecraft.net")}
+                  src="/images/minecraft-logo.svg"
+                  alt="Minecraft"
+                  width={100}
+                  height={100}
+                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
+                <Image
+                  onClick={handleKeyword("404")}
+                  src="/images/404game-logo.png"
+                  alt="Games Placeholder"
+                  width={100}
+                  height={100}
+                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" /> */}
           </section>
 
           <section className="relative col-span-12 cursor-default flex h-full flex-col bg-gradient-to-br from-white/25 via-white/5 to-black/40 items-center justify-between rounded-xl border border-white/10 bg-white/16 px-2 py-2 text-center shadow-[0_18px_40px_rgba(0,0,0,0.4)] transition hover:bg-white/24 hover:shadow-[0_28px_70px_rgba(0,0,0,0.55)] focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] lg:col-span-6 lg:col-start-4 lg:row-start-2">

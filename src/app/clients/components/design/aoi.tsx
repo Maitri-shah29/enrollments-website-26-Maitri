@@ -1,8 +1,66 @@
 "use client";
 import Image from "next/image";
 import type React from "react";
+import type { DesignAOI } from "@/lib/types";
 
-const AOIs: React.FC = () => {
+interface AOIsProps {
+  joinedAOIs: Set<DesignAOI>;
+  onJoinAOI: (aoi: DesignAOI) => void;
+  onLeaveAOI: (aoi: DesignAOI) => void;
+  aoiJoinLimit: number;
+}
+
+const AOI_DATA: {
+  aoi: DesignAOI;
+  title: string;
+  banner: string;
+  description: string;
+}[] = [
+  {
+    aoi: "uiux",
+    title: "UI/UX Design",
+    banner: "/images/design/aoi_banners/uiux_banner.svg",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt.",
+  },
+  {
+    aoi: "videoediting",
+    title: "Video Editing",
+    banner: "/images/design/aoi_banners/videoediting_banner.svg",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt.",
+  },
+  {
+    aoi: "illustrations",
+    title: "Illustrations",
+    banner: "/images/design/aoi_banners/illustrations_banner.svg",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt.",
+  },
+  {
+    aoi: "motiongraphics",
+    title: "Motion Graphics",
+    banner: "/images/design/aoi_banners/motiongraphics_banner.svg",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt.",
+  },
+  {
+    aoi: "3d",
+    title: "3D Design",
+    banner: "/images/design/aoi_banners/3d-banner-fixed.svg",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt.",
+  },
+];
+
+const AOIs: React.FC<AOIsProps> = ({
+  joinedAOIs,
+  onJoinAOI,
+  onLeaveAOI,
+  aoiJoinLimit,
+}) => {
+  const atLimit = joinedAOIs.size >= aoiJoinLimit;
+
   return (
     <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
       <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
