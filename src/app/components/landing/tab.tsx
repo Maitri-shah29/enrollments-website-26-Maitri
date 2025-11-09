@@ -88,6 +88,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
     research: "Research",
     events: "Events",
     domains: "Domains",
+    pintoorun: "PintooRun",
   };
 
   return (
