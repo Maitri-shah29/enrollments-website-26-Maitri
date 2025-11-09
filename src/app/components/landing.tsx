@@ -48,6 +48,7 @@ const Landing: React.FC<{
       showEvents: false,
       showDomains: false,
       showPintooRun: false,
+      showSnake: false,
       history: [],
       pointer: -1,
     },
@@ -71,6 +72,7 @@ const Landing: React.FC<{
       showEvents: false,
       showDomains: false,
       showPintooRun: false,
+      showSnake: false,
       history: [],
       pointer: -1,
     };
@@ -100,6 +102,7 @@ const Landing: React.FC<{
       showEvents: url === "events",
       showDomains: url === "domains",
       showPintooRun: url === "pintoorun",
+      showSnake: url === "snake",
       history: [
         {
           id: Date.now(),
@@ -129,6 +132,7 @@ const Landing: React.FC<{
           showEvents: false,
           showDomains: false,
           showPintooRun: false,
+          showSnake: false,
           history: [],
           pointer: -1,
         },

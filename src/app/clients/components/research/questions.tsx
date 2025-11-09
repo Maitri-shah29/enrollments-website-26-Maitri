@@ -347,14 +347,21 @@ const Questions: React.FC<QuestionsProps> = ({
               "
               placeholder="Type your answer here..."
               value={currentResponse}
-              onChange={(e) =>
+              onChange={(e) => {
+                const text = e.target.value;
+
+                if (text.length > 1500) return;
+
                 currentQuestion &&
-                handleResponseChange(currentQuestion.id, e.target.value)
-              }
+                  handleResponseChange(currentQuestion.id, e.target.value);
+              }}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {1500 - currentResponse.length} characters left
+          </p>
         </div>
 
         <div className="flex justify-end flex-shrink-0 mt-4">

@@ -1,6 +1,5 @@
 "use client";
 import * as d3 from "d3";
-import { on } from "events";
 import { useEffect, useRef } from "react";
 
 interface AOIsProps {
@@ -10,7 +9,7 @@ interface AOIsProps {
 const aoiEllipse = "/images/research/aoi-ellipse.svg";
 const researchEllipse = "/images/research/research-ellipse.svg";
 
-function StaticFaintLines() {
+function _StaticFaintLines() {
   const BASE_W = 1366;
   const BASE_H = 944;
 
