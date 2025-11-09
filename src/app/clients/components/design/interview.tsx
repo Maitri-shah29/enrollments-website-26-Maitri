@@ -20,21 +20,7 @@ const Interview: React.FC = () => {
             className="w-[12%] lg:w-[15%] absolute -top-[18%] left-[3%] lg:left-[1%]"
           />
           <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel
-            nisi at nisl luctus tincidunt. Aliquam semper erat et nibh
-            scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam
-            semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit
-            amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus
-            tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            <br />
-            <br />
-            Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et
-            nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam
-            semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit
-            amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus
-            tincidunt.
+            This page will be available after round 1
           </p>
         </div>
         <Image
