@@ -15,11 +15,18 @@ const AIMLPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
-            The AI/ML AOI delves into the world of intelligent systems that can
-            learn, adapt, and make decisions. Members explore algorithms that
-            power everything from predictive analytics to generative models,
-            uncovering how data drives smarter and more efficient real-world
-            solutions.
+            lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
+            ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum
+            lorem ipsum lorem ipsum lorem ipsum v lorem ipsum eugfuw
+            kurfuwbfhweb rbfuyrgp4ugfhfiuwe psiuhfouwgfiewb bwiubfiuwgfwegf7gw
+            uwebcuhsdbvouwg8 wegf87gf wegfo8wegf9w7ef
+            wbcusbdvy8gwefesdbjckusbdvywegvwbvhbvjsbvduv8wgvbvhjbvjhsdv sd
+            yugrvehvbwehbvhewbvhsdbvbvyweguewbewbvhbvyubvuywegvubhvbvweyfwe8hfbf
+            fugo8wegvobv bvuwewe eubo8wegowyebvuybewuybvuvb kjhbv wbefiyug
+            djkfvbkuebvuyre kjfbviyuerbi8yr lorem ipsum wkjehbiwfyw
+            kwhbvwuyvb8wey khvbygrv8owgvo8wegfw wuebo8wegfo8we7gew
+            uvbowvogwe789fwe jhvbouwgvo8gwvo8vo8 kfubhvouego8rgv
+            huvboygv8gf87wef87wefrvb ubvygvo8gfo8we7
           </p>
         </div>
       </div>
