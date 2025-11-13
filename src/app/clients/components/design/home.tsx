@@ -46,10 +46,16 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
         )}
 
         <div className="flex gap-15 mt-10">
-          <a
-            href="https://www.figma.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                { type: "NAVIGATE_TO", url: "https://www.figma.com" },
+                "*",
+              );
+            }}
+            aria-label="Open Figma"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/figma.webp"
@@ -58,11 +64,20 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.adobe.com/products/xd.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                {
+                  type: "NAVIGATE_TO",
+                  url: "https://www.adobe.com/products/xd.html",
+                },
+                "*",
+              );
+            }}
+            aria-label="Open Adobe XD"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/xd.webp"
@@ -71,11 +86,20 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.adobe.com/products/premiere.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                {
+                  type: "NAVIGATE_TO",
+                  url: "https://www.adobe.com/products/premiere.html",
+                },
+                "*",
+              );
+            }}
+            aria-label="Open Premiere Pro"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/premirepro.webp"
@@ -84,11 +108,20 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.adobe.com/products/aftereffects.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                {
+                  type: "NAVIGATE_TO",
+                  url: "https://www.adobe.com/products/aftereffects.html",
+                },
+                "*",
+              );
+            }}
+            aria-label="Open After Effects"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/aftereffects.webp"
@@ -97,11 +130,20 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.adobe.com/products/photoshop.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                {
+                  type: "NAVIGATE_TO",
+                  url: "https://www.adobe.com/products/photoshop.html",
+                },
+                "*",
+              );
+            }}
+            aria-label="Open Photoshop"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/photoshop.webp"
@@ -110,11 +152,20 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.adobe.com/products/illustrator.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                {
+                  type: "NAVIGATE_TO",
+                  url: "https://www.adobe.com/products/illustrator.html",
+                },
+                "*",
+              );
+            }}
+            aria-label="Open Illustrator"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/illustrator.webp"
@@ -123,11 +174,17 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.blender.org"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                { type: "NAVIGATE_TO", url: "https://www.blender.org" },
+                "*",
+              );
+            }}
+            aria-label="Open Blender"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/blender.webp"
@@ -136,11 +193,17 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
-          <a
-            href="https://www.canva.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.parent.postMessage(
+                { type: "NAVIGATE_TO", url: "https://www.canva.com" },
+                "*",
+              );
+            }}
+            aria-label="Open Canva"
+            className="bg-transparent border-none p-0 cursor-pointer"
           >
             <Image
               src="/images/design/app_icons/canva.webp"
@@ -149,7 +212,7 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
               height={50}
               className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
             />
-          </a>
+          </button>
         </div>
       </div>
     </div>
