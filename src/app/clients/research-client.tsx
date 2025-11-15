@@ -17,6 +17,8 @@ import Questions, {
 } from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
 import type { ResearchAOI } from "@/lib/research-navigation";
+import createRoundUser from "../actions/create-round-user";
+import { Domain } from "@prisma/client";
 
 const AOI_KEYS = [
   "COMMON",
@@ -120,23 +122,21 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
+    // console.log(await createRoundUser(Domain.cc));
     try {
-      const res = await fetch("/api/round-user?domain=research");
-      if (!res.ok) throw new Error("Failed to initialize round user");
-      const data = await res.json();
+      const result = await createRoundUser(Domain.research);
+      console.log(result);
 
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        setRoundUser(data as RoundUserExtended);
-      } else if (Array.isArray(data) && data.length > 0) {
-        setRoundUser(data[0] as RoundUserExtended);
-      } else {
-        setRoundUser(null);
-        throw new Error("No round user returned");
+      if ("error" in result) {
+        setError(result.error ?? "Unknown error");
+        return;
       }
 
+      setRoundUser(result.roundUser as RoundUserExtended);
       setSelectedPanel("About");
     } catch (err) {
       console.error("Error initializing round user:", err);
+
       setError(
         err instanceof Error ? err.message : "Failed to initialize round user",
       );

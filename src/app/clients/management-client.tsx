@@ -13,6 +13,8 @@ import Instructions from "./components/management/instructions";
 import ManagementLanding from "./components/management/landing";
 import QuestionsList from "./components/management/questions-list";
 import WhatWeDo from "./components/management/whatwedo";
+import createRoundUser from "../actions/create-round-user";
+import { Domain } from "@prisma/client";
 
 interface ManagementClientProps {
   initialRoundUser?: RoundUserExtended | null;
@@ -83,25 +85,24 @@ export default function Management({
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
+    // console.log(await createRoundUser(Domain.cc));
     try {
-      const response = await fetch("/api/round-user?domain=management");
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to initialize round user");
+      const result = await createRoundUser(Domain.management);
+      console.log(result);
+
+      if ("error" in result) {
+        setError(result.error ?? "Unknown error");
+        return;
       }
-      const data = await response.json();
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        setRoundUser(data as RoundUserExtended);
-      } else if (Array.isArray(data) && data.length > 0) {
-        setRoundUser(data[0] as RoundUserExtended);
-      } else {
-        setRoundUser(null);
-        throw new Error("No round user returned");
-      }
+
+      setRoundUser(result.roundUser as RoundUserExtended);
       setActiveSection("About");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setRoundUser(null);
+      console.error("Error initializing round user:", err);
+
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize round user",
+      );
     } finally {
       setLoading(false);
     }

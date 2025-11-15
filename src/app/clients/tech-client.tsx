@@ -10,6 +10,8 @@ import Instructions from "./components/tech/instructions";
 import TechLanding from "./components/tech/landing";
 import Questions from "./components/tech/questions";
 import Sidebar from "./components/tech/sidebar";
+import createRoundUser from "../actions/create-round-user";
+import { Domain } from "@prisma/client";
 
 const AOI_JOIN_LIMIT = 3;
 
@@ -116,20 +118,13 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
 
   const initializeRoundUser = async () => {
     try {
-      const res = await fetch("/api/round-user?domain=tech");
-      if (!res.ok) throw new Error("Failed to initialize round user");
-      const data = await res.json();
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        setRoundUser(data as RoundUserExtended);
-      } else if (Array.isArray(data) && data.length > 0) {
-        setRoundUser(data[0] as RoundUserExtended);
-      } else {
-        setRoundUser(null);
-        throw new Error("No round user returned");
-      }
+      const result = await createRoundUser(Domain.tech);
+      console.log(result);
+
+      setRoundUser(result.roundUser as RoundUserExtended);
       setSection("about");
-    } catch (_err) {
-      setRoundUser(null);
+    } catch (err) {
+      console.error("Error initializing round user:", err);
     }
   };
 
