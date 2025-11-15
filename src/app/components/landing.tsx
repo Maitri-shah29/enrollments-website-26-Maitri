@@ -90,6 +90,10 @@ const Landing: React.FC<{
       return;
     }
 
+    if (tabs.length >= 6) {
+      return;
+    }
+
     const newId = Date.now() + Math.random();
     const newTab: TabData = {
       id: newId,
