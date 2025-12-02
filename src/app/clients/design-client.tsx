@@ -1,9 +1,9 @@
 /*
 TODOS
 1) Add sign in gaurd if the user is not logged in i think jenifer is working on it's component so it can be resued here
-2) add form validation to the text boxes inside questions component i think design questions will only have long answer questions or smth so it shouldnt be too hard 
+2) add form validation to the text boxes inside questions component i think design questions will only have long answer questions or smth so it shouldnt be too hard
 3) TO BE DISCUSSED WITH SC adding auto save 3 sec debounce iirc they did say yes to it but asking once more wouldnt hurt
-4) Adding a varname guard, right now a question with any varname will be rendered, we can hardcode a list of allowed varnames inside question submission so stoopid questions dont get rendered 
+4) Adding a varname guard, right now a question with any varname will be rendered, we can hardcode a list of allowed varnames inside question submission so stoopid questions dont get rendered
 */
 "use client";
 import Image from "next/image";
@@ -17,6 +17,8 @@ import Home from "./components/design/home";
 import Instructions from "./components/design/instructions";
 import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
+import createRoundUser from "../actions/create-round-user";
+import { Domain } from "@prisma/client";
 
 const AOI_JOIN_LIMIT = 3;
 
@@ -75,23 +77,21 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
+    // console.log(await createRoundUser(Domain.cc));
     try {
-      const res = await fetch("/api/round-user?domain=design");
-      if (!res.ok) throw new Error("Failed to initialize round user");
-      const data = await res.json();
+      const result = await createRoundUser(Domain.design);
+      console.log(result);
 
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        setRoundUser(data as RoundUserExtended);
-      } else if (Array.isArray(data) && data.length > 0) {
-        setRoundUser(data[0] as RoundUserExtended);
-      } else {
-        setRoundUser(null);
-        throw new Error("No round user returned");
+      if ("error" in result) {
+        setError(result.error ?? "Unknown error");
+        return;
       }
 
+      setRoundUser(result.roundUser as RoundUserExtended);
       setSelectedPanel("About");
     } catch (err) {
       console.error("Error initializing round user:", err);
+
       setError(
         err instanceof Error ? err.message : "Failed to initialize round user",
       );
@@ -99,7 +99,6 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
       setLoading(false);
     }
   };
-
   // get questions from the round
   const formQuestions = roundUser?.round?.Question || [];
 

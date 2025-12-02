@@ -7,6 +7,8 @@ import Interview from "./components/cc/interview";
 import Homepage from "./components/cc/landing";
 import CCNavBar from "./components/cc/navbar";
 import Questions, { type RoundUserExtended } from "./components/cc/questions";
+import createRoundUser from "../actions/create-round-user";
+import { Domain } from "@prisma/client";
 
 type CCClientProps = {
   initialRoundUser?: RoundUserExtended | null;
@@ -27,25 +29,15 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
+    // console.log(await createRoundUser(Domain.cc));
     try {
-      const res = await fetch("/api/round-user?domain=cc");
-      if (!res.ok) throw new Error("Failed to initialize round user");
-      const data = await res.json();
-
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        setRoundUser(data as RoundUserExtended);
-      } else if (Array.isArray(data) && data.length > 0) {
-        // Fallback if API still returns array
-        setRoundUser(data[0] as RoundUserExtended);
-      } else {
-        setRoundUser(null);
-        throw new Error("No round user returned");
-      }
-
-      // Move to About after initialization
+      const result = await createRoundUser(Domain.cc);
+      console.log(result);
+      setRoundUser(result.roundUser as RoundUserExtended);
       setSelectedPanel("About");
     } catch (err) {
       console.error("Error initializing round user:", err);
+
       setError(
         err instanceof Error ? err.message : "Failed to initialize round user",
       );
