@@ -155,7 +155,14 @@ export default async function submitForm(
     // Update status to evaluate
     const updated = await prisma.roundUser.update({
       where: { id: roundUserId },
-      data: { status: "evaluate" },
+      data: {
+        status: "evaluate",
+        formSubmission: {
+          update: {
+            formSubmittedAt: new Date(),
+          },
+        },
+      },
     });
 
     return { success: true, roundUser: updated };
