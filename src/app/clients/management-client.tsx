@@ -1,5 +1,4 @@
 "use client";
-
 import { Domain } from "@prisma/client";
 import { Pencil, Search, Settings } from "lucide-react";
 import Image from "next/image";
@@ -275,11 +274,11 @@ export default function Management({
           />
         );
       case "About":
-        return <About />;
+        return <About onBack={() => setActiveSection("Landing")} />;
       case "What we do":
-        return <WhatWeDo />;
+        return <WhatWeDo onBack={() => setActiveSection("Landing")} />;
       case "Instructions":
-        return <Instructions />;
+        return <Instructions onBack={() => setActiveSection("Landing")} />;
       case "Round 1":
         if (loading) return <p className="text-white">Loading round...</p>;
         if (error) return <p className="text-red-600 font-semibold">{error}</p>;
@@ -351,6 +350,7 @@ export default function Management({
             onSubmitForm={handleSubmitForm}
             roundUser={roundUser}
             submittingForm={submittingForm}
+            onBack={() => setActiveSection("Landing")}
           />
         ) : (
           <p className="text-gray-700">No questions available.</p>

@@ -20,6 +20,7 @@ interface QuestionsProps {
   onSubmitForm?: () => void;
   roundUser?: RoundUserExtended | null;
   submittingForm?: boolean;
+  onBack?: () => void;
 }
 
 export default function QuestionsList({
@@ -34,6 +35,7 @@ export default function QuestionsList({
   onSubmitForm,
   roundUser,
   submittingForm,
+  onBack,
 }: QuestionsProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [visited, setVisited] = useState<boolean[]>([]);
@@ -83,7 +85,7 @@ export default function QuestionsList({
 
   return (
     <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-hidden">
-      <Header />
+      <Header onClick={onBack} />
       <div className="absolute left-14 top-2 flex items-center gap-3">
         <button
           type="button"

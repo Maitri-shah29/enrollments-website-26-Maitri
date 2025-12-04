@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Header from "./header";
 
-export default function WhatWeDo() {
+interface WhatWeDoProps {
+  onBack?: () => void;
+}
+
+export default function WhatWeDo({ onBack }: WhatWeDoProps) {
   return (
     <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto">
-      <Header />
+      <Header onClick={onBack} />
       <div className="px-10 py-5 overflow-y-auto h-full">
         <h1 className="text-2xl text-black mb-1">What We Do</h1>
 
