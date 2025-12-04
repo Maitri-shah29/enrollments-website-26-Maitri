@@ -42,7 +42,7 @@ const AOI_DATA: {
     title: "Motion Graphics",
     banner: "/images/design/aoi_banners/motiongraphics_banner.svg",
     description:
-      "Static designs are cool, but motion brings them to life. We love adding movement, bounce, and personality to visuals, turning simple ideas into something that instantly grabs attention. If it makes you say “whoa,” we know it worked.",
+      'Static designs are cool, but motion brings them to life. We love adding movement, bounce, and personality to visuals, turning simple ideas into something that instantly grabs attention. If it makes you say "whoa," we know it worked.',
   },
   {
     aoi: "3d",
@@ -91,9 +91,12 @@ const AOIs: React.FC<AOIsProps> = ({
                 className="w-full"
               />
             </div>
-            <div className="flex w-full lg:w-[50%] items-center flex-col justify-center gap-4">
+            <div className="flex w-full lg:w-[50%] items-center flex-col justify-center gap-4 mt-5">
+              <h2 className="font-coolvetica text-white text-2xl lg:text-3xl font-bold text-center">
+                {aoiItem.title}
+              </h2>
               <p
-                className={`font-coolvetica text-[clamp(0.875rem,1vw,1.125rem)] leading-relaxed ${isEven ? "" : "lg:text-end"}`}
+                className={`mt-1 font-coolvetica text-[clamp(1.1rem,1.3vw,1.5rem)] leading-relaxed text-center`}
               >
                 {aoiItem.description}
               </p>

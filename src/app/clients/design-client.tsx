@@ -6,10 +6,12 @@ TODOS
 4) Adding a varname guard, right now a question with any varname will be rendered, we can hardcode a list of allowed varnames inside question submission so stoopid questions dont get rendered
 */
 "use client";
+import { Domain } from "@prisma/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { DesignAOI } from "@/lib/types";
+import createRoundUser from "../actions/create-round-user";
 import About from "./components/design/about";
 import AOIs from "./components/design/aoi";
 import DesignNavbar from "./components/design/design-navbar";
@@ -17,8 +19,6 @@ import Home from "./components/design/home";
 import Instructions from "./components/design/instructions";
 import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
-import createRoundUser from "../actions/create-round-user";
-import { Domain } from "@prisma/client";
 
 const AOI_JOIN_LIMIT = 3;
 
@@ -114,9 +114,9 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
       <Image
         src="/images/design/acmlogo.svg"
         alt="About Design"
-        width={400}
-        height={400}
-        className="w-[15vw] object-cover absolute top-5 left-5 z-30"
+        width={320}
+        height={320}
+        className="w-[12vw] object-cover absolute top-5 left-2 z-30"
       />
 
       <DesignNavbar
