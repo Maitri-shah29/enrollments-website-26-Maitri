@@ -1,8 +1,8 @@
 "use server";
+import { type Domain, RoundType } from "@prisma/client";
+import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Domain, RoundType } from "@prisma/client";
-import { headers } from "next/headers";
 
 export default async function createRoundUser(domain: Domain) {
   try {
