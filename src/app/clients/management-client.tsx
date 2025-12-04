@@ -1,4 +1,5 @@
 "use client";
+
 import { Domain } from "@prisma/client";
 import { Pencil, Search, Settings } from "lucide-react";
 import Image from "next/image";
@@ -7,6 +8,7 @@ import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import createRoundUser from "../actions/create-round-user";
+import fetchRoundUser from "../actions/fetch-round-user";
 import saveFormResponse from "../actions/save-form-response";
 import submitForm from "../actions/submit-form";
 import About from "./components/management/about";
@@ -240,12 +242,9 @@ export default function Management({
       setNotification("Form submitted successfully!");
 
       // Refresh the round user data to get updated status
-      const response = await fetch("/api/round-user?domain=management");
-      if (response.ok) {
-        const data = await response.json();
-        if (data && typeof data === "object" && !Array.isArray(data)) {
-          setRoundUser(data as RoundUserExtended);
-        }
+      const data = await fetchRoundUser("management");
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        setRoundUser(data as RoundUserExtended);
       }
 
       setTimeout(() => setNotification(null), 3000);
