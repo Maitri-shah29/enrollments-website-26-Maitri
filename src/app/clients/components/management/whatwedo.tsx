@@ -14,7 +14,7 @@ export default function WhatWeDo() {
             <div>
               <p className="text-black font-medium text-sm">Management</p>
               <p className="text-xs text-gray-700">
-                &lt;loremipsum@acmvit.in&gt;
+                &lt;management@acmvit.in&gt;
               </p>
               <p className="text-xs text-gray-700">to me ▾</p>
             </div>
@@ -26,8 +26,8 @@ export default function WhatWeDo() {
             <strong>Marketing —</strong> We create all the hype around our
             events. We make sure every event looks amazing and gets the
             attention it deserves. I can't remember the last conversation where
-            I didn't mention ExamCooker — because marketing shouldn't stop,
-            right? Posters, captions, PR strategies — we do it all.
+            I didn't mention 'ExamCooker', because marketing shouldn't stop,
+            right? Posters, captions, PR strategies. We do it all!
           </p>
 
           <p>

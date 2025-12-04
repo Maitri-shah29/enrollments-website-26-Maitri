@@ -54,7 +54,7 @@ export default function Question({
           <div>
             <p className="text-black font-medium">Mgmt</p>
             <p className="text-sm text-gray-700">
-              &lt;loremipsum@gmail.com&gt;
+              &lt;management@acm.vit.in&gt;
             </p>
             <p className="text-sm text-gray-700">to me ▾</p>
           </div>

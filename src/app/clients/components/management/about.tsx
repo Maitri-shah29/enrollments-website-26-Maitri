@@ -15,7 +15,7 @@ export default function About() {
             <div>
               <p className="text-black font-medium text-sm">Management</p>
               <p className="text-xs text-gray-700">
-                &lt;loremipsum@acmvit.in&gt;
+                &lt;management@acmvit.in&gt;
               </p>
               <p className="text-xs text-gray-700">to me ▾</p>
             </div>
@@ -32,6 +32,14 @@ export default function About() {
             We&apos;re the ones who take up big ideas and turn them into
             well-executed events. From brainstorming and ideating to the final
             wrap-up, we make sure everything goes smoothly.
+          </p>
+          <p>
+            The Management team oversees the planning, coordination, and
+            execution of all major events and initiatives. From ideation to
+            implementation, management ensures every event runs smoothly while
+            maintaining high quality and engaging content. Learn how to
+            collaborate on sponsorships, logistics, content creation, and event
+            promotion to bring ACM's vision to life.
           </p>
           <p>
             We ensure every aspect of an event is handled with finesse, whether
