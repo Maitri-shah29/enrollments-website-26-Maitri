@@ -2,14 +2,13 @@
 import Image from "next/image";
 import React, { useMemo } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
-import { round1Folders } from "@/lib/constants";
 import type { AOI, QuestionId } from "@/lib/types";
 import TechButton from "./button";
 
 type Props = {
-  activeRoundFolder: AOI | "";
+  activeRoundFolder: string | "";
   activeQuestion: QuestionId | "";
-  onSelectFolder: (folder: AOI) => void;
+  onSelectFolder: (folder: string) => void;
   onSelectQuestion: (q: QuestionId) => void;
   submittedQuestions: Set<string>;
   roundUser?: RoundUserExtended | null;
@@ -25,16 +24,23 @@ export default function Round1List({
   roundUser,
   joinedAOIs,
 }: Props) {
-  const availableFolders = useMemo(
-    () => round1Folders.filter((folder) => joinedAOIs.has(folder)),
-    [joinedAOIs],
-  );
+  const availableFolders = useMemo(() => {
+    const folders: string[] = Array.from(joinedAOIs);
+    const hasCommon = (roundUser?.round?.Question || []).some(
+      (q) => !q.varName || q.varName === "common",
+    );
+    if (hasCommon) folders.unshift("common");
+    return folders;
+  }, [joinedAOIs, roundUser?.round?.Question]);
 
-  const getQuestionsForFolder = (folder: AOI): QuestionId[] => {
+  const getQuestionsForFolder = (folder: string): QuestionId[] => {
     if (!roundUser?.round?.Question) return [];
-    const folderQuestions = roundUser.round.Question.filter(
-      (q) => q.varName === folder,
-    ).sort((a, b) => a.serial - b.serial);
+    const folderQuestions = roundUser.round.Question.filter((q) => {
+      if (folder === "common") {
+        return !q.varName || q.varName === "common";
+      }
+      return q.varName === folder;
+    }).sort((a, b) => a.serial - b.serial);
     return folderQuestions.map(
       (_, index) => `question${index + 1}` as QuestionId,
     );

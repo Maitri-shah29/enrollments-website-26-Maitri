@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Header from "./header";
 
-export default function About() {
+interface AboutProps {
+  onBack?: () => void;
+}
+
+export default function About({ onBack }: AboutProps) {
   return (
     <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto">
-      <Header />
+      <Header onClick={onBack} />
       <div className="px-10 py-5 overflow-y-auto h-full">
         <h1 className="text-2xl text-black mb-1">About</h1>
 
@@ -15,7 +19,7 @@ export default function About() {
             <div>
               <p className="text-black font-medium text-sm">Management</p>
               <p className="text-xs text-gray-700">
-                &lt;loremipsum@acmvit.in&gt;
+                &lt;management@acmvit.in&gt;
               </p>
               <p className="text-xs text-gray-700">to me ▾</p>
             </div>
@@ -32,6 +36,14 @@ export default function About() {
             We&apos;re the ones who take up big ideas and turn them into
             well-executed events. From brainstorming and ideating to the final
             wrap-up, we make sure everything goes smoothly.
+          </p>
+          <p>
+            The Management team oversees the planning, coordination, and
+            execution of all major events and initiatives. From ideation to
+            implementation, management ensures every event runs smoothly while
+            maintaining high quality and engaging content. Learn how to
+            collaborate on sponsorships, logistics, content creation, and event
+            promotion to bring ACM's vision to life.
           </p>
           <p>
             We ensure every aspect of an event is handled with finesse, whether

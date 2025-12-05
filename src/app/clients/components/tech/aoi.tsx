@@ -73,12 +73,6 @@ export default function AOIContent({ activeAOI }: Props) {
         ))}
       </div>
       <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
-        <pre className="text-right pr-4 select-none text-[#993C7A]">
-          {Array.from({ length: numLines }, (_, i) => (
-            <div key={i}>{i + 1}</div>
-          ))}
-        </pre>
-
         <pre className="whitespace-pre-wrap text-[#E097CE] max-w-4xl">
           {aoi.text}
         </pre>

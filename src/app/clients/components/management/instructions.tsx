@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Header from "./header";
 
-export default function Instructions() {
+interface InstructionsProps {
+  onBack?: () => void;
+}
+
+export default function Instructions({ onBack }: InstructionsProps) {
   return (
     <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto">
-      <Header />
+      <Header onClick={onBack} />
       <div className="px-10 py-5 overflow-y-auto h-full">
         <h1 className="text-2xl text-black mb-1">Instructions</h1>
 
@@ -15,7 +19,7 @@ export default function Instructions() {
             <div>
               <p className="text-black font-medium text-sm">Management</p>
               <p className="text-xs text-gray-700">
-                &lt;loremipsum@acmvit.in&gt;
+                &lt;management@acmvit.in&gt;
               </p>
               <p className="text-xs text-gray-700">to me ▾</p>
             </div>
@@ -25,14 +29,17 @@ export default function Instructions() {
         {/* Dynamic Content */}
         <div className="text-black leading-relaxed space-y-4 text-base mt-5">
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
-            ipsum mauris, cursus a ullamcorper sit amet, efficitur bibendum dui.
-            Donec facilisis justo eget nisi eleifend, a bibendum velit rhoncus.
-            Cras a nisl a odio euismod id, accumsan ac nisl. Aenean imperdiet
-            velit in justo volutpat feugiat. Proin quis gravida turpis.
-            Vestibulum felis purus, sodales non mi id, vulputate auctor sapien.
-            Vestibulum vel dolor nunc. Orci varius natoque penatibus et magnis
-            dis parturient montes, nascetur ridiculus mus.
+            The instructions for the Management round are pretty
+            straightforward. Answer each question honestly and be true to
+            yourself. After answering a question hit the submit button then
+            proceed to answering the rest. After all questions have been
+            answered, hit the submit form button at the bottom of the page.
+          </p>
+          <p>
+            Remember, there are no right or wrong answers here. We just want to
+            get to know you better and see how you think. So, take your time,
+            reflect on each question, and provide thoughtful responses. Good
+            Luck!
           </p>
         </div>
       </div>

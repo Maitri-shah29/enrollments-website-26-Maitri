@@ -273,11 +273,11 @@ export default function Management({
           />
         );
       case "About":
-        return <About />;
+        return <About onBack={() => setActiveSection("Landing")} />;
       case "What we do":
-        return <WhatWeDo />;
+        return <WhatWeDo onBack={() => setActiveSection("Landing")} />;
       case "Instructions":
-        return <Instructions />;
+        return <Instructions onBack={() => setActiveSection("Landing")} />;
       case "Round 1":
         if (loading) return <p className="text-white">Loading round...</p>;
         if (error) return <p className="text-red-600 font-semibold">{error}</p>;
@@ -349,6 +349,7 @@ export default function Management({
             onSubmitForm={handleSubmitForm}
             roundUser={roundUser}
             submittingForm={submittingForm}
+            onBack={() => setActiveSection("Landing")}
           />
         ) : (
           <p className="text-gray-700">No questions available.</p>
@@ -447,26 +448,42 @@ export default function Management({
           <Pencil /> <span className="font-medium">Compose</span>
         </div>
         <nav className="flex flex-col space-y-2 text-lg">
-          {["About", "What we do", "Instructions", "Round 1"].map((section) => {
-            const isDisabled = !roundUser && section !== "Landing";
-            return (
-              <button
-                type="button"
-                key={section}
-                onClick={() => !isDisabled && setActiveSection(section)}
-                disabled={isDisabled}
-                className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
-                  activeSection === section
-                    ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
-                    : isDisabled
-                      ? "text-gray-500 cursor-not-allowed opacity-50"
-                      : "hover:text-gray-200 hover:bg-white/25 text-white"
-                }`}
-              >
-                {section}
-              </button>
-            );
-          })}
+          {(() => {
+            const allSections = [
+              "About",
+              "What we do",
+              "Instructions",
+              "Round 1",
+            ];
+            // When NOT on Round 1, let searchInput filter the left navbar components
+            const filteredSections =
+              activeSection === "Round 1" || !searchInput.trim()
+                ? allSections
+                : allSections.filter((s) =>
+                    s.toLowerCase().includes(searchInput.trim().toLowerCase()),
+                  );
+
+            return filteredSections.map((section) => {
+              const isDisabled = !roundUser && section !== "Landing";
+              return (
+                <button
+                  type="button"
+                  key={section}
+                  onClick={() => !isDisabled && setActiveSection(section)}
+                  disabled={isDisabled}
+                  className={`rounded-4xl px-6 py-2 text-left font-medium transition ${
+                    activeSection === section
+                      ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
+                      : isDisabled
+                        ? "text-gray-500 cursor-not-allowed opacity-50"
+                        : "hover:text-gray-200 hover:bg-white/25 text-white"
+                  }`}
+                >
+                  {section}
+                </button>
+              );
+            });
+          })()}
         </nav>
       </aside>
 
@@ -481,6 +498,28 @@ export default function Management({
               value={searchInput}
               onChange={(e) => {
                 setSearchInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (activeSection !== "Round 1") {
+                    const allSections = [
+                      "About",
+                      "What we do",
+                      "Instructions",
+                      "Round 1",
+                    ];
+                    const matches = !searchInput.trim()
+                      ? allSections
+                      : allSections.filter((s) =>
+                          s
+                            .toLowerCase()
+                            .includes(searchInput.trim().toLowerCase()),
+                        );
+                    if (matches.length > 0) {
+                      setActiveSection(matches[0]);
+                    }
+                  }
+                }
               }}
               placeholder="Search Mail"
               className="outline-none flex-1 text-black placeholder-gray-600 bg-transparent"

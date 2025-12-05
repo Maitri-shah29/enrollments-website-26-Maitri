@@ -1,8 +1,10 @@
 "use client";
+import { Domain } from "@prisma/client";
 import { useEffect, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { useTechNavigation } from "@/lib/tech-navigation";
 import type { AOI } from "@/lib/types";
+import createRoundUser from "../actions/create-round-user";
 import About from "./components/tech/about";
 import AOIContent from "./components/tech/aoi";
 import ExploreAOIs from "./components/tech/explore";
@@ -10,8 +12,6 @@ import Instructions from "./components/tech/instructions";
 import TechLanding from "./components/tech/landing";
 import Questions from "./components/tech/questions";
 import Sidebar from "./components/tech/sidebar";
-import createRoundUser from "../actions/create-round-user";
-import { Domain } from "@prisma/client";
 
 const AOI_JOIN_LIMIT = 3;
 
@@ -260,7 +260,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         onSelectAOI={selectAoi}
         activeRoundFolder={activeRoundFolder}
         activeQuestion={activeQuestion}
-        onSelectFolder={selectFolder}
+        onSelectFolder={(folder: string) => selectFolder(folder as any)}
         onSelectQuestion={selectQuestion}
         submittedQuestions={submittedQuestions}
         onLogoClick={() => setSection("welcome")}
