@@ -223,6 +223,7 @@ export default function Sidebar({
                   submittedQuestions={submittedQuestions}
                   roundUser={roundUser}
                   joinedAOIs={joinedAOIs}
+                  currentAnswers={currentAnswers}
                 />
               )}
           </React.Fragment>
