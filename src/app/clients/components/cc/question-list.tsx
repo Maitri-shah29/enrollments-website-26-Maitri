@@ -11,10 +11,12 @@ const QuestionList = ({
   questions,
   onQuestionSelect,
   activeQuestionId,
+  responses,
 }: {
   questions: CCQuestionListProp[];
   onQuestionSelect: (questionId: string) => void;
   activeQuestionId: string | null;
+  responses?: Record<string, string>;
 }) => {
   return (
     <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
@@ -25,6 +27,7 @@ const QuestionList = ({
           title={question.title}
           difficulty={question.difficulty}
           isActive={activeQuestionId === question.id}
+          hasResponse={!!responses?.[question.id]?.trim()}
           onClick={() => onQuestionSelect(question.id)}
         />
       ))}

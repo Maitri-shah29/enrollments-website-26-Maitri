@@ -13,6 +13,7 @@ type Props = {
   submittedQuestions: Set<string>;
   roundUser?: RoundUserExtended | null;
   joinedAOIs: Set<AOI>;
+  currentAnswers: Record<string, string>;
 };
 
 export default function Round1List({
@@ -23,6 +24,7 @@ export default function Round1List({
   submittedQuestions,
   roundUser,
   joinedAOIs,
+  currentAnswers,
 }: Props) {
   const availableFolders = useMemo(() => {
     const folders: string[] = Array.from(joinedAOIs);
@@ -58,6 +60,13 @@ export default function Round1List({
     <div className="ml-4 mt-2 flex flex-col gap-1 text-[#993C7A] text-sm">
       {availableFolders.map((folder) => {
         const isFolderActive = activeRoundFolder === folder;
+        const folderQuestions = getQuestionsForFolder(folder);
+        const allQuestionsAnswered =
+          folderQuestions.length > 0 &&
+          folderQuestions.every((q) => {
+            const questionKey = `${folder}-${q}`;
+            return !!currentAnswers[questionKey]?.trim();
+          });
         return (
           <React.Fragment key={folder}>
             <TechButton
@@ -69,7 +78,7 @@ export default function Round1List({
             >
               <Image
                 src={
-                  isFolderActive
+                  isFolderActive || allQuestionsAnswered
                     ? "/images/selected-folder.svg"
                     : "/images/unselected-folder.svg"
                 }
@@ -86,6 +95,7 @@ export default function Round1List({
                   const questionKey = `${folder}-${q}`;
                   const isQuestionSubmitted =
                     submittedQuestions.has(questionKey);
+                  const hasAnswer = !!currentAnswers[questionKey]?.trim();
                   return (
                     <TechButton
                       key={q}
@@ -97,7 +107,7 @@ export default function Round1List({
                     >
                       <Image
                         src={
-                          isQuestionActive || isQuestionSubmitted
+                          isQuestionActive || isQuestionSubmitted || hasAnswer
                             ? "/images/selected-folder.svg"
                             : "/images/unselected-folder.svg"
                         }

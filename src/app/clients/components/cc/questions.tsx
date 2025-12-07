@@ -420,6 +420,7 @@ const Questions = ({
               questions={questionsForList}
               onQuestionSelect={handleQuestionSelect}
               activeQuestionId={activeQuestionId}
+              responses={effectiveResponses}
             />
           </div>
           <div className="w-full md:w-2/3 flex flex-row max-h-screen">
