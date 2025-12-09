@@ -2,7 +2,12 @@
 
 import { Search } from "lucide-react";
 import Image from "next/image";
-import type { ChangeEvent, KeyboardEvent } from "react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  useEffect,
+  useState,
+} from "react";
 
 interface HomePageProps {
   query: string;
@@ -30,7 +35,39 @@ const HomePage: React.FC<HomePageProps> = ({
   onQueryKeyDown,
   onNavigateKeyword,
 }) => {
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
+
+  useEffect(() => {
+    const loadPhotos = async () => {
+      try {
+        const response = await fetch("/api/photos");
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        setPhotos(Array.isArray(data.photos) ? data.photos : []);
+        setCurrentPhotoIndex(0);
+      } catch (error) {
+        console.error("Failed to fetch photos", error);
+      }
+    };
+
+    void loadPhotos();
+  }, []);
+
+  useEffect(() => {
+    if (photos.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [photos]);
 
   return (
     <div className="min-h-full w-full bg-[#080808] text-white">
@@ -113,24 +150,26 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </button>
 
-          <section className="relative col-span-12 flex h-full flex-col gap-6 rounded-xl border border-white/10 bg-white/14 p-6 shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
+          <section className="relative col-span-12 flex h-full overflow-hidden rounded-xl border border-white/10 bg-white/14 shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
             <div className="pointer-events-none absolute inset-0">
               <span className="absolute left-0 top-0 h-5 w-5 border-t-[7px] border-l-[7px] border-white" />
               <span className="absolute right-0 top-0 h-5 w-5 border-t-[7px] border-r-[7px] border-white" />
               <span className="absolute left-0 bottom-0 h-5 w-5 border-b-[7px] border-l-[7px] border-white" />
               <span className="absolute right-0 bottom-0 h-5 w-5 border-b-[7px] border-r-[7px] border-white" />
             </div>
-            <div className="relative z-10 flex h-full flex-col items-center justify-center gap-4 text-center">
-              <h3
-                className="text-5xl font-semibold"
-                style={{
-                  color: "transparent",
-                  WebkitTextStroke: "2px white",
-                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-                }}
-              >
-                Photos
-              </h3>
+            <div className="relative z-10 flex h-full w-full">
+              {photos.length === 0 ? (
+                <div className="flex h-full w-full items-center justify-center bg-black/30 text-lg text-white/60">
+                  No photos :/
+                </div>
+              ) : (
+                <img
+                  src={photos[currentPhotoIndex]}
+                  alt="ACM club activities"
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              )}
             </div>
           </section>
 
