@@ -211,6 +211,13 @@ const Landing: React.FC<{
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTabId(tab.id)}
+                  onAuxClick={(e) => {
+                    // Middle-click (button 1) closes tab
+                    if (e.button === 1) {
+                      e.preventDefault();
+                      closeTab(tab.id);
+                    }
+                  }}
                   draggable
                   onDragStart={(event) => handleDragStart(event, tab.id)}
                   onDragOver={(event) => handleDragOver(event, tab.id)}

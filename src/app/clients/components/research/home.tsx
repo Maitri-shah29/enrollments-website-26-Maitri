@@ -82,7 +82,7 @@ export default function Home({ onGetStarted, loading = false }: Props) {
       >
         Welcome to
         <br />
-        ACM VIT
+        ACM's
         <br />
         Research
       </h1>
