@@ -285,8 +285,16 @@ const HomePage: React.FC<HomePageProps> = ({
               <div className="flex gap-3">
                 <Image
                   onClick={handleKeyword("pintoorun")}
-                  src="/images/addons/ICON.svg"
+                  src="/images/addons/pintoorun-icon.svg"
                   alt="Pintoo Run"
+                  width={100}
+                  height={100}
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
+                <Image
+                  onClick={handleKeyword("snake")}
+                  src="/images/addons/snake-icon.svg"
+                  alt="Snake Game"
                   width={100}
                   height={100}
                   className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
@@ -303,14 +311,6 @@ const HomePage: React.FC<HomePageProps> = ({
                   onClick={handleKeyword("classic.minecraft.net")}
                   src="/images/minecraft-logo.svg"
                   alt="Minecraft"
-                  width={100}
-                  height={100}
-                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
-                />
-                <Image
-                  onClick={handleKeyword("404")}
-                  src="/images/404game-logo.png"
-                  alt="Games Placeholder"
                   width={100}
                   height={100}
                   className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"

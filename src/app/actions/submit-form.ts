@@ -9,11 +9,10 @@ export default async function submitForm(
   currentResponses: Record<string, string>,
 ) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user?.id) {
-      return { error: "Not authenticated" };
+    const session = await auth.api.getSession({ headers: await headers() });
+    const userId = session?.session?.userId;
+    if (!userId) {
+      return { error: "Not logged in" } as const;
     }
 
     // Verify the round user belongs to the current user

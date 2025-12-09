@@ -26,6 +26,8 @@ type Props = {
   roundUser?: RoundUserExtended | null;
   joinedAOIs: Set<AOI>;
   currentAnswers: Record<string, string>;
+  roundActive?: boolean;
+  roundHidden?: boolean;
 };
 
 export default function Sidebar({
@@ -46,6 +48,8 @@ export default function Sidebar({
   roundUser,
   joinedAOIs,
   currentAnswers,
+  roundActive = true,
+  roundHidden = false,
 }: Props) {
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
@@ -187,47 +191,55 @@ export default function Sidebar({
             { name: "Instructions", key: "instructions" },
             { name: "Round 1", key: "round1" },
           ] as const
-        ).map((item) => (
-          <React.Fragment key={item.key}>
-            <NavItem
-              label={item.name}
-              iconSrc="/images/folder.svg"
-              isActive={activeSection === item.key}
-              hasBottomBorder={item.key === "round1"}
-              disabled={!roundUser}
-              onClick={() => {
-                if (item.key === "aoi") {
-                  onToggleAoi();
-                  onChangeSection("aoi");
-                  return;
-                }
-                if (item.key === "round1") {
-                  onToggleRound();
-                  onChangeSection("round1");
-                  return;
-                }
-                onChangeSection(item.key);
-              }}
-            />
-            {item.key === "aoi" && activeSection === "aoi" && aoiExpanded && (
-              <AoiList activeAOI={activeAOI} onSelectAOI={onSelectAOI} />
-            )}
-            {item.key === "round1" &&
-              activeSection === "round1" &&
-              roundExpanded && (
-                <Round1List
-                  activeRoundFolder={activeRoundFolder}
-                  activeQuestion={activeQuestion}
-                  onSelectFolder={onSelectFolder}
-                  onSelectQuestion={onSelectQuestion}
-                  submittedQuestions={submittedQuestions}
-                  roundUser={roundUser}
-                  joinedAOIs={joinedAOIs}
-                  currentAnswers={currentAnswers}
-                />
+        )
+          .filter(
+            (item) =>
+              !(roundHidden && item.name.toLowerCase().startsWith("round")),
+          )
+          .map((item) => (
+            <React.Fragment key={item.key}>
+              <NavItem
+                label={item.name}
+                iconSrc="/images/folder.svg"
+                isActive={activeSection === item.key}
+                hasBottomBorder={item.key === "round1"}
+                disabled={!roundUser}
+                onClick={() => {
+                  if (item.key === "aoi") {
+                    onToggleAoi();
+                    onChangeSection("aoi");
+                    return;
+                  }
+                  if (item.key === "round1") {
+                    onChangeSection("round1");
+                    if (roundActive) {
+                      onToggleRound();
+                    }
+                    return;
+                  }
+                  onChangeSection(item.key);
+                }}
+              />
+              {item.key === "aoi" && activeSection === "aoi" && aoiExpanded && (
+                <AoiList activeAOI={activeAOI} onSelectAOI={onSelectAOI} />
               )}
-          </React.Fragment>
-        ))}
+              {item.key === "round1" &&
+                activeSection === "round1" &&
+                roundExpanded &&
+                roundActive && (
+                  <Round1List
+                    activeRoundFolder={activeRoundFolder}
+                    activeQuestion={activeQuestion}
+                    onSelectFolder={onSelectFolder}
+                    onSelectQuestion={onSelectQuestion}
+                    submittedQuestions={submittedQuestions}
+                    roundUser={roundUser}
+                    joinedAOIs={joinedAOIs}
+                    currentAnswers={currentAnswers}
+                  />
+                )}
+            </React.Fragment>
+          ))}
       </div>
       {roundUser && roundUserStatus === "pending" && (
         <div className="mt-6 px-2">

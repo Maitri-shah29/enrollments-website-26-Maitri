@@ -5,16 +5,26 @@ type CCNavBarProps = {
   selected: string;
   onSelect: (selected: string) => void;
   disabled?: boolean;
+  roundHidden?: boolean;
 };
 
-const CCNavBar = ({ selected, onSelect, disabled = false }: CCNavBarProps) => {
-  const buttons: string[] = [
+const CCNavBar = ({
+  selected,
+  onSelect,
+  disabled = false,
+  roundHidden = false,
+}: CCNavBarProps) => {
+  const allButtons: string[] = [
     "About",
     "Instructions",
     "Questions",
     "Contest",
     "Interview",
   ];
+
+  const buttons = roundHidden
+    ? allButtons.filter((btn) => btn !== "Questions")
+    : allButtons;
 
   return (
     <div className="flex justify-center items-center w-full">

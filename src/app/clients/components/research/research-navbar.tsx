@@ -28,6 +28,7 @@ interface ResearchNavbarProps {
   onQuestionSelect?: (idx: number) => void;
   roundUser?: RoundUserExtended | null;
   joinedAOIs?: Set<ResearchAOI>;
+  roundHidden?: boolean;
 }
 //test
 const Icon = {
@@ -45,6 +46,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   onQuestionSelect,
   roundUser,
   joinedAOIs = new Set(),
+  roundHidden = false,
 }) => {
   const [expandedRound, setExpandedRound] = useState<boolean>(false);
   const [AOIState, setAoiState] = useState<string>("");
@@ -151,34 +153,36 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </button>
           ))}
 
-          <button
-            className={`mt-1 w-full flex items-center justify-end pl-3 py-2 rounded transition-colors ${
-              isDisabled
-                ? "cursor-not-allowed opacity-40"
-                : selected === "Round 1"
-                  ? "bg-[#7d5bed] cursor-pointer"
-                  : "hover:bg-white/3 cursor-pointer"
-            }`}
-            onClick={(e) => {
-              if (!isDisabled) {
-                setExpandedRound((s) => !s);
-                onSelect(expandedRound ? "" : "Round 1");
-              }
-              e.stopPropagation();
-            }}
-            disabled={isDisabled}
-            type="button"
-            tabIndex={0}
-          >
-            <div className={`flex items-center gap-3 w-full`}>
-              <div className="w-5 h-full relative">
-                <Image src={Round} alt="Round" width={20} height={20} />
+          {!roundHidden && (
+            <button
+              className={`mt-1 w-full flex items-center justify-end pl-3 py-2 rounded transition-colors ${
+                isDisabled
+                  ? "cursor-not-allowed opacity-40"
+                  : selected === "Round 1"
+                    ? "bg-[#7d5bed] cursor-pointer"
+                    : "hover:bg-white/3 cursor-pointer"
+              }`}
+              onClick={(e) => {
+                if (!isDisabled) {
+                  setExpandedRound((s) => !s);
+                  onSelect(expandedRound ? "" : "Round 1");
+                }
+                e.stopPropagation();
+              }}
+              disabled={isDisabled}
+              type="button"
+              tabIndex={0}
+            >
+              <div className={`flex items-center gap-3 w-full`}>
+                <div className="w-5 h-full relative">
+                  <Image src={Round} alt="Round" width={20} height={20} />
+                </div>
+                <span className={`text-sm text-left`}>Round 1</span>
               </div>
-              <span className={`text-sm text-left`}>Round 1</span>
-            </div>
-          </button>
+            </button>
+          )}
 
-          {expandedRound && (
+          {!roundHidden && expandedRound && (
             <div className="space-y-1 pl-6">
               {visibleAOIs.length === 0 ? (
                 <div className="text-white/60 text-sm px-2 py-2">
@@ -245,7 +249,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </div>
           )}
 
-          <div className="mt-0">
+          <div className={roundHidden ? "mt-1" : "mt-0"}>
             <button
               type="button"
               onClick={() => {

@@ -4,9 +4,10 @@ import Button from "./button";
 
 type Props = {
   onGetStarted?: () => void;
+  loading?: boolean;
 };
 
-const Homepage: React.FC<Props> = ({ onGetStarted }) => {
+const Homepage: React.FC<Props> = ({ onGetStarted, loading = false }) => {
   const cells = Array.from({ length: 8 }, (_, idx) => `cell-${idx + 1}`);
   return (
     <div className="w-full h-full relative overflow-hidden">
@@ -102,9 +103,10 @@ const Homepage: React.FC<Props> = ({ onGetStarted }) => {
             </span>
           </h1>
           <Button
-            label="Get Started →"
+            label={loading ? "Loading..." : "Get Started →"}
             onClick={onGetStarted}
             buttonClassName="py-3 !px-[30px] text-lg"
+            disabled={loading}
           />
         </div>
       </div>
