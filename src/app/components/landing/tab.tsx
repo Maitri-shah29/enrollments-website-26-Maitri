@@ -819,41 +819,62 @@ const Tab: React.FC<TabProps> = ({
           tabData.showTech) ? (
           <SignupPage onSignIn={() => {}} />
         ) : tabData.showManagement ? (
-          <div className="w-full h-full bg-white overflow-auto relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
             <div className="h-full flex items-center justify-center">
               {managementChildren}
             </div>
           </div>
         ) : tabData.showEvents ? (
-          <div className="w-full h-full bg-white overflow-auto hide-scrollbar relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto hide-scrollbar relative"
+          >
             <div className="min-h-screen flex items-center justify-center">
               <Events />
             </div>
           </div>
         ) : tabData.showDomains ? (
-          <div className="w-full h-full bg-white overflow-auto hide-scrollbar relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto hide-scrollbar relative"
+          >
             <div className="min-h-screen flex items-center justify-center">
               <Domains />
             </div>
           </div>
         ) : tabData.showCc ? (
-          <div className="w-full h-full bg-white overflow-auto relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
             <div className="h-full flex items-center justify-center">
               {ccChildren}
             </div>
           </div>
         ) : tabData.showTech ? (
-          <div className="w-full h-full bg-white overflow-auto relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
             <div className="h-full flex items-center justify-center">
               {techChildren}
             </div>
           </div>
         ) : tabData.showDesign ? (
-          <div className="w-full h-full bg-white overflow-auto relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
             {designChildren}
           </div>
         ) : tabData.showResearch ? (
-          <div className="w-full h-full bg-white overflow-auto relative">
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
             {researchChildren}
           </div>
         ) : tabData.showPintooRun ? (
