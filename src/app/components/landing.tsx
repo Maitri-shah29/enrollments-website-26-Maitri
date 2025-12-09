@@ -212,7 +212,7 @@ const Landing: React.FC<{
                   type="button"
                   onClick={() => setActiveTabId(tab.id)}
                   onAuxClick={(e) => {
-                    // Middle-click (button 1) to close tab
+                    // Middle-click (button 1) closes tab
                     if (e.button === 1) {
                       e.preventDefault();
                       closeTab(tab.id);
