@@ -12,8 +12,13 @@ const allowedExtensions = new Set([
 ]);
 
 const photosDir = path.join(process.cwd(), "public", "photos");
+const MAX_DEPTH = 30;
 
-function collectPhotos(dir: string): string[] {
+function collectPhotos(dir: string, depth = 0): string[] {
+  if (depth > MAX_DEPTH) {
+    return [];
+  }
+
   const entries = readdirSync(dir, { withFileTypes: true });
   const files: string[] = [];
 
@@ -21,7 +26,7 @@ function collectPhotos(dir: string): string[] {
     const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      files.push(...collectPhotos(fullPath));
+      files.push(...collectPhotos(fullPath, depth + 1));
       continue;
     }
 
