@@ -109,6 +109,7 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
         alt="About Design"
         width={1920}
         height={1080}
+        draggable={false}
         className="w-full h-full object-cover absolute top-0 left-0"
       />
       <Image
@@ -116,6 +117,7 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
         alt="About Design"
         width={320}
         height={320}
+        draggable={false}
         className="w-[12vw] object-cover absolute top-5 left-2 z-30"
       />
 

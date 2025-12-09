@@ -425,7 +425,8 @@ export default function Management({
         width={1920}
         height={1080}
         alt="bg"
-        className={`absolute top-0 left-0 object-cover w-full h-full transition-opacity duration-500 ${
+        draggable={false}
+        className={`absolute top-0 left-0 object-cover w-full h-full transition-opacity duration-500 select-none ${
           fade ? "opacity-60" : "opacity-100"
         }`}
       />
@@ -442,7 +443,8 @@ export default function Management({
           alt="ACM VIT icon"
           width={180}
           height={180}
-          className="mb-8"
+          draggable={false}
+          className="mb-8 select-none"
         />
         <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20">
           <Pencil /> <span className="font-medium">Compose</span>

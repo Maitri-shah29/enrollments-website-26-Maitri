@@ -761,6 +761,7 @@ const Tab: React.FC<TabProps> = ({
                 alt="Home"
                 width={18}
                 height={18}
+                draggable={false}
                 className="w-4 h-4 transition-transform duration-200 hover:scale-110"
               />
             </button>

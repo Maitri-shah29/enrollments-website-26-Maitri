@@ -49,6 +49,7 @@ export default function RefreshButton({
         alt="Refresh"
         width={16}
         height={16}
+        draggable={false}
         className="w-4 h-4"
       />
     </button>

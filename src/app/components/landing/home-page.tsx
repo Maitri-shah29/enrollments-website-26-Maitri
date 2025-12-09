@@ -41,7 +41,8 @@ const HomePage: React.FC<HomePageProps> = ({
           alt="ACM mascot illustration"
           fill
           priority
-          className="object-contain object-left opacity-25"
+          draggable={false}
+          className="object-contain object-left opacity-25 select-none"
         />
       </div>
 
@@ -53,8 +54,9 @@ const HomePage: React.FC<HomePageProps> = ({
               alt="ACM-VIT logo"
               fill
               priority
+              draggable={false}
               sizes="(min-width: 640px) 14rem, 11rem"
-              className="object-contain"
+              className="object-contain select-none"
             />
           </div>
           <div className="flex w-full min-w-[240px] max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
