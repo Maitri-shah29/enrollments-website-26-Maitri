@@ -15,14 +15,16 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
         alt="Home Design"
         width={250}
         height={250}
-        className="object-cover absolute top-20 -right-20 animate-spin-slow"
+        draggable={false}
+        className="object-cover absolute top-20 -right-20 animate-spin-slow select-none"
       />
       <Image
         src="/images/design/disc.svg"
         alt="Home Design"
         width={175}
         height={175}
-        className="object-cover absolute bottom-20 -left-15 animate-spin-slow"
+        draggable={false}
+        className="object-cover absolute bottom-20 -left-15 animate-spin-slow select-none"
       />
       <div className="flex flex-col h-screen w-full justify-center items-center figma-cursor">
         <Image
@@ -30,7 +32,8 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
           alt="Home Design Foreground"
           width={1200}
           height={600}
-          className="relative w-[60%]"
+          draggable={false}
+          className="relative w-[60%] select-none"
         />
         <div className="w-210 h-0.5 rounded-full bg-white opacity-99 mt-10"></div>
 

@@ -370,7 +370,7 @@ export default function Management({
   };
 
   const [settings, setSettings] = useState(false);
-  const [wallpaper, setWallpaper] = useState("big sur");
+  const [wallpaper, setWallpaper] = useState("sequoia");
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
@@ -451,7 +451,8 @@ export default function Management({
         width={1920}
         height={1080}
         alt="bg"
-        className={`absolute top-0 left-0 object-cover w-full h-full transition-opacity duration-500 ${
+        draggable={false}
+        className={`absolute top-0 left-0 object-cover w-full h-full transition-opacity duration-500 select-none ${
           fade ? "opacity-60" : "opacity-100"
         }`}
       />
@@ -468,7 +469,8 @@ export default function Management({
           alt="ACM VIT icon"
           width={180}
           height={180}
-          className="mb-8"
+          draggable={false}
+          className="mb-8 select-none"
         />
         <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20">
           <Pencil /> <span className="font-medium">Compose</span>
@@ -480,18 +482,9 @@ export default function Management({
               "What we do",
               "Instructions",
               "Round 1",
-            ].filter(
-              (s) => !(roundHidden && s.toLowerCase().startsWith("round")),
-            );
-            // When NOT on Round 1, let searchInput filter the left navbar components
-            const filteredSections =
-              activeSection === "Round 1" || !searchInput.trim()
-                ? allSections
-                : allSections.filter((s) =>
-                    s.toLowerCase().includes(searchInput.trim().toLowerCase()),
-                  );
+            ];
 
-            return filteredSections.map((section) => {
+            return allSections.map((section) => {
               const isDisabled = !roundUser && section !== "Landing";
               return (
                 <button
@@ -527,32 +520,7 @@ export default function Management({
               onChange={(e) => {
                 setSearchInput(e.target.value);
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (activeSection !== "Round 1") {
-                    const allSections = [
-                      "About",
-                      "What we do",
-                      "Instructions",
-                      "Round 1",
-                    ].filter(
-                      (s) =>
-                        !(roundHidden && s.toLowerCase().startsWith("round")),
-                    );
-                    const matches = !searchInput.trim()
-                      ? allSections
-                      : allSections.filter((s) =>
-                          s
-                            .toLowerCase()
-                            .includes(searchInput.trim().toLowerCase()),
-                        );
-                    if (matches.length > 0) {
-                      setActiveSection(matches[0]);
-                    }
-                  }
-                }
-              }}
-              placeholder="Search Mail"
+              placeholder="Search Questions"
               className="outline-none flex-1 text-black placeholder-gray-600 bg-transparent"
             />
           </div>
@@ -572,7 +540,7 @@ export default function Management({
                 onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 mt-3 w-48 flex flex-col gap-2 z-100 rounded-2xl bg-white/30 backdrop-blur-xl border border-white/30 shadow-lg p-3 animate-[fadeIn_0.2s_ease-out]"
               >
-                {["sonoma", "sequoia", "big sur"].map((wall, index) => (
+                {["sequoia", "sonoma", "big sur"].map((wall, index) => (
                   <div
                     key={index}
                     onClick={(e) => {
@@ -584,9 +552,9 @@ export default function Management({
                   >
                     <div className="group relative flex items-center justify-center">
                       <Image
-                        src={`/images/management/wallpapers/${wall}.svg`}
-                        width={500}
-                        height={500}
+                        src={`/images/management/wallpapers/thumbnails/${wall}.webp`}
+                        width={200}
+                        height={125}
                         alt={wall}
                         className="rounded-lg transition-all duration-300 group-hover:brightness-50"
                       />

@@ -33,7 +33,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
 
   return (
-    <div className="min-h-full w-full bg-[#080808] text-white">
+    <div className="min-h-full w-full bg-[#080808] text-white select-none">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
       <div className="pointer-events-none absolute inset-0 flex h-full w-full">
         <Image
@@ -41,7 +41,8 @@ const HomePage: React.FC<HomePageProps> = ({
           alt="ACM mascot illustration"
           fill
           priority
-          className="object-contain object-left opacity-25"
+          draggable={false}
+          className="object-contain object-left opacity-25 select-none"
         />
       </div>
 
@@ -53,13 +54,14 @@ const HomePage: React.FC<HomePageProps> = ({
               alt="ACM-VIT logo"
               fill
               priority
+              draggable={false}
               sizes="(min-width: 640px) 14rem, 11rem"
-              className="object-contain"
+              className="object-contain select-none"
             />
           </div>
           <div className="flex w-full min-w-[240px] max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <input
-              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400"
+              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400 select-text"
               placeholder="Search"
               value={query}
               onChange={onQueryChange}
@@ -233,7 +235,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
             <div className="relative h-30 w-full flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
               <h1
-                className="font-poppins text-2xl text-center tracking-wider"
+                className="font-poppins text-2xl text-center tracking-wider select-none"
                 style={{
                   color: "transparent",
                   WebkitTextStroke: "1px white",
@@ -243,14 +245,15 @@ const HomePage: React.FC<HomePageProps> = ({
                 Games
               </h1>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 select-none">
                 <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"
                   alt="Pintoo Run"
                   width={100}
                   height={100}
-                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  draggable={false}
+                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("snake")}
@@ -258,7 +261,8 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Snake Game"
                   width={100}
                   height={100}
-                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  draggable={false}
+                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("krunker.io")}
@@ -266,7 +270,8 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Krunker"
                   width={100}
                   height={100}
-                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  draggable={false}
+                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("classic.minecraft.net")}
@@ -274,7 +279,8 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Minecraft"
                   width={100}
                   height={100}
-                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  draggable={false}
+                  className="object-contain p-0.5 w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
               </div>
             </div>
