@@ -3,9 +3,10 @@ import Image from "next/image";
 
 type TechLandingProps = {
   onGetStarted: () => void;
+  loading?: boolean;
 };
 
-const TechLanding = ({ onGetStarted }: TechLandingProps) => {
+const TechLanding = ({ onGetStarted, loading = false }: TechLandingProps) => {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center">
       {/* botm left tornado*/}
@@ -37,9 +38,10 @@ const TechLanding = ({ onGetStarted }: TechLandingProps) => {
         <button
           type="button"
           onClick={onGetStarted}
-          className="bg-transparent border border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors cursor-pointer"
+          disabled={loading}
+          className="bg-transparent border border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          Get Started
+          {loading ? "Loading..." : "Get Started"}
         </button>
       </div>
     </div>

@@ -437,61 +437,65 @@ const Questions: React.FC<QuestionsProps> = ({
           <div className="relative mb-4 lg:mb-8">
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
             <div className="bg-[#43A363] p-4 lg:p-6 rounded-xl flex flex-col gap-2">
-              {aoiData.map((aoi) => (
-                <button
-                  type="button" // Important for buttons not in a form
-                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
-                  key={aoi.name}
-                  onClick={() => handleAoiClick(aoi)}
-                >
-                  <div
-                    className={`w-6 aspect-square rounded-sm ${
-                      selectedAoi?.name === aoi.name
-                        ? "bg-[#1A1A1A]"
-                        : "bg-white"
-                    }`}
-                  ></div>
-                  <p
-                    className={`font-coolvetica truncate ${
-                      selectedAoi?.name === aoi.name ? "font-bold" : ""
-                    }`}
+              {aoiData.map((aoi) => {
+                const allAnswered = aoi.questions.every(
+                  (q) => answers[q.questionId]?.trim().length > 0,
+                );
+                return (
+                  <button
+                    type="button"
+                    className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
+                    key={aoi.name}
+                    onClick={() => handleAoiClick(aoi)}
                   >
-                    {aoi.name}
-                  </p>
-                </button>
-              ))}
+                    <div
+                      className={`w-6 aspect-square rounded-sm ${
+                        allAnswered ? "bg-green-500" : "bg-white"
+                      }`}
+                    ></div>
+                    <p
+                      className={`font-coolvetica truncate ${
+                        selectedAoi?.name === aoi.name ? "font-bold" : ""
+                      }`}
+                    >
+                      {aoi.name}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="relative">
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
             <div className="bg-[#3389E5] p-8 rounded-xl flex flex-col gap-2">
-              {selectedAoi?.questions.map((question) => (
-                // 🐛 FIX 1: Use <button> for clickable items
-                <button
-                  type="button" // Important for buttons not in a form
-                  className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
-                  key={question.header}
-                  onClick={() => handleQuestionClick(question)}
-                >
-                  <div
-                    className={`w-6 aspect-square rounded-sm ${
-                      selectedQuestion?.header === question.header
-                        ? "bg-[#1A1A1A]"
-                        : "bg-white"
-                    }`}
-                  ></div>
-                  <p
-                    className={`font-coolvetica truncate ${
-                      selectedQuestion?.header === question.header
-                        ? "font-bold"
-                        : ""
-                    }`}
+              {selectedAoi?.questions.map((question) => {
+                const hasAnswer =
+                  answers[question.questionId]?.trim().length > 0;
+                return (
+                  <button
+                    type="button"
+                    className="flex gap-3 lg:gap-5 items-center cursor-pointer z-100 w-full p-0 border-none bg-transparent text-white text-left"
+                    key={question.header}
+                    onClick={() => handleQuestionClick(question)}
                   >
-                    {question.header}
-                  </p>
-                </button>
-              ))}
+                    <div
+                      className={`w-6 aspect-square rounded-sm ${
+                        hasAnswer ? "bg-green-500" : "bg-white"
+                      }`}
+                    ></div>
+                    <p
+                      className={`font-coolvetica truncate ${
+                        selectedQuestion?.header === question.header
+                          ? "font-bold"
+                          : ""
+                      }`}
+                    >
+                      {question.header}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

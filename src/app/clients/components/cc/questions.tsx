@@ -74,12 +74,12 @@ const Questions = ({
     Record<string, string>
   >({});
   const useExternal = !!responses && !!setResponses;
-  const effectiveResponses = useExternal ? responses! : internalResponses;
+  const effectiveResponses = useExternal ? responses : internalResponses;
   const updateResponses: React.Dispatch<
     React.SetStateAction<Record<string, string>>
   > = (value) => {
-    if (useExternal) {
-      setResponses!(value);
+    if (useExternal && setResponses) {
+      setResponses(value);
     } else {
       setInternalResponses(value);
     }
@@ -90,33 +90,34 @@ const Questions = ({
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
 
+  // Stable reference for responses from server
+  const serverResponses = roundUser?.formSubmission?.responses;
+
   useEffect(() => {
     if (useExternal) return;
-    if (roundUser?.formSubmission?.responses) {
+    if (serverResponses) {
       const initialResponses: Record<string, string> = {};
-      roundUser.formSubmission.responses.forEach((response) => {
+      serverResponses.forEach((response) => {
         if (response.response) {
           initialResponses[response.questionId] = response.response;
         }
       });
       setInternalResponses(initialResponses);
     }
-  }, [roundUser?.formSubmission?.responses, useExternal]);
+  }, [useExternal, serverResponses]);
+
+  // Stable references for questions
+  const questions = roundUser?.round?.Question;
+  const firstSubjectiveQuestionId = questions?.find(
+    (q) => q.type === "stq" || q.type === "ltq",
+  )?.id;
 
   useEffect(() => {
-    if (
-      !roundUser ||
-      !roundUser.round ||
-      !Array.isArray(roundUser.round.Question)
-    )
-      return;
-    const subjectiveQuestions = roundUser.round.Question.filter(
-      (question) => question.type === "stq" || question.type === "ltq",
-    );
-    if (subjectiveQuestions.length > 0 && !activeQuestionId) {
-      setActiveQuestionId(subjectiveQuestions[0].id);
+    if (!questions || !Array.isArray(questions)) return;
+    if (firstSubjectiveQuestionId && !activeQuestionId) {
+      setActiveQuestionId(firstSubjectiveQuestionId);
     }
-  }, [roundUser, activeQuestionId]);
+  }, [firstSubjectiveQuestionId, activeQuestionId, questions]);
 
   const handleQuestionSelect = (questionId: string) => {
     setActiveQuestionId(questionId);
@@ -420,6 +421,7 @@ const Questions = ({
               questions={questionsForList}
               onQuestionSelect={handleQuestionSelect}
               activeQuestionId={activeQuestionId}
+              responses={effectiveResponses}
             />
           </div>
           <div className="w-full md:w-2/3 flex flex-row max-h-screen">

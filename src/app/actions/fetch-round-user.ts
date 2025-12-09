@@ -27,22 +27,40 @@ export default async function fetchRoundUser(domain: string) {
     } else {
       throw new Error("Invalid domain provided");
     }
+    // First, check if the round is hidden
+    const round = await prisma.round.findFirst({
+      where: {
+        domain: enumDomain,
+        type: "form",
+        active: true,
+        number: 1,
+      },
+      select: {
+        hidden: true,
+      },
+    });
+
     const roundUser = await prisma.roundUser.findFirst({
       where: {
         round: {
           domain: enumDomain,
           type: "form",
+          number: 1,
+          active: true,
         },
         userId: user.session.userId,
       },
       include: {
         round: {
           include: {
-            Question: {
-              orderBy: {
-                serial: "asc",
-              },
-            },
+            // Only include questions if round is not hidden
+            Question: round?.hidden
+              ? false
+              : {
+                  orderBy: {
+                    serial: "asc",
+                  },
+                },
           },
         },
         formSubmission: {

@@ -126,7 +126,7 @@ export default function QuestionsList({
                 >
                   <input
                     type="checkbox"
-                    checked={visited[index] || false}
+                    checked={!!answers[q.id]?.trim()}
                     tabIndex={-1}
                     className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
                     readOnly

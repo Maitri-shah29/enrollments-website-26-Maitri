@@ -5,11 +5,13 @@ import Header from "./header";
 type ManagementLandingProps = {
   onGetStarted: () => void;
   wallpaper: string;
+  loading?: boolean;
 };
 
 const ManagementLanding = ({
   onGetStarted,
   wallpaper,
+  loading = false,
 }: ManagementLandingProps) => {
   const buttonColors: Record<string, string> = {
     "big sur": "bg-[#AD3232] hover:bg-[#AD3232]/70",
@@ -67,13 +69,15 @@ const ManagementLanding = ({
           <button
             type="button"
             onClick={onGetStarted}
+            disabled={loading}
             className={`
-    ${buttonColors[wallpaper] || buttonColors.default} 
-    text-white font-bold py-3 px-8 rounded-lg 
+    ${buttonColors[wallpaper] || buttonColors.default}
+    text-white font-bold py-3 px-8 rounded-lg
     shadow-md hover:shadow-lg transition-all
+    disabled:opacity-50 disabled:cursor-not-allowed
   `}
           >
-            Get Started
+            {loading ? "Loading..." : "Get Started"}
           </button>
         </div>
       </div>

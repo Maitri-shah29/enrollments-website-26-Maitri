@@ -423,9 +423,14 @@ const Tab: React.FC<TabProps> = ({
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
 
+    const currentUrl =
+      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
+
     requestFullscreen();
 
     if (INTERNAL_KEYWORDS.has(trimmed)) {
+      if (currentUrl === trimmed) return;
+
       const newPage: PageHistory = {
         id: Date.now(),
         title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
@@ -433,6 +438,9 @@ const Tab: React.FC<TabProps> = ({
       };
 
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
+      if (newHistory.length === 0) {
+        newHistory.push({ id: Date.now() - 1, title: "Home", url: "" });
+      }
       newHistory.push(newPage);
 
       onUpdateTab({
@@ -460,6 +468,8 @@ const Tab: React.FC<TabProps> = ({
 
     const formatted = ensureHttps(inputValue);
 
+    if (currentUrl === formatted) return;
+
     const newPage: PageHistory = {
       id: Date.now(),
       title: inputValue,
@@ -467,6 +477,9 @@ const Tab: React.FC<TabProps> = ({
     };
 
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
+    if (newHistory.length === 0) {
+      newHistory.push({ id: Date.now() - 1, title: "Home", url: "" });
+    }
     newHistory.push(newPage);
 
     onUpdateTab({
@@ -566,6 +579,10 @@ const Tab: React.FC<TabProps> = ({
   };
 
   const goHome = () => {
+    const currentUrl =
+      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
+    if (currentUrl === "") return;
+
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
     newHistory.push({
       id: Date.now(),

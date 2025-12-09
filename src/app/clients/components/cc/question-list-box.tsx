@@ -5,12 +5,14 @@ function QuestionListBox({
   title = "Sample Question",
   difficulty = "Medium",
   isActive = false,
+  hasResponse = false,
   onClick,
 }: {
   slNo?: number;
   title?: string;
   difficulty?: string;
   isActive?: boolean;
+  hasResponse?: boolean;
   onClick?: () => void;
 } = {}) {
   const iconCount = difficulty === "Easy" ? 1 : difficulty === "Medium" ? 2 : 3;
@@ -37,7 +39,11 @@ function QuestionListBox({
       }
       onClick={onClick}
     >
-      <div className="flex items-center justify-between bg-[#16171B] w-full h-fit sm:h-16 border-[0.2px] border-[#C9EB3E]">
+      <div
+        className={`flex items-center justify-between w-full h-fit sm:h-16 border-[0.2px] border-[#C9EB3E] ${
+          hasResponse ? "bg-[#2a2b32]" : "bg-[#16171B]"
+        }`}
+      >
         <div className="flex flex-col justify-center space-y-0.5 px-4 w-3/5">
           <div className="text-[#C9EB3E] font-ShareTechMono text-md font-normal leading-normal text-left w-full">
             Question {slNo}
