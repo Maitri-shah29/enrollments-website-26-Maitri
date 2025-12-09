@@ -7,14 +7,16 @@ interface DesignNavbarProps {
   selected: string;
   onSelect: (panel: string) => void;
   roundUser?: RoundUserExtended | null;
+  roundHidden?: boolean;
 }
 
 const DesignNavbar: React.FC<DesignNavbarProps> = ({
   selected,
   onSelect,
   roundUser,
+  roundHidden = false,
 }) => {
-  const items = [
+  const allItems = [
     "Home",
     "About",
     "Instructions",
@@ -22,6 +24,10 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
     "Questions",
     "Interview",
   ];
+
+  const items = allItems.filter(
+    (item) => !(roundHidden && item.toLowerCase() === "questions"),
+  );
 
   const isDisabled = !roundUser;
 

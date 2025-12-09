@@ -42,8 +42,11 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
     initialRoundUser ?? null,
   );
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [joinedAOIs, setJoinedAOIs] = useState<Set<AOI>>(new Set());
   const [aoisLoaded, setAoisLoaded] = useState(false);
+  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
   useEffect(() => {
@@ -51,7 +54,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
     if (savedAOIs) {
       try {
         const parsed = JSON.parse(savedAOIs) as AOI[];
-        console.log("Restored AOIs from localStorage:", parsed);
+        // console.log("Restored AOIs from localStorage:", parsed);
         setJoinedAOIs(new Set(parsed));
       } catch (err) {
         console.error("Failed to parse saved AOIs:", err);
@@ -63,7 +66,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   useEffect(() => {
     if (!aoisLoaded) return;
     const aoiArray = [...joinedAOIs];
-    console.log("Saving AOIs to localStorage:", aoiArray);
+    // console.log("Saving AOIs to localStorage:", aoiArray);
     localStorage.setItem("tech-joined-aois", JSON.stringify(aoiArray));
   }, [joinedAOIs, aoisLoaded]);
 
@@ -72,10 +75,10 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
       const savedAnswers: Record<string, string> = {};
       const questions = roundUser.round?.Question || [];
 
-      console.log(
-        "Loading responses from DB:",
-        roundUser.formSubmission.responses.length,
-      );
+      // console.log(
+      //   "Loading responses from DB:",
+      //   roundUser.formSubmission.responses.length,
+      // );
 
       for (const response of roundUser.formSubmission.responses) {
         if (response.response) {
@@ -90,15 +93,15 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
             if (questionIndex !== -1) {
               const questionKey = `${question.varName}-question${questionIndex + 1}`;
               savedAnswers[questionKey] = response.response;
-              console.log(
-                `Restored answer for ${questionKey}:`,
-                response.response.substring(0, 50),
-              );
+              // console.log(
+              //   `Restored answer for ${questionKey}:`,
+              //   response.response.substring(0, 50),
+              // );
             }
           }
         }
       }
-      console.log("Total restored answers:", Object.keys(savedAnswers).length);
+      // console.log("Total restored answers:", Object.keys(savedAnswers).length);
       setAnswers(savedAnswers);
     }
   }, [roundUser]);
@@ -117,14 +120,34 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   };
 
   const initializeRoundUser = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const result = await createRoundUser(Domain.tech);
       console.log(result);
+
+      if ("error" in result) {
+        if (result.error === "Round is not active") {
+          setError("Enrollments for this domain haven't started yet");
+        } else if (result.error === "No form round found for this domain") {
+          setError("This domain is not available for enrollment at the moment");
+        } else if (result.error === "Internal server error") {
+          setError("Something went wrong. Please try again later");
+        } else {
+          setError(result.error ?? "Unknown error");
+        }
+        return;
+      }
 
       setRoundUser(result.roundUser as RoundUserExtended);
       setSection("about");
     } catch (err) {
       console.error("Error initializing round user:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize round user",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,13 +239,13 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
-      if (roundHidden) {
+      if (!roundActive) {
         return (
           <div className="text-center text-[#993C7A] text-xl py-12">
-            <h1 className="text-2xl font-bold mb-4">Round Hidden</h1>
-            <p className="text-white">
-              This round is currently hidden and cannot be accessed.
-            </p>
+            <h1 className="text-2xl font-bold mb-4">
+              Round currently inactive.
+            </h1>
+            <p className="text-white">This round will start soon...</p>
           </div>
         );
       }
@@ -242,13 +265,33 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
       );
     }
     if (activeSection === "welcome") {
-      return <TechLanding onGetStarted={initializeRoundUser} />;
+      return (
+        <TechLanding onGetStarted={initializeRoundUser} loading={loading} />
+      );
     }
     return null;
   };
 
   return (
     <div className="w-full h-full bg-[#08111D] flex font-jetbrains [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#08111D] border-2 border-[#993C7A] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#993C7A] text-2xl font-jetbrains mb-4">
+              Oops!
+            </h3>
+            <p className="text-white text-lg mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="w-full px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <Sidebar
         activeSection={activeSection}
         onChangeSection={setSection}
@@ -267,6 +310,8 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         roundUser={roundUser}
         joinedAOIs={joinedAOIs}
         currentAnswers={answers}
+        roundActive={roundActive}
+        roundHidden={roundHidden}
       />
       <div className="w-full h-full p-7 relative font-jetbrains">
         <div className="w-full h-full border-2 border-[#993C7A] flex flex-col justify-center items-center p-10 relative overflow-y-auto">

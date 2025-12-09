@@ -1,4 +1,5 @@
 "use client";
+import { Domain } from "@prisma/client";
 import { useCallback, useEffect, useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
@@ -18,7 +19,6 @@ import Questions, {
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
 import type { ResearchAOI } from "@/lib/research-navigation";
 import createRoundUser from "../actions/create-round-user";
-import { Domain } from "@prisma/client";
 
 const AOI_KEYS = [
   "COMMON",
@@ -80,6 +80,7 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
   const [joinedAOIs, setJoinedAOIs] = useState<Set<ResearchAOI>>(new Set());
   const [aoisLoaded, setAoisLoaded] = useState(false);
+  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
   // Load joined AOIs from localStorage on mount
@@ -128,7 +129,15 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
       console.log(result);
 
       if ("error" in result) {
-        setError(result.error ?? "Unknown error");
+        if (result.error === "Round is not active") {
+          setError("Enrollments for this domain haven't started yet");
+        } else if (result.error === "No form round found for this domain") {
+          setError("This domain is not available for enrollment at the moment");
+        } else if (result.error === "Internal server error") {
+          setError("Something went wrong. Please try again later");
+        } else {
+          setError(result.error ?? "Unknown error");
+        }
         return;
       }
 
@@ -193,6 +202,24 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
 
   return (
     <div className="flex h-full w-full bg-[#1a1a1a]">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border-2 border-[#C8B7FF] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#C8B7FF] text-2xl font-semibold mb-4">
+              Oops!
+            </h3>
+            <p className="text-white text-lg mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="w-full px-6 py-2 bg-[#C8B7FF] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#a89be0] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <ResearchNavbar
         selected={selectedPanel}
         onSelect={handlePanelSelect}
@@ -202,11 +229,12 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
         onQuestionSelect={handleQuestionSelect}
         roundUser={roundUser}
         joinedAOIs={joinedAOIs}
+        roundHidden={roundHidden}
       />
 
       <div className="flex-1 min-w-0 h-full overflow-hidden">
         {selectedPanel === "Home" && (
-          <ResearchHome onGetStarted={initializeRoundUser} />
+          <ResearchHome onGetStarted={initializeRoundUser} loading={loading} />
         )}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}
@@ -218,9 +246,12 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
             onLeaveAOI={handleLeaveAOI}
           />
         )}
-        {selectedPanel === "Round 1" && roundHidden ? (
+        {selectedPanel === "Round 1" && !roundActive ? (
           <div className="text-center text-white text-xl py-12">
-            This round is currently hidden and cannot be accessed.
+            <h1 className="text-2xl font-bold mb-4">
+              Round currently inactive.
+            </h1>
+            <p>This round will start soon...</p>
           </div>
         ) : selectedPanel === "Round 1" ? (
           <Questions
