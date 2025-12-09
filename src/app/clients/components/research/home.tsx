@@ -55,9 +55,10 @@ function StaticFaintLines() {
 
 type Props = {
   onGetStarted?: () => void;
+  loading?: boolean;
 };
 
-export default function Home({ onGetStarted }: Props) {
+export default function Home({ onGetStarted, loading = false }: Props) {
   return (
     <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex flex-col items-center justify-center">
       <NetworkGraph />
@@ -90,9 +91,10 @@ export default function Home({ onGetStarted }: Props) {
         <button
           type="button"
           onClick={onGetStarted}
-          className="mt-8 px-8 py-3 bg-[#7D5BED] text-white font-medium rounded-md hover:bg-[#6B4DD1] transition-colors relative z-10"
+          disabled={loading}
+          className="mt-8 px-8 py-3 bg-[#7D5BED] text-white font-medium rounded-md hover:bg-[#6B4DD1] transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Get Started →
+          {loading ? "Loading..." : "Get Started →"}
         </button>
       )}
     </div>
