@@ -165,13 +165,11 @@ const HomePage: React.FC<HomePageProps> = ({
                   No photos :/
                 </div>
               ) : (
-                <Image
+                <img
                   src={photos[currentPhotoIndex]}
                   alt="ACM club activities"
-                  fill
-                  className="object-cover"
+                  className="h-full w-full object-cover"
                   loading="lazy"
-                  draggable={false}
                 />
               )}
             </div>
