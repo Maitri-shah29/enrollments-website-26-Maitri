@@ -33,7 +33,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
 
   return (
-    <div className="min-h-full w-full bg-[#080808] text-white">
+    <div className="min-h-full w-full bg-[#080808] text-white select-none">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
       <div className="pointer-events-none absolute inset-0 flex h-full w-full">
         <Image
@@ -61,7 +61,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
           <div className="flex w-full min-w-[240px] max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <input
-              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400"
+              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400 select-text"
               placeholder="Search"
               value={query}
               onChange={onQueryChange}
