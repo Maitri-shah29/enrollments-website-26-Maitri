@@ -44,6 +44,7 @@ export default function Management({
   );
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const debounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
   const questions = useMemo(() => {
@@ -92,7 +93,15 @@ export default function Management({
       console.log(result);
 
       if ("error" in result) {
-        setError(result.error ?? "Unknown error");
+        if (result.error === "Round is not active") {
+          setError("Enrollments for this domain haven't started yet");
+        } else if (result.error === "No form round found for this domain") {
+          setError("This domain is not available for enrollment at the moment");
+        } else if (result.error === "Internal server error") {
+          setError("Something went wrong. Please try again later");
+        } else {
+          setError(result.error ?? "Unknown error");
+        }
         return;
       }
 
@@ -270,6 +279,7 @@ export default function Management({
           <ManagementLanding
             onGetStarted={initializeRoundUser}
             wallpaper={wallpaper}
+            loading={loading}
           />
         );
       case "About":
@@ -281,14 +291,14 @@ export default function Management({
       case "Round 1":
         if (loading) return <p className="text-white">Loading round...</p>;
         if (error) return <p className="text-red-600 font-semibold">{error}</p>;
-        if (roundHidden) {
+        if (!roundActive) {
           return (
-            <div className="text-center py-12">
-              <h1 className="text-2xl font-bold mb-4 text-white">
-                Round Hidden
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+              <h1 className="text-3xl font-bold mb-4 text-gray-800">
+                Round currently inactive.
               </h1>
-              <p className="text-gray-300">
-                This round is currently hidden and cannot be accessed.
+              <p className="text-lg text-gray-700">
+                This round will start soon...
               </p>
             </div>
           );
@@ -379,6 +389,22 @@ export default function Management({
 
   return (
     <div className="h-full flex w-full overflow-hidden font-helvetica">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white border-2 border-red-400 rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-red-500 text-2xl font-bold mb-4">Oops!</h3>
+            <p className="text-gray-700 text-lg mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="w-full px-6 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       {notification && (
         <div
           className={`fixed top-8 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${

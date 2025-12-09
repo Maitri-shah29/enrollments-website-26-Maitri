@@ -1,5 +1,7 @@
 "use client";
+import { Domain } from "@prisma/client";
 import { useEffect, useState } from "react";
+import createRoundUser from "../actions/create-round-user";
 import About from "./components/cc/about";
 import Contest from "./components/cc/contest";
 import Instructions from "./components/cc/instructions";
@@ -7,8 +9,6 @@ import Interview from "./components/cc/interview";
 import Homepage from "./components/cc/landing";
 import CCNavBar from "./components/cc/navbar";
 import Questions, { type RoundUserExtended } from "./components/cc/questions";
-import createRoundUser from "../actions/create-round-user";
-import { Domain } from "@prisma/client";
 
 type CCClientProps = {
   initialRoundUser?: RoundUserExtended | null;
@@ -23,6 +23,7 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
+  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
   // Create/fetch round user on demand (Get Started)
@@ -33,6 +34,20 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
     try {
       const result = await createRoundUser(Domain.cc);
       console.log(result);
+
+      if ("error" in result) {
+        if (result.error === "Round is not active") {
+          setError("Enrollments for this domain haven't started yet");
+        } else if (result.error === "No form round found for this domain") {
+          setError("This domain is not available for enrollment at the moment");
+        } else if (result.error === "Internal server error") {
+          setError("Something went wrong. Please try again later");
+        } else {
+          setError(result.error ?? "Unknown error");
+        }
+        return;
+      }
+
       setRoundUser(result.roundUser as RoundUserExtended);
       setSelectedPanel("About");
     } catch (err) {
@@ -66,22 +81,44 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
 
   return (
     <div className="w-full h-full relative overflow-y-auto">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#121216] border-2 border-[#C9EB3E] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#C9EB3E] text-2xl font-ShareTechMono mb-4">
+              Oops!
+            </h3>
+            <p className="text-white text-lg mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="w-full px-6 py-2 bg-[#C9EB3E] text-[#121216] font-ShareTechMono font-medium hover:bg-[#b8d938] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <div className="absolute top-[1.2rem] left-0 w-full z-20 flex items-center justify-between">
         <CCNavBar
           selected={selectedPanel}
           onSelect={setSelectedPanel}
           disabled={!roundUser}
+          roundHidden={roundHidden}
         />
       </div>
       {selectedPanel === "Home" && (
-        <Homepage onGetStarted={initializeRoundUser} />
+        <Homepage onGetStarted={initializeRoundUser} loading={loading} />
       )}
       {selectedPanel !== "Home" && (
         <div className="w-full min-h-full bg-[#121216] pt-28 pb-16">
           <div className="w-full space-y-8 md:px-6 lg:px-11 xl:px-15 2xl:px-20 mt-[45px]">
-            {selectedPanel === "Questions" && roundHidden ? (
+            {selectedPanel === "Questions" && !roundActive ? (
               <div className="text-center text-[#C9EB3E] font-ShareTechMono text-xl py-12">
-                This round is currently hidden and cannot be accessed.
+                <h1 className="text-2xl font-bold mb-4">
+                  Round currently inactive.
+                </h1>
+                <p>This round will start soon...</p>
               </div>
             ) : selectedPanel === "Questions" ? (
               <Questions
