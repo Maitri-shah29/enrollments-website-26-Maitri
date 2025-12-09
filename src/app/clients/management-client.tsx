@@ -457,15 +457,8 @@ export default function Management({
               "Instructions",
               "Round 1",
             ];
-            // When NOT on Round 1, let searchInput filter the left navbar components
-            const filteredSections =
-              activeSection === "Round 1" || !searchInput.trim()
-                ? allSections
-                : allSections.filter((s) =>
-                    s.toLowerCase().includes(searchInput.trim().toLowerCase()),
-                  );
 
-            return filteredSections.map((section) => {
+            return allSections.map((section) => {
               const isDisabled = !roundUser && section !== "Landing";
               return (
                 <button
@@ -501,29 +494,7 @@ export default function Management({
               onChange={(e) => {
                 setSearchInput(e.target.value);
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (activeSection !== "Round 1") {
-                    const allSections = [
-                      "About",
-                      "What we do",
-                      "Instructions",
-                      "Round 1",
-                    ];
-                    const matches = !searchInput.trim()
-                      ? allSections
-                      : allSections.filter((s) =>
-                          s
-                            .toLowerCase()
-                            .includes(searchInput.trim().toLowerCase()),
-                        );
-                    if (matches.length > 0) {
-                      setActiveSection(matches[0]);
-                    }
-                  }
-                }
-              }}
-              placeholder="Search Mail"
+              placeholder="Search Questions"
               className="outline-none flex-1 text-black placeholder-gray-600 bg-transparent"
             />
           </div>
