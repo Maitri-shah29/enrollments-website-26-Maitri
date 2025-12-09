@@ -42,14 +42,14 @@ export default function RefreshButton({
       aria-label="Refresh page"
       title={title}
       onClick={handleClick}
-      className={className}
+      className={`${className} transition-transform duration-200 hover:scale-110`}
     >
       <Image
         src="/refresh-button.svg"
         alt="Refresh"
         width={16}
         height={16}
-        className="w-4 h-4 transition-transform duration-200 hover:scale-110"
+        className="w-4 h-4"
       />
     </button>
   );
