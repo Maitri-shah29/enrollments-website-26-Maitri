@@ -250,7 +250,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Pintoo Run"
                   width={100}
                   height={100}
-                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
                 />
                 <Image
                   onClick={handleKeyword("snake")}
@@ -258,7 +258,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Snake Game"
                   width={100}
                   height={100}
-                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
                 />
                 <Image
                   onClick={handleKeyword("krunker.io")}
@@ -266,7 +266,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Krunker"
                   width={100}
                   height={100}
-                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
                 />
                 <Image
                   onClick={handleKeyword("classic.minecraft.net")}
@@ -274,7 +274,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   alt="Minecraft"
                   width={100}
                   height={100}
-                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                  className="object-contain p-0.5 w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
                 />
               </div>
             </div>
