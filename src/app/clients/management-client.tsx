@@ -360,7 +360,7 @@ export default function Management({
   };
 
   const [settings, setSettings] = useState(false);
-  const [wallpaper, setWallpaper] = useState("big sur");
+  const [wallpaper, setWallpaper] = useState("sequoia");
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
@@ -514,7 +514,7 @@ export default function Management({
                 onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 mt-3 w-48 flex flex-col gap-2 z-100 rounded-2xl bg-white/30 backdrop-blur-xl border border-white/30 shadow-lg p-3 animate-[fadeIn_0.2s_ease-out]"
               >
-                {["sonoma", "sequoia", "big sur"].map((wall, index) => (
+                {["sequoia", "sonoma", "big sur"].map((wall, index) => (
                   <div
                     key={index}
                     onClick={(e) => {
@@ -526,9 +526,9 @@ export default function Management({
                   >
                     <div className="group relative flex items-center justify-center">
                       <Image
-                        src={`/images/management/wallpapers/${wall}.svg`}
-                        width={500}
-                        height={500}
+                        src={`/images/management/wallpapers/thumbnails/${wall}.webp`}
+                        width={200}
+                        height={125}
                         alt={wall}
                         className="rounded-lg transition-all duration-300 group-hover:brightness-50"
                       />
