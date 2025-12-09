@@ -233,7 +233,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
             <div className="relative h-30 w-full flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
               <h1
-                className="font-poppins text-2xl text-center tracking-wider"
+                className="font-poppins text-2xl text-center tracking-wider select-none"
                 style={{
                   color: "transparent",
                   WebkitTextStroke: "1px white",
