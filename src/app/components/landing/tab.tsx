@@ -218,6 +218,11 @@ const IFRAME_WHITELIST = new Set([
   "examcooker.acmvit.in",
   "unipool.acmvit.in",
   "cli-rpg.acmvit.in",
+
+  //CC Resources
+  "neetcode.io",
+  "cses.fi",
+  "algomap.io",
 ]);
 
 const isWhitelisted = (url: string) => {

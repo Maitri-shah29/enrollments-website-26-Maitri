@@ -107,15 +107,18 @@ const Instructions: React.FC = () => {
             {[
               {
                 title: "Neetcode 150",
-                note: "150 curated problems across topics.",
+                note: "150 curated problems across topics curated for you.",
+                href: "https://neetcode.io/practice/practice/neetcode150",
               },
               {
-                title: "Striver's A2Z",
-                note: "Comprehensive topic-wise practice.",
+                title: "CSES Problemset",
+                note: "Comprehensive topic-wise CP Practice problems",
+                href: "https://cses.fi/problemset",
               },
               {
                 title: "AlgoMap",
                 note: "Graphical roadmap for learning algorithms.",
+                href: "https://algomap.io/",
               },
             ].map((s) => (
               <div
@@ -131,12 +134,21 @@ const Instructions: React.FC = () => {
                     className="w-12 h-12"
                   />
                 </div>
-                <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.parent.postMessage(
+                      { type: "NAVIGATE_TO", url: s.href },
+                      "*",
+                    );
+                  }}
+                  className="text-left flex-1"
+                >
                   <div className="text-white font-ShareTechMono font-semibold">
                     {s.title}
                   </div>
                   <div className="text-[#9a9a9a] text-sm">{s.note}</div>
-                </div>
+                </button>
               </div>
             ))}
           </div>

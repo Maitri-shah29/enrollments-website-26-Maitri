@@ -257,6 +257,20 @@ const Questions = ({
   };
 
   const handleSubmitForm = () => {
+    const unansweredQuestions = subjectiveQuestions.filter((question) => {
+      const response = effectiveResponses[question.id];
+      return !response || response.trim() === "";
+    });
+
+    if (unansweredQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
+
     setShowConfirmDialog(true);
   };
 

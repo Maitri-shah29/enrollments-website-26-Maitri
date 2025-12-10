@@ -154,6 +154,21 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   const renderContent = () => {
     const roundUserStatus = roundUser?.status || "pending";
 
+    // Allow about, instructions, and aoi pages to be displayed normally
+    if (activeSection === "about") return <About />;
+    if (activeSection === "instructions") return <Instructions />;
+    if (activeSection === "aoi") {
+      if (activeAOI) return <AOIContent activeAOI={activeAOI} />;
+      return (
+        <div className="text-[#993C7A] text-2xl font-semibold">
+          <h1>Areas of Interest</h1>
+          <p className="mt-4 text-lg text-white">
+            Select a subtopic from the sidebar to view more details.
+          </p>
+        </div>
+      );
+    }
+
     // Status-based rendering for evaluate, promoted, rejected
     if (roundUserStatus === "evaluate") {
       return (
@@ -200,19 +215,6 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
       );
     }
 
-    if (activeSection === "about") return <About />;
-    if (activeSection === "aoi") {
-      if (activeAOI) return <AOIContent activeAOI={activeAOI} />;
-      return (
-        <div className="text-[#993C7A] text-2xl font-semibold">
-          <h1>Areas of Interest</h1>
-          <p className="mt-4 text-lg text-white">
-            Select a subtopic from the sidebar to view more details.
-          </p>
-        </div>
-      );
-    }
-    if (activeSection === "instructions") return <Instructions />;
     if (activeSection === "explore")
       return (
         <div className="w-full">
@@ -227,8 +229,6 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
               </span>{" "}
               areas of interest you'd like to participate in. Joining an AOI
               unlocks those questions in Round 1.
-              <br />
-              You can leave an AOI to join another.
             </div>
           </div>
           <ExploreAOIs
@@ -239,6 +239,29 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
+      if (joinedAOIs.size === 0) {
+        return (
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="text-center">
+              <div className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+                No AOIs Selected
+              </div>
+              <p className="text-white text-lg mb-4">
+                You must select at least one Area of Interest before accessing
+                Round 1 questions.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSection("explore")}
+                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors rounded"
+              >
+                Go to Explore AOIs
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       if (!roundActive) {
         return (
           <div className="text-center text-[#993C7A] text-xl py-12">

@@ -105,7 +105,7 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
   const formQuestions = roundUser?.round?.Question || [];
 
   return (
-    <div className="flex flex-col w-full h-full border border-black text-white figma-cursor">
+    <div className="flex flex-col w-full h-full border border-black text-white figma-cursor overflow-hidden">
       {/* Error Popup */}
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -147,7 +147,7 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
       />
       <div
         key={selectedPanel}
-        className="flex overflow-y-auto z-10 animate-panel-transition [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex overflow-hidden z-10 animate-panel-transition"
       >
         {selectedPanel === "Home" && (
           <Home onGetStarted={initializeRoundUser} loading={loading} />
