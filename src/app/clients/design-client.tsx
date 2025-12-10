@@ -28,6 +28,10 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
   const [error, setError] = useState<string | null>(null);
   const [joinedAOIs, setJoinedAOIs] = useState<Set<DesignAOI>>(new Set());
   const [aoisLoaded, setAoisLoaded] = useState(false);
+  const [savedAnswers, setSavedAnswers] = useState<Record<string, string>>({});
+  const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
+    Set<string>
+  >(new Set());
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
@@ -179,6 +183,10 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
               questions={formQuestions}
               roundUser={roundUser}
               joinedAOIs={joinedAOIs}
+              savedAnswers={savedAnswers}
+              setSavedAnswers={setSavedAnswers}
+              questionsWithUnsavedEdits={questionsWithUnsavedEdits}
+              setQuestionsWithUnsavedEdits={setQuestionsWithUnsavedEdits}
             />
           )
         )}

@@ -22,6 +22,12 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
+    {},
+  );
+  const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
+    Set<string>
+  >(new Set());
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
@@ -70,11 +76,16 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
 
     if (formSubmissionId !== currentFsId) {
       const initial: Record<string, string> = {};
+      const saved: Record<string, string> = {};
       const serverResponses = roundUser.formSubmission.responses ?? [];
       serverResponses.forEach((r) => {
-        if (r.response) initial[r.questionId] = r.response;
+        if (r.response) {
+          initial[r.questionId] = r.response;
+          saved[r.questionId] = r.response;
+        }
       });
       setResponses(initial);
+      setSavedResponses(saved);
       setFormSubmissionId(currentFsId);
     }
   }, [roundUser?.formSubmission, formSubmissionId]);
@@ -127,6 +138,10 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
                 error={error}
                 responses={responses}
                 setResponses={setResponses}
+                savedResponses={savedResponses}
+                setSavedResponses={setSavedResponses}
+                questionsWithUnsavedEdits={questionsWithUnsavedEdits}
+                setQuestionsWithUnsavedEdits={setQuestionsWithUnsavedEdits}
               />
             ) : (
               <>

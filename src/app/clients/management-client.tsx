@@ -32,20 +32,25 @@ export default function Management({
   );
   const [searchInput, setSearchInput] = useState<string>("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [savedAnswers, setSavedAnswers] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessages, setSuccessMessages] = useState<
     Record<string, string>
   >({});
   const [submittingForm, setSubmittingForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingQuestionIndex, setPendingQuestionIndex] = useState<
+    number | null
+  >(null);
+  const [pendingBackNavigation, setPendingBackNavigation] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
-  const debounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
   const roundActive = !!roundUser?.round?.active;
-  const roundHidden = !!roundUser?.round?.hidden;
+  const _roundHidden = !!roundUser?.round?.hidden;
 
   const questions = useMemo(() => {
     const qs = (roundUser?.round?.Question ||
@@ -59,7 +64,8 @@ export default function Management({
   useEffect(() => {
     if (!roundUser?.formSubmission?.responses) return;
 
-    const savedAnswers: Record<string, string> = {};
+    const loadedAnswers: Record<string, string> = {};
+    const loadedSavedAnswers: Record<string, string> = {};
     const serverResponses = roundUser.formSubmission.responses;
 
     console.log(
@@ -69,7 +75,8 @@ export default function Management({
 
     for (const response of serverResponses) {
       if (response.response && response.questionId) {
-        savedAnswers[response.questionId] = response.response;
+        loadedAnswers[response.questionId] = response.response;
+        loadedSavedAnswers[response.questionId] = response.response;
         console.log(
           `[Management] Restored answer for question ${response.questionId}:`,
           response.response.substring(0, 50),
@@ -79,9 +86,10 @@ export default function Management({
 
     console.log(
       "[Management] Total restored answers:",
-      Object.keys(savedAnswers).length,
+      Object.keys(loadedAnswers).length,
     );
-    setAnswers(savedAnswers);
+    setAnswers(loadedAnswers);
+    setSavedAnswers(loadedSavedAnswers);
   }, [roundUser]);
 
   const initializeRoundUser = async () => {
@@ -131,23 +139,21 @@ export default function Management({
   useEffect(() => {
     return () => {
       Object.values(timeoutRef.current).forEach(clearTimeout);
-      Object.values(debounceTimerRef.current).forEach(clearTimeout);
     };
   }, []);
 
-  const autoSaveAnswer = async (qid: string, value: string) => {
-    if (!formId) return;
-
-    try {
-      await saveFormResponse(formId, qid, value || null);
-      console.log(`[Management] Auto-saved answer for question ${qid}`);
-    } catch (e) {
-      console.error(`[Management] Auto-save failed for question ${qid}:`, e);
-    }
-  };
-
   function onChangeAnswer(qid: string, value: string) {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
+
+    // If the question was previously saved and the value differs, mark it as unsaved
+    if (savedAnswers[qid] !== undefined && savedAnswers[qid] !== value) {
+      setSavedAnswers((prev) => {
+        const next = { ...prev };
+        delete next[qid];
+        return next;
+      });
+    }
+
     if (errors[qid]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -162,18 +168,6 @@ export default function Management({
         return next;
       });
     }
-
-    if (!formId) return;
-
-    if (debounceTimerRef.current[qid]) {
-      clearTimeout(debounceTimerRef.current[qid]);
-    }
-
-    debounceTimerRef.current[qid] = setTimeout(() => {
-      autoSaveAnswer(qid, value).catch((err) => {
-        console.error("[Management] Debounced auto-save error:", err);
-      });
-    }, 3000); // 3 second debounce
   }
 
   async function onSubmitAnswer(q: QuestionPayload) {
@@ -191,6 +185,7 @@ export default function Management({
 
     try {
       await saveFormResponse(formId, q.id, current || null);
+      setSavedAnswers((prev) => ({ ...prev, [q.id]: current }));
       setSuccessMessages((prev) => ({
         ...prev,
         [q.id]: "Saved successfully!",
@@ -203,7 +198,7 @@ export default function Management({
           return next;
         });
       }, 2000);
-    } catch (e) {
+    } catch (_e) {
       setErrors((prev) => ({ ...prev, [q.id]: "Failed to save" }));
     }
   }
@@ -216,6 +211,23 @@ export default function Management({
       setNotificationType("error");
       setNotification(
         `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    // Check if all questions are saved
+    const unsavedQuestions = questions.filter((q) => {
+      const currentAnswer = answers[q.id] || "";
+      const savedAnswer = savedAnswers[q.id];
+      // Question is unsaved if: no saved answer exists OR current answer differs from saved
+      return savedAnswer === undefined || currentAnswer !== savedAnswer;
+    });
+
+    if (unsavedQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
       );
       setTimeout(() => setNotification(null), 5000);
       return;
@@ -270,6 +282,41 @@ export default function Management({
 
   const handleCancelSubmit = () => {
     setShowConfirmDialog(false);
+  };
+
+  const handleQuestionClick = (index: number): boolean => {
+    const questionId = questions[index]?.id;
+    if (!questionId) return true;
+
+    const currentAnswer = answers[questionId] || "";
+    const savedAnswer = savedAnswers[questionId] || "";
+    const hasUnsavedChanges = currentAnswer !== savedAnswer;
+
+    if (hasUnsavedChanges) {
+      setPendingQuestionIndex(index);
+      setPendingBackNavigation(false);
+      setShowUnsavedDialog(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleBackClick = (): boolean => {
+    // Check if any question has unsaved changes
+    const hasUnsavedChanges = questions.some((q) => {
+      const currentAnswer = answers[q.id] || "";
+      const savedAnswer = savedAnswers[q.id] || "";
+      return currentAnswer !== savedAnswer;
+    });
+
+    if (hasUnsavedChanges) {
+      setPendingBackNavigation(true);
+      setPendingQuestionIndex(null);
+      setShowUnsavedDialog(true);
+      return false;
+    }
+    setActiveSection("Landing");
+    return true;
   };
 
   const renderActiveSection = () => {
@@ -350,6 +397,7 @@ export default function Management({
           <QuestionsList
             questions={questions}
             answers={answers}
+            savedAnswers={savedAnswers}
             searchInput={searchInput}
             errors={errors}
             successMessages={successMessages}
@@ -359,7 +407,8 @@ export default function Management({
             onSubmitForm={handleSubmitForm}
             roundUser={roundUser}
             submittingForm={submittingForm}
-            onBack={() => setActiveSection("Landing")}
+            onBack={handleBackClick}
+            onQuestionClick={handleQuestionClick}
           />
         ) : (
           <p className="text-gray-700">No questions available.</p>
@@ -441,6 +490,51 @@ export default function Management({
                 disabled={submittingForm}
               >
                 {submittingForm ? "Submitting..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+          <div className="bg-white border-2 border-gray-300 p-8 rounded-2xl max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-gray-800 text-2xl font-bold mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-gray-700 text-lg mb-6">
+              You have unsaved changes. Do you want to proceed without saving?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setShowUnsavedDialog(false);
+                  setPendingQuestionIndex(null);
+                  setPendingBackNavigation(false);
+                }}
+                className="px-6 py-2 bg-transparent border-2 border-gray-400 text-gray-700 hover:bg-gray-100 transition-colors rounded-lg font-medium"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowUnsavedDialog(false);
+                  if (pendingBackNavigation) {
+                    setActiveSection("Landing");
+                    setPendingBackNavigation(false);
+                  } else if (pendingQuestionIndex !== null) {
+                    // Proceed with navigation - this will be handled in QuestionsList
+                    const event = new CustomEvent("proceedWithNavigation", {
+                      detail: { index: pendingQuestionIndex },
+                    });
+                    window.dispatchEvent(event);
+                    setPendingQuestionIndex(null);
+                  }
+                }}
+                className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg font-medium"
+                type="button"
+              >
+                Proceed
               </button>
             </div>
           </div>
@@ -537,7 +631,9 @@ export default function Management({
 
             {settings && (
               <div
+                role="menu"
                 onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.key === "Escape" && e.stopPropagation()}
                 className="absolute right-0 mt-3 w-48 flex flex-col gap-2 z-100 rounded-2xl bg-white/30 backdrop-blur-xl border border-white/30 shadow-lg p-3 animate-[fadeIn_0.2s_ease-out]"
               >
                 {["sequoia", "sonoma", "big sur"].map((wall, index) => (

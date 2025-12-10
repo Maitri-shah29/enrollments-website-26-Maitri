@@ -1,7 +1,7 @@
 "use client";
 import type { Prisma } from "@prisma/client";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import submitForm from "@/app/actions/submit-form";
 import AnswerBox from "./answer-box";
@@ -56,6 +56,14 @@ type QuestionsProps = {
   error?: string | null;
   responses?: Record<string, string>; // lifted state from parent
   setResponses?: React.Dispatch<React.SetStateAction<Record<string, string>>>; // setter from parent
+  savedResponses?: Record<string, string>; // lifted state from parent
+  setSavedResponses?: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >; // setter from parent
+  questionsWithUnsavedEdits?: Set<string>; // lifted state from parent
+  setQuestionsWithUnsavedEdits?: React.Dispatch<
+    React.SetStateAction<Set<string>>
+  >; // setter from parent
 };
 
 const Questions = ({
@@ -64,6 +72,10 @@ const Questions = ({
   error = null,
   responses,
   setResponses,
+  savedResponses: externalSavedResponses,
+  setSavedResponses: externalSetSavedResponses,
+  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
+  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
 }: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
@@ -93,11 +105,32 @@ const Questions = ({
     null,
   );
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
-  const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
-    {},
-  );
 
-  // Stable reference for responses from server
+  const [internalSavedResponses, setInternalSavedResponses] = useState<
+    Record<string, string>
+  >({});
+  const [
+    internalQuestionsWithUnsavedEdits,
+    setInternalQuestionsWithUnsavedEdits,
+  ] = useState<Set<string>>(new Set());
+
+  const useExternalSavedState =
+    !!externalSavedResponses &&
+    !!externalSetSavedResponses &&
+    !!externalSetQuestionsWithUnsavedEdits;
+  const savedResponses = useExternalSavedState
+    ? externalSavedResponses
+    : internalSavedResponses;
+  const setSavedResponses = useExternalSavedState
+    ? externalSetSavedResponses
+    : setInternalSavedResponses;
+  const questionsWithUnsavedEdits = useExternalSavedState
+    ? externalQuestionsWithUnsavedEdits || new Set()
+    : internalQuestionsWithUnsavedEdits;
+  const setQuestionsWithUnsavedEdits = useExternalSavedState
+    ? externalSetQuestionsWithUnsavedEdits
+    : setInternalQuestionsWithUnsavedEdits;
+
   const serverResponses = roundUser?.formSubmission?.responses;
 
   useEffect(() => {
@@ -114,16 +147,16 @@ const Questions = ({
   }, [useExternal, serverResponses]);
 
   useEffect(() => {
-    if (serverResponses) {
+    if (serverResponses && !useExternalSavedState) {
       const saved: Record<string, string> = {};
       serverResponses.forEach((response) => {
         if (response.response) {
           saved[response.questionId] = response.response;
         }
       });
-      setSavedResponses(saved);
+      setInternalSavedResponses(saved);
     }
-  }, [serverResponses]);
+  }, [serverResponses, useExternalSavedState]);
 
   // Stable references for questions
   const questions = roundUser?.round?.Question;
@@ -153,6 +186,13 @@ const Questions = ({
       [questionId]: response,
     }));
     setHasUnsavedChanges(true);
+    // Track that this question has unsaved edits if it differs from saved
+    if (
+      savedResponses[questionId] !== undefined &&
+      savedResponses[questionId] !== response
+    ) {
+      setQuestionsWithUnsavedEdits((prev) => new Set(prev).add(questionId));
+    }
   };
 
   if (loading) {
@@ -232,6 +272,12 @@ const Questions = ({
         ...prev,
         [activeQuestion.id]: currentResponse,
       }));
+
+      setQuestionsWithUnsavedEdits((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(activeQuestion.id);
+        return newSet;
+      });
       setNotificationType("success");
       setNotification(getSubmitMessage(selectedLanguage));
       setTimeout(() => setNotification(null), 3000);
@@ -256,6 +302,23 @@ const Questions = ({
       setNotificationType("error");
       setNotification(
         `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
+
+    // Check if all questions are saved
+    const unsavedQuestions = subjectiveQuestions.filter((q) => {
+      const currentAnswer = effectiveResponses[q.id] || "";
+      const savedAnswer = savedResponses[q.id];
+      // Question is unsaved if: no saved answer exists OR current answer differs from saved
+      return savedAnswer === undefined || currentAnswer !== savedAnswer;
+    });
+
+    if (unsavedQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
       );
       setTimeout(() => setNotification(null), 4000);
       return;
@@ -468,6 +531,8 @@ const Questions = ({
               onQuestionSelect={handleQuestionSelect}
               activeQuestionId={activeQuestionId}
               responses={savedResponses}
+              currentResponses={effectiveResponses}
+              questionsWithUnsavedEdits={questionsWithUnsavedEdits}
             />
           </div>
           <div className="w-full md:w-2/3 flex flex-row max-h-screen">

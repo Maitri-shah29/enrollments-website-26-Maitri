@@ -14,6 +14,7 @@ type Props = {
   roundUser?: RoundUserExtended | null;
   joinedAOIs: Set<AOI>;
   currentAnswers: Record<string, string>;
+  savedAnswers?: Record<string, string>;
 };
 
 export default function Round1List({
@@ -25,6 +26,7 @@ export default function Round1List({
   roundUser,
   joinedAOIs,
   currentAnswers,
+  savedAnswers = {},
 }: Props) {
   const availableFolders = useMemo(() => {
     const folders: string[] = Array.from(joinedAOIs);
@@ -61,11 +63,23 @@ export default function Round1List({
       {availableFolders.map((folder) => {
         const isFolderActive = activeRoundFolder === folder;
         const folderQuestions = getQuestionsForFolder(folder);
-        const allQuestionsAnswered =
+        const allQuestionsSaved =
           folderQuestions.length > 0 &&
           folderQuestions.every((q) => {
-            const questionKey = `${folder}-${q}`;
-            return !!currentAnswers[questionKey]?.trim();
+            if (!roundUser?.round?.Question) return false;
+            const question = roundUser.round.Question.filter((qs) => {
+              if (folder === "common")
+                return !qs.varName || qs.varName === "common";
+              return qs.varName === folder;
+            })
+              .sort((a, b) => a.serial - b.serial)
+              .find((_, idx) => `question${idx + 1}` === q);
+            if (!question) return false;
+            const hasSaved = !!savedAnswers[question.id]?.trim();
+            const currentAnswer = currentAnswers[`${folder}-${q}`] || "";
+            const hasUnsavedEdit =
+              hasSaved && savedAnswers[question.id] !== currentAnswer;
+            return hasSaved && !hasUnsavedEdit;
           });
         return (
           <React.Fragment key={folder}>
@@ -78,7 +92,7 @@ export default function Round1List({
             >
               <Image
                 src={
-                  isFolderActive || allQuestionsAnswered
+                  isFolderActive || allQuestionsSaved
                     ? "/images/selected-folder.svg"
                     : "/images/unselected-folder.svg"
                 }
@@ -95,7 +109,26 @@ export default function Round1List({
                   const questionKey = `${folder}-${q}`;
                   const isQuestionSubmitted =
                     submittedQuestions.has(questionKey);
-                  const hasAnswer = !!currentAnswers[questionKey]?.trim();
+
+                  // Get actual question ID for saved status
+                  const question = roundUser?.round?.Question?.filter((qs) => {
+                    if (folder === "common")
+                      return !qs.varName || qs.varName === "common";
+                    return qs.varName === folder;
+                  })
+                    .sort((a, b) => a.serial - b.serial)
+                    .find((_, idx) => `question${idx + 1}` === q);
+
+                  const hasSavedAnswer = question
+                    ? !!savedAnswers[question.id]?.trim()
+                    : false;
+                  const currentAnswer = currentAnswers[questionKey] || "";
+                  const hasUnsavedEdit =
+                    hasSavedAnswer && question
+                      ? savedAnswers[question.id] !== currentAnswer
+                      : false;
+                  const isQuestionSaved = hasSavedAnswer && !hasUnsavedEdit;
+
                   return (
                     <TechButton
                       key={q}
@@ -107,7 +140,9 @@ export default function Round1List({
                     >
                       <Image
                         src={
-                          isQuestionActive || isQuestionSubmitted || hasAnswer
+                          isQuestionActive ||
+                          isQuestionSubmitted ||
+                          isQuestionSaved
                             ? "/images/selected-folder.svg"
                             : "/images/unselected-folder.svg"
                         }

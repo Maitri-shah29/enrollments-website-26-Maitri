@@ -1,9 +1,9 @@
 "use client";
 import { Domain } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { useTechNavigation } from "@/lib/tech-navigation";
-import type { AOI } from "@/lib/types";
+import type { AOI, QuestionId } from "@/lib/types";
 import createRoundUser from "../actions/create-round-user";
 import About from "./components/tech/about";
 import AOIContent from "./components/tech/aoi";
@@ -39,6 +39,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
     new Set(),
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [savedAnswers, setSavedAnswers] = useState<Record<string, string>>({});
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
     initialRoundUser ?? null,
   );
@@ -46,6 +47,12 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [joinedAOIs, setJoinedAOIs] = useState<Set<AOI>>(new Set());
   const [aoisLoaded, setAoisLoaded] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    type: "folder" | "question";
+    value: string;
+  } | null>(null);
+  const hasUnsavedChangesRef = useRef<boolean>(false);
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
@@ -72,13 +79,10 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
 
   useEffect(() => {
     if (roundUser?.formSubmission?.responses) {
-      const savedAnswers: Record<string, string> = {};
+      const loadedAnswers: Record<string, string> = {};
+      const loadedSavedAnswers: Record<string, string> = {};
+      const loadedSubmittedQuestions = new Set<string>();
       const questions = roundUser.round?.Question || [];
-
-      // console.log(
-      //   "Loading responses from DB:",
-      //   roundUser.formSubmission.responses.length,
-      // );
 
       for (const response of roundUser.formSubmission.responses) {
         if (response.response) {
@@ -92,17 +96,16 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
             );
             if (questionIndex !== -1) {
               const questionKey = `${question.varName}-question${questionIndex + 1}`;
-              savedAnswers[questionKey] = response.response;
-              // console.log(
-              //   `Restored answer for ${questionKey}:`,
-              //   response.response.substring(0, 50),
-              // );
+              loadedAnswers[questionKey] = response.response;
+              loadedSavedAnswers[question.id] = response.response;
+              loadedSubmittedQuestions.add(questionKey);
             }
           }
         }
       }
-      // console.log("Total restored answers:", Object.keys(savedAnswers).length);
-      setAnswers(savedAnswers);
+      setAnswers(loadedAnswers);
+      setSavedAnswers(loadedSavedAnswers);
+      setSubmittedQuestions(loadedSubmittedQuestions);
     }
   }, [roundUser]);
 
@@ -284,6 +287,18 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
           onSubmit={(key) =>
             setSubmittedQuestions((prev) => new Set([...prev, key]))
           }
+          savedAnswers={savedAnswers}
+          onSaveAnswer={(questionId, value) =>
+            setSavedAnswers((prev) => ({ ...prev, [questionId]: value }))
+          }
+          hasUnsavedChangesRef={hasUnsavedChangesRef}
+          onMarkUnsaved={(key) =>
+            setSubmittedQuestions((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(key);
+              return newSet;
+            })
+          }
         />
       );
     }
@@ -295,8 +310,72 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
     return null;
   };
 
+  const handleFolderSelectWithCheck = (folder: string) => {
+    if (hasUnsavedChangesRef.current) {
+      setPendingNavigation({ type: "folder", value: folder });
+      setShowUnsavedDialog(true);
+      return;
+    }
+    selectFolder(folder as AOI);
+  };
+
+  const handleQuestionSelectWithCheck = (question: string) => {
+    if (hasUnsavedChangesRef.current) {
+      setPendingNavigation({ type: "question", value: question });
+      setShowUnsavedDialog(true);
+      return;
+    }
+    selectQuestion(question as QuestionId);
+  };
+
+  const handleConfirmNavigation = () => {
+    if (pendingNavigation) {
+      if (pendingNavigation.type === "folder") {
+        selectFolder(pendingNavigation.value as AOI);
+      } else {
+        selectQuestion(pendingNavigation.value as QuestionId);
+      }
+    }
+    hasUnsavedChangesRef.current = false;
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+
+  const handleCancelNavigation = () => {
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+
   return (
     <div className="w-full h-full bg-[#08111D] flex font-jetbrains [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#08111D] border-2 border-[#993C7A] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#993C7A] text-2xl font-jetbrains mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-white text-lg mb-6">
+              You have unsaved changes. Do you want to proceed without saving?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelNavigation}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-jetbrains hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmNavigation}
+                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors"
+                type="button"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Error Popup */}
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -326,13 +405,14 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         onSelectAOI={selectAoi}
         activeRoundFolder={activeRoundFolder}
         activeQuestion={activeQuestion}
-        onSelectFolder={(folder: string) => selectFolder(folder as any)}
-        onSelectQuestion={selectQuestion}
+        onSelectFolder={handleFolderSelectWithCheck}
+        onSelectQuestion={handleQuestionSelectWithCheck}
         submittedQuestions={submittedQuestions}
         onLogoClick={() => setSection("welcome")}
         roundUser={roundUser}
         joinedAOIs={joinedAOIs}
         currentAnswers={answers}
+        savedAnswers={savedAnswers}
         roundActive={roundActive}
         roundHidden={roundHidden}
       />
