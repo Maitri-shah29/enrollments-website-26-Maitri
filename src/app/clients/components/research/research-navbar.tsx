@@ -5,12 +5,11 @@ import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/research/questions";
-import type { ResearchAOI } from "@/lib/research-navigation";
+import type { ResearchAOI, ResearchSection } from "@/lib/research-navigation";
 
 const About = "/images/research/about.svg";
 const ACM = "/images/research/acm-logo.svg";
 const Aoi = "/images/research/aoi.svg";
-const Explore = "/images/research/explore.svg"; // Add explore icon
 const Help = "/images/research/help.svg";
 const Instructions = "/images/research/instructions.svg";
 const Interview = "/images/research/interview.svg";
@@ -20,10 +19,19 @@ const Settings = "/images/research/settings.svg";
 const Vault = "/images/research/vault.svg";
 
 interface ResearchNavbarProps {
+  activeSection: string;
+  onChangeSection: (s: ResearchSection) => void;
+  aoiExpanded: boolean;
+  onToggleAoi: () => void;
+  roundExpanded: boolean;
+  onToggleRound: () => void;
+  activeQuestion: string;
+  activeRoundFolder: string;
   selected: string;
   onSelect: (panel: string) => void;
   selectedAOI?: string;
   selectedQuestionIdx?: number | null;
+  submittedQuestions: Set<string>;
   onAOISelect?: (aoi: string) => void;
   onQuestionSelect?: (idx: number) => void;
   roundUser?: RoundUserExtended | null;
@@ -33,11 +41,12 @@ interface ResearchNavbarProps {
 //test
 const Icon = {
   ChevronRight: (_props: React.SVGProps<SVGSVGElement>) => (
-    <Image src={RightArrow} width={9} height={16} alt="RightArrow" />
+    <Image src={RightArrow} width={6} height={6} alt="RightArrow" />
   ),
 };
 
 const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
+  submittedQuestions,
   selected,
   onSelect,
   selectedAOI,
@@ -140,7 +149,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                 }
               }}
               disabled={isDisabled}
-              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors rounded ${
+              className={`w-full my-1 flex items-center gap-3 pl-3 py-1.5 text-left transition-colors rounded ${
                 isDisabled
                   ? "cursor-not-allowed opacity-40"
                   : selected === it.key
@@ -155,7 +164,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
           {!roundHidden && (
             <button
-              className={`mt-1 w-full flex items-center justify-end pl-3 py-2 rounded transition-colors ${
+              className={`w-full flex items-center justify-end pl-3 py-1.5 rounded transition-colors ${
                 isDisabled
                   ? "cursor-not-allowed opacity-40"
                   : selected === "Round 1"
@@ -191,7 +200,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               ) : (
                 visibleAOIs.map((aoi) => (
                   <div key={aoi} className="space-y-1">
-                    <div className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-md hover:bg-white/3 transition-colors">
+                    <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-md hover:bg-white/3 transition-colors">
                       <button
                         type="button"
                         onClick={() => {
@@ -231,7 +240,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                               onQuestionSelect?.(qIdx);
                               onSelect("Round 1");
                             }}
-                            className={`w-full text-left px-3 py-0.5 border-b-2 border-[#DBD3D3]/50 flex items-center justify-between text-sm transition-colors cursor-pointer`}
+                            className={`w-full text-left px-3 py-0.5 ${submittedQuestions.has(`${aoi}-question${qIdx + 1}`) ? `border-[#7D5BED] border-b-3` : `border-[#DBD3D3]/25 border-b-2`} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3`}
                           >
                             <span className="text-left">
                               Question {qIdx + 1}
@@ -249,7 +258,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </div>
           )}
 
-          <div className={roundHidden ? "mt-1" : "mt-0"}>
+          <div className={roundHidden ? "mt-4" : "mt-3"}>
             <button
               type="button"
               onClick={() => {
