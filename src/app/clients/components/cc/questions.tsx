@@ -86,9 +86,16 @@ const Questions = ({
   };
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("plaintext");
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(
+    null,
+  );
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
+  const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
+    {},
+  );
 
   // Stable reference for responses from server
   const serverResponses = roundUser?.formSubmission?.responses;
@@ -106,6 +113,18 @@ const Questions = ({
     }
   }, [useExternal, serverResponses]);
 
+  useEffect(() => {
+    if (serverResponses) {
+      const saved: Record<string, string> = {};
+      serverResponses.forEach((response) => {
+        if (response.response) {
+          saved[response.questionId] = response.response;
+        }
+      });
+      setSavedResponses(saved);
+    }
+  }, [serverResponses]);
+
   // Stable references for questions
   const questions = roundUser?.round?.Question;
   const firstSubjectiveQuestionId = questions?.find(
@@ -120,55 +139,21 @@ const Questions = ({
   }, [firstSubjectiveQuestionId, activeQuestionId, questions]);
 
   const handleQuestionSelect = (questionId: string) => {
+    if (hasUnsavedChanges) {
+      setPendingQuestionId(questionId);
+      setShowUnsavedDialog(true);
+      return;
+    }
     setActiveQuestionId(questionId);
   };
-
-  const autoSaveResponse = useCallback(
-    async (questionId: string, response: string) => {
-      if (!roundUser?.formSubmission?.id) return;
-
-      try {
-        await saveFormResponse(
-          roundUser.formSubmission.id,
-          questionId,
-          response,
-        );
-      } catch (err) {
-        console.error("Auto-save error:", err);
-        if (err instanceof Error) {
-          console.error("Auto-save error details:", err.message);
-        }
-      }
-    },
-    [roundUser?.formSubmission?.id],
-  );
 
   const handleResponseChange = (questionId: string, response: string) => {
     updateResponses((prev) => ({
       ...prev,
       [questionId]: response,
     }));
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      autoSaveResponse(questionId, response).catch((err) => {
-        // Extra error handling layer
-        console.error("Debounced auto-save error:", err);
-      });
-    }, 5000);
+    setHasUnsavedChanges(true);
   };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -242,6 +227,11 @@ const Questions = ({
         activeQuestion.id,
         currentResponse,
       );
+      setHasUnsavedChanges(false);
+      setSavedResponses((prev) => ({
+        ...prev,
+        [activeQuestion.id]: currentResponse,
+      }));
       setNotificationType("success");
       setNotification(getSubmitMessage(selectedLanguage));
       setTimeout(() => setNotification(null), 3000);
@@ -311,6 +301,20 @@ const Questions = ({
 
   const handleCancelSubmit = () => {
     setShowConfirmDialog(false);
+  };
+
+  const handleConfirmQuestionChange = () => {
+    setHasUnsavedChanges(false);
+    setShowUnsavedDialog(false);
+    if (pendingQuestionId) {
+      setActiveQuestionId(pendingQuestionId);
+      setPendingQuestionId(null);
+    }
+  };
+
+  const handleCancelQuestionChange = () => {
+    setShowUnsavedDialog(false);
+    setPendingQuestionId(null);
   };
 
   // Check round user status
@@ -424,6 +428,34 @@ const Questions = ({
           </div>
         </div>
       )}
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-[#16171B] border-2 border-[#C9EB3E] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#C9EB3E] text-2xl font-ShareTechMono mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-white text-lg mb-6 font-ShareTechMono">
+              You have unsaved changes. Do you want to proceed without saving?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelQuestionChange}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-ShareTechMono hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmQuestionChange}
+                className="px-6 py-2 bg-[#C9EB3E] text-black font-ShareTechMono hover:bg-[#a8c932] transition-colors"
+                type="button"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {subjectiveQuestions.length === 0 ? (
         <div className="text-white text-lg text-center py-8">
           No subjective questions available for this round.
@@ -435,7 +467,7 @@ const Questions = ({
               questions={questionsForList}
               onQuestionSelect={handleQuestionSelect}
               activeQuestionId={activeQuestionId}
-              responses={effectiveResponses}
+              responses={savedResponses}
             />
           </div>
           <div className="w-full md:w-2/3 flex flex-row max-h-screen">
