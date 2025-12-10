@@ -154,6 +154,21 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   const renderContent = () => {
     const roundUserStatus = roundUser?.status || "pending";
 
+    // Allow about, instructions, and aoi pages to be displayed normally
+    if (activeSection === "about") return <About />;
+    if (activeSection === "instructions") return <Instructions />;
+    if (activeSection === "aoi") {
+      if (activeAOI) return <AOIContent activeAOI={activeAOI} />;
+      return (
+        <div className="text-[#993C7A] text-2xl font-semibold">
+          <h1>Areas of Interest</h1>
+          <p className="mt-4 text-lg text-white">
+            Select a subtopic from the sidebar to view more details.
+          </p>
+        </div>
+      );
+    }
+
     // Status-based rendering for evaluate, promoted, rejected
     if (roundUserStatus === "evaluate") {
       return (
@@ -200,19 +215,6 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
       );
     }
 
-    if (activeSection === "about") return <About />;
-    if (activeSection === "aoi") {
-      if (activeAOI) return <AOIContent activeAOI={activeAOI} />;
-      return (
-        <div className="text-[#993C7A] text-2xl font-semibold">
-          <h1>Areas of Interest</h1>
-          <p className="mt-4 text-lg text-white">
-            Select a subtopic from the sidebar to view more details.
-          </p>
-        </div>
-      );
-    }
-    if (activeSection === "instructions") return <Instructions />;
     if (activeSection === "explore")
       return (
         <div className="w-full">
