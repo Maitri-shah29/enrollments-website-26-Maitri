@@ -107,13 +107,13 @@ const Instructions: React.FC = () => {
             {[
               {
                 title: "Neetcode 150",
-                note: "150 curated problems across topics.",
+                note: "150 curated problems across topics curated for you.",
                 href: "https://neetcode.io/practice/practice/neetcode150",
               },
               {
-                title: "Striver's A2Z",
-                note: "Comprehensive topic-wise practice.",
-                href: "https://takeuforward.org/strivers-a2z-dsa-course/strivers-a2z-dsa-course-sheet-2",
+                title: "CSES Problemset",
+                note: "Comprehensive topic-wise CP Practice problems",
+                href: "https://cses.fi/problemset",
               },
               {
                 title: "AlgoMap",

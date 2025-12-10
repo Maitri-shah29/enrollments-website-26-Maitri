@@ -221,7 +221,7 @@ const IFRAME_WHITELIST = new Set([
 
   //CC Resources
   "neetcode.io",
-  "takeuforward.org",
+  "cses.fi",
   "algomap.io",
 ]);
 
