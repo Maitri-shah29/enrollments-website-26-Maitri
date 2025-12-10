@@ -56,6 +56,7 @@ interface QuestionsProps {
   onAOIChange?: (aoi: string) => void;
   onQuestionChange?: (idx: number) => void;
   joinedAOIs?: Set<ResearchAOI>;
+  onSubmit: (key: string) => void;
 }
 
 const Questions: React.FC<QuestionsProps> = ({
@@ -66,10 +67,12 @@ const Questions: React.FC<QuestionsProps> = ({
   setResponses,
   selectedAOI: propSelectedAOI = "Blockchain",
   selectedQuestionIdx: propSelectedQuestionIdx = 0,
-  onAOIChange,
-  onQuestionChange,
+  onAOIChange: _onAOIChange,
+  onQuestionChange: _onQuestionChange,
+  onSubmit,
   joinedAOIs = new Set(),
 }) => {
+  const questionKey = `${propSelectedAOI}-question${propSelectedQuestionIdx + 1}`;
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
@@ -78,12 +81,13 @@ const Questions: React.FC<QuestionsProps> = ({
     Record<string, string>
   >({});
   const useExternal = !!responses && !!setResponses;
-  const effectiveResponses = useExternal ? responses! : internalResponses;
+  const effectiveResponses =
+    useExternal && responses ? responses : internalResponses;
   const updateResponses: React.Dispatch<
     React.SetStateAction<Record<string, string>>
   > = (value) => {
     if (useExternal) {
-      setResponses!(value);
+      setResponses?.(value);
     } else {
       setInternalResponses(value);
     }
@@ -118,11 +122,12 @@ const Questions: React.FC<QuestionsProps> = ({
           questionId,
           response,
         );
+        onSubmit(questionKey);
       } catch (err) {
         console.error("Auto-save error:", err);
       }
     },
-    [roundUser?.formSubmission?.id],
+    [roundUser?.formSubmission?.id, onSubmit, questionKey],
   );
 
   const handleResponseChange = (questionId: string, response: string) => {
@@ -314,7 +319,7 @@ const Questions: React.FC<QuestionsProps> = ({
       setNotification("No active question or form submission found");
       return;
     }
-
+    onSubmit(questionKey);
     setSubmitting(true);
     setNotification(null);
 

@@ -18,6 +18,7 @@ import Questions, {
 } from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
 import type { ResearchAOI } from "@/lib/research-navigation";
+import { useResearchNavigation } from "@/lib/research-navigation";
 import createRoundUser from "../actions/create-round-user";
 
 const AOI_KEYS = [
@@ -82,6 +83,20 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
   const [aoisLoaded, setAoisLoaded] = useState(false);
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
+  const {
+    activeSection,
+    aoiExpanded,
+    roundExpanded,
+    activeRoundFolder,
+    activeQuestion,
+    setSection,
+    toggleAoi,
+    toggleRound,
+  } = useResearchNavigation();
+
+  const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Load joined AOIs from localStorage on mount
   useEffect(() => {
@@ -156,19 +171,34 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
 
   useEffect(() => {
     if (!roundUser?.formSubmission) return;
-
+    const savedAnswers: Record<string, string | null> = {};
     const currentFsId = roundUser.formSubmission.id;
-
+    const questions = roundUser.round?.Question || [];
+    const submittedResponses: string[] = [];
     if (formSubmissionId !== currentFsId) {
       const initial: Record<string, string> = {};
       const serverResponses = roundUser.formSubmission.responses ?? [];
       serverResponses.forEach((r) => {
-        if (r.response) initial[r.questionId] = r.response;
+        const question = questions.find((q) => q.id === r.questionId);
+        if (question) {
+          const AOIQuestions = questions
+            .filter((q) => q.varName === question.varName)
+            .sort((a, b) => a.serial - b.serial);
+          const questionIndex = AOIQuestions.findIndex(
+            (q) => q.id === question.id,
+          );
+          if (questionIndex !== -1) {
+            const questionKey = `${question.varName}-question${questionIndex + 1}`;
+            submittedResponses.push(questionKey);
+          }
+          if (r.response) initial[r.questionId] = r.response;
+        }
       });
       setResponses(initial);
+      setSubmittedQuestions(new Set(submittedResponses));
       setFormSubmissionId(currentFsId);
     }
-  }, [roundUser?.formSubmission, formSubmissionId]);
+  }, [roundUser?.formSubmission, roundUser?.round?.Question, formSubmissionId]);
 
   // ✅ Memoized so it never re-creates between renders
   const handleAOISelect = useCallback((aoi: string) => {
@@ -221,10 +251,19 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
         </div>
       )}
       <ResearchNavbar
+        activeSection={activeSection}
+        onChangeSection={setSection}
+        aoiExpanded={aoiExpanded}
+        onToggleAoi={toggleAoi}
+        roundExpanded={roundExpanded}
+        onToggleRound={toggleRound}
+        activeQuestion={`question${activeQuestion + 1}`}
+        activeRoundFolder={activeRoundFolder}
         selected={selectedPanel}
         onSelect={handlePanelSelect}
         selectedAOI={selectedAOI}
         selectedQuestionIdx={selectedQuestionIdx}
+        submittedQuestions={submittedQuestions}
         onAOISelect={handleAOISelect}
         onQuestionSelect={handleQuestionSelect}
         roundUser={roundUser}
@@ -265,6 +304,9 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
             onAOIChange={setSelectedAOI}
             onQuestionChange={setSelectedQuestionIdx}
             joinedAOIs={joinedAOIs}
+            onSubmit={(key) =>
+              setSubmittedQuestions((prev) => new Set([...prev, key]))
+            }
           />
         ) : null}
         {selectedPanel === "Interview" && <Interview />}
