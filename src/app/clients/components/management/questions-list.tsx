@@ -113,40 +113,59 @@ export default function QuestionsList({
 
       <div className="p-2 flex-1 w-full overflow-y-auto">
         <div className="space-y-1">
-          {questions.map(
-            (q, index) =>
-              (searchInput.trim() === "" ||
-                q.question
-                  .toLowerCase()
-                  .includes(searchInput.toLowerCase())) && (
-                <label
-                  key={q.id}
-                  onClick={() => handleClick(index)}
-                  className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!answers[q.id]?.trim()}
-                    tabIndex={-1}
-                    className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
-                    readOnly
-                  />
+          {(() => {
+            const filteredQuestions = questions.filter(
+              (q) =>
+                searchInput.trim() === "" ||
+                q.question.toLowerCase().includes(searchInput.toLowerCase()),
+            );
 
-                  <span
-                    className="font-medium flex-1 text-gray-700"
-                    style={{
-                      overflowWrap: "anywhere",
-                      wordBreak: "break-word",
-                    }}
+            if (filteredQuestions.length === 0 && searchInput.trim() !== "") {
+              return (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <p className="text-lg font-medium">No questions found</p>
+                  <p className="text-sm mt-1">
+                    Try a different search term or clear the search bar
+                  </p>
+                </div>
+              );
+            }
+
+            return questions.map(
+              (q, index) =>
+                (searchInput.trim() === "" ||
+                  q.question
+                    .toLowerCase()
+                    .includes(searchInput.toLowerCase())) && (
+                  <label
+                    key={q.id}
+                    onClick={() => handleClick(index)}
+                    className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
                   >
-                    {index + 1}.{" "}
-                    {q.question.length > 50
-                      ? `${q.question.slice(0, 50)}...`
-                      : q.question}
-                  </span>
-                </label>
-              ),
-          )}
+                    <input
+                      type="checkbox"
+                      checked={!!answers[q.id]?.trim()}
+                      tabIndex={-1}
+                      className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
+                      readOnly
+                    />
+
+                    <span
+                      className="font-medium flex-1 text-gray-700"
+                      style={{
+                        overflowWrap: "anywhere",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {index + 1}.{" "}
+                      {q.question.length > 50
+                        ? `${q.question.slice(0, 50)}...`
+                        : q.question}
+                    </span>
+                  </label>
+                ),
+            );
+          })()}
         </div>
       </div>
 

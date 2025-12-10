@@ -54,7 +54,7 @@ export default function Question({
           <div>
             <p className="text-black font-medium">Mgmt</p>
             <p className="text-sm text-gray-700">
-              &lt;management@acm.vit.in&gt;
+              &lt;management@acmvit.in&gt;
             </p>
             <p className="text-sm text-gray-700">to me ▾</p>
           </div>
@@ -73,7 +73,7 @@ export default function Question({
           <div className="flex items-center text-sm text-gray-700 space-x-2 mb-3">
             <Reply size={16} />
             <p>
-              mgmt(ew-management@acm.org) -{" "}
+              mgmt(ew-management@acmvit.in) -{" "}
               <span className="text-gray-500 italic">Saved draft</span>
             </p>
           </div>
