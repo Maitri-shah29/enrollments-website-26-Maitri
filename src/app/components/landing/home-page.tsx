@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import Gravity, { MatterBody } from "@/app/components/gravity";
 
 interface HomePageProps {
   query: string;
@@ -19,13 +20,22 @@ interface HomePageProps {
 const topEventNames = ["Cryptic Hunt", "Reverse Coding", "Exam Cooker"];
 const bottomEventNames = ["Forktober", "Unipool", "Code 2 Create"];
 
-const domainLinks = [
-  { label: "Design", keyword: "design", variant: "outline" as const },
-  { label: "CC", keyword: "cc", variant: "solid" as const },
-  { label: "Research", keyword: "research", variant: "solid" as const },
-  { label: "Tech", keyword: "tech", variant: "outline" as const },
-  { label: "Management", keyword: "management", variant: "solid" as const },
-];
+const stickerPhysics = {
+  matterBodyOptions: {
+    friction: 0.12,
+    restitution: 0.4,
+    density: 0.001,
+    frictionAir: 0.016,
+  },
+};
+
+const stickerTextBase: React.CSSProperties = {
+  WebkitFontSmoothing: "antialiased",
+  textRendering: "optimizeLegibility",
+  WebkitTextStroke: "3px #ffffff",
+  paintOrder: "stroke fill",
+  filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.28))",
+};
 
 const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
@@ -39,6 +49,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
+  const goToDomains = handleKeyword("domains");
 
   useEffect(() => {
     const loadPhotos = async () => {
@@ -118,7 +129,7 @@ const HomePage: React.FC<HomePageProps> = ({
             onClick={handleKeyword("acmvit.in")}
           >
             <div className="w-full h-full bg-[#292625] rounded-xl flex items-center text-5xl font-poppins pl-10">
-              <h1>About acm</h1>
+              <h1>About ACM</h1>
               <Image
                 src="/images/addons/Group 1000007435.png"
                 width={400}
@@ -258,25 +269,94 @@ const HomePage: React.FC<HomePageProps> = ({
             {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" /> */}
           </section>
 
-          <div
-            onClick={handleKeyword("domains")}
-            className="relative col-span-6 bg-[#292625] rounded-xl text-5xl flex justify-center items-center font-poppins"
-          >
-            Domains
-            <Image
-              src="/images/addons/Group 2087325587.svg"
-              alt="hhhh"
-              width={270}
-              height={270}
-              className="absolute -left-2 -bottom-4"
-            ></Image>
-            <Image
-              src="/images/addons/Group 2087325588.svg"
-              alt="hhhh"
-              width={200}
-              height={200}
-              className="absolute -right-3 -top-5"
-            ></Image>
+          <div className="relative col-span-6 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
+            <Gravity
+              className="absolute inset-0 z-0 overflow-visible pointer-events-auto"
+              gravity={{ x: 0, y: 1 }}
+              addTopWall={true}
+              grabCursor={true}
+            >
+              <MatterBody
+                x="18%"
+                y="76%"
+                angle={-12}
+                {...stickerPhysics}
+                onClick={goToDomains}
+              >
+                <div
+                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#7b2ff7]"
+                  style={stickerTextBase}
+                >
+                  Tech
+                </div>
+              </MatterBody>
+
+              <MatterBody
+                x="28%"
+                y="80%"
+                angle={-8}
+                {...stickerPhysics}
+                onClick={goToDomains}
+              >
+                <div
+                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#ff8a1f]"
+                  style={stickerTextBase}
+                >
+                  Design
+                </div>
+              </MatterBody>
+
+              <MatterBody
+                x="21%"
+                y="86%"
+                angle={-6}
+                {...stickerPhysics}
+                onClick={goToDomains}
+              >
+                <div
+                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#3aa7ff]"
+                  style={stickerTextBase}
+                >
+                  Management
+                </div>
+              </MatterBody>
+
+              <MatterBody
+                x="76%"
+                y="18%"
+                angle={6}
+                {...stickerPhysics}
+                onClick={goToDomains}
+              >
+                <div
+                  className="select-none text-[30px] font-black leading-[1] tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
+                  style={stickerTextBase}
+                >
+                  Research
+                </div>
+              </MatterBody>
+
+              <MatterBody
+                x="87%"
+                y="24%"
+                angle={2}
+                {...stickerPhysics}
+                onClick={goToDomains}
+              >
+                <div
+                  className="select-none text-[34px] font-black leading-[1] tracking-tight text-[#4f7d1a]"
+                  style={stickerTextBase}
+                >
+                  CC
+                </div>
+              </MatterBody>
+            </Gravity>
+
+            <div className="pointer-events-none relative z-10 flex min-h-[360px] w-full flex-col items-center justify-center gap-2 px-6 text-center">
+              <span className="text-[48px] font-black leading-tight text-white drop-shadow-[0_18px_36px_rgba(0,0,0,0.45)] sm:text-[54px]">
+                Domains
+              </span>
+            </div>
           </div>
         </div>
       </div>
