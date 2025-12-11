@@ -110,7 +110,7 @@ const AOIs: React.FC<AOIsProps> = ({
                   }
                 }}
                 disabled={disableJoin}
-                className={`px-10 py-4 border-2 font-coolvetica rounded-lg transition-colors duration-200 ${
+                className={`px-7 py-2 border-2 font-coolvetica rounded-lg mt-5 transition-colors duration-200 ${
                   isJoined
                     ? "border-white bg-transparent hover:bg-[#F55F4B] hover:border-[#F55F4B] text-white"
                     : disableJoin

@@ -70,7 +70,7 @@ const HomePage: React.FC<HomePageProps> = ({
   }, [photos]);
 
   return (
-    <div className="min-h-full w-full bg-[#080808] text-white select-none">
+    <div className="flex justify-center items-center min-h-full w-full bg-[#080808] text-white select-none">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
       <div className="pointer-events-none absolute inset-0 flex h-full w-full">
         <Image
@@ -85,7 +85,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
       <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1500px] flex-col gap-10 px-4 py-8 sm:px-6 lg:px-10">
         <div className="grid w-full gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-6">
-          <div className="relative h-16 w-44 justify-self-start sm:h-20 sm:w-56">
+          <div className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56">
             <Image
               src="/images/acmlogo.svg"
               alt="ACM-VIT logo"
@@ -96,7 +96,7 @@ const HomePage: React.FC<HomePageProps> = ({
               className="object-contain select-none"
             />
           </div>
-          <div className="flex w-full min-w-[240px] max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
+          <div className="flex w-full min-w-60 max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
             <input
               className="w-full text-lg font-medium outline-none placeholder:text-neutral-400 select-text"
               placeholder="Search"
@@ -112,45 +112,29 @@ const HomePage: React.FC<HomePageProps> = ({
           />
         </div>
 
-        <div className="grid gap-5 lg:auto-rows-[240px] lg:grid-cols-12">
-          <button
-            type="button"
+        <div className="grid gap-5 lg:auto-rows-[280px] grid-cols-12 h-full">
+          <div
+            className="col-span-6 relative"
             onClick={handleKeyword("acmvit.in")}
-            className="relative col-span-12 overflow-hidden rounded-xl border border-white/10 bg-white/20 p-6 text-left shadow-[0_24px_60px_rgba(0,0,0,0.45)] transition hover:bg-white/24 hover:shadow-[0_28px_70px_rgba(0,0,0,0.55)] focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] lg:col-span-6 lg:col-start-1 lg:h-full"
           >
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-white/5 to-black/40" />
-              <div
-                className="absolute left-[-55%] top-1/2 flex w-[320%] -translate-y-1/2 select-none text-white/10 font-bold"
-                style={{
-                  transform: "rotate(65deg)",
-                }}
-              >
-                <div className="flex flex-col">
-                  {aboutMarqueeRows.map((row) => (
-                    <span
-                      key={row}
-                      className="animate-about-drift whitespace-nowrap text-[84px] font-PolysansTrial font-black leading-[0.69] tracking-tight text-white/15 drop-shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
-                    >
-                      acmacmacmacmacmacmacmacm
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <div className="w-full h-full bg-[#292625] rounded-xl flex items-center text-5xl font-poppins pl-10">
+              <h1>About acm</h1>
+              <Image
+                src="/images/addons/Group 1000007435.png"
+                width={400}
+                height={400}
+                alt="acmacmacm"
+                className="absolute right-0"
+              />
             </div>
-            <div className="relative z-10 flex h-full flex-col justify-center">
-              <h2
-                className="text-6xl font-poppins"
-                style={{
-                  color: "transparent",
-                  WebkitTextStroke: "2px white",
-                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-                }}
-              >
-                About ACM
-              </h2>
-            </div>
-          </button>
+            <Image
+              src="/images/addons/Phone 2.svg"
+              width={1500}
+              height={1500}
+              alt="ACM VIT Website Preview"
+              className="absolute w-[130%] h-[130%] bottom-0 -right-50"
+            />
+          </div>
 
           <section className="relative col-span-12 flex h-full overflow-hidden rounded-xl border border-white/10 bg-white/14 shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
             <div className="pointer-events-none absolute inset-0">
@@ -175,94 +159,23 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </section>
 
-          <button
-            type="button"
+          <div
+            className="col-span-3 row-span-2 bg-[#292625] rounded-xl relative"
             onClick={handleKeyword("events")}
-            className="group relative col-span-12 flex h-full flex-col items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-white/14 px-2 py-2 text-center shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-10 lg:row-span-2"
           >
-            {/* Gradient overlay for normal and hover state */}
-            <div className="pointer-events-none absolute inset-0 transition-all duration-300 bg-gradient-to-br from-white/30 via-white/7 to-black/40 opacity-50 group-hover:from-white/25 group-hover:via-white/5 group-hover:to-black/40 group-hover:opacity-100" />
-
-            <div className="relative z-10 flex w-full flex-col font-bold gap-3 whitespace-nowrap text-2xl uppercase tracking-[0.1em] text-white/85">
-              {topEventNames.map((label, index) => (
-                <span
-                  key={label}
-                  className="inline-flex font-poppins"
-                  style={{
-                    animation: `eventsOscillate 6s ease-in-out ${
-                      index * 0.4
-                    }s infinite alternate`,
-                  }}
-                >
-                  {[0, 1].map((repeat) => (
-                    <span key={`${label}-${repeat}`} className="px-3">
-                      {label === "Reverse Coding" ? (
-                        <span
-                          className="inline-block"
-                          style={{
-                            color: "transparent",
-                            WebkitTextStroke: "1px white",
-                            textShadow: "0 6px 16px rgba(0,0,0,0.5)",
-                          }}
-                        >
-                          {label}
-                        </span>
-                      ) : (
-                        label
-                      )}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </div>
-            <div>
-              <h3
-                className="text-5xl font-poppins"
-                style={{
-                  color: "transparent",
-                  WebkitTextStroke: "2px white",
-                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-                }}
-              >
-                Events and Projects
-              </h3>
-            </div>
-            <div className="relative z-10 flex w-full flex-col font-bold gap-3 whitespace-nowrap text-2xl uppercase tracking-[0.1em] text-white/85">
-              {bottomEventNames.map((label, index) => (
-                <span
-                  key={label}
-                  className="inline-flex font-poppins"
-                  style={{
-                    animation: `eventsOscillate 6.5s ease-in-out ${
-                      index * 0.5
-                    }s infinite alternate-reverse`,
-                  }}
-                >
-                  {[0, 1].map((repeat) => (
-                    <span key={`${label}-${repeat}`} className="px-3">
-                      {label === "Forktober" || label === "Code 2 Create" ? (
-                        <span
-                          className="inline-block"
-                          style={{
-                            color: "transparent",
-                            WebkitTextStroke: "1px white",
-                            textShadow: "0 6px 16px rgba(0,0,0,0.5)",
-                          }}
-                        >
-                          {label}
-                        </span>
-                      ) : (
-                        label
-                      )}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </div>
-          </button>
+            <Image
+              src="/images/addons/Group 2087325586.svg"
+              alt="events"
+              width={500}
+              height={500}
+            ></Image>
+            <h1 className="text-center text-4xl font-poppins bottom-10 absolute">
+              Events and Projects
+            </h1>
+          </div>
 
           <section className="flex w-full h-full flex-col gap-2 lg:col-span-3 lg:col-start-1 lg:row-start-2">
-            <div className="relative h-full w-full items-center justify-center  col-span-12 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
+            <div className="relative h-full w-full items-center justify-center  col-span-12 flex flex-col overflow-hidden rounded-xl bg-[#292625]">
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
@@ -272,8 +185,8 @@ const HomePage: React.FC<HomePageProps> = ({
                 className="absolute inset-0 w-full h-full rounded-xl"
               ></iframe>
             </div>
-            <div className="relative h-30 w-full flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/16 text-sm text-white/70 shadow-[0_18px_40px_rgba(0,0,0,0.4)]">
-              <h1
+            <div className="relative h-30 w-full flex flex-col items-center justify-center rounded-xl bg-[#292625]">
+              {/* <h1
                 className="font-poppins text-2xl text-center tracking-wider select-none"
                 style={{
                   color: "transparent",
@@ -282,9 +195,9 @@ const HomePage: React.FC<HomePageProps> = ({
                 }}
               >
                 Games
-              </h1>
+              </h1> */}
 
-              <div className="flex gap-3 select-none">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
                 <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"
@@ -321,88 +234,52 @@ const HomePage: React.FC<HomePageProps> = ({
                   draggable={false}
                   className="object-contain p-0.5 w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
+
+                <Image
+                  onClick={handleKeyword("404")}
+                  src="/images/404game-logo.png"
+                  alt="Games Placeholder"
+                  width={100}
+                  height={100}
+                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
+
+                <Image
+                  onClick={handleKeyword("skribbl.io")}
+                  src="/images/skribbl-logo.svg"
+                  alt="Games Placeholder"
+                  width={100}
+                  height={100}
+                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
+                />
               </div>
             </div>
 
             {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" /> */}
           </section>
 
-          <section className="relative col-span-12 cursor-default flex h-full flex-col bg-gradient-to-br from-white/25 via-white/5 to-black/40 items-center justify-between rounded-xl border border-white/10 bg-white/16 px-2 py-2 text-center shadow-[0_18px_40px_rgba(0,0,0,0.4)] transition hover:bg-white/24 hover:shadow-[0_28px_70px_rgba(0,0,0,0.55)] focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] lg:col-span-6 lg:col-start-4 lg:row-start-2">
-            <div className="flex w-full items-center justify-between gap-6">
-              {domainLinks.slice(0, 2).map(({ label, keyword, variant }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={handleKeyword(keyword)}
-                  className="font-poppins text-2xl font-semibold tracking-[0.05em] transition-transform duration-150 hover:-translate-y-1"
-                  style={
-                    variant === "outline"
-                      ? {
-                          color: "transparent",
-                          WebkitTextStroke: "1px white",
-                          textShadow: "0 4px 14px rgba(0,0,0,0.45)",
-                        }
-                      : {
-                          color: "white",
-                          textShadow: "0 4px 14px rgba(0,0,0,0.45)",
-                        }
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="text-6xl font-poppins"
-              style={{
-                color: "transparent",
-                WebkitTextStroke: "2px white",
-                textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-              }}
-              onClick={handleKeyword("domains")}
-            >
-              Domains
-            </button>
-            <div className="flex w-full flex-col gap-6">
-              <div className="flex w-full items-center justify-between gap-6">
-                {domainLinks.slice(2).map(({ label, keyword, variant }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={handleKeyword(keyword)}
-                    className="font-poppins text-2xl font-semibold tracking-[0.05em] transition-transform duration-150 hover:-translate-y-1"
-                    style={
-                      variant === "outline"
-                        ? {
-                            color: "transparent",
-                            WebkitTextStroke: "1px white",
-                            textShadow: "0 4px 14px rgba(0,0,0,0.45)",
-                          }
-                        : {
-                            color: "white",
-                            textShadow: "0 4px 14px rgba(0,0,0,0.45)",
-                          }
-                    }
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
+          <div
+            onClick={handleKeyword("domains")}
+            className="relative col-span-6 bg-[#292625] rounded-xl text-5xl flex justify-center items-center font-poppins"
+          >
+            Domains
+            <Image
+              src="/images/addons/Group 2087325587.svg"
+              alt="hhhh"
+              width={270}
+              height={270}
+              className="absolute -left-2 -bottom-4"
+            ></Image>
+            <Image
+              src="/images/addons/Group 2087325588.svg"
+              alt="hhhh"
+              width={200}
+              height={200}
+              className="absolute -right-3 -top-5"
+            ></Image>
+          </div>
         </div>
       </div>
-      <style jsx>{`
-        @keyframes eventsOscillate {
-          0% {
-            transform: translateX(-12%);
-          }
-          100% {
-            transform: translateX(12%);
-          }
-        }
-      `}</style>
     </div>
   );
 };
