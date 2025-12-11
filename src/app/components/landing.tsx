@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, type ReactNode, useState } from "react";
+import { type DragEvent, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
@@ -247,9 +247,8 @@ const Landing: React.FC<{
                   >
                     {tab.title}
                   </span>
-                  {/* biome-ignore lint/a11y/useSemanticElements: inner close button cannot be a nested button*/}
-                  <span
-                    role="button"
+                  <button
+                    type="button"
                     tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -268,7 +267,7 @@ const Landing: React.FC<{
                     }`}
                   >
                     ×
-                  </span>
+                  </button>
                 </button>
               );
             })}
