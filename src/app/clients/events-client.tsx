@@ -21,7 +21,7 @@ const Events = () => {
       id: 1,
       title: "CODE2CREATE",
       logoScale: 1,
-      textColor: "#5EBF94",
+      textColor: "#fff",
       logo: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -1156,7 +1156,7 @@ const Events = () => {
       id: 9,
       title: "CODEX CRYPTUM",
       logoScale: 2,
-      textColor: "#D96700",
+      textColor: "#fff",
       logo: (
         <Image
           src="codex-cryptum-logo.svg"
