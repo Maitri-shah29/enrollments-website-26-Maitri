@@ -22,7 +22,7 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
   const allItems = ["Home", "About", "Instructions", "AOIs", "Questions"];
 
   const items = allItems.filter(
-    (item) => !(roundHidden && item.toLowerCase() === "questions")
+    (item) => !(roundHidden && item.toLowerCase() === "questions"),
   );
 
   const isDisabled = !roundUser;

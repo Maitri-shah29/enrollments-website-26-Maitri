@@ -18,10 +18,10 @@ export const questionsList: QuestionId[] = [
 const getDomainCap = (): number => {
   if (!process.env.NEXT_PUBLIC_DOMAIN_CAP) {
     console.error(
-      "NEXT_PUBLIC_DOMAIN_CAP is not defined in environment variables. Please add it to your .env file."
+      "NEXT_PUBLIC_DOMAIN_CAP is not defined in environment variables. Please add it to your .env file.",
     );
     throw new Error(
-      "NEXT_PUBLIC_DOMAIN_CAP is not defined. Check console for details."
+      "NEXT_PUBLIC_DOMAIN_CAP is not defined. Check console for details.",
     );
   }
   return Number.parseInt(process.env.NEXT_PUBLIC_DOMAIN_CAP);

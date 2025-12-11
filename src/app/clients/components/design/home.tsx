@@ -63,8 +63,8 @@ export default function Home({
             {hasRoundUser
               ? "Continue →"
               : loading
-              ? "Loading..."
-              : "Get Started →"}
+                ? "Loading..."
+                : "Get Started →"}
           </button>
         </div>
 

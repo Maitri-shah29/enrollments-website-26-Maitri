@@ -122,7 +122,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     }
     // Check if this AOI is in the joined set
     const researchAOI = Object.entries(researchAOIToLabel).find(
-      ([_, label]) => label === aoi
+      ([_, label]) => label === aoi,
     )?.[0] as ResearchAOI | undefined;
     return researchAOI && joinedAOIs.has(researchAOI);
   });
@@ -145,7 +145,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     const aoiQuestions = questions.filter(
       (q) =>
         (q.type === "stq" || q.type === "ltq") &&
-        q.varName?.toLowerCase().startsWith(prefix)
+        q.varName?.toLowerCase().startsWith(prefix),
     );
     return aoiQuestions.length;
   };
@@ -180,8 +180,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                 isDisabled || isLimitReached
                   ? "cursor-not-allowed opacity-40"
                   : selected === it.key
-                  ? "bg-[#7d5bed] cursor-pointer"
-                  : "hover:bg-white/3 cursor-pointer"
+                    ? "bg-[#7d5bed] cursor-pointer"
+                    : "hover:bg-white/3 cursor-pointer"
               }`}
             >
               <span className="w-5 h-full text-white/90">{it.icon}</span>
@@ -195,8 +195,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                 isDisabled || isLimitReached
                   ? "cursor-not-allowed opacity-40"
                   : selected === "Round 1"
-                  ? "bg-[#7d5bed] cursor-pointer"
-                  : "hover:bg-white/3 cursor-pointer"
+                    ? "bg-[#7d5bed] cursor-pointer"
+                    : "hover:bg-white/3 cursor-pointer"
               }`}
               onClick={(e) => {
                 if (!isDisabled && !isLimitReached) {
@@ -292,7 +292,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                                 )}
                               </button>
                             );
-                          }
+                          },
                         )}
                       </div>
                     )}
