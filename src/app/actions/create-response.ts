@@ -21,6 +21,10 @@ export default async function createResponse(
       return { error: "Not authenticated" };
     }
 
+    if (text.length > 1500) {
+      return { error: "Character overlimit" };
+    }
+
     const roundUserCount = await prisma.roundUser.count({
       where: {
         userId,
