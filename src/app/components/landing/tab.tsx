@@ -895,7 +895,6 @@ const Tab: React.FC<TabProps> = ({
           )
         ) : (
           <div className="h-full">
-            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
             <HomePage
               query={homeInput}
               onQueryChange={handleHomeChange}
