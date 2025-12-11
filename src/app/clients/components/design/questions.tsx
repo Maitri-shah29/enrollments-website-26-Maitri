@@ -1,6 +1,5 @@
 "use client";
 import type { Question } from "@prisma/client";
-import { debounce } from "lodash";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
@@ -13,6 +12,14 @@ interface QuestionsProps {
   questions: Question[];
   roundUser: RoundUserExtended;
   joinedAOIs: Set<DesignAOI>;
+  savedAnswers?: Record<string, string>; // lifted state from parent
+  setSavedAnswers?: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >; // setter from parent
+  questionsWithUnsavedEdits?: Set<string>; // lifted state from parent
+  setQuestionsWithUnsavedEdits?: React.Dispatch<
+    React.SetStateAction<Set<string>>
+  >; // setter from parent
 }
 
 interface TransformedQuestion {
@@ -60,6 +67,10 @@ const Questions: React.FC<QuestionsProps> = ({
   questions,
   roundUser,
   joinedAOIs,
+  savedAnswers: externalSavedAnswers,
+  setSavedAnswers: externalSetSavedAnswers,
+  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
+  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
 }) => {
   // Map DesignAOI to varName prefixes (these should match the question varNames in your database)
   const designAOIToVarName: Record<DesignAOI, string> = {
@@ -106,6 +117,39 @@ const Questions: React.FC<QuestionsProps> = ({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
+
+  // Use external state if provided, otherwise use internal
+  const [internalSavedAnswers, setInternalSavedAnswers] = useState<
+    Record<string, string>
+  >({});
+  const [
+    internalQuestionsWithUnsavedEdits,
+    setInternalQuestionsWithUnsavedEdits,
+  ] = useState<Set<string>>(new Set());
+
+  const useExternalSavedState =
+    !!externalSavedAnswers &&
+    !!externalSetSavedAnswers &&
+    !!externalSetQuestionsWithUnsavedEdits;
+  const savedAnswers = useExternalSavedState
+    ? externalSavedAnswers
+    : internalSavedAnswers;
+  const setSavedAnswers = useExternalSavedState
+    ? externalSetSavedAnswers
+    : setInternalSavedAnswers;
+  const questionsWithUnsavedEdits = useExternalSavedState
+    ? externalQuestionsWithUnsavedEdits || new Set()
+    : internalQuestionsWithUnsavedEdits;
+  const setQuestionsWithUnsavedEdits = useExternalSavedState
+    ? externalSetQuestionsWithUnsavedEdits
+    : setInternalQuestionsWithUnsavedEdits;
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    type: "aoi" | "question";
+    target: AOIData | TransformedQuestion;
+  } | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const showToast = useCallback(
     (message: string, type: "success" | "error") => {
@@ -131,57 +175,30 @@ const Questions: React.FC<QuestionsProps> = ({
         }
       }
       setAnswers(loadedAnswers);
+      if (!useExternalSavedState) {
+        setInternalSavedAnswers(loadedAnswers);
+      } else if (externalSetSavedAnswers) {
+        externalSetSavedAnswers(loadedAnswers);
+      }
       console.log("Loaded answers from saved responses:", loadedAnswers);
     }
-  }, [savedResponses]);
-
-  const saveResponse = useCallback(
-    async (questionId: string, currentAnswer: string) => {
-      if (!formSubmissionId || !questionId) {
-        console.error("Missing required data to save response");
-        return;
-      }
-      if (!currentAnswer.trim()) {
-        console.log("Answer is empty, skipping save");
-        return;
-      }
-      try {
-        await createResponse(questionId, formSubmissionId, currentAnswer);
-        console.log(`Response for ${questionId} saved successfully`);
-      } catch (error) {
-        console.error(`Failed to save response for ${questionId}:`, error);
-      }
-    },
-    [formSubmissionId],
-  );
-
-  const debouncedSave = useMemo(
-    () => debounce(saveResponse, 1000),
-    [saveResponse],
-  );
-  useEffect(() => {
-    return () => {
-      debouncedSave.cancel();
-    };
-  }, [debouncedSave]);
+  }, [savedResponses, useExternalSavedState, externalSetSavedAnswers]);
 
   const handleAoiClick = (aoi: AOIData) => {
-    if (selectedQuestion) {
-      debouncedSave(
-        selectedQuestion.questionId,
-        answers[selectedQuestion.questionId] || "",
-      );
+    if (hasUnsavedChanges) {
+      setPendingNavigation({ type: "aoi", target: aoi });
+      setShowUnsavedDialog(true);
+      return;
     }
     setSelectedAoi(aoi);
     setSelectedQuestion(aoi.questions[0]);
   };
 
   const handleQuestionClick = (question: TransformedQuestion) => {
-    if (selectedQuestion) {
-      debouncedSave(
-        selectedQuestion.questionId,
-        answers[selectedQuestion.questionId] || "",
-      );
+    if (hasUnsavedChanges) {
+      setPendingNavigation({ type: "question", target: question });
+      setShowUnsavedDialog(true);
+      return;
     }
     setSelectedQuestion(question);
   };
@@ -207,6 +224,17 @@ const Questions: React.FC<QuestionsProps> = ({
         formSubmissionId,
         currentAnswer,
       );
+      // Update saved answers and clear unsaved edit flag
+      setSavedAnswers((prev) => ({
+        ...prev,
+        [selectedQuestion.questionId]: currentAnswer,
+      }));
+      setQuestionsWithUnsavedEdits((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(selectedQuestion.questionId);
+        return newSet;
+      });
+      setHasUnsavedChanges(false);
       console.log("Response saved successfully");
       showToast("Response submitted successfully!", "success");
     } catch (error) {
@@ -215,7 +243,14 @@ const Questions: React.FC<QuestionsProps> = ({
     } finally {
       setIsSaving(false);
     }
-  }, [formSubmissionId, selectedQuestion, answers, showToast]);
+  }, [
+    formSubmissionId,
+    selectedQuestion,
+    answers,
+    showToast,
+    setSavedAnswers,
+    setQuestionsWithUnsavedEdits,
+  ]);
 
   const handleSubmitForm = () => {
     // Frontend validation before showing confirm dialog
@@ -389,8 +424,57 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
+  const handleConfirmNavigation = () => {
+    if (pendingNavigation) {
+      if (pendingNavigation.type === "aoi") {
+        const aoi = pendingNavigation.target as AOIData;
+        setSelectedAoi(aoi);
+        setSelectedQuestion(aoi.questions[0]);
+      } else {
+        const question = pendingNavigation.target as TransformedQuestion;
+        setSelectedQuestion(question);
+      }
+    }
+    setHasUnsavedChanges(false);
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+
+  const handleCancelNavigation = () => {
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+
   return (
     <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+          <div className="bg-[#302E2E] border-2 border-[#F55F4B] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#F55F4B] text-2xl font-brushwell mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-white text-lg mb-6 font-coolvetica">
+              You have unsaved changes. Do you want to proceed without saving?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelNavigation}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-coolvetica hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmNavigation}
+                className="px-6 py-2 bg-[#F55F4B] text-white font-coolvetica hover:bg-[#d64f3a] transition-colors"
+                type="button"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && (
         <div
           className={`fixed top-5 right-5 z-[1000] p-4 rounded-lg shadow-xl text-white font-coolvetica transition-opacity duration-300 ${getToastClasses(
@@ -438,9 +522,14 @@ const Questions: React.FC<QuestionsProps> = ({
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
             <div className="bg-[#43A363] p-4 lg:p-6 rounded-xl flex flex-col gap-2">
               {aoiData.map((aoi) => {
-                const allAnswered = aoi.questions.every(
-                  (q) => answers[q.questionId]?.trim().length > 0,
-                );
+                const allAnswered = aoi.questions.every((q) => {
+                  const hasSavedAnswer =
+                    savedAnswers[q.questionId]?.trim().length > 0;
+                  const hasUnsavedEdit = questionsWithUnsavedEdits.has(
+                    q.questionId,
+                  );
+                  return hasSavedAnswer && !hasUnsavedEdit;
+                });
                 return (
                   <button
                     type="button"
@@ -470,8 +559,12 @@ const Questions: React.FC<QuestionsProps> = ({
             <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
             <div className="bg-[#3389E5] p-8 rounded-xl flex flex-col gap-2">
               {selectedAoi?.questions.map((question) => {
-                const hasAnswer =
-                  answers[question.questionId]?.trim().length > 0;
+                const hasSavedAnswer =
+                  savedAnswers[question.questionId]?.trim().length > 0;
+                const hasUnsavedEdit = questionsWithUnsavedEdits.has(
+                  question.questionId,
+                );
+                const hasAnswer = hasSavedAnswer && !hasUnsavedEdit;
                 return (
                   <button
                     type="button"
@@ -528,7 +621,16 @@ const Questions: React.FC<QuestionsProps> = ({
                       [questionId]: newAnswer,
                     }));
 
-                    debouncedSave(questionId, newAnswer);
+                    setHasUnsavedChanges(true);
+                    // Track unsaved edits if different from saved
+                    if (
+                      savedAnswers[questionId] !== undefined &&
+                      savedAnswers[questionId] !== newAnswer
+                    ) {
+                      setQuestionsWithUnsavedEdits((prev) =>
+                        new Set(prev).add(questionId),
+                      );
+                    }
                   }}
                   className="
                         w-full h-full

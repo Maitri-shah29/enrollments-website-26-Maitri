@@ -1,7 +1,7 @@
 "use client";
 import type { Prisma } from "@prisma/client";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import submitForm from "@/app/actions/submit-form";
 import type { ResearchAOI } from "@/lib/research-navigation";
@@ -51,6 +51,14 @@ interface QuestionsProps {
   error?: string | null;
   responses?: Record<string, string>;
   setResponses?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  savedResponses?: Record<string, string>;
+  setSavedResponses?: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
+  questionsWithUnsavedEdits?: Set<string>;
+  setQuestionsWithUnsavedEdits?: React.Dispatch<
+    React.SetStateAction<Set<string>>
+  >;
   selectedAOI?: string;
   selectedQuestionIdx?: number;
   onAOIChange?: (aoi: string) => void;
@@ -65,6 +73,10 @@ const Questions: React.FC<QuestionsProps> = ({
   error = null,
   responses,
   setResponses,
+  savedResponses: externalSavedResponses,
+  setSavedResponses: externalSetSavedResponses,
+  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
+  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
   selectedAOI: propSelectedAOI = "Blockchain",
   selectedQuestionIdx: propSelectedQuestionIdx = 0,
   onAOIChange: _onAOIChange,
@@ -80,6 +92,13 @@ const Questions: React.FC<QuestionsProps> = ({
   const [internalResponses, setInternalResponses] = useState<
     Record<string, string>
   >({});
+  const [internalSavedResponses, setInternalSavedResponses] = useState<
+    Record<string, string>
+  >({});
+  const [
+    internalQuestionsWithUnsavedEdits,
+    setInternalQuestionsWithUnsavedEdits,
+  ] = useState<Set<string>>(new Set());
   const useExternal = !!responses && !!setResponses;
   const effectiveResponses =
     useExternal && responses ? responses : internalResponses;
@@ -92,11 +111,26 @@ const Questions: React.FC<QuestionsProps> = ({
       setInternalResponses(value);
     }
   };
+  const useExternalSavedState =
+    !!externalSavedResponses &&
+    !!externalSetSavedResponses &&
+    !!externalSetQuestionsWithUnsavedEdits;
+  const savedResponses = useExternalSavedState
+    ? externalSavedResponses
+    : internalSavedResponses;
+  const setSavedResponses = useExternalSavedState
+    ? externalSetSavedResponses
+    : setInternalSavedResponses;
+  const questionsWithUnsavedEdits = useExternalSavedState
+    ? externalQuestionsWithUnsavedEdits || new Set()
+    : internalQuestionsWithUnsavedEdits;
+  const setQuestionsWithUnsavedEdits = useExternalSavedState
+    ? externalSetQuestionsWithUnsavedEdits
+    : setInternalQuestionsWithUnsavedEdits;
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize responses from server data
   useEffect(() => {
@@ -112,51 +146,38 @@ const Questions: React.FC<QuestionsProps> = ({
     }
   }, [roundUser?.formSubmission?.responses, useExternal]);
 
-  const autoSaveResponse = useCallback(
-    async (questionId: string, response: string) => {
-      if (!roundUser?.formSubmission?.id) return;
-
-      try {
-        await saveFormResponse(
-          roundUser.formSubmission.id,
-          questionId,
-          response,
-        );
-        onSubmit(questionKey);
-      } catch (err) {
-        console.error("Auto-save error:", err);
-      }
-    },
-    [roundUser?.formSubmission?.id, onSubmit, questionKey],
-  );
+  // Initialize saved responses from server data
+  useEffect(() => {
+    if (roundUser?.formSubmission?.responses && !useExternalSavedState) {
+      const saved: Record<string, string> = {};
+      roundUser.formSubmission.responses.forEach((response) => {
+        if (response.response) {
+          saved[response.questionId] = response.response;
+        }
+      });
+      setInternalSavedResponses(saved);
+    }
+  }, [roundUser?.formSubmission?.responses, useExternalSavedState]);
 
   const handleResponseChange = (questionId: string, response: string) => {
     updateResponses((prev) => ({
       ...prev,
       [questionId]: response,
     }));
-
-    // Only auto-save if user is authenticated
-    if (!roundUser?.formSubmission?.id) return;
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      autoSaveResponse(questionId, response).catch((err) => {
-        console.error("Debounced auto-save error:", err);
+    // Track that this question has unsaved edits if it differs from saved
+    const savedResponse = savedResponses[questionId] || "";
+    if (savedResponse !== response) {
+      // Has unsaved changes
+      setQuestionsWithUnsavedEdits((prev) => new Set(prev).add(questionKey));
+    } else {
+      // Matches saved response, remove from unsaved
+      setQuestionsWithUnsavedEdits((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(questionKey);
+        return newSet;
       });
-    }, 3000);
+    }
   };
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -329,6 +350,15 @@ const Questions: React.FC<QuestionsProps> = ({
         currentQuestion.id,
         currentResponse,
       );
+      setSavedResponses((prev) => ({
+        ...prev,
+        [currentQuestion.id]: currentResponse,
+      }));
+      setQuestionsWithUnsavedEdits((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(questionKey);
+        return newSet;
+      });
       setNotificationType("success");
       setNotification("Answer submitted successfully!");
       setTimeout(() => setNotification(null), 3000);
@@ -354,9 +384,28 @@ const Questions: React.FC<QuestionsProps> = ({
     );
 
     if (unansweredQuestions.length > 0) {
+      console.log("hi");
+      console.log(unansweredQuestions);
       setNotificationType("error");
       setNotification(
         `Please answer all questions. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    // Check if all questions are saved
+    const unsavedQuestions = questionsToValidate.filter((q) => {
+      const currentAnswer = effectiveResponses[q.id] || "";
+      const savedAnswer = savedResponses[q.id] || "";
+      // Question is unsaved if current answer differs from saved
+      return currentAnswer !== savedAnswer;
+    });
+
+    if (unsavedQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
       );
       setTimeout(() => setNotification(null), 5000);
       return;

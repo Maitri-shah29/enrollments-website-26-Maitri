@@ -11,6 +11,7 @@ import Question from "./question";
 interface QuestionsProps {
   questions: QuestionPayload[];
   answers: Record<string, string>;
+  savedAnswers?: Record<string, string>;
   searchInput: string;
   errors: Record<string, string>;
   successMessages: Record<string, string>;
@@ -21,11 +22,15 @@ interface QuestionsProps {
   roundUser?: RoundUserExtended | null;
   submittingForm?: boolean;
   onBack?: () => void;
+  onQuestionBackClick?: () => void;
+  activeIndex: number | null;
+  setActiveIndex: (index: number | null) => void;
 }
 
 export default function QuestionsList({
   questions,
   answers,
+  savedAnswers = {},
   searchInput,
   errors,
   successMessages,
@@ -36,15 +41,34 @@ export default function QuestionsList({
   roundUser,
   submittingForm,
   onBack,
+  onQuestionBackClick,
+  activeIndex,
+  setActiveIndex,
 }: QuestionsProps) {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [visited, setVisited] = useState<boolean[]>([]);
+  const [_visited, setVisited] = useState<boolean[]>([]);
   const [revalidating, setRevalidating] = useState(false);
 
   useEffect(() => {
     const initial = Array(questions.length).fill(false);
     setVisited(initial);
   }, [questions.length]);
+
+  useEffect(() => {
+    const handleProceed = (e: Event) => {
+      const customEvent = e as CustomEvent<{ index: number }>;
+      const index = customEvent.detail.index;
+      setVisited((prev) => {
+        const next = [...prev];
+        next[index] = true;
+        return next;
+      });
+      setActiveIndex(index);
+    };
+
+    window.addEventListener("proceedWithNavigation", handleProceed);
+    return () =>
+      window.removeEventListener("proceedWithNavigation", handleProceed);
+  }, [setActiveIndex]);
 
   const handleRevalidate = async () => {
     setRevalidating(true);
@@ -68,7 +92,7 @@ export default function QuestionsList({
         successMessage={successMessages[questionData.id]}
         onChangeAnswer={onChangeAnswer}
         onSubmitAnswer={onSubmitAnswer}
-        goBack={() => setActiveIndex(null)}
+        goBack={onQuestionBackClick}
         wallpaper={wallpaper}
       />
     );
@@ -140,11 +164,12 @@ export default function QuestionsList({
                   <label
                     key={q.id}
                     onClick={() => handleClick(index)}
+                    onKeyDown={(e) => e.key === "Enter" && handleClick(index)}
                     className="flex items-start gap-3 w-full cursor-pointer hover:bg-gray-100  rounded-md px-3 py-2"
                   >
                     <input
                       type="checkbox"
-                      checked={!!answers[q.id]?.trim()}
+                      checked={!!savedAnswers[q.id]?.trim()}
                       tabIndex={-1}
                       className="flex-shrink-0 w-4 h-4 mt-0.5 checked:accent-gray-500 cursor-pointer overflow-hidden"
                       readOnly

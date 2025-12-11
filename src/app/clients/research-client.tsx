@@ -78,9 +78,21 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
+    {},
+  );
+  const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
+    Set<string>
+  >(new Set());
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
   const [joinedAOIs, setJoinedAOIs] = useState<Set<ResearchAOI>>(new Set());
   const [aoisLoaded, setAoisLoaded] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    type: "aoi" | "question";
+    value: string | number;
+  } | null>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
   const {
@@ -120,6 +132,12 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
     console.log("Saving Research AOIs to localStorage:", aoiArray);
     localStorage.setItem("research-joined-aois", JSON.stringify(aoiArray));
   }, [joinedAOIs, aoisLoaded]);
+
+  // Track if current question has unsaved changes
+  useEffect(() => {
+    const currentKey = `${selectedAOI}-question${selectedQuestionIdx + 1}`;
+    setHasUnsavedChanges(questionsWithUnsavedEdits.has(currentKey));
+  }, [selectedAOI, selectedQuestionIdx, questionsWithUnsavedEdits]);
 
   const handleJoinAOI = (aoi: ResearchAOI) => {
     if (joinedAOIs.size < AOI_JOIN_LIMIT) {
@@ -177,6 +195,7 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
     const submittedResponses: string[] = [];
     if (formSubmissionId !== currentFsId) {
       const initial: Record<string, string> = {};
+      const saved: Record<string, string> = {};
       const serverResponses = roundUser.formSubmission.responses ?? [];
       serverResponses.forEach((r) => {
         const question = questions.find((q) => q.id === r.questionId);
@@ -191,43 +210,105 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
             const questionKey = `${question.varName}-question${questionIndex + 1}`;
             submittedResponses.push(questionKey);
           }
-          if (r.response) initial[r.questionId] = r.response;
+          if (r.response) {
+            initial[r.questionId] = r.response;
+            saved[r.questionId] = r.response;
+          }
         }
       });
       setResponses(initial);
+      setSavedResponses(saved);
       setSubmittedQuestions(new Set(submittedResponses));
       setFormSubmissionId(currentFsId);
     }
   }, [roundUser?.formSubmission, roundUser?.round?.Question, formSubmissionId]);
 
   // ✅ Memoized so it never re-creates between renders
-  const handleAOISelect = useCallback((aoi: string) => {
-    const key = toAoiKey(aoi);
-    if (key) {
-      setSelectedAOI(keyToLabel[key]);
-      setSelectedPanel(key);
-      setSelectedQuestionIdx(0);
-    } else {
-      setSelectedPanel("AOIs");
-    }
-  }, []);
+  const handleAOISelect = useCallback(
+    (aoi: string) => {
+      if (hasUnsavedChanges && selectedPanel === "Round 1") {
+        setPendingNavigation({ type: "aoi", value: aoi });
+        setShowUnsavedDialog(true);
+        return;
+      }
+      const key = toAoiKey(aoi);
+      if (key) {
+        setSelectedAOI(keyToLabel[key]);
+        setSelectedPanel(key);
+        setSelectedQuestionIdx(0);
+      } else {
+        setSelectedPanel("AOIs");
+      }
+    },
+    [hasUnsavedChanges, selectedPanel],
+  );
 
   // ✅ Memoized to keep `onSelect` stable for AOIs
-  const handlePanelSelect = useCallback((panelName: string) => {
-    const key = toAoiKey(panelName);
-    if (key) {
-      setSelectedAOI(keyToLabel[key]);
-      setSelectedQuestionIdx(0);
-      setSelectedPanel(key);
-      return;
+  const handlePanelSelect = useCallback(
+    (panelName: string) => {
+      if (
+        hasUnsavedChanges &&
+        selectedPanel === "Round 1" &&
+        panelName !== "Round 1"
+      ) {
+        setPendingNavigation({ type: "aoi", value: panelName });
+        setShowUnsavedDialog(true);
+        return;
+      }
+      const key = toAoiKey(panelName);
+      if (key) {
+        setSelectedAOI(keyToLabel[key]);
+        setSelectedQuestionIdx(0);
+        setSelectedPanel(key);
+        return;
+      }
+
+      setSelectedPanel(panelName);
+    },
+    [hasUnsavedChanges, selectedPanel],
+  );
+
+  const handleQuestionSelect = useCallback(
+    (idx: number) => {
+      if (
+        hasUnsavedChanges &&
+        selectedPanel === "Round 1" &&
+        idx !== selectedQuestionIdx
+      ) {
+        setPendingNavigation({ type: "question", value: idx });
+        setShowUnsavedDialog(true);
+        return;
+      }
+      setSelectedQuestionIdx(idx);
+      setSelectedPanel("Round 1");
+    },
+    [hasUnsavedChanges, selectedPanel, selectedQuestionIdx],
+  );
+
+  const handleConfirmNavigation = useCallback(() => {
+    setShowUnsavedDialog(false);
+    if (!pendingNavigation) return;
+
+    if (pendingNavigation.type === "aoi") {
+      const aoi = pendingNavigation.value as string;
+      const key = toAoiKey(aoi);
+      if (key) {
+        setSelectedAOI(keyToLabel[key]);
+        setSelectedPanel(key);
+        setSelectedQuestionIdx(0);
+      } else {
+        setSelectedPanel(aoi);
+      }
+    } else if (pendingNavigation.type === "question") {
+      setSelectedQuestionIdx(pendingNavigation.value as number);
+      setSelectedPanel("Round 1");
     }
+    setPendingNavigation(null);
+  }, [pendingNavigation]);
 
-    setSelectedPanel(panelName);
-  }, []);
-
-  const handleQuestionSelect = useCallback((idx: number) => {
-    setSelectedQuestionIdx(idx);
-    setSelectedPanel("Round 1");
+  const handleCancelNavigation = useCallback(() => {
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
   }, []);
 
   return (
@@ -250,6 +331,36 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
           </div>
         </div>
       )}
+      {/* Unsaved Changes Dialog */}
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border-2 border-[#7D5BED] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#7D5BED] text-2xl font-semibold mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-white text-lg mb-6">
+              You have unsaved changes. If you leave now, your changes will be
+              lost. Do you want to continue?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={handleCancelNavigation}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-colors rounded-lg"
+              >
+                Stay
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmNavigation}
+                className="px-6 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors rounded-lg"
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <ResearchNavbar
         activeSection={activeSection}
         onChangeSection={setSection}
@@ -264,6 +375,7 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
         selectedAOI={selectedAOI}
         selectedQuestionIdx={selectedQuestionIdx}
         submittedQuestions={submittedQuestions}
+        questionsWithUnsavedEdits={questionsWithUnsavedEdits}
         onAOISelect={handleAOISelect}
         onQuestionSelect={handleQuestionSelect}
         roundUser={roundUser}
@@ -299,6 +411,10 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
             error={error}
             responses={responses}
             setResponses={setResponses}
+            savedResponses={savedResponses}
+            setSavedResponses={setSavedResponses}
+            questionsWithUnsavedEdits={questionsWithUnsavedEdits}
+            setQuestionsWithUnsavedEdits={setQuestionsWithUnsavedEdits}
             selectedAOI={selectedAOI}
             selectedQuestionIdx={selectedQuestionIdx}
             onAOIChange={setSelectedAOI}

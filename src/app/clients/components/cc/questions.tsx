@@ -1,7 +1,7 @@
 "use client";
 import type { Prisma } from "@prisma/client";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import submitForm from "@/app/actions/submit-form";
 import AnswerBox from "./answer-box";
@@ -56,6 +56,14 @@ type QuestionsProps = {
   error?: string | null;
   responses?: Record<string, string>; // lifted state from parent
   setResponses?: React.Dispatch<React.SetStateAction<Record<string, string>>>; // setter from parent
+  savedResponses?: Record<string, string>; // lifted state from parent
+  setSavedResponses?: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >; // setter from parent
+  questionsWithUnsavedEdits?: Set<string>; // lifted state from parent
+  setQuestionsWithUnsavedEdits?: React.Dispatch<
+    React.SetStateAction<Set<string>>
+  >; // setter from parent
 };
 
 const Questions = ({
@@ -64,6 +72,10 @@ const Questions = ({
   error = null,
   responses,
   setResponses,
+  savedResponses: externalSavedResponses,
+  setSavedResponses: externalSetSavedResponses,
+  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
+  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
 }: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
@@ -86,11 +98,39 @@ const Questions = ({
   };
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("plaintext");
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(
+    null,
+  );
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
 
-  // Stable reference for responses from server
+  const [internalSavedResponses, setInternalSavedResponses] = useState<
+    Record<string, string>
+  >({});
+  const [
+    internalQuestionsWithUnsavedEdits,
+    setInternalQuestionsWithUnsavedEdits,
+  ] = useState<Set<string>>(new Set());
+
+  const useExternalSavedState =
+    !!externalSavedResponses &&
+    !!externalSetSavedResponses &&
+    !!externalSetQuestionsWithUnsavedEdits;
+  const savedResponses = useExternalSavedState
+    ? externalSavedResponses
+    : internalSavedResponses;
+  const setSavedResponses = useExternalSavedState
+    ? externalSetSavedResponses
+    : setInternalSavedResponses;
+  const questionsWithUnsavedEdits = useExternalSavedState
+    ? externalQuestionsWithUnsavedEdits || new Set()
+    : internalQuestionsWithUnsavedEdits;
+  const setQuestionsWithUnsavedEdits = useExternalSavedState
+    ? externalSetQuestionsWithUnsavedEdits
+    : setInternalQuestionsWithUnsavedEdits;
+
   const serverResponses = roundUser?.formSubmission?.responses;
 
   useEffect(() => {
@@ -106,6 +146,18 @@ const Questions = ({
     }
   }, [useExternal, serverResponses]);
 
+  useEffect(() => {
+    if (serverResponses && !useExternalSavedState) {
+      const saved: Record<string, string> = {};
+      serverResponses.forEach((response) => {
+        if (response.response) {
+          saved[response.questionId] = response.response;
+        }
+      });
+      setInternalSavedResponses(saved);
+    }
+  }, [serverResponses, useExternalSavedState]);
+
   // Stable references for questions
   const questions = roundUser?.round?.Question;
   const firstSubjectiveQuestionId = questions?.find(
@@ -120,55 +172,28 @@ const Questions = ({
   }, [firstSubjectiveQuestionId, activeQuestionId, questions]);
 
   const handleQuestionSelect = (questionId: string) => {
+    if (hasUnsavedChanges) {
+      setPendingQuestionId(questionId);
+      setShowUnsavedDialog(true);
+      return;
+    }
     setActiveQuestionId(questionId);
   };
-
-  const autoSaveResponse = useCallback(
-    async (questionId: string, response: string) => {
-      if (!roundUser?.formSubmission?.id) return;
-
-      try {
-        await saveFormResponse(
-          roundUser.formSubmission.id,
-          questionId,
-          response,
-        );
-      } catch (err) {
-        console.error("Auto-save error:", err);
-        if (err instanceof Error) {
-          console.error("Auto-save error details:", err.message);
-        }
-      }
-    },
-    [roundUser?.formSubmission?.id],
-  );
 
   const handleResponseChange = (questionId: string, response: string) => {
     updateResponses((prev) => ({
       ...prev,
       [questionId]: response,
     }));
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    setHasUnsavedChanges(true);
+    // Track that this question has unsaved edits if it differs from saved
+    if (
+      savedResponses[questionId] !== undefined &&
+      savedResponses[questionId] !== response
+    ) {
+      setQuestionsWithUnsavedEdits((prev) => new Set(prev).add(questionId));
     }
-
-    debounceTimerRef.current = setTimeout(() => {
-      autoSaveResponse(questionId, response).catch((err) => {
-        // Extra error handling layer
-        console.error("Debounced auto-save error:", err);
-      });
-    }, 5000);
   };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -242,6 +267,17 @@ const Questions = ({
         activeQuestion.id,
         currentResponse,
       );
+      setHasUnsavedChanges(false);
+      setSavedResponses((prev) => ({
+        ...prev,
+        [activeQuestion.id]: currentResponse,
+      }));
+
+      setQuestionsWithUnsavedEdits((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(activeQuestion.id);
+        return newSet;
+      });
       setNotificationType("success");
       setNotification(getSubmitMessage(selectedLanguage));
       setTimeout(() => setNotification(null), 3000);
@@ -266,6 +302,23 @@ const Questions = ({
       setNotificationType("error");
       setNotification(
         `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
+      );
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
+
+    // Check if all questions are saved
+    const unsavedQuestions = subjectiveQuestions.filter((q) => {
+      const currentAnswer = effectiveResponses[q.id] || "";
+      const savedAnswer = savedResponses[q.id];
+      // Question is unsaved if: no saved answer exists OR current answer differs from saved
+      return savedAnswer === undefined || currentAnswer !== savedAnswer;
+    });
+
+    if (unsavedQuestions.length > 0) {
+      setNotificationType("error");
+      setNotification(
+        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
       );
       setTimeout(() => setNotification(null), 4000);
       return;
@@ -311,6 +364,20 @@ const Questions = ({
 
   const handleCancelSubmit = () => {
     setShowConfirmDialog(false);
+  };
+
+  const handleConfirmQuestionChange = () => {
+    setHasUnsavedChanges(false);
+    setShowUnsavedDialog(false);
+    if (pendingQuestionId) {
+      setActiveQuestionId(pendingQuestionId);
+      setPendingQuestionId(null);
+    }
+  };
+
+  const handleCancelQuestionChange = () => {
+    setShowUnsavedDialog(false);
+    setPendingQuestionId(null);
   };
 
   // Check round user status
@@ -424,6 +491,34 @@ const Questions = ({
           </div>
         </div>
       )}
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-[#16171B] border-2 border-[#C9EB3E] p-8 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-[#C9EB3E] text-2xl font-ShareTechMono mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-white text-lg mb-6 font-ShareTechMono">
+              You have unsaved changes. Do you want to proceed without saving?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelQuestionChange}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white font-ShareTechMono hover:bg-white hover:text-black transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmQuestionChange}
+                className="px-6 py-2 bg-[#C9EB3E] text-black font-ShareTechMono hover:bg-[#a8c932] transition-colors"
+                type="button"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {subjectiveQuestions.length === 0 ? (
         <div className="text-white text-lg text-center py-8">
           No subjective questions available for this round.
@@ -435,7 +530,9 @@ const Questions = ({
               questions={questionsForList}
               onQuestionSelect={handleQuestionSelect}
               activeQuestionId={activeQuestionId}
-              responses={effectiveResponses}
+              responses={savedResponses}
+              currentResponses={effectiveResponses}
+              questionsWithUnsavedEdits={questionsWithUnsavedEdits}
             />
           </div>
           <div className="w-full md:w-2/3 flex flex-row max-h-screen">

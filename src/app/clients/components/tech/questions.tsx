@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { asciiArt } from "./ascii-art";
@@ -12,6 +12,10 @@ type Props = {
   answers: Record<string, string>;
   onChangeAnswer: (key: string, value: string) => void;
   onSubmit: (key: string) => void;
+  savedAnswers?: Record<string, string>;
+  onSaveAnswer?: (key: string, value: string) => void;
+  hasUnsavedChangesRef?: React.MutableRefObject<boolean>;
+  onMarkUnsaved?: (key: string) => void;
 };
 
 export default function Questions({
@@ -21,56 +25,16 @@ export default function Questions({
   answers,
   onChangeAnswer,
   onSubmit,
+  savedAnswers = {},
+  onSaveAnswer,
+  hasUnsavedChangesRef,
+  onMarkUnsaved,
 }: Props) {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
-  const autoSaveResponse = useCallback(
-    async (questionId: string, response: string) => {
-      if (!roundUser?.formSubmission?.id) return;
-
-      try {
-        await saveFormResponse(
-          roundUser.formSubmission.id,
-          questionId,
-          response,
-        );
-      } catch (err) {
-        console.error("Auto-save error:", err);
-      }
-    },
-    [roundUser?.formSubmission?.id],
-  );
-
-  const handleResponseChange = (
-    questionKey: string,
-    questionId: string,
-    response: string,
-  ) => {
-    onChangeAnswer(questionKey, response);
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      autoSaveResponse(questionId, response).catch((err) => {
-        console.error("Debounced auto-save error:", err);
-      });
-    }, 3000);
-  };
 
   if (
     !roundUser ||
@@ -181,6 +145,16 @@ export default function Questions({
         currentResponse,
       );
 
+      // Update saved answers
+      if (onSaveAnswer) {
+        onSaveAnswer(currentQuestion.id, currentResponse);
+      }
+
+      // Clear unsaved changes flag
+      if (hasUnsavedChangesRef) {
+        hasUnsavedChangesRef.current = false;
+      }
+
       setNotificationType("success");
       setNotification("Answer submitted successfully!");
       onSubmit(questionKey);
@@ -246,11 +220,22 @@ export default function Questions({
 
               if (text.length > 1500) return;
 
-              handleResponseChange(
-                questionKey,
-                currentQuestion.id,
-                e.target.value,
-              );
+              onChangeAnswer(questionKey, e.target.value);
+
+              const savedValue = savedAnswers[currentQuestion.id];
+              const isDifferent =
+                savedValue !== undefined && savedValue !== e.target.value;
+              const newHasUnsaved =
+                isDifferent ||
+                (savedValue === undefined && e.target.value.trim().length > 0);
+              if (hasUnsavedChangesRef) {
+                hasUnsavedChangesRef.current = newHasUnsaved;
+              }
+
+              // Mark as unsaved if editing a saved question
+              if (isDifferent && onMarkUnsaved) {
+                onMarkUnsaved(questionKey);
+              }
             }}
             onWheel={(e) => {
               e.preventDefault();
