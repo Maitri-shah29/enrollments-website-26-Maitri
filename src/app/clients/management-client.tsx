@@ -327,6 +327,8 @@ export default function Management({
           setPendingBackNavigation(true);
           setPendingQuestionIndex(null);
           setShowUnsavedDialog(true);
+        } else {
+          setActiveIndex(null);
         }
       }
     }
@@ -443,6 +445,25 @@ export default function Management({
     const saved = localStorage.getItem("selectedWallpaper");
     if (saved) setWallpaper(saved);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settings) {
+        const target = event.target as HTMLElement;
+        if (!target.closest("[data-settings-menu]")) {
+          setSettings(false);
+        }
+      }
+    };
+
+    if (settings) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [settings]);
 
   const handleWallpaperChange = (wall: string) => {
     setFade(true);
@@ -611,7 +632,7 @@ export default function Management({
                     activeSection === section
                       ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
                       : isDisabled
-                        ? "text-gray-500 cursor-not-allowed opacity-50"
+                        ? "text-gray-900 cursor-not-allowed opacity-50"
                         : "hover:text-gray-200 hover:bg-white/25 text-white"
                   }`}
                 >
@@ -641,7 +662,7 @@ export default function Management({
           </div>
 
           {/* Settings Dropdown */}
-          <div className="ml-4 relative">
+          <div className="ml-4 relative" data-settings-menu>
             <button
               type="button"
               onClick={() => setSettings(!settings)}

@@ -91,7 +91,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
         onClick={onClose}
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       />
-      <div className="absolute right-0 top-12 w-72 rounded-3xl bg-[#585858] text-white shadow-[0_12px_40px_rgba(0,0,0,0.45)] z-50 overflow-hidden border border-white/10">
+      <div className="absolute z-400 right-0 top-12 w-72 rounded-3xl bg-[#585858] text-white shadow-[0_12px_40px_rgba(0,0,0,0.45)] z-50 overflow-hidden border border-white/10">
         {isAuthenticated
           ? authenticatedView(user, onLogout)
           : unauthenticatedView()}

@@ -44,10 +44,10 @@ export default function Question({
   };
 
   return (
-    <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col overflow-hidden">
+    <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col overflow-auto">
       <Header onClick={goBack} />
 
-      <div className="flex flex-col p-10 h-full overflow-hidden">
+      <div className="flex flex-col p-10 h-full overflow-auto">
         {/* Email Header */}
         <div className="flex items-center space-x-3 mb-6">
           <Image src="/profile-icon.svg" alt="User" width={50} height={50} />
