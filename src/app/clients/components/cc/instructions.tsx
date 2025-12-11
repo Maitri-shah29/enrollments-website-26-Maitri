@@ -10,7 +10,7 @@ const Instructions: React.FC = () => {
         <ul className="list-disc pl-6 space-y-2 text-white">
           <li>Answer all the questions in the form round.</li>
           <li>Next round will be a CC contest round.</li>
-          <li>It will be organised on Sunday, 9th January, 2026.</li>
+          <li>It will be organised on 9th January, 2026.</li>
           <li>Link will be shared later</li>
         </ul>
       </NeonSection>
