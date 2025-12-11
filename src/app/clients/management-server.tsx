@@ -3,7 +3,11 @@ import fetchRoundUser from "@/app/actions/fetch-round-user";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import ManagementClient from "@/app/clients/management-client";
 
-export default async function ManagementServer() {
+export default async function ManagementServer({
+  roundUserCount,
+}: {
+  roundUserCount: number;
+}) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
     const roundUser = await fetchRoundUser("management");
@@ -16,5 +20,10 @@ export default async function ManagementServer() {
 
   //console.log(initialRoundUser);
 
-  return <ManagementClient initialRoundUser={initialRoundUser} />;
+  return (
+    <ManagementClient
+      initialRoundUser={initialRoundUser}
+      roundUserCount={roundUserCount}
+    />
+  );
 }

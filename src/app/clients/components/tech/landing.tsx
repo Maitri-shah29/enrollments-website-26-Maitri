@@ -4,9 +4,16 @@ import Image from "next/image";
 type TechLandingProps = {
   onGetStarted: () => void;
   loading?: boolean;
+  hasRoundUser?: boolean;
+  onContinue?: () => void;
 };
 
-const TechLanding = ({ onGetStarted, loading = false }: TechLandingProps) => {
+const TechLanding = ({
+  onGetStarted,
+  loading = false,
+  hasRoundUser = false,
+  onContinue,
+}: TechLandingProps) => {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center">
       {/* botm left tornado*/}
@@ -37,11 +44,11 @@ const TechLanding = ({ onGetStarted, loading = false }: TechLandingProps) => {
       <div className="mt-12 relative z-10">
         <button
           type="button"
-          onClick={onGetStarted}
-          disabled={loading}
+          onClick={hasRoundUser ? onContinue : onGetStarted}
+          disabled={loading && !hasRoundUser}
           className="bg-transparent border border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {loading ? "Loading..." : "Get Started"}
+          {hasRoundUser ? "Continue" : loading ? "Loading..." : "Get Started"}
         </button>
       </div>
     </div>

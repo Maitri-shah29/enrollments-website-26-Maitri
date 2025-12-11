@@ -3,7 +3,11 @@ import fetchRoundUser from "@/app/actions/fetch-round-user";
 import CCClient from "@/app/clients/cc-client";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 
-export default async function CCServer() {
+export default async function CCServer({
+  roundUserCount,
+}: {
+  roundUserCount: number;
+}) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
     const roundUser = await fetchRoundUser("cc");
@@ -17,5 +21,10 @@ export default async function CCServer() {
 
   console.log(initialRoundUser);
 
-  return <CCClient initialRoundUser={initialRoundUser} />;
+  return (
+    <CCClient
+      initialRoundUser={initialRoundUser}
+      roundUserCount={roundUserCount}
+    />
+  );
 }

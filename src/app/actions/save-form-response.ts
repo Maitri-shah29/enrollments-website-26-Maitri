@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import {
   type RuleType,
@@ -42,6 +43,23 @@ export default async function saveFormResponse(
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.session?.userId;
   if (!userId) throw new Error("Not logged in");
+
+  const roundUserCount = await prisma.roundUser.count({
+    where: {
+      userId,
+      status: { not: "pending" },
+      round: {
+        number: 1,
+        type: "form", // Prisma queries usually expect the specific enum or matching string
+      },
+    },
+  });
+
+  if (roundUserCount >= DOMAIN_CAP) {
+    throw new Error(
+      `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+    );
+  }
 
   const form = await prisma.formSubmission.findUnique({
     where: { id: formId },

@@ -1,6 +1,6 @@
 "use client";
-import { Domain } from "@prisma/client";
 import { useEffect, useState } from "react";
+import { DOMAIN_CAP } from "@/lib/constants";
 import createRoundUser from "../actions/create-round-user";
 import About from "./components/cc/about";
 import Contest from "./components/cc/contest";
@@ -12,9 +12,10 @@ import Questions, { type RoundUserExtended } from "./components/cc/questions";
 
 type CCClientProps = {
   initialRoundUser?: RoundUserExtended | null;
+  roundUserCount: number;
 };
 
-const Page = ({ initialRoundUser }: CCClientProps) => {
+const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
     initialRoundUser ?? null,
@@ -37,8 +38,15 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
     setLoading(true);
     setError(null);
     // console.log(await createRoundUser(Domain.cc));
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
     try {
-      const result = await createRoundUser(Domain.cc);
+      const result = await createRoundUser("cc");
       console.log(result);
 
       if ("error" in result) {
@@ -103,7 +111,7 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
             <button
               type="button"
               onClick={() => setError(null)}
-              className="w-full px-6 py-2 bg-[#C9EB3E] text-[#121216] font-ShareTechMono font-medium hover:bg-[#b8d938] transition-colors"
+              className="w-full px-6 py-2 bg-[#C9EB3E] text-[#121216] font-ShareTechMono font-medium hover:bg-[#b8d938] transition-colors rounded-lg"
             >
               Close
             </button>
@@ -116,10 +124,17 @@ const Page = ({ initialRoundUser }: CCClientProps) => {
           onSelect={setSelectedPanel}
           disabled={!roundUser}
           roundHidden={roundHidden}
+          roundUserCount={roundUserCount}
+          roundUser={roundUser}
         />
       </div>
       {selectedPanel === "Home" && (
-        <Homepage onGetStarted={initializeRoundUser} loading={loading} />
+        <Homepage
+          onGetStarted={initializeRoundUser}
+          loading={loading}
+          hasRoundUser={!!roundUser}
+          onContinue={() => setSelectedPanel("About")}
+        />
       )}
       {selectedPanel !== "Home" && (
         <div className="w-full min-h-full bg-[#121216] pt-28 pb-16">

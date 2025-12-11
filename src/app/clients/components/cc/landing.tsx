@@ -5,9 +5,16 @@ import Button from "./button";
 type Props = {
   onGetStarted?: () => void;
   loading?: boolean;
+  hasRoundUser?: boolean;
+  onContinue?: () => void;
 };
 
-const Homepage: React.FC<Props> = ({ onGetStarted, loading = false }) => {
+const Homepage: React.FC<Props> = ({
+  onGetStarted,
+  loading = false,
+  hasRoundUser = false,
+  onContinue,
+}) => {
   const cells = Array.from({ length: 8 }, (_, idx) => `cell-${idx + 1}`);
   return (
     <div className="w-full h-full relative overflow-hidden">
@@ -103,10 +110,16 @@ const Homepage: React.FC<Props> = ({ onGetStarted, loading = false }) => {
             </span>
           </h1>
           <Button
-            label={loading ? "Loading..." : "Get Started →"}
-            onClick={onGetStarted}
+            label={
+              hasRoundUser
+                ? "Continue →"
+                : loading
+                  ? "Loading..."
+                  : "Get Started →"
+            }
+            onClick={hasRoundUser ? onContinue : onGetStarted}
             buttonClassName="py-3 !px-[30px] text-lg"
-            disabled={loading}
+            disabled={loading && !hasRoundUser}
           />
         </div>
       </div>

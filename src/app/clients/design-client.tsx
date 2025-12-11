@@ -1,8 +1,8 @@
 "use client";
-import { Domain } from "@prisma/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { DOMAIN_CAP } from "@/lib/constants";
 import type { DesignAOI } from "@/lib/types";
 import createRoundUser from "../actions/create-round-user";
 import About from "./components/design/about";
@@ -17,9 +17,13 @@ const AOI_JOIN_LIMIT = 3;
 
 interface DesignClientProps {
   initialRoundUser?: RoundUserExtended | null;
+  roundUserCount: number;
 }
 
-const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
+const DesignClient = ({
+  initialRoundUser,
+  roundUserCount,
+}: DesignClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
     initialRoundUser ?? null,
@@ -76,8 +80,15 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
     setLoading(true);
     setError(null);
     // console.log(await createRoundUser(Domain.cc));
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
     try {
-      const result = await createRoundUser(Domain.design);
+      const result = await createRoundUser("design");
       console.log(result);
 
       if ("error" in result) {
@@ -119,7 +130,7 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
             <button
               type="button"
               onClick={() => setError(null)}
-              className="w-full px-6 py-3 bg-[#F55F4B] text-white font-medium rounded-lg hover:bg-[#d94a3a] transition-colors"
+              className="w-full px-6 py-3 bg-[#F55F4B] text-white font-medium rounded-2xl hover:bg-[#d94a3a] transition-colors"
             >
               Close
             </button>
@@ -148,13 +159,19 @@ const DesignClient = ({ initialRoundUser }: DesignClientProps) => {
         onSelect={setSelectedPanel}
         roundUser={roundUser}
         roundHidden={roundHidden}
+        roundUserCount={roundUserCount}
       />
       <div
         key={selectedPanel}
         className="flex overflow-hidden z-10 animate-panel-transition"
       >
         {selectedPanel === "Home" && (
-          <Home onGetStarted={initializeRoundUser} loading={loading} />
+          <Home
+            onGetStarted={initializeRoundUser}
+            loading={loading}
+            hasRoundUser={!!roundUser}
+            onContinue={() => setSelectedPanel("About")}
+          />
         )}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}

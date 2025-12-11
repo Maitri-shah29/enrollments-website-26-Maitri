@@ -219,11 +219,22 @@ const Questions: React.FC<QuestionsProps> = ({
 
     try {
       setIsSaving(true);
-      await createResponse(
+      const result = await createResponse(
         selectedQuestion.questionId,
         formSubmissionId,
         currentAnswer,
+        roundUser.id,
       );
+
+      if (
+        result &&
+        typeof result === "object" &&
+        "error" in result &&
+        result.error
+      ) {
+        throw new Error(result.error);
+      }
+
       // Update saved answers and clear unsaved edit flag
       setSavedAnswers((prev) => ({
         ...prev,
@@ -239,7 +250,8 @@ const Questions: React.FC<QuestionsProps> = ({
       showToast("Response submitted successfully!", "success");
     } catch (error) {
       console.error("Failed to save response:", error);
-      showToast("Submission failed: An error occurred.", "error");
+      const msg = error instanceof Error ? error.message : "Submission failed";
+      showToast(msg, "error");
     } finally {
       setIsSaving(false);
     }
@@ -250,6 +262,7 @@ const Questions: React.FC<QuestionsProps> = ({
     showToast,
     setSavedAnswers,
     setQuestionsWithUnsavedEdits,
+    roundUser.id,
   ]);
 
   const handleSubmitForm = () => {

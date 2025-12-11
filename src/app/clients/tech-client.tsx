@@ -1,7 +1,7 @@
 "use client";
-import { Domain } from "@prisma/client";
 import { useEffect, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { DOMAIN_CAP } from "@/lib/constants";
 import { useTechNavigation } from "@/lib/tech-navigation";
 import type { AOI, QuestionId } from "@/lib/types";
 import createRoundUser from "../actions/create-round-user";
@@ -17,9 +17,10 @@ const AOI_JOIN_LIMIT = 3;
 
 type TechClientProps = {
   initialRoundUser?: RoundUserExtended | null;
+  roundUserCount: number;
 };
 
-const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
+const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   const {
     activeSection,
     aoiExpanded,
@@ -95,7 +96,9 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
               (q) => q.id === question.id,
             );
             if (questionIndex !== -1) {
-              const questionKey = `${question.varName}-question${questionIndex + 1}`;
+              const questionKey = `${question.varName}-question${
+                questionIndex + 1
+              }`;
               loadedAnswers[questionKey] = response.response;
               loadedSavedAnswers[question.id] = response.response;
               loadedSubmittedQuestions.add(questionKey);
@@ -125,8 +128,15 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
     try {
-      const result = await createRoundUser(Domain.tech);
+      const result = await createRoundUser("tech");
       console.log(result);
 
       if ("error" in result) {
@@ -304,7 +314,12 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
     }
     if (activeSection === "welcome") {
       return (
-        <TechLanding onGetStarted={initializeRoundUser} loading={loading} />
+        <TechLanding
+          onGetStarted={initializeRoundUser}
+          loading={loading}
+          hasRoundUser={!!roundUser}
+          onContinue={() => setSection("about")}
+        />
       );
     }
     return null;
@@ -387,7 +402,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
             <button
               type="button"
               onClick={() => setError(null)}
-              className="w-full px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors"
+              className="w-full px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors rounded-lg"
             >
               Close
             </button>
@@ -415,6 +430,7 @@ const TechWebsite = ({ initialRoundUser }: TechClientProps) => {
         savedAnswers={savedAnswers}
         roundActive={roundActive}
         roundHidden={roundHidden}
+        roundUserCount={roundUserCount}
       />
       <div className="w-full h-full p-7 relative font-jetbrains">
         <div className="w-full h-full border-2 border-[#993C7A] flex flex-col justify-center items-center p-10 relative overflow-y-auto">

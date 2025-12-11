@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export default async function submitForm(
@@ -15,13 +16,33 @@ export default async function submitForm(
       return { error: "Not logged in" } as const;
     }
 
+    const roundUserCount = await prisma.roundUser.count({
+      where: {
+        userId,
+        status: { not: "pending" },
+        round: {
+          number: 1,
+          type: "form",
+        },
+      },
+    });
+
+    if (roundUserCount >= DOMAIN_CAP) {
+      return {
+        error: `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      };
+    }
+
     // Verify the round user belongs to the current user
     const roundUser = await prisma.roundUser.findUnique({
       where: { id: roundUserId },
       select: {
         userId: true,
+        status: true,
         round: {
           select: {
+            active: true,
+            hidden: true,
             Question: {
               select: {
                 id: true,
@@ -50,6 +71,18 @@ export default async function submitForm(
 
     if (roundUser.userId !== session.user.id) {
       return { error: "Unauthorized" };
+    }
+
+    if (!roundUser.round.active) {
+      return { error: "Round is not active" };
+    }
+
+    if (roundUser.round.hidden) {
+      return { error: "Round is hidden" };
+    }
+
+    if (roundUser.status !== "pending") {
+      return { error: "Submission not allowed: user status is not pending" };
     }
 
     // Get all subjective questions (stq and ltq)

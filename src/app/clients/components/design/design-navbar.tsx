@@ -2,12 +2,14 @@
 import Image from "next/image";
 import type React from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { DOMAIN_CAP } from "@/lib/constants";
 
 interface DesignNavbarProps {
   selected: string;
   onSelect: (panel: string) => void;
   roundUser?: RoundUserExtended | null;
   roundHidden?: boolean;
+  roundUserCount?: number;
 }
 
 const DesignNavbar: React.FC<DesignNavbarProps> = ({
@@ -15,23 +17,23 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
   onSelect,
   roundUser,
   roundHidden = false,
+  roundUserCount = 0,
 }) => {
-  const allItems = [
-    "Home",
-    "About",
-    "Instructions",
-    "AOIs",
-    "Questions",
-    "Interview",
-  ];
+  const allItems = ["Home", "About", "Instructions", "AOIs", "Questions"];
 
   const items = allItems.filter(
-    (item) => !(roundHidden && item.toLowerCase() === "questions"),
+    (item) => !(roundHidden && item.toLowerCase() === "questions")
   );
 
   const isDisabled = !roundUser;
+  const isLimitReached =
+    roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
 
   const handleItemClick = (item: string) => {
+    // If enrollment limit reached and user hasn't enrolled yet, block all navigation except Home
+    if (isLimitReached && item !== "Home") {
+      return;
+    }
     if (isDisabled && item !== "Home") {
       return;
     }
@@ -42,7 +44,8 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
     <div className="flex items-center justify-center min-h-16 z-20 font-coolvetica">
       <div className="flex gap-10">
         {items.map((item) => {
-          const isItemDisabled = isDisabled && item !== "Home";
+          const isItemDisabled =
+            (isDisabled || isLimitReached) && item !== "Home";
 
           return (
             <button

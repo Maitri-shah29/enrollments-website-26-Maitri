@@ -1,5 +1,4 @@
 "use client";
-import { Domain } from "@prisma/client";
 import { useCallback, useEffect, useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
@@ -17,6 +16,7 @@ import Questions, {
   type RoundUserExtended,
 } from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
+import { DOMAIN_CAP } from "@/lib/constants";
 import type { ResearchAOI } from "@/lib/research-navigation";
 import { useResearchNavigation } from "@/lib/research-navigation";
 import createRoundUser from "../actions/create-round-user";
@@ -66,9 +66,13 @@ function toAoiKey(input: string): AoiKey | null {
 
 type ResearchClientProps = {
   initialRoundUser?: RoundUserExtended | null;
+  roundUserCount: number;
 };
 
-const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
+const ResearchClient = ({
+  initialRoundUser,
+  roundUserCount,
+}: ResearchClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [selectedAOI, setSelectedAOI] = useState<string>("Common");
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
@@ -157,8 +161,15 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
     setLoading(true);
     setError(null);
     // console.log(await createRoundUser(Domain.cc));
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
     try {
-      const result = await createRoundUser(Domain.research);
+      const result = await createRoundUser("research");
       console.log(result);
 
       if ("error" in result) {
@@ -189,7 +200,7 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
 
   useEffect(() => {
     if (!roundUser?.formSubmission) return;
-    const savedAnswers: Record<string, string | null> = {};
+    const _savedAnswers: Record<string, string | null> = {};
     const currentFsId = roundUser.formSubmission.id;
     const questions = roundUser.round?.Question || [];
     const submittedResponses: string[] = [];
@@ -207,7 +218,9 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
             (q) => q.id === question.id,
           );
           if (questionIndex !== -1) {
-            const questionKey = `${question.varName}-question${questionIndex + 1}`;
+            const questionKey = `${question.varName}-question${
+              questionIndex + 1
+            }`;
             submittedResponses.push(questionKey);
           }
           if (r.response) {
@@ -381,11 +394,17 @@ const ResearchClient = ({ initialRoundUser }: ResearchClientProps) => {
         roundUser={roundUser}
         joinedAOIs={joinedAOIs}
         roundHidden={roundHidden}
+        roundUserCount={roundUserCount}
       />
 
       <div className="flex-1 min-w-0 h-full overflow-hidden">
         {selectedPanel === "Home" && (
-          <ResearchHome onGetStarted={initializeRoundUser} loading={loading} />
+          <ResearchHome
+            onGetStarted={initializeRoundUser}
+            loading={loading}
+            hasRoundUser={!!roundUser}
+            onContinue={() => setSelectedPanel("About")}
+          />
         )}
         {selectedPanel === "About" && <About />}
         {selectedPanel === "Instructions" && <Instructions />}

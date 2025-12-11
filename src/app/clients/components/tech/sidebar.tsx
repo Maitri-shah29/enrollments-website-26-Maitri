@@ -3,6 +3,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import submitForm from "@/app/actions/submit-form";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { DOMAIN_CAP } from "@/lib/constants";
 import type { AOI, QuestionId, Section } from "@/lib/types";
 import AoiList from "./aoi-list";
 import NavItem from "./nav-item";
@@ -29,6 +30,7 @@ type Props = {
   savedAnswers?: Record<string, string>;
   roundActive?: boolean;
   roundHidden?: boolean;
+  roundUserCount?: number;
 };
 
 export default function Sidebar({
@@ -52,6 +54,7 @@ export default function Sidebar({
   savedAnswers = {},
   roundActive = true,
   roundHidden = false,
+  roundUserCount = 0,
 }: Props) {
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
@@ -59,6 +62,9 @@ export default function Sidebar({
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
+
+  const isLimitReached =
+    roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
 
   const handleSubmitForm = () => {
     // Get all relevant questions for joined AOIs
@@ -243,11 +249,19 @@ export default function Sidebar({
                 iconSrc="/images/folder.svg"
                 isActive={activeSection === item.key}
                 hasBottomBorder={item.key === "round1"}
-                disabled={!roundUser}
+                disabled={!roundUser || isLimitReached}
                 onClick={() => {
                   if (item.key === "aoi") {
-                    onToggleAoi();
-                    onChangeSection("aoi");
+                    // If AOI is already active, toggle it; otherwise, set it as active and ensure it's expanded
+                    if (activeSection === "aoi") {
+                      onToggleAoi();
+                    } else {
+                      onChangeSection("aoi");
+                      // Ensure it's expanded when switching to AOI section
+                      if (!aoiExpanded) {
+                        onToggleAoi();
+                      }
+                    }
                     return;
                   }
                   if (item.key === "round1") {

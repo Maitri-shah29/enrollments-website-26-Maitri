@@ -84,7 +84,9 @@ const Questions: React.FC<QuestionsProps> = ({
   onSubmit,
   joinedAOIs = new Set(),
 }) => {
-  const questionKey = `${propSelectedAOI}-question${propSelectedQuestionIdx + 1}`;
+  const questionKey = `${propSelectedAOI}-question${
+    propSelectedQuestionIdx + 1
+  }`;
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
@@ -121,7 +123,7 @@ const Questions: React.FC<QuestionsProps> = ({
   const setSavedResponses = useExternalSavedState
     ? externalSetSavedResponses
     : setInternalSavedResponses;
-  const questionsWithUnsavedEdits = useExternalSavedState
+  const _questionsWithUnsavedEdits = useExternalSavedState
     ? externalQuestionsWithUnsavedEdits || new Set()
     : internalQuestionsWithUnsavedEdits;
   const setQuestionsWithUnsavedEdits = useExternalSavedState

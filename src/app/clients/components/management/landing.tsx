@@ -6,12 +6,16 @@ type ManagementLandingProps = {
   onGetStarted: () => void;
   wallpaper: string;
   loading?: boolean;
+  hasRoundUser?: boolean;
+  onContinue?: () => void;
 };
 
 const ManagementLanding = ({
   onGetStarted,
   wallpaper,
   loading = false,
+  hasRoundUser = false,
+  onContinue,
 }: ManagementLandingProps) => {
   const buttonColors: Record<string, string> = {
     "big sur": "bg-[#AD3232] hover:bg-[#AD3232]/70",
@@ -68,8 +72,8 @@ const ManagementLanding = ({
         <div className="w-full flex justify-center mt-auto">
           <button
             type="button"
-            onClick={onGetStarted}
-            disabled={loading}
+            onClick={hasRoundUser ? onContinue : onGetStarted}
+            disabled={loading && !hasRoundUser}
             className={`
     ${buttonColors[wallpaper] || buttonColors.default}
     text-white font-bold py-3 px-8 rounded-lg
@@ -77,7 +81,7 @@ const ManagementLanding = ({
     disabled:opacity-50 disabled:cursor-not-allowed
   `}
           >
-            {loading ? "Loading..." : "Get Started"}
+            {hasRoundUser ? "Continue" : loading ? "Loading..." : "Get Started"}
           </button>
         </div>
       </div>

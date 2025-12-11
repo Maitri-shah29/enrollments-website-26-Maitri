@@ -3,7 +3,11 @@ import fetchRoundUser from "@/app/actions/fetch-round-user";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import TechWebsite from "@/app/clients/tech-client";
 
-export default async function TechServer() {
+export default async function TechServer({
+  roundUserCount,
+}: {
+  roundUserCount: number;
+}) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
     const roundUser = await fetchRoundUser("tech");
@@ -16,5 +20,10 @@ export default async function TechServer() {
 
   console.log(initialRoundUser);
 
-  return <TechWebsite initialRoundUser={initialRoundUser} />;
+  return (
+    <TechWebsite
+      initialRoundUser={initialRoundUser}
+      roundUserCount={roundUserCount}
+    />
+  );
 }

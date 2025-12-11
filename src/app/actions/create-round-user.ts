@@ -1,7 +1,8 @@
 "use server";
-import { type Domain, RoundType } from "@prisma/client";
+import { type Domain, RoundStatus, RoundType } from "@prisma/client";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export default async function createRoundUser(domain: Domain) {
@@ -12,11 +13,30 @@ export default async function createRoundUser(domain: Domain) {
       return { error: "Not logged in" } as const;
     }
 
+    const roundUserCount = await prisma.roundUser.count({
+      where: {
+        userId,
+        status: { not: "pending" },
+        round: {
+          number: 1,
+          type: "form",
+        },
+      },
+    });
+
+    if (roundUserCount >= DOMAIN_CAP) {
+      return {
+        error: `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      } as const;
+    }
+
     const round = await prisma.round.findFirst({
       where: {
         domain,
         number: 1,
         type: RoundType.form,
+        active: true,
+        hidden: false,
       },
       select: { id: true, active: true },
     });
@@ -25,6 +45,7 @@ export default async function createRoundUser(domain: Domain) {
       return { error: "No form round found for this domain" } as const;
     }
 
+    //dont really need this if statement
     if (round.active) {
       const existingRoundUser = await prisma.roundUser.findFirst({
         where: {
@@ -32,20 +53,7 @@ export default async function createRoundUser(domain: Domain) {
           userId,
         },
         include: {
-          round: {
-            include: {
-              Question: {
-                orderBy: {
-                  serial: "asc",
-                },
-              },
-            },
-          },
-          formSubmission: {
-            include: {
-              responses: true,
-            },
-          },
+          round: true,
           Task: true,
           Meet_User: true,
           user: true,
@@ -53,8 +61,40 @@ export default async function createRoundUser(domain: Domain) {
       });
 
       if (existingRoundUser) {
+        // Only include ques and formsubission if status is pending
+        if (existingRoundUser.status === RoundStatus.pending) {
+          const roundUserWithDetails = await prisma.roundUser.findFirst({
+            where: {
+              id: existingRoundUser.id,
+            },
+            include: {
+              round: {
+                include: {
+                  Question: {
+                    orderBy: {
+                      serial: "asc",
+                    },
+                  },
+                },
+              },
+              formSubmission: {
+                include: {
+                  responses: true,
+                },
+              },
+              Task: true,
+              Meet_User: true,
+              user: true,
+            },
+          });
+
+          return {
+            roundUser: roundUserWithDetails,
+          } as const;
+        }
+
         return {
-          roundUser: existingRoundUser,
+          roundUser: { ...existingRoundUser, formSubmission: null },
         } as const;
       }
 

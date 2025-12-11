@@ -2,12 +2,19 @@
 import Image from "next/image";
 import type React from "react";
 
-interface HomeProps {
+type Props = {
   onGetStarted?: () => void;
   loading?: boolean;
-}
+  hasRoundUser?: boolean;
+  onContinue?: () => void;
+};
 
-const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
+export default function Home({
+  onGetStarted,
+  loading = false,
+  hasRoundUser = false,
+  onContinue,
+}: Props) {
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden">
       <Image
@@ -36,8 +43,7 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
           className="relative w-[60%] select-none"
         />
         <div className="w-210 h-0.5 rounded-full bg-white opacity-99 mt-10"></div>
-
-        {onGetStarted && (
+        {/* {onGetStarted && (
           <button
             onClick={onGetStarted}
             disabled={loading}
@@ -46,183 +52,100 @@ const Home: React.FC<HomeProps> = ({ onGetStarted, loading = false }) => {
           >
             {loading ? "Loading..." : "Get Started"}
           </button>
-        )}
-
-        <div className="flex gap-15 mt-10">
+        )} */}
+        <div className="flex gap-4">
           <button
             type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                { type: "NAVIGATE_TO", url: "https://www.figma.com" },
-                "*",
-              );
-            }}
-            aria-label="Open Figma"
-            className="bg-transparent border-none p-0 cursor-pointer"
+            onClick={hasRoundUser ? onContinue : onGetStarted}
+            disabled={loading && !hasRoundUser}
+            className="mt-8 px-8 py-3 bg-white text-black font-coolvetica text-lg rounded-lg hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
+            {hasRoundUser
+              ? "Continue →"
+              : loading
+              ? "Loading..."
+              : "Get Started →"}
+          </button>
+        </div>
+
+        <div className="flex gap-15 mt-10">
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/figma.webp"
               alt="figma"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                {
-                  type: "NAVIGATE_TO",
-                  url: "https://www.adobe.com/products/xd.html",
-                },
-                "*",
-              );
-            }}
-            aria-label="Open Adobe XD"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/xd.webp"
               alt="adobe xd"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                {
-                  type: "NAVIGATE_TO",
-                  url: "https://www.adobe.com/products/premiere.html",
-                },
-                "*",
-              );
-            }}
-            aria-label="Open Premiere Pro"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/premirepro.webp"
               alt="premiere pro"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                {
-                  type: "NAVIGATE_TO",
-                  url: "https://www.adobe.com/products/aftereffects.html",
-                },
-                "*",
-              );
-            }}
-            aria-label="Open After Effects"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/aftereffects.webp"
               alt="after effects"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                {
-                  type: "NAVIGATE_TO",
-                  url: "https://www.adobe.com/products/photoshop.html",
-                },
-                "*",
-              );
-            }}
-            aria-label="Open Photoshop"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/photoshop.webp"
               alt="photoshop"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                {
-                  type: "NAVIGATE_TO",
-                  url: "https://www.adobe.com/products/illustrator.html",
-                },
-                "*",
-              );
-            }}
-            aria-label="Open Illustrator"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/illustrator.webp"
               alt="illustrator"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                { type: "NAVIGATE_TO", url: "https://www.blender.org" },
-                "*",
-              );
-            }}
-            aria-label="Open Blender"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/blender.webp"
               alt="blender"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.parent.postMessage(
-                { type: "NAVIGATE_TO", url: "https://www.canva.com" },
-                "*",
-              );
-            }}
-            aria-label="Open Canva"
-            className="bg-transparent border-none p-0 cursor-pointer"
-          >
+          </div>
+          <div className="bg-transparent border-none p-0">
             <Image
               src="/images/design/app_icons/canva.webp"
               alt="canva"
               width={50}
               height={50}
-              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200 cursor-pointer"
+              className="relative w-12 h-12 mx-auto transition-all hover:scale-110 hover:rotate-5 duration-200"
             />
-          </button>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Home;
+}
 
 {
   /*/images/ACM-VIT-Logo.svg*/

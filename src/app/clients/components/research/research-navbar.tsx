@@ -5,6 +5,7 @@ import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/research/questions";
+import { DOMAIN_CAP } from "@/lib/constants";
 import type { ResearchAOI, ResearchSection } from "@/lib/research-navigation";
 
 const About = "/images/research/about.svg";
@@ -38,6 +39,7 @@ interface ResearchNavbarProps {
   roundUser?: RoundUserExtended | null;
   joinedAOIs?: Set<ResearchAOI>;
   roundHidden?: boolean;
+  roundUserCount?: number;
 }
 //test
 const Icon = {
@@ -58,6 +60,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   roundUser,
   joinedAOIs = new Set(),
   roundHidden = false,
+  roundUserCount = 0,
 }) => {
   const [expandedRound, setExpandedRound] = useState<boolean>(false);
   const [AOIState, setAoiState] = useState<string>("");
@@ -70,6 +73,8 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
       : questionState;
 
   const isDisabled = !roundUser;
+  const isLimitReached =
+    roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
 
   const items = [
     {
@@ -117,7 +122,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     }
     // Check if this AOI is in the joined set
     const researchAOI = Object.entries(researchAOIToLabel).find(
-      ([_, label]) => label === aoi,
+      ([_, label]) => label === aoi
     )?.[0] as ResearchAOI | undefined;
     return researchAOI && joinedAOIs.has(researchAOI);
   });
@@ -140,7 +145,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     const aoiQuestions = questions.filter(
       (q) =>
         (q.type === "stq" || q.type === "ltq") &&
-        q.varName?.toLowerCase().startsWith(prefix),
+        q.varName?.toLowerCase().startsWith(prefix)
     );
     return aoiQuestions.length;
   };
@@ -166,17 +171,17 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               key={it.key}
               type="button"
               onClick={() => {
-                if (!isDisabled) {
+                if (!isDisabled && !isLimitReached) {
                   onSelect(it.key);
                 }
               }}
-              disabled={isDisabled}
+              disabled={isDisabled || isLimitReached}
               className={`w-full my-1 flex items-center gap-3 pl-3 py-1.5 text-left transition-colors rounded ${
-                isDisabled
+                isDisabled || isLimitReached
                   ? "cursor-not-allowed opacity-40"
                   : selected === it.key
-                    ? "bg-[#7d5bed] cursor-pointer"
-                    : "hover:bg-white/3 cursor-pointer"
+                  ? "bg-[#7d5bed] cursor-pointer"
+                  : "hover:bg-white/3 cursor-pointer"
               }`}
             >
               <span className="w-5 h-full text-white/90">{it.icon}</span>
@@ -187,20 +192,20 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
           {!roundHidden && (
             <button
               className={`w-full flex items-center justify-end pl-3 py-1.5 rounded transition-colors ${
-                isDisabled
+                isDisabled || isLimitReached
                   ? "cursor-not-allowed opacity-40"
                   : selected === "Round 1"
-                    ? "bg-[#7d5bed] cursor-pointer"
-                    : "hover:bg-white/3 cursor-pointer"
+                  ? "bg-[#7d5bed] cursor-pointer"
+                  : "hover:bg-white/3 cursor-pointer"
               }`}
               onClick={(e) => {
-                if (!isDisabled) {
+                if (!isDisabled && !isLimitReached) {
                   setExpandedRound((s) => !s);
                   onSelect(expandedRound ? "" : "Round 1");
                 }
                 e.stopPropagation();
               }}
-              disabled={isDisabled}
+              disabled={isDisabled || isLimitReached}
               type="button"
               tabIndex={0}
             >
@@ -287,7 +292,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                                 )}
                               </button>
                             );
-                          },
+                          }
                         )}
                       </div>
                     )}
@@ -296,36 +301,6 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               )}
             </div>
           )}
-
-          <div className={roundHidden ? "mt-4" : "mt-3"}>
-            <button
-              type="button"
-              onClick={() => {
-                if (!isDisabled) {
-                  onSelect("Interview");
-                }
-              }}
-              disabled={isDisabled}
-              className={`w-full flex items-center gap-3 pl-3 py-2 text-left transition-colors rounded ${
-                isDisabled
-                  ? "cursor-not-allowed opacity-40"
-                  : selected === "Interview"
-                    ? "bg-[#7d5bed] cursor-pointer"
-                    : "hover:bg-white/3 cursor-pointer"
-              }`}
-            >
-              <span className="w-5 h-full text-white/90">
-                <Image
-                  src={Interview}
-                  alt="interview"
-                  width={40}
-                  height={40}
-                  className="w-5 h-5"
-                />
-              </span>
-              <span className="text-sm">Interview</span>
-            </button>
-          </div>
         </div>
         <div
           className="flex flex-col items-start mt-auto"

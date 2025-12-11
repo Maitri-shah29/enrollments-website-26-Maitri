@@ -14,3 +14,17 @@ export const questionsList: QuestionId[] = [
   "question9",
   "question10",
 ];
+
+const getDomainCap = (): number => {
+  if (!process.env.NEXT_PUBLIC_DOMAIN_CAP) {
+    console.error(
+      "NEXT_PUBLIC_DOMAIN_CAP is not defined in environment variables. Please add it to your .env file."
+    );
+    throw new Error(
+      "NEXT_PUBLIC_DOMAIN_CAP is not defined. Check console for details."
+    );
+  }
+  return Number.parseInt(process.env.NEXT_PUBLIC_DOMAIN_CAP);
+};
+
+export const DOMAIN_CAP = getDomainCap();

@@ -1,10 +1,10 @@
 "use client";
 
-import { Domain } from "@prisma/client";
 import { Pencil, Search, Settings } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { DOMAIN_CAP } from "@/lib/constants";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import createRoundUser from "../actions/create-round-user";
@@ -19,10 +19,12 @@ import WhatWeDo from "./components/management/whatwedo";
 
 interface ManagementClientProps {
   initialRoundUser?: RoundUserExtended | null;
+  roundUserCount: number;
 }
 
 export default function Management({
   initialRoundUser,
+  roundUserCount,
 }: ManagementClientProps) {
   const [activeSection, setActiveSection] = useState("Landing");
   const [loading, setLoading] = useState(false);
@@ -97,8 +99,15 @@ export default function Management({
     setLoading(true);
     setError(null);
     // console.log(await createRoundUser(Domain.cc));
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
     try {
-      const result = await createRoundUser(Domain.management);
+      const result = await createRoundUser("management");
       console.log(result);
 
       if ("error" in result) {
@@ -258,7 +267,11 @@ export default function Management({
         {} as Record<string, string>,
       );
 
-      await submitForm(roundUser.id, currentResponses);
+      const result = await submitForm(roundUser.id, currentResponses);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       setNotificationType("success");
       setNotification("Form submitted successfully!");
@@ -327,6 +340,8 @@ export default function Management({
             onGetStarted={initializeRoundUser}
             wallpaper={wallpaper}
             loading={loading}
+            hasRoundUser={!!roundUser}
+            onContinue={() => setActiveSection("About")}
           />
         );
       case "About":
@@ -449,7 +464,7 @@ export default function Management({
             <button
               type="button"
               onClick={() => setError(null)}
-              className="w-full px-6 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors"
+              className="w-full px-6 py-2 bg-red-500 text-white font-medium rounded-2xl hover:bg-red-600 transition-colors"
             >
               Close
             </button>
@@ -580,8 +595,12 @@ export default function Management({
               "Round 1",
             ];
 
+            const isLimitReached =
+              roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
+
             return allSections.map((section) => {
-              const isDisabled = !roundUser && section !== "Landing";
+              const isDisabled =
+                (!roundUser && section !== "Landing") || isLimitReached;
               return (
                 <button
                   type="button"
@@ -638,15 +657,16 @@ export default function Management({
                 onKeyDown={(e) => e.key === "Escape" && e.stopPropagation()}
                 className="absolute right-0 mt-3 w-48 flex flex-col gap-2 z-100 rounded-2xl bg-white/30 backdrop-blur-xl border border-white/30 shadow-lg p-3 animate-[fadeIn_0.2s_ease-out]"
               >
-                {["sequoia", "sonoma", "big sur"].map((wall, index) => (
-                  <div
-                    key={index}
+                {["sequoia", "sonoma", "big sur"].map((wall) => (
+                  <button
+                    key={wall}
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleWallpaperChange(wall);
                       setSettings(false);
                     }}
-                    className="cursor-pointer flex items-center justify-center"
+                    className="cursor-pointer flex items-center justify-center bg-transparent border-none p-0"
                   >
                     <div className="group relative flex items-center justify-center">
                       <Image
@@ -660,7 +680,7 @@ export default function Management({
                         {wall}
                       </span>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}

@@ -56,9 +56,16 @@ function StaticFaintLines() {
 type Props = {
   onGetStarted?: () => void;
   loading?: boolean;
+  hasRoundUser?: boolean;
+  onContinue?: () => void;
 };
 
-export default function Home({ onGetStarted, loading = false }: Props) {
+export default function Home({
+  onGetStarted,
+  loading = false,
+  hasRoundUser = false,
+  onContinue,
+}: Props) {
   return (
     <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex flex-col items-center justify-center">
       <NetworkGraph />
@@ -87,16 +94,14 @@ export default function Home({ onGetStarted, loading = false }: Props) {
         Research
       </h1>
 
-      {onGetStarted && (
-        <button
-          type="button"
-          onClick={onGetStarted}
-          disabled={loading}
-          className="mt-8 px-8 py-3 bg-[#7D5BED] text-white font-medium rounded-md hover:bg-[#6B4DD1] transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? "Loading..." : "Get Started →"}
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={hasRoundUser ? onContinue : onGetStarted}
+        disabled={loading && !hasRoundUser}
+        className="mt-8 px-8 py-3 bg-[#7D5BED] text-white font-medium rounded-md hover:bg-[#6B4DD1] transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {hasRoundUser ? "Continue →" : loading ? "Loading..." : "Get Started →"}
+      </button>
     </div>
   );
 }
