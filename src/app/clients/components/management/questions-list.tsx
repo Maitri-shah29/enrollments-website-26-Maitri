@@ -22,7 +22,9 @@ interface QuestionsProps {
   roundUser?: RoundUserExtended | null;
   submittingForm?: boolean;
   onBack?: () => void;
-  onQuestionClick?: (index: number) => boolean;
+  onQuestionBackClick?: () => void;
+  activeIndex: number | null;
+  setActiveIndex: (index: number | null) => void;
 }
 
 export default function QuestionsList({
@@ -39,9 +41,10 @@ export default function QuestionsList({
   roundUser,
   submittingForm,
   onBack,
-  onQuestionClick,
+  onQuestionBackClick,
+  activeIndex,
+  setActiveIndex,
 }: QuestionsProps) {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [_visited, setVisited] = useState<boolean[]>([]);
   const [revalidating, setRevalidating] = useState(false);
 
@@ -65,7 +68,7 @@ export default function QuestionsList({
     window.addEventListener("proceedWithNavigation", handleProceed);
     return () =>
       window.removeEventListener("proceedWithNavigation", handleProceed);
-  }, []);
+  }, [setActiveIndex]);
 
   const handleRevalidate = async () => {
     setRevalidating(true);
@@ -89,17 +92,13 @@ export default function QuestionsList({
         successMessage={successMessages[questionData.id]}
         onChangeAnswer={onChangeAnswer}
         onSubmitAnswer={onSubmitAnswer}
-        goBack={() => setActiveIndex(null)}
+        goBack={onQuestionBackClick}
         wallpaper={wallpaper}
       />
     );
   }
 
   const handleClick = (index: number) => {
-    if (onQuestionClick) {
-      const canProceed = onQuestionClick(index);
-      if (!canProceed) return;
-    }
     setVisited((prev) => {
       const next = [...prev];
       next[index] = true;

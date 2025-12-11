@@ -48,6 +48,7 @@ export default function Management({
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const roundActive = !!roundUser?.round?.active;
   const _roundHidden = !!roundUser?.round?.hidden;
@@ -284,39 +285,38 @@ export default function Management({
     setShowConfirmDialog(false);
   };
 
-  const handleQuestionClick = (index: number): boolean => {
-    const questionId = questions[index]?.id;
-    if (!questionId) return true;
+  // const handleQuestionClick = (index: number): boolean => {
+  //   const questionId = questions[index]?.id;
+  //   if (!questionId) return true;
 
-    const currentAnswer = answers[questionId] || "";
-    const savedAnswer = savedAnswers[questionId] || "";
-    const hasUnsavedChanges = currentAnswer !== savedAnswer;
+  //   const currentAnswer = answers[questionId] || "";
+  //   const savedAnswer = savedAnswers[questionId] || "";
+  //   const hasUnsavedChanges = currentAnswer !== savedAnswer;
 
-    if (hasUnsavedChanges) {
-      setPendingQuestionIndex(index);
-      setPendingBackNavigation(false);
-      setShowUnsavedDialog(true);
-      return false;
+  //   if (hasUnsavedChanges) {
+  //     setPendingQuestionIndex(index);
+  //     setPendingBackNavigation(false);
+  //     setShowUnsavedDialog(true);
+  //     return false;
+  //   }
+  //   return true;
+  // };
+
+  const handleBackClick = (): void => {
+    if (activeIndex !== null) {
+      const questionId = questions[activeIndex]?.id;
+      if (questionId) {
+        const currentAnswer = answers[questionId] || "";
+        const savedAnswer = savedAnswers[questionId] || "";
+        const hasUnsavedChanges = currentAnswer !== savedAnswer;
+
+        if (hasUnsavedChanges) {
+          setPendingBackNavigation(true);
+          setPendingQuestionIndex(null);
+          setShowUnsavedDialog(true);
+        }
+      }
     }
-    return true;
-  };
-
-  const handleBackClick = (): boolean => {
-    // Check if any question has unsaved changes
-    const hasUnsavedChanges = questions.some((q) => {
-      const currentAnswer = answers[q.id] || "";
-      const savedAnswer = savedAnswers[q.id] || "";
-      return currentAnswer !== savedAnswer;
-    });
-
-    if (hasUnsavedChanges) {
-      setPendingBackNavigation(true);
-      setPendingQuestionIndex(null);
-      setShowUnsavedDialog(true);
-      return false;
-    }
-    setActiveSection("Landing");
-    return true;
   };
 
   const renderActiveSection = () => {
@@ -407,8 +407,10 @@ export default function Management({
             onSubmitForm={handleSubmitForm}
             roundUser={roundUser}
             submittingForm={submittingForm}
-            onBack={handleBackClick}
-            onQuestionClick={handleQuestionClick}
+            onBack={() => setActiveSection("Landing")}
+            onQuestionBackClick={handleBackClick}
+            activeIndex={activeIndex}
+            setActiveIndex={setActiveIndex}
           />
         ) : (
           <p className="text-gray-700">No questions available.</p>
@@ -520,7 +522,7 @@ export default function Management({
                 onClick={() => {
                   setShowUnsavedDialog(false);
                   if (pendingBackNavigation) {
-                    setActiveSection("Landing");
+                    setActiveIndex(null);
                     setPendingBackNavigation(false);
                   } else if (pendingQuestionIndex !== null) {
                     // Proceed with navigation - this will be handled in QuestionsList
