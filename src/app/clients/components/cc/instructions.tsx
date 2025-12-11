@@ -10,19 +10,8 @@ const Instructions: React.FC = () => {
         <ul className="list-disc pl-6 space-y-2 text-white">
           <li>Answer all the questions in the form round.</li>
           <li>Next round will be a CC contest round.</li>
-          <li>It will be organised on Sunday, 14th December, 2025.</li>
-          <li>Timings will be 9:00 pm to 11:00 pm.</li>
-          <li>
-            Contest link is{" "}
-            <a
-              href="https://hackerrank.com/acmvit-enrollments"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#C9EB3E] underline"
-            >
-              hackerrank.com/acmvit-enrollments
-            </a>
-          </li>
+          <li>It will be organised on Sunday, 9th January, 2026.</li>
+          <li>Link will be shared later</li>
         </ul>
       </NeonSection>
 
