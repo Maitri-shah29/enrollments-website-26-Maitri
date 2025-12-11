@@ -32,6 +32,7 @@ interface ResearchNavbarProps {
   selectedAOI?: string;
   selectedQuestionIdx?: number | null;
   submittedQuestions: Set<string>;
+  questionsWithUnsavedEdits?: Set<string>;
   onAOISelect?: (aoi: string) => void;
   onQuestionSelect?: (idx: number) => void;
   roundUser?: RoundUserExtended | null;
@@ -47,6 +48,7 @@ const Icon = {
 
 const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   submittedQuestions,
+  questionsWithUnsavedEdits = new Set(),
   selected,
   onSelect,
   selectedAOI,
@@ -120,8 +122,28 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     return researchAOI && joinedAOIs.has(researchAOI);
   });
 
-  // 4 questions per AOI
-  const questionsPerAOI = 4;
+  // Map AOI names to varName prefixes
+  const aoiToPrefixMap: Record<string, string> = {
+    Common: "common",
+    "AI/ML": "aiml",
+    Cybersecurity: "cybersec",
+    Blockchain: "blockchain",
+    Bioinformatics: "bioinfo",
+    "Quantum Computing": "quantum",
+    IoT: "iot",
+  };
+
+  // Get number of questions per AOI dynamically
+  const getQuestionsPerAOI = (aoi: string) => {
+    const prefix = aoiToPrefixMap[aoi] || "common";
+    const questions = roundUser?.round?.Question || [];
+    const aoiQuestions = questions.filter(
+      (q) =>
+        (q.type === "stq" || q.type === "ltq") &&
+        q.varName?.toLowerCase().startsWith(prefix),
+    );
+    return aoiQuestions.length;
+  };
 
   return (
     <aside
@@ -231,25 +253,42 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
 
                     {effectiveAOI === aoi && (
                       <div className="pl-6 space-y-1">
-                        {Array.from({ length: questionsPerAOI }, (_, qIdx) => (
-                          <button
-                            key={`${aoi}-q${qIdx + 1}`}
-                            type="button"
-                            onClick={() => {
-                              setQuestionState(qIdx);
-                              onQuestionSelect?.(qIdx);
-                              onSelect("Round 1");
-                            }}
-                            className={`w-full text-left px-3 py-0.5 ${submittedQuestions.has(`${aoi}-question${qIdx + 1}`) ? `border-[#7D5BED] border-b-3` : `border-[#DBD3D3]/25 border-b-2`} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3`}
-                          >
-                            <span className="text-left">
-                              Question {qIdx + 1}
-                            </span>
-                            {effectiveQuestionIdx === qIdx && (
-                              <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
-                            )}
-                          </button>
-                        ))}
+                        {Array.from(
+                          { length: getQuestionsPerAOI(aoi) },
+                          (_, qIdx) => {
+                            const questionKey = `${aoi}-question${qIdx + 1}`;
+                            const isSaved = submittedQuestions.has(questionKey);
+                            const hasUnsaved =
+                              questionsWithUnsavedEdits.has(questionKey);
+
+                            let borderClass = "border-[#DBD3D3]/25 border-b-2";
+                            if (hasUnsaved) {
+                              borderClass = "border-orange-500 border-b-3";
+                            } else if (isSaved) {
+                              borderClass = "border-[#7D5BED] border-b-3";
+                            }
+
+                            return (
+                              <button
+                                key={questionKey}
+                                type="button"
+                                onClick={() => {
+                                  setQuestionState(qIdx);
+                                  onQuestionSelect?.(qIdx);
+                                  onSelect("Round 1");
+                                }}
+                                className={`w-full text-left px-3 py-0.5 ${borderClass} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3`}
+                              >
+                                <span className="text-left">
+                                  Question {qIdx + 1}
+                                </span>
+                                {effectiveQuestionIdx === qIdx && (
+                                  <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
+                                )}
+                              </button>
+                            );
+                          },
+                        )}
                       </div>
                     )}
                   </div>
