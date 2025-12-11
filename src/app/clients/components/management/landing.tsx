@@ -24,9 +24,9 @@ const ManagementLanding = ({
   };
 
   return (
-    <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto">
+    <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto hide-scrollbar">
       <Header />
-      <div className="flex flex-col flex-1 px-10 pt-5 pb-3 space-y-6">
+      <div className="flex flex-col flex-1 px-10 pt-5 pb-3 space-y-6 overflow-auto">
         <div>
           <h1 className="text-2xl text-black mb-1">
             Welcome to ACM's Management Domain

@@ -183,8 +183,8 @@ export default function QuestionsList({
                       }}
                     >
                       {index + 1}.{" "}
-                      {q.question.length > 50
-                        ? `${q.question.slice(0, 50)}...`
+                      {q.question.length > 120
+                        ? `${q.question.slice(0, 120)}...`
                         : q.question}
                     </span>
                   </label>
@@ -195,12 +195,12 @@ export default function QuestionsList({
       </div>
 
       {roundUser?.status === "pending" && onSubmitForm && (
-        <div className="p-4 border-t border-gray-300 bg-white/40 backdrop-blur-sm flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             type="button"
             onClick={onSubmitForm}
             disabled={submittingForm}
-            className="px-5 py-2 rounded-full text-white font-medium transition disabled:bg-gray-400 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-700"
+            className="px-5 py-2 rounded-full text-white font-medium transition disabled:bg-gray-400 disabled:cursor-not-allowed bg-gray-600 hover:bg-gray-500"
           >
             {submittingForm ? "Submitting..." : "Submit Form"}
           </button>
