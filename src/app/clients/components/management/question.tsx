@@ -62,7 +62,9 @@ export default function Question({
 
         {/* Question Text */}
         <div className="text-black">
-          <p className="break-all whitespace-pre-wrap">{question.question}</p>
+          <p className="whitespace-pre-wrap break-normal">
+            {question.question}
+          </p>
           {question.helpText && (
             <p className="text-sm text-gray-600 mt-2">{question.helpText}</p>
           )}

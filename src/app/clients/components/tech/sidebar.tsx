@@ -70,33 +70,49 @@ export default function Sidebar({
     // Get all relevant questions for joined AOIs
     const joinedAOIsArray = Array.from(joinedAOIs);
     const allQuestions = roundUser?.round?.Question || [];
-    const relevantQuestions = allQuestions.filter((q) => {
-      const isStandard = q.type === "stq" || q.type === "ltq";
-      const isAOI = q.varName && joinedAOIsArray.includes(q.varName as AOI);
-      const isCommon = !q.varName || q.varName === "common";
-      return isStandard && (isAOI || isCommon);
-    });
+    const relevantQuestions = allQuestions.filter(
+      (q: (typeof allQuestions)[number]) => {
+        const isStandard = q.type === "stq" || q.type === "ltq";
+        const isAOI = q.varName && joinedAOIsArray.includes(q.varName as AOI);
+        const isCommon = !q.varName || q.varName === "common";
+        return isStandard && (isAOI || isCommon);
+      },
+    );
 
     // Check if all questions are saved
-    const unsavedQuestions = relevantQuestions.filter((question) => {
-      const folderQuestions = allQuestions
-        .filter((q) => q.varName === question.varName)
-        .sort((a, b) => a.serial - b.serial);
-      const questionIndex = folderQuestions.findIndex(
-        (q) => q.id === question.id,
-      );
-      if (questionIndex !== -1) {
-        const folderKey = question.varName || "common";
-        const questionKey = `${folderKey}-question${questionIndex + 1}`;
-        const currentAnswer = currentAnswers[questionKey] || "";
-        const savedAnswer = savedAnswers[questionKey];
-        // Question is unsaved if: no saved answer exists OR current answer differs from saved
-        return savedAnswer === undefined || currentAnswer !== savedAnswer;
-      }
-      return false;
-    });
+    const unsavedQuestions = relevantQuestions.filter(
+      (question: (typeof allQuestions)[number]) => {
+        const folderQuestions = allQuestions
+          .filter(
+            (q: (typeof allQuestions)[number]) =>
+              q.varName === question.varName,
+          )
+          .sort(
+            (
+              a: (typeof allQuestions)[number],
+              b: (typeof allQuestions)[number],
+            ) => a.serial - b.serial,
+          );
+        const questionIndex = folderQuestions.findIndex(
+          (q: (typeof allQuestions)[number]) => q.id === question.id,
+        );
+        console.log(savedAnswers, currentAnswers);
+        if (questionIndex !== -1) {
+          const folderKey = question.varName || "common";
+          const questionKey = `${folderKey}-question${questionIndex + 1}`;
+          const currentAnswer = currentAnswers[questionKey] || "";
+          const savedAnswer = savedAnswers[question.id];
+          // Question is unsaved if: no saved answer exists OR current answer differs from saved
+          // console.log(currentAnswer, savedAnswer);
+          // console.log("hdnsjhdl")
+          return savedAnswer === undefined || currentAnswer !== savedAnswer;
+        }
+        return false;
+      },
+    );
 
     if (unsavedQuestions.length > 0) {
+      console.log(unsavedQuestions);
       setNotificationType("error");
       setNotification(
         `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
@@ -120,21 +136,30 @@ export default function Sidebar({
     // Get all question IDs for joined AOIs only
     const joinedAOIsArray = Array.from(joinedAOIs);
     const allQuestions = roundUser.round?.Question || [];
-    const relevantQuestions = allQuestions.filter((q) => {
-      const isStandard = q.type === "stq" || q.type === "ltq";
-      const isAOI = q.varName && joinedAOIsArray.includes(q.varName as AOI);
-      const isCommon = !q.varName || q.varName === "common";
-      return isStandard && (isAOI || isCommon);
-    });
+    const relevantQuestions = allQuestions.filter(
+      (q: (typeof allQuestions)[number]) => {
+        const isStandard = q.type === "stq" || q.type === "ltq";
+        const isAOI = q.varName && joinedAOIsArray.includes(q.varName as AOI);
+        const isCommon = !q.varName || q.varName === "common";
+        return isStandard && (isAOI || isCommon);
+      },
+    );
 
     // Build effective responses only for joined AOIs
     const effectiveResponses: Record<string, string> = {};
     for (const question of relevantQuestions) {
       const folderQuestions = allQuestions
-        .filter((q) => q.varName === question.varName)
-        .sort((a, b) => a.serial - b.serial);
+        .filter(
+          (q: (typeof allQuestions)[number]) => q.varName === question.varName,
+        )
+        .sort(
+          (
+            a: (typeof allQuestions)[number],
+            b: (typeof allQuestions)[number],
+          ) => a.serial - b.serial,
+        );
       const questionIndex = folderQuestions.findIndex(
-        (q) => q.id === question.id,
+        (q: (typeof allQuestions)[number]) => q.id === question.id,
       );
       if (questionIndex !== -1) {
         const folderKey = question.varName || "common";

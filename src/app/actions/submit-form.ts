@@ -33,6 +33,12 @@ export default async function submitForm(
       };
     }
 
+    for (const [, text] of Object.entries(currentResponses)) {
+      if (text.length > 1500) {
+        return { error: "Character overlimit" };
+      }
+    }
+
     // Verify the round user belongs to the current user
     const roundUser = await prisma.roundUser.findUnique({
       where: { id: roundUserId },

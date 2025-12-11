@@ -24,6 +24,8 @@ const LANGUAGE_OPTIONS = [
   { value: "go", label: "Go" },
 ];
 
+const CHARACTER_LIMIT = 1500;
+
 const AnswerBox = (props: AnswerBoxProps) => {
   const initialBody = typeof props.body === "string" ? props.body : "";
   const [code, setCode] = useState(initialBody);
@@ -83,8 +85,10 @@ const AnswerBox = (props: AnswerBoxProps) => {
 
   const handleEditorChange = (newValue: string | undefined) => {
     const value = newValue || "";
-    setCode(value);
-    props.onChange?.(value);
+    if (value.length <= CHARACTER_LIMIT) {
+      setCode(value);
+      props.onChange?.(value);
+    }
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -99,17 +103,26 @@ const AnswerBox = (props: AnswerBoxProps) => {
         <span className="text-[#C9EB3E] font-ShareTechMono text-[20px]">
           {props.subject}
         </span>
-        <select
-          value={selectedLanguage}
-          onChange={handleLanguageChange}
-          className="bg-[#16171B] text-[#C9EB3E] border-[2px] border-solid border-[#393A3D] px-3 py-1 font-ShareTechMono text-[16px] rounded-sm focus:outline-none hover:border-[#C9EB3E]"
-        >
-          {LANGUAGE_OPTIONS.map((lang) => (
-            <option key={lang.value} value={lang.value}>
-              {lang.label}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-4">
+          <span
+            className={`font-ShareTechMono text-[14px] ${
+              code.length >= CHARACTER_LIMIT ? "text-red-500" : "text-[#858585]"
+            }`}
+          >
+            {code.length} / {CHARACTER_LIMIT}
+          </span>
+          <select
+            value={selectedLanguage}
+            onChange={handleLanguageChange}
+            className="bg-[#16171B] text-[#C9EB3E] border-[2px] border-solid border-[#393A3D] px-3 py-1 font-ShareTechMono text-[16px] rounded-sm focus:outline-none hover:border-[#C9EB3E]"
+          >
+            {LANGUAGE_OPTIONS.map((lang) => (
+              <option key={lang.value} value={lang.value}>
+                {lang.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="flex-1 w-full min-h-[220px] selection:bg-[#ccff00]">
