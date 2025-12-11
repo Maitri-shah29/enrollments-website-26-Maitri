@@ -269,7 +269,10 @@ const HomePage: React.FC<HomePageProps> = ({
             {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" /> */}
           </section>
 
-          <div className="relative col-span-6 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
+          <div
+            onClick={goToDomains}
+            className="relative col-span-6 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+          >
             <Gravity
               className="absolute inset-0 z-0 overflow-visible pointer-events-auto"
               gravity={{ x: 0, y: 1 }}
