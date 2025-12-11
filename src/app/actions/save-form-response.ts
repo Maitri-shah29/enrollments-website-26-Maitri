@@ -44,6 +44,10 @@ export default async function saveFormResponse(
   const userId = session?.session?.userId;
   if (!userId) throw new Error("Not logged in");
 
+  if (response != null && response.length > 1500) {
+    return { error: "Character overlimit" };
+  }
+
   const roundUserCount = await prisma.roundUser.count({
     where: {
       userId,
