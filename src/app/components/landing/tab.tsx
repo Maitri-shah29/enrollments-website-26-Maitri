@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import PintooRun from "@/app/clients/PintooRun-client";
@@ -25,10 +24,10 @@ const ROTATING_WEBSITES = [
   "skrbbl.io",
   "wikipedia.org",
   "classic.minecraft.net",
-  "chess.com",
 ];
 
 const IFRAME_WHITELIST = new Set([
+  // 🌐 Core / Existing
   "os.acmvit.in",
   "localhost.acmvit.in",
   "rcpc.acmvit.in",
@@ -38,7 +37,7 @@ const IFRAME_WHITELIST = new Set([
   "icpc.global",
   "comick.live",
 
-  "2048-main-delta.vercel.app",
+  // 🎮 Games & Game Sites
   "agar.io",
   "slither.io",
   "krunker.io",
@@ -55,7 +54,6 @@ const IFRAME_WHITELIST = new Set([
   "surviv.io",
   "classic.minecraft.net",
   "2048game.com",
-  "chess.com",
   "lichess.org",
   "poki.com",
   "crazygames.com",
@@ -71,6 +69,7 @@ const IFRAME_WHITELIST = new Set([
   "hole.io",
   "skibiditoilet.io",
 
+  // 📚 Educational / Math / Science
   "desmos.com",
   "geogebra.org",
   "symbolab.com",
@@ -90,6 +89,7 @@ const IFRAME_WHITELIST = new Set([
   "projecteuler.net",
   "scratch.mit.edu",
 
+  // 💻 Coding / Developer Tools
   "codepen.io",
   "jsfiddle.net",
   "codesandbox.io",
@@ -130,6 +130,7 @@ const IFRAME_WHITELIST = new Set([
   "supabase.com",
   "render.com",
 
+  // 🎨 Design / Drawing / Whiteboards
   "tldraw.com",
   "excalidraw.com",
   "miro.com",
@@ -147,6 +148,7 @@ const IFRAME_WHITELIST = new Set([
   "pixilart.com",
   "jamboard.google.com",
 
+  // 🌍 Maps / Geo / Visualization
   "openstreetmap.org",
   "geojson.io",
   "earth.google.com",
@@ -160,6 +162,7 @@ const IFRAME_WHITELIST = new Set([
   "stellarium-web.org",
   "peakfinder.org",
 
+  // 📁 Google Embeds (Must Use /embed or /preview)
   "docs.google.com/forms",
   "docs.google.com/presentation",
   "docs.google.com/spreadsheets",
@@ -168,6 +171,7 @@ const IFRAME_WHITELIST = new Set([
   "youtube.com/embed",
   "player.vimeo.com",
 
+  // 🎵 Audio / Media Embeds
   "open.spotify.com/embed",
   "soundcloud.com",
   "bandcamp.com",
@@ -175,12 +179,14 @@ const IFRAME_WHITELIST = new Set([
   "tunein.com",
   "anchor.fm",
 
+  // ✅ Productivity / Collaboration
   "notion.so",
   "airtable.com",
   "trello.com",
   "typeform.com",
   "forms.gle",
 
+  // 📖 Info / Knowledge / Open Data
   "wikipedia.org",
   "wikimedia.org",
   "archive.org",
@@ -193,6 +199,7 @@ const IFRAME_WHITELIST = new Set([
   "duckduckgo.com",
   "startpage.com",
 
+  // ⚙️ Utilities / File / Media Tools
   "remove.bg",
   "ilovepdf.com",
   "smallpdf.com",
@@ -203,6 +210,7 @@ const IFRAME_WHITELIST = new Set([
   "pdfescape.com",
   "compressjpeg.com",
 
+  // ACM-VIT legacy websites
   "c2c.acmvit.in",
   "cryptichunt.acmvit.in",
   "examcooker.acmvit.in",
@@ -257,43 +265,43 @@ interface HomePageNavbarProps {
   onNavigate: (keyword: string) => void;
 }
 
-// const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
-//   const bookmarkLabels: Record<string, string> = {
-//     cc: "CC",
-//     management: "Management",
-//     tech: "Tech",
-//     design: "Design",
-//     research: "Research",
-//     events: "Events",
-//     domains: "Domains",
-//     pintoorun: "PintooRun",
-//     snake: "SnakeGame",
-//   };
+const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
+  const bookmarkLabels: Record<string, string> = {
+    cc: "CC",
+    management: "Management",
+    tech: "Tech",
+    design: "Design",
+    research: "Research",
+    events: "Events",
+    domains: "Domains",
+    pintoorun: "PintooRun",
+    snake: "SnakeGame",
+  };
 
-//   return (
-//     <nav className="w-full bg-[#555] text-white py-2">
-//       <ul className="flex items-center justify-center pl-8 gap-6 text-sm font-semibold">
-//         {Array.from(INTERNAL_KEYWORDS).map((item, index) => (
-//           <div key={item}>
-//             <li>
-//               <button
-//                 type="button"
-//                 onClick={() => onNavigate(item)}
-//                 className="hover:text-gray-300 transition-colors"
-//               >
-//                 {bookmarkLabels[item] || item}
-//               </button>
-//             </li>
+  return (
+    <nav className="w-full bg-[#555] text-white py-2">
+      <ul className="flex items-center justify-center pl-8 gap-6 text-sm font-semibold">
+        {Array.from(INTERNAL_KEYWORDS).map((item, index) => (
+          <React.Fragment key={item}>
+            <li>
+              <button
+                type="button"
+                onClick={() => onNavigate(item)}
+                className="hover:text-gray-300 transition-colors"
+              >
+                {bookmarkLabels[item] || item}
+              </button>
+            </li>
 
-//             {index < Array.from(INTERNAL_KEYWORDS).length - 1 && (
-//               <span className="h-4 w-px bg-gray-300 opacity-40" />
-//             )}
-//           </div>
-//         ))}
-//       </ul>
-//     </nav>
-//   );
-// };
+            {index < Array.from(INTERNAL_KEYWORDS).length - 1 && (
+              <span className="h-4 w-px bg-gray-300 opacity-40" />
+            )}
+          </React.Fragment>
+        ))}
+      </ul>
+    </nav>
+  );
+};
 
 interface PageHistory {
   id: number;
@@ -655,6 +663,16 @@ const Tab: React.FC<TabProps> = ({
   };
 
   const handleRefresh = () => {
+    if (
+      tabData.showManagement ||
+      tabData.showCc ||
+      tabData.showTech ||
+      tabData.showDesign ||
+      tabData.showResearch
+    ) {
+      return;
+    }
+
     // Increment refresh key to force re-render of client components
     setRefreshKey((prev) => prev + 1);
 
@@ -804,7 +822,7 @@ const Tab: React.FC<TabProps> = ({
         </div>
       </div>
       {/* Content Area */}
-      <div className="flex justify-center items-center relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {!session?.data &&
         (tabData.showManagement ||
           tabData.showCc ||
@@ -894,7 +912,8 @@ const Tab: React.FC<TabProps> = ({
             ></iframe>
           )
         ) : (
-          <div className="h-full">
+          <div>
+            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
             <HomePage
               query={homeInput}
               onQueryChange={handleHomeChange}
