@@ -1,179 +1,285 @@
 "use client";
+
 import Image from "next/image";
 import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-const Domains: React.FC = () => {
-  const handleNavigate = (url: string) => {
-    window.parent.postMessage({ type: "NAVIGATE_TO", url: url }, "*");
-  };
+type Domain = {
+  slug: string;
+  title: string;
+  summary: string;
+  accent: string;
+  folder: string;
+  text: string;
+  image: string;
+  background: string;
+};
+
+const domains: Domain[] = [
+  {
+    slug: "design",
+    title: "Design",
+    summary:
+      "Craft beautiful digital experiences through design. From UI/UX to motion graphics, illustrations to 3D design, our designers bring creative visions to life with stunning visual storytelling.",
+    accent: "#8C3428",
+    folder: "#F55F4B",
+    text: "#ffffff",
+    image: "/images/domains/design.svg",
+    background: "url('/images/domains/design-bg.png')",
+  },
+  {
+    slug: "cc",
+    title: "Competitive Coding",
+    summary:
+      "Master algorithmic thinking and problem-solving through rigorous competitive coding. Our members tackle complex data structures and algorithms while building speed and precision in high-stakes programming contests.",
+    accent: "#7E9328",
+    folder: "#BBD842",
+    text: "#292625",
+    image: "/images/domains/cc.svg",
+    background: "url('/images/domains/cc-bg.png')",
+  },
+  {
+    slug: "management",
+    title: "Management",
+    summary:
+      "Transform big ideas into unforgettable events. We handle everything from brainstorming and sponsorships to logistics and content creation. We're the extroverts ensuring every event is smooth, well-organized, and unforgettable.",
+    accent: "#0E3A60",
+    folder: "#46A8FF",
+    text: "#ffffff",
+    image: "/images/domains/management.svg",
+    background: "url('/images/domains/management-bg.png')",
+  },
+  {
+    slug: "research",
+    title: "Research",
+    summary:
+      "Foster curiosity and innovation across cutting-edge fields. From AI and Blockchain to Quantum Computing and Bioinformatics, we bridge theory and real-world application through collaboration and continuous learning.",
+    accent: "#3C2C73",
+    folder: "#A98FFF",
+    text: "#ffffff",
+    image: "/images/domains/research.svg",
+    background: "url('/images/domains/research-bg.png')",
+  },
+  {
+    slug: "tech",
+    title: "Tech",
+    summary:
+      "Build the future with cutting-edge technology. From web and app development to DevOps and open-source contribution, our members master full-stack solutions and modern development practices.",
+    accent: "#7B336E",
+    folder: "#FF6CD9",
+    text: "#ffffff",
+    image: "/images/domains/tech.svg",
+    background: "url('/images/domains/tech-bg.png')",
+  },
+];
+
+const Domains = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const active = useMemo(() => domains[activeIndex], [activeIndex]);
+  const backgroundImage = active.background;
+
+  const backFlapColor = active.accent;
+  const frontFlapColor = active.folder;
+
+  const handleNavigate = useCallback((url: string) => {
+    window.parent.postMessage({ type: "NAVIGATE_TO", url }, "*");
+  }, []);
+
+  const goNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % domains.length);
+  }, []);
+
+  const goPrev = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
+  }, []);
+
+  const handleNavigateKey = useCallback(
+    (event: React.KeyboardEvent<HTMLElement>, slug: string) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleNavigate(slug);
+      }
+    },
+    [handleNavigate],
+  );
+
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight") goNext();
+      if (event.key === "ArrowLeft") goPrev();
+    };
+
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, [goNext, goPrev]);
 
   return (
-    <div className="bg-gradient-to-br from-black via-gray-950 to-black w-full min-h-screen text-white font-doppio overflow-hidden hide-scrollbar p-20 relative">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-0 w-[600px] h-[600px] bg-lime-500/30 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-1/3 right-0 w-[550px] h-[550px] bg-blue-500/30 rounded-full blur-[120px] animate-pulse [animation-delay:1s]" />
-        <div className="absolute bottom-20 left-1/4 w-[500px] h-[500px] bg-pink-500/25 rounded-full blur-[120px] animate-pulse [animation-delay:0.5s]" />
-        <div className="absolute top-2/3 left-1/2 w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[100px] animate-pulse [animation-delay:1.5s]" />
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
+    <div className="relative h-screen w-full overflow-hidden bg-black text-white font-doppio">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500"
+        style={{
+          backgroundImage,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-6 py-6 md:px-10 lg:px-12">
+        <header className="mb-15 flex w-full items-center justify-center">
+          <h2
+            className="text-center text-5xl font-poppins tracking-tight drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] md:text-6xl"
+            style={{
+              color: "transparent",
+              WebkitTextStroke: "3px white",
+              textShadow: "0 8px 24px rgba(0,0,0,0.45)",
+            }}
+          >
+            Domains
+          </h2>
+        </header>
+
+        <main className="relative w-full max-w-6xl">
+          <button
+            aria-label="Previous domain"
+            type="button"
+            className="absolute -left-3 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full shadow-2xl shadow-black/40 transition-transform duration-200 hover:scale-110 sm:-left-6 md:-left-8"
+            style={{ backgroundColor: active.accent }}
+            onClick={goPrev}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="h-7 w-7"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              role="img"
+              aria-label="Previous domain"
+            >
+              <title>Previous domain</title>
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+          </button>
+
+          <button
+            aria-label="Next domain"
+            type="button"
+            className="absolute -right-3 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full shadow-2xl shadow-black/40 transition-transform duration-200 hover:scale-110 sm:-right-6 md:-right-8"
+            style={{ backgroundColor: active.accent }}
+            onClick={goNext}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="h-7 w-7"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              role="img"
+              aria-label="Next domain"
+            >
+              <title>Next domain</title>
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            className="group relative mx-auto flex max-w-5xl cursor-pointer flex-col items-center gap-6 overflow-visible px-4 pb-6 pt-4 sm:px-8 md:px-12"
+            onClick={() => handleNavigate(active.slug)}
+            onKeyDown={(event) => handleNavigateKey(event, active.slug)}
+          >
+            <div className="relative w-full max-w-4xl flex justify-center">
+              <div
+                className="relative h-[460px] w-[420px] sm:w-[520px]"
+                style={{ perspective: "1400px" }}
+              >
+                <div
+                  className="absolute inset-0 z-0"
+                  style={{
+                    filter: `drop-shadow(0 28px 60px ${active.accent}40)`,
+                  }}
+                  aria-hidden="true"
+                >
+                  <svg
+                    viewBox="0 0 300 180"
+                    className="h-auto w-full"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M 25 0 L 180 0 C 195 0 200 35 220 35 L 275 35 C 288.8 35 300 46.2 300 60 L 300 155 C 300 168.8 288.8 180 275 180 L 25 180 C 11.2 180 0 168.8 0 155 L 0 25 C 0 11.2 11.2 0 25 0 Z"
+                      fill={backFlapColor}
+                    />
+                  </svg>
+                </div>
+
+                <div
+                  className="absolute left-1/2 top-24 z-10 h-52 w-72 -translate-x-1/2 overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.55)] transform-gpu transition-transform duration-500 ease-out [transform:translate(-50%,-50%)_rotate(-2deg)_scale(1)] group-hover:[transform:translate(-35%,-60%)_rotate(-6deg)_scale(1.05)]"
+                  style={{ border: "6px solid white" }}
+                >
+                  <Image
+                    src={active.image}
+                    alt={active.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 240px, 320px"
+                    priority
+                  />
+                </div>
+
+                <div
+                  className="absolute left-0 right-0 top-28 z-20 origin-bottom transform-gpu transition-transform duration-500 ease-out [transform:translateY(0)_rotateX(0deg)_translateZ(0)] group-hover:[transform:translateY(-2px)_rotateX(-16deg)_translateZ(14px)]"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transformOrigin: "50% 100%",
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 300 180"
+                    className="h-auto w-full drop-shadow-[0_16px_34px_rgba(0,0,0,0.35)]"
+                    preserveAspectRatio="xMidYMid meet"
+                    style={{ transformOrigin: "50% 0%" }}
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M 25 0 L 180 0 C 195 0 200 35 220 35 L 275 35 C 288.8 35 300 46.2 300 60 L 300 155 C 300 168.8 288.8 180 275 180 L 25 180 C 11.2 180 0 168.8 0 155 L 0 25 C 0 11.2 11.2 0 25 0 Z"
+                      fill={frontFlapColor}
+                    />
+                  </svg>
+
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-start justify-end px-10 pb-16">
+                    <h3
+                      className="text-left text-3xl font-poppins md:text-4xl"
+                      style={{ color: active.text }}
+                    >
+                      {active.title}
+                    </h3>
+                    <div
+                      className="my-3 h-[2px] w-2/3 items-start"
+                      style={{ backgroundColor: active.text }}
+                    />
+                    <p
+                      className="max-w-xl text-base leading-6 text-left"
+                      style={{ color: active.text }}
+                    >
+                      {active.summary}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </button>
+        </main>
       </div>
-
-      <header className="px-8 pt-8 flex items-center mb-16 relative z-10">
-        <div className="relative w-70 h-30 flex-shrink-0">
-          <Image
-            src="/images/acmlogo.svg"
-            alt="ACM VIT Logo"
-            fill
-            className="object-contain"
-          />
-        </div>
-        <h2 className="flex-1 text-center text-6xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-lg">
-          Domains
-        </h2>
-        <div className="w-70 flex-shrink-0"></div>
-      </header>
-
-      <main className="max-w-450 mx-auto px-0 pt-6 pb-12 relative z-10">
-        <section
-          className="flex flex-row items-center mb-20 gap-[7.5rem] cursor-pointer group transition-all duration-300 hover:scale-[1.02]"
-          onClick={() => handleNavigate("cc")}
-        >
-          <div className="w-2/5 mb-6 mr-6">
-            <div className="rounded-xl border-2 border-lime-500/50 group-hover:border-lime-400 group-hover:shadow-lg group-hover:shadow-lime-500/20 overflow-hidden relative h-60 transition-all duration-300">
-              <Image
-                fill
-                src="/images/domains/cc.svg"
-                alt="Competitive Coding"
-                className="object-cover opacity-60"
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
-                Competitive Coding
-              </span>
-            </div>
-          </div>
-          <div className="w-1/2 text-gray-300 text-2xl group-hover:text-white transition-colors duration-300">
-            <p>
-              Master algorithmic thinking and problem-solving through rigorous
-              competitive coding. Our members tackle complex data structures and
-              algorithms while building speed and precision in high-stakes
-              programming contests.
-            </p>
-          </div>
-        </section>
-
-        <section
-          className="flex flex-row items-center mb-20 gap-[7.5rem] cursor-pointer group transition-all duration-300 hover:scale-[1.02]"
-          onClick={() => handleNavigate("design")}
-        >
-          <div className="w-3/5 text-gray-300 text-2xl group-hover:text-white transition-colors duration-300">
-            <p>
-              Craft beautiful digital experiences through design. From UI/UX to
-              motion graphics, illustrations to 3D design, our designers bring
-              creative visions to life with stunning visual storytelling.
-            </p>
-          </div>
-          <div className="w-1/2 mb-6 ml-6">
-            <div className="rounded-xl border-2 border-blue-500/50 group-hover:border-blue-400 group-hover:shadow-lg group-hover:shadow-blue-500/20 overflow-hidden relative h-60 transition-all duration-300">
-              <Image
-                fill
-                src="/images/domains/design.svg"
-                alt="Design"
-                className="object-cover opacity-60"
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
-                Design
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section
-          className="flex flex-row items-center mb-20 gap-[7.5rem] cursor-pointer group transition-all duration-300 hover:scale-[1.02]"
-          onClick={() => handleNavigate("management")}
-        >
-          <div className="w-2/5 mb-6 mr-6">
-            <div className="rounded-xl border-2 border-red-500/50 group-hover:border-red-400 group-hover:shadow-lg group-hover:shadow-red-500/20 overflow-hidden relative h-60 transition-all duration-300">
-              <Image
-                fill
-                src="/images/domains/management.svg"
-                alt="Management"
-                className="object-cover opacity-60"
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
-                Management
-              </span>
-            </div>
-          </div>
-          <div className="w-1/2 text-gray-300 text-2xl group-hover:text-white transition-colors duration-300">
-            <p>
-              Transform big ideas into unforgettable events. We handle
-              everything from brainstorming and sponsorships to logistics and
-              content creation. We're the extroverts ensuring every event is
-              smooth, well-organized, and unforgettable.
-            </p>
-          </div>
-        </section>
-
-        <section
-          className="flex flex-row items-center mb-20 gap-[7.5rem] cursor-pointer group transition-all duration-300 hover:scale-[1.02]"
-          onClick={() => handleNavigate("research")}
-        >
-          <div className="w-3/5 text-gray-300 text-2xl group-hover:text-white transition-colors duration-300">
-            <p>
-              Foster curiosity and innovation across cutting-edge fields. From
-              AI and Blockchain to Quantum Computing and Bioinformatics, we
-              bridge theory and real-world application through collaboration and
-              continuous learning.
-            </p>
-          </div>
-          <div className="w-1/2 mb-6 ml-6">
-            <div className="rounded-xl border-2 border-purple-500/50 group-hover:border-purple-400 group-hover:shadow-lg group-hover:shadow-purple-500/20 overflow-hidden relative h-60 transition-all duration-300">
-              <Image
-                src="/images/domains/research.svg"
-                alt="Research"
-                fill
-                className="object-cover opacity-60"
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
-                Research
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section
-          className="flex flex-row items-center mb-20 gap-[7.5rem] cursor-pointer group transition-all duration-300 hover:scale-[1.02]"
-          onClick={() => handleNavigate("tech")}
-        >
-          <div className="w-2/5 mb-6 mr-6">
-            <div className="rounded-xl border-2 border-pink-500/50 group-hover:border-pink-400 group-hover:shadow-lg group-hover:shadow-pink-500/20 overflow-hidden relative h-60 transition-all duration-300">
-              <Image
-                src="/images/domains/tech.svg"
-                alt="Tech"
-                fill
-                className="object-cover opacity-60"
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">
-                Tech
-              </span>
-            </div>
-          </div>
-          <div className="w-1/2 text-gray-300 text-2xl group-hover:text-white transition-colors duration-300">
-            <p>
-              Build the future with cutting-edge technology. From web and app
-              development to DevOps and open-source contribution, our members
-              master full-stack solutions and modern development practices.
-            </p>
-          </div>
-        </section>
-      </main>
     </div>
   );
 };
