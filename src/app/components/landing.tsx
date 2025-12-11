@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, useState } from "react";
+import { type DragEvent, useEffect, useState } from "react";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
@@ -36,25 +36,119 @@ const Landing: React.FC<{
 }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
-  const [tabs, setTabs] = useState<TabData[]>([
-    {
-      id: initialId,
-      title: "New Tab",
-      showCc: false,
-      showManagement: false,
-      showTech: false,
-      showDesign: false,
-      showResearch: false,
-      showEvents: false,
-      showDomains: false,
-      showPintooRun: false,
-      showSnake: false,
-      history: [],
-      pointer: -1,
-    },
-  ]);
-  const [activeTabId, setActiveTabId] = useState<number>(initialId);
+
+  const [tabs, setTabs] = useState<TabData[]>(() => {
+    if (typeof window === "undefined") {
+      return [
+        {
+          id: initialId,
+          title: "New Tab",
+          showCc: false,
+          showManagement: false,
+          showTech: false,
+          showDesign: false,
+          showResearch: false,
+          showEvents: false,
+          showDomains: false,
+          showPintooRun: false,
+          showSnake: false,
+          history: [],
+          pointer: -1,
+        },
+      ];
+    }
+
+    try {
+      const savedTabs = localStorage.getItem("browserTabs");
+      if (savedTabs) {
+        const parsed = JSON.parse(savedTabs);
+        return parsed.length > 0
+          ? parsed
+          : [
+              {
+                id: initialId,
+                title: "New Tab",
+                showCc: false,
+                showManagement: false,
+                showTech: false,
+                showDesign: false,
+                showResearch: false,
+                showEvents: false,
+                showDomains: false,
+                showPintooRun: false,
+                showSnake: false,
+                history: [],
+                pointer: -1,
+              },
+            ];
+      }
+    } catch (error) {
+      console.error("Failed to load tabs from localStorage:", error);
+    }
+
+    return [
+      {
+        id: initialId,
+        title: "New Tab",
+        showCc: false,
+        showManagement: false,
+        showTech: false,
+        showDesign: false,
+        showResearch: false,
+        showEvents: false,
+        showDomains: false,
+        showPintooRun: false,
+        showSnake: false,
+        history: [],
+        pointer: -1,
+      },
+    ];
+  });
+
+  const [activeTabId, setActiveTabId] = useState<number>(() => {
+    if (typeof window === "undefined") return initialId;
+
+    try {
+      const savedActiveTabId = localStorage.getItem("activeTabId");
+      const savedTabs = localStorage.getItem("browserTabs");
+
+      if (savedActiveTabId && savedTabs) {
+        const parsed = JSON.parse(savedTabs);
+        const tabExists = parsed.some(
+          (tab: TabData) => tab.id === Number(savedActiveTabId),
+        );
+        if (tabExists) {
+          return Number(savedActiveTabId);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load activeTabId from localStorage:", error);
+    }
+
+    return tabs[0]?.id || initialId;
+  });
+
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("browserTabs", JSON.stringify(tabs));
+      } catch (error) {
+        console.error("Failed to save tabs to localStorage:", error);
+      }
+    }
+  }, [tabs]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("activeTabId", String(activeTabId));
+      } catch (error) {
+        console.error("Failed to save activeTabId to localStorage:", error);
+      }
+    }
+  }, [activeTabId]);
 
   if (isPending) return null;
 
