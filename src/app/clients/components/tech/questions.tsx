@@ -35,7 +35,6 @@ export default function Questions({
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
-  const [_hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
   if (
     !roundUser ||
@@ -152,7 +151,6 @@ export default function Questions({
       }
 
       // Clear unsaved changes flag
-      setHasUnsavedChanges(false);
       if (hasUnsavedChangesRef) {
         hasUnsavedChangesRef.current = false;
       }
@@ -230,7 +228,6 @@ export default function Questions({
               const newHasUnsaved =
                 isDifferent ||
                 (savedValue === undefined && e.target.value.trim().length > 0);
-              setHasUnsavedChanges(newHasUnsaved);
               if (hasUnsavedChangesRef) {
                 hasUnsavedChangesRef.current = newHasUnsaved;
               }
