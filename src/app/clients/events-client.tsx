@@ -1231,7 +1231,7 @@ const Events = () => {
               {/* Logo with 3D hover animation */}
               <div className="relative w-full h-24 xl:h-32 2xl:h-40 -mb-4 flex items-center justify-center z-[5]">
                 <div
-                  className={`drop-shadow-2xl transition-transform duration-500 ease-out w-[90px] xl:w-[110px] 2xl:w-[130px]`}
+                  className={`drop-shadow-2xl transition-all duration-500 ease-out w-[90px] xl:w-[110px] 2xl:w-[130px] group-hover:-translate-y-12`}
                   style={{
                     transform: `translate(0,0) rotate(-2deg) scale(${
                       event.logoScale || 1
