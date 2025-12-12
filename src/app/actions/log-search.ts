@@ -4,8 +4,10 @@ import clientPromise from "@/lib/mongo";
 
 const filters = ["research", "design", "tech", "management", "cc"];
 export async function logSearch(query: string, email?: string | null) {
-  if (!query || query.length > 25 || !email || !filters.includes(query)) return;
-  console.log("haha");
+  console.log("hii");
+  if (!query || query.length > 25 || !email || filters.includes(query)) return;
+
+  // if (!query || query.length > 25 || !email) return;
   try {
     const client = await clientPromise;
     const db = client.db("acm_enrollments");
@@ -17,7 +19,9 @@ export async function logSearch(query: string, email?: string | null) {
       timestamp: { $gte: oneMinuteAgo },
     });
 
+    console.log(recentLogsCount);
     if (recentLogsCount >= 10) {
+      console.log("you have been rate limited");
       return;
     }
 
@@ -26,6 +30,7 @@ export async function logSearch(query: string, email?: string | null) {
       email: email || null,
       timestamp: new Date(),
     });
+    console.log("ajwwjd");
   } catch (error) {
     console.error("Failed to log search:", error);
   }
