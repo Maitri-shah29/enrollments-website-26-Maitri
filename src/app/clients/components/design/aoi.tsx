@@ -62,7 +62,7 @@ const AOIs: React.FC<AOIsProps> = ({
   const atLimit = joinedAOIs.size >= aoiJoinLimit;
 
   return (
-    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] [--scrollbar-thumb:#F55F4B] pb-[3%]">
       <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
         Areas of Interest
       </h1>
@@ -80,7 +80,9 @@ const AOIs: React.FC<AOIsProps> = ({
         return (
           <div
             key={aoiItem.aoi}
-            className={`flex flex-col ${isEven ? "lg:flex-row" : "lg:flex-row-reverse"} px-[3%] gap-[3%] mb-[3%]`}
+            className={`flex flex-col ${
+              isEven ? "lg:flex-row" : "lg:flex-row-reverse"
+            } px-[3%] gap-[3%] mb-[3%]`}
           >
             <div className="w-full lg:w-[50%]">
               <Image
