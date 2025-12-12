@@ -489,7 +489,7 @@ export default function Management({
       )}
       {notification && (
         <div
-          className={`fixed top-8 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
+          className={`fixed top-35 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
             notificationType === "success"
               ? "bg-green-600 border-green-500"
               : "bg-red-600 border-red-500"

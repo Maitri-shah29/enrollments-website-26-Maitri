@@ -203,7 +203,7 @@ export default function Sidebar({
     <div className="min-w-45 w-[16%] overflow-hidden border-r-2 border-[#993C7A] h-full p-2 overflow-y-auto font-jetbrains [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
       {notification && (
         <div
-          className={`fixed top-8 right-8 px-4 py-2 font-jetbrains shadow-lg z-50 text-white border ${
+          className={`fixed top-30 right-8 px-4 py-2 font-jetbrains shadow-lg z-50 text-white border ${
             notificationType === "success"
               ? "bg-[#08111D] border-[#993C7A]"
               : "bg-[#08111D] border-red-500"
