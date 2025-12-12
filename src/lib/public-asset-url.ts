@@ -9,7 +9,9 @@ function normalizePath(pathname: string) {
 }
 
 const PUBLIC_ASSET_PREFIX = normalizePrefix(
-  process.env.NEXT_PUBLIC_PUBLIC_ASSET_PREFIX || process.env.CDN_ASSET_PREFIX || "",
+  process.env.NEXT_PUBLIC_PUBLIC_ASSET_PREFIX ||
+    process.env.CDN_ASSET_PREFIX ||
+    "https://assets.acmvit.in/ocs",
 );
 
 export function publicAssetUrl(pathname: string): string {
