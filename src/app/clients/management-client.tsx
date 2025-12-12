@@ -619,7 +619,7 @@ export default function Management({
             return allSections.map((section) => {
               const isDisabled =
                 (!roundUser && section !== "Landing") || isLimitReached;
-              if (section === "Round 1") {
+              if (section === "Round 1" && roundActive === false) {
                 return <div key="round 1"></div>;
               }
               return (
