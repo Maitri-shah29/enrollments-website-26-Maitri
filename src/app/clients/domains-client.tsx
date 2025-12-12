@@ -133,7 +133,41 @@ const Domains = () => {
   }, [goNext, goPrev]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black text-white font-doppio">
+    <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
+      <style jsx>{`
+        @keyframes slide-left {
+          0% {
+            opacity: 0;
+            transform: translateX(60px) scale(0.95);
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        @keyframes slide-right {
+          0% {
+            opacity: 0;
+            transform: translateX(-60px) scale(0.95);
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        .animate-slide-left {
+          animation: slide-left 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .animate-slide-right {
+          animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+      `}</style>
       <div
         className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
         style={{

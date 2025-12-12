@@ -21,7 +21,7 @@ export default async function fetchUser() {
     return fetchUser;
   } catch (e) {
     console.error("Error: ", e);
-    // throw new Error("User not found");
-    return null;
+    throw new Error("User not found");
+    // return null;
   }
 }
