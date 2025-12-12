@@ -1,6 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -11,9 +10,6 @@ import {
 import Gravity, { MatterBody } from "@/app/components/gravity";
 
 interface HomePageProps {
-  query: string;
-  onQueryChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onQueryKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onNavigateKeyword?: (keyword: string) => void;
 }
 
@@ -50,12 +46,7 @@ const phrases = [
   "Dream Big. Achieve Bigger.",
 ];
 
-const HomePage: React.FC<HomePageProps> = ({
-  query,
-  onQueryChange,
-  onQueryKeyDown,
-  onNavigateKeyword,
-}) => {
+const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -106,8 +97,8 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1500px] flex-col gap-10 px-4 py-8 sm:px-6 lg:px-10">
-        <div className="grid w-full gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-6">
-          <div className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56">
+        <div className="flex w-full justify-start">
+          <div className="relative h-26 w-44 sm:h-20 sm:w-56">
             <Image
               src="/images/acmlogo.svg"
               alt="ACM-VIT logo"
