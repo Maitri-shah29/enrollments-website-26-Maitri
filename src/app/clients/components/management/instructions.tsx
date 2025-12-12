@@ -29,17 +29,21 @@ export default function Instructions({ onBack }: InstructionsProps) {
         {/* Dynamic Content */}
         <div className="text-black leading-relaxed space-y-4 text-base mt-5">
           <p>
-            The instructions for the Management round are pretty
-            straightforward. Answer each question honestly and be true to
-            yourself. After answering a question hit the save button then
-            proceed to answering the rest. After all questions have been
-            answered, hit the submit form button at the bottom of the page.
+            Welcome to the first round of ACM-VIT's Management Domain
+            recruitment! In this round, you'll have the opportunity to
+            demonstrate your leadership abilities, organizational skills, and
+            vision for creating impactful events and initiatives. You'll be
+            presented with a series of questions that assess your strategic
+            thinking, team coordination capabilities, and understanding of what
+            it takes to manage successful technical communities.
           </p>
           <p>
-            Remember, there are no right or wrong answers here. We just want to
-            get to know you better and see how you think. So, take your time,
-            reflect on each question, and provide thoughtful responses. Good
-            Luck!
+            Once you've completed all the questions, review your answers
+            thoroughly and click submit. We're looking for individuals who
+            demonstrate strong communication skills, proactive leadership, and
+            the drive to bring people together while executing events and
+            projects that make a lasting impact on the ACM-VIT community. Good
+            luck!
           </p>
         </div>
       </div>
