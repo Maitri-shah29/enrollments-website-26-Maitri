@@ -45,13 +45,13 @@ const FolderDesignBig = ({
           <svg
             viewBox="0 0 300 180"
             xmlns="http://www.w3.org/2000/svg"
-            className="absolute inset-0 h-full w-full -translate-y-[67px]"
+            className="absolute inset-0 h-full w-full -translate-y-5 translate-x-5 bg-blur"
           >
             <title>Folder Background</title>
             <path
               d="M 25 0 L 180 0 C 195 0 200 35 220 35 L 275 35 C 288.8 35 300 46.2 300 60 L 300 155 C 300 168.8 288.8 180 275 180 L 25 180 C 11.2 180 0 168.8 0 155 L 0 25 C 0 11.2 11.2 0 25 0 Z"
               fill={color}
-              opacity={0.6}
+              opacity={0.7}
             />
           </svg>
           {/* Main Folder */}

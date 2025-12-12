@@ -39,13 +39,15 @@ const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
 const value = Math.floor(Math.random() * 7);
 const phrases = [
-  "Xyz Says Hello!",
-  "Welcome to Xyz Browser!",
   "Welcome to OCS'26",
   "Gear Up for an Incredible Journey!",
   "Your Adventure Starts Now!",
   "Innovation Begins Here",
   "Dream Big. Achieve Bigger.",
+  "ACM-VIT Says Hello!",
+  "Welcome to ACM-VIT's Browser!",
+  "Welcome to OCS'26!",
+  "Because Technology Matters",
 ];
 
 const PhotoPanel: React.FC = memo(() => {
@@ -141,7 +143,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
         />
       </div>
 
-      <div className="relative mx-auto flex min-h-full w-full max-w-[90vw] md:max-w-[92vw] xl:max-w-[94vw] 2xl:max-w-[96vw] flex-col gap-8 px-4 pt-8 sm:px-6 lg:px-10 2xl:px-12">
+      <div className="relative mx-auto flex h-full w-full max-w-[90vw] md:max-w-[92vw] xl:max-w-[94vw] 2xl:max-w-[96vw] flex-col gap-8 px-4 pt-8 sm:px-6 lg:px-10 2xl:px-12">
         <div className="grid w-full gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
           <div className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56">
             <Image
@@ -166,25 +168,25 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
         <div className="grid gap-4 2xl:gap-5 auto-rows-[22vh] sm:auto-rows-[24vh] lg:auto-rows-[26vh] xl:auto-rows-[28vh] 2xl:auto-rows-[30vh] grid-cols-12 h-full">
           <div
-            className="col-span-6 relative overflow-hidden rounded-2xl"
+            className="col-span-6 relative"
             onClick={handleKeyword("acmvit.in")}
           >
-            <div className="w-full h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] 2xl:min-h-[28vh] bg-[#292625] rounded-2xl flex items-center text-4xl lg:text-[2.6rem] xl:text-[2.5rem] 2xl:text-[2.6rem] font-poppins pl-[4%] pr-[18%]">
-              <h1 className="relative">About ACM</h1>
+            <div className="w-full h-full bg-[#292625] rounded-xl flex items-center text-5xl font-poppins pl-10">
+              <h1>About ACM</h1>
               <Image
                 src="/images/addons/Group 1000007435.png"
-                width={520}
-                height={520}
-                alt="ACM background motif"
-                className="absolute right-[-6%] lg:right-[-4%] xl:right-[-2%] top-1/2 -translate-y-1/4 w-[42%] lg:w-[40%] xl:w-[38%] 2xl:w-[36%] max-w-[420px]"
+                width={400}
+                height={400}
+                alt="acmacmacm"
+                className="absolute right-0 z-0 h-full"
               />
             </div>
             <Image
               src="/images/addons/Phone 2.svg"
-              width={2500}
-              height={2500}
+              width={1500}
+              height={1500}
               alt="ACM VIT Website Preview"
-              className="absolute w-[112%] h-[112%] lg:w-[110%] z-30 lg:h-[110%] xl:w-[108%] xl:h-[108%] 2xl:w-[116%] 2xl:h-[106%] bottom-[10%] right-[-20%]"
+              className="absolute w-[130%] h-[130%] bottom-0 -right-50"
             />
           </div>
 
@@ -205,23 +207,26 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             </h1>
           </div>
 
-          <section className="flex w-full h-full flex-col gap-3 row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2">
-            <div className="relative flex-1 min-h-[14vh] sm:min-h-[15vh] lg:min-h-[16vh] xl:min-h-[17vh] 2xl:min-h-[18vh] w-full items-center justify-center col-span-12 flex flex-col overflow-hidden rounded-2xl bg-[#292625]">
+          <section
+            className="grid w-full h-full relative row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2 overflow-hidden rounded-xl"
+            style={{ gridTemplateRows: "1fr 1fr" }}
+          >
+            <div className="max-h-[200px] w-full overflow-hidden rounded-t-xl">
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
                 src="https://open.spotify.com/embed/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ?utm_source=generator&theme=0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                className="absolute inset-0 w-full h-full rounded-2xl"
+                className="w-full h-full border-0"
               ></iframe>
             </div>
-            <div className="relative flex-1 w-full gap-2 flex flex-col items-center justify-center rounded-2xl bg-[#292625]">
-              <h1 className="font-poppins text-2xl lg:text-[1.6rem] text-center tracking-wider select-none">
+            <div className="row-start-2 absolute row-end-3 h-full w-full gap-4 flex flex-col items-center justify-center rounded-2xl bg-[#292625] px-4 py-2">
+              <h1 className="font-poppins lg:text-md xl:text-2xl 2xl:text-2xl text-center tracking-wider select-none">
                 Games
               </h1>
 
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none px-2">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
                 <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"
@@ -229,7 +234,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   width={100}
                   height={100}
                   draggable={false}
-                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("snake")}
@@ -238,25 +243,25 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   width={100}
                   height={100}
                   draggable={false}
-                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("krunker.io")}
                   src="/images/krunker-logo.png"
                   alt="Krunker"
-                  width={100}
-                  height={100}
+                  width={80}
+                  height={80}
                   draggable={false}
-                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("classic.minecraft.net")}
                   src="/images/minecraft-logo.svg"
                   alt="Minecraft"
-                  width={100}
-                  height={100}
+                  width={80}
+                  height={80}
                   draggable={false}
-                  className="object-contain p-0.5 w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
 
                 <Image
@@ -272,14 +277,13 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   onClick={handleKeyword("skribbl.io")}
                   src="/images/skribbl-logo.svg"
                   alt="Games Placeholder"
-                  width={100}
-                  height={100}
+                  width={80}
+                  height={80}
                   className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
                 />
               </div>
             </div>
           </section>
-
           <div
             onClick={goToDomains}
             className="relative col-span-6 row-span-1 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_14px_32px_rgba(0,0,0,0.32)]"
@@ -343,7 +347,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 onClick={goToDomains}
               >
                 <div
-                  className="select-none text-[30px] font-black leading-none tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
+                  className="select-none text-[30px] font-black leading-[1] tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
                   style={stickerTextBase}
                 >
                   Research
@@ -358,7 +362,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 onClick={goToDomains}
               >
                 <div
-                  className="select-none text-[34px] font-black leading-none tracking-tight text-[#4f7d1a]"
+                  className="select-none text-[34px] font-black leading-[1] tracking-tight text-[#4f7d1a]"
                   style={stickerTextBase}
                 >
                   CC
