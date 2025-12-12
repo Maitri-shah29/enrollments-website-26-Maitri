@@ -175,9 +175,12 @@ const Landing: React.FC<{
   };
 
   const addTabWithUrl = (url: string) => {
-    const existingTab = tabs.find((tab) =>
-      tab.history.some((h) => h.url === url),
-    );
+    // Only check if another tab is currently showing this URL (not entire history)
+    const existingTab = tabs.find((tab) => {
+      const currentUrl =
+        tab.pointer >= 0 ? tab.history[tab.pointer]?.url : null;
+      return currentUrl === url;
+    });
 
     if (existingTab) {
       setActiveTabId(existingTab.id);

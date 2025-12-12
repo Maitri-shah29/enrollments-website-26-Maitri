@@ -16,7 +16,7 @@ import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 
 const ROTATING_WEBSITES = [
-  "os.acmvit.in",
+  //"os.acmvit.in",
   "fast.com",
   "acmvit.in",
   "krunker.io",
