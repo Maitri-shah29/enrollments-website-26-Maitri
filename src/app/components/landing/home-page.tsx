@@ -35,7 +35,7 @@ const stickerTextBase: React.CSSProperties = {
 
 const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
-const value = Math.floor(Math.random() * 10);
+const value = Math.floor(Math.random() * 7);
 const phrases = [
   "Xyz Says Hello!",
   "Welcome to Xyz Browser!",
