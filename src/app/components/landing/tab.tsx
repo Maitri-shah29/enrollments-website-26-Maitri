@@ -13,6 +13,7 @@ import { useSessionContext } from "../session-provider"; // Adjust path as neede
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 import { useSearchHistory } from "@/hooks/use-search-history";
+import { logSearch } from "@/app/actions/log-search";
 
 const ROTATING_WEBSITES = [
   "ocs.acmvit.in",
@@ -445,6 +446,9 @@ const Tab: React.FC<TabProps> = ({
     const trimmed = inputValue.toLowerCase();
 
     addToHistory(trimmed);
+    if (session?.data?.user?.email) {
+      logSearch(trimmed, session.data.user.email);
+    }
 
     const currentUrl =
       tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
