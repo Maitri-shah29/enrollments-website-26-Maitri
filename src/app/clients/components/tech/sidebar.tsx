@@ -60,7 +60,7 @@ export default function Sidebar({
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
-    "success",
+    "success"
   );
 
   const isLimitReached =
@@ -75,7 +75,7 @@ export default function Sidebar({
         const isAOI = q.varName && joinedAOIsArray.includes(q.varName as AOI);
         const isCommon = !q.varName || q.varName === "common";
         return isStandard && (isAOI || isCommon);
-      },
+      }
     );
 
     // Check if all questions are saved
@@ -83,17 +83,16 @@ export default function Sidebar({
       (question: (typeof allQuestions)[number]) => {
         const folderQuestions = allQuestions
           .filter(
-            (q: (typeof allQuestions)[number]) =>
-              q.varName === question.varName,
+            (q: (typeof allQuestions)[number]) => q.varName === question.varName
           )
           .sort(
             (
               a: (typeof allQuestions)[number],
-              b: (typeof allQuestions)[number],
-            ) => a.serial - b.serial,
+              b: (typeof allQuestions)[number]
+            ) => a.serial - b.serial
           );
         const questionIndex = folderQuestions.findIndex(
-          (q: (typeof allQuestions)[number]) => q.id === question.id,
+          (q: (typeof allQuestions)[number]) => q.id === question.id
         );
         console.log(savedAnswers, currentAnswers);
         if (questionIndex !== -1) {
@@ -107,14 +106,14 @@ export default function Sidebar({
           return savedAnswer === undefined || currentAnswer !== savedAnswer;
         }
         return false;
-      },
+      }
     );
 
     if (unsavedQuestions.length > 0) {
       console.log(unsavedQuestions);
       setNotificationType("error");
       setNotification(
-        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
+        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`
       );
       setTimeout(() => setNotification(null), 5000);
       return;
@@ -141,7 +140,7 @@ export default function Sidebar({
         const isAOI = q.varName && joinedAOIsArray.includes(q.varName as AOI);
         const isCommon = !q.varName || q.varName === "common";
         return isStandard && (isAOI || isCommon);
-      },
+      }
     );
 
     // Build effective responses only for joined AOIs
@@ -149,16 +148,16 @@ export default function Sidebar({
     for (const question of relevantQuestions) {
       const folderQuestions = allQuestions
         .filter(
-          (q: (typeof allQuestions)[number]) => q.varName === question.varName,
+          (q: (typeof allQuestions)[number]) => q.varName === question.varName
         )
         .sort(
           (
             a: (typeof allQuestions)[number],
-            b: (typeof allQuestions)[number],
-          ) => a.serial - b.serial,
+            b: (typeof allQuestions)[number]
+          ) => a.serial - b.serial
         );
       const questionIndex = folderQuestions.findIndex(
-        (q: (typeof allQuestions)[number]) => q.id === question.id,
+        (q: (typeof allQuestions)[number]) => q.id === question.id
       );
       if (questionIndex !== -1) {
         const folderKey = question.varName || "common";
@@ -179,7 +178,7 @@ export default function Sidebar({
       } else {
         setNotificationType("success");
         setNotification(
-          "Form submitted successfully! Your responses are now being evaluated.",
+          "Form submitted successfully! Your responses are now being evaluated."
         );
         setTimeout(() => {
           window.location.reload();
@@ -256,15 +255,15 @@ export default function Sidebar({
         {(
           [
             { name: "About", key: "about" },
+            { name: "Instructions", key: "instructions" },
             { name: "AOI", key: "aoi" },
             { name: "Explore", key: "explore" },
-            { name: "Instructions", key: "instructions" },
             { name: "Round 1", key: "round1" },
           ] as const
         )
           .filter(
             (item) =>
-              !(roundHidden && item.name.toLowerCase().startsWith("round")),
+              !(roundHidden && item.name.toLowerCase().startsWith("round"))
           )
           .map((item) => (
             <React.Fragment key={item.key}>
