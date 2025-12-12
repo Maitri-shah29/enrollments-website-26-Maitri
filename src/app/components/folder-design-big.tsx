@@ -68,7 +68,7 @@ const FolderDesignBig = ({
             />
           </svg>
           <div
-            className="absolute inset-0 flex flex-col justify-center px-6 md:px-8 py-6 md:py-8 pointer-events-auto -translate-x-8"
+            className="absolute inset-0 flex flex-col justify-center px-6 md:px-8 py-6 md:py-8 pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Title */}
