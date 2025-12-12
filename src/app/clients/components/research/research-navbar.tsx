@@ -36,12 +36,12 @@ interface ResearchNavbarProps {
   questionsWithUnsavedEdits?: Set<string>;
   onAOISelect?: (aoi: string) => void;
   onQuestionSelect?: (idx: number) => void;
-  roundUser?: RoundUserExtended | null;
+  roundUser: RoundUserExtended | null;
   joinedAOIs?: Set<ResearchAOI>;
   roundHidden?: boolean;
   roundUserCount?: number;
 }
-//test
+
 const Icon = {
   ChevronRight: (_props: React.SVGProps<SVGSVGElement>) => (
     <Image src={RightArrow} width={6} height={6} alt="RightArrow" />
@@ -256,46 +256,49 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                       </div>
                     </div>
 
-                    {effectiveAOI === aoi && (
-                      <div className="pl-6 space-y-1">
-                        {Array.from(
-                          { length: getQuestionsPerAOI(aoi) },
-                          (_, qIdx) => {
-                            const questionKey = `${aoi}-question${qIdx + 1}`;
-                            const isSaved = submittedQuestions.has(questionKey);
-                            const hasUnsaved =
-                              questionsWithUnsavedEdits.has(questionKey);
+                    {effectiveAOI === aoi &&
+                      roundUser?.status === "pending" && (
+                        <div className="pl-6 space-y-1">
+                          {Array.from(
+                            { length: getQuestionsPerAOI(aoi) },
+                            (_, qIdx) => {
+                              const questionKey = `${aoi}-question${qIdx + 1}`;
+                              const isSaved =
+                                submittedQuestions.has(questionKey);
+                              const hasUnsaved =
+                                questionsWithUnsavedEdits.has(questionKey);
 
-                            let borderClass = "border-[#DBD3D3]/25 border-b-2";
-                            if (hasUnsaved) {
-                              borderClass = "border-orange-500 border-b-3";
-                            } else if (isSaved) {
-                              borderClass = "border-[#7D5BED] border-b-3";
-                            }
+                              let borderClass =
+                                "border-[#DBD3D3]/25 border-b-2";
+                              if (hasUnsaved) {
+                                borderClass = "border-orange-500 border-b-3";
+                              } else if (isSaved) {
+                                borderClass = "border-[#7D5BED] border-b-3";
+                              }
 
-                            return (
-                              <button
-                                key={questionKey}
-                                type="button"
-                                onClick={() => {
-                                  setQuestionState(qIdx);
-                                  onQuestionSelect?.(qIdx);
-                                  onSelect("Round 1");
-                                }}
-                                className={`w-full text-left px-3 py-0.5 ${borderClass} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3`}
-                              >
-                                <span className="text-left">
-                                  Question {qIdx + 1}
-                                </span>
-                                {effectiveQuestionIdx === qIdx && (
-                                  <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
-                                )}
-                              </button>
-                            );
-                          },
-                        )}
-                      </div>
-                    )}
+                              return (
+                                <button
+                                  key={questionKey}
+                                  type="button"
+                                  onClick={() => {
+                                    setQuestionState(qIdx);
+                                    onQuestionSelect?.(qIdx);
+                                    onSelect("Round 1");
+                                  }}
+                                  className={`w-full text-left px-3 py-0.5 ${borderClass} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3`}
+                                >
+                                  <span className="text-left">
+                                    Question {qIdx + 1}
+                                  </span>
+                                  {effectiveQuestionIdx === qIdx && (
+                                    <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
+                                  )}
+                                </button>
+                              );
+                            },
+                          )}
+                        </div>
+                      )}
                   </div>
                 ))
               )}

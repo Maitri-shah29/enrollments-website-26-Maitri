@@ -67,7 +67,6 @@ export default function Sidebar({
     roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
 
   const handleSubmitForm = () => {
-    // Get all relevant questions for joined AOIs
     const joinedAOIsArray = Array.from(joinedAOIs);
     const allQuestions = roundUser?.round?.Question || [];
     const relevantQuestions = allQuestions.filter(
