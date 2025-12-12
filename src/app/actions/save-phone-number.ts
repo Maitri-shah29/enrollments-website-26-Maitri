@@ -11,6 +11,22 @@ export default async function savePhoneNumber(phone: string) {
     return { error: "Phone number is required" };
   }
 
+  // Validate format: must start with '+' and contain only numbers after that
+  if (!/^\+\d+$/.test(trimmedPhone)) {
+    return {
+      error:
+        "Invalid phone number format. Must start with '+' followed by digits.",
+    };
+  }
+
+  // Validate length: Max 16 characters (including +), Min 8 characters
+  if (trimmedPhone.length > 16) {
+    return { error: "Phone number is too long (max 15 digits)" };
+  }
+  if (trimmedPhone.length < 8) {
+    return { error: "Phone number is too short" };
+  }
+
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
