@@ -115,6 +115,7 @@ const Questions: React.FC<QuestionsProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [submittingForm, setSubmittingForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
 
@@ -438,19 +439,23 @@ const Questions: React.FC<QuestionsProps> = ({
   }
 
   const handleConfirmNavigation = () => {
-    if (pendingNavigation) {
-      if (pendingNavigation.type === "aoi") {
-        const aoi = pendingNavigation.target as AOIData;
-        setSelectedAoi(aoi);
-        setSelectedQuestion(aoi.questions[0]);
-      } else {
-        const question = pendingNavigation.target as TransformedQuestion;
-        setSelectedQuestion(question);
+    setIsProceeding(true);
+    handleSaveResponse().then(() => {
+      setIsProceeding(false);
+      if (pendingNavigation) {
+        if (pendingNavigation.type === "aoi") {
+          const aoi = pendingNavigation.target as AOIData;
+          setSelectedAoi(aoi);
+          setSelectedQuestion(aoi.questions[0]);
+        } else {
+          const question = pendingNavigation.target as TransformedQuestion;
+          setSelectedQuestion(question);
+        }
       }
-    }
-    setHasUnsavedChanges(false);
-    setShowUnsavedDialog(false);
-    setPendingNavigation(null);
+      setHasUnsavedChanges(false);
+      setShowUnsavedDialog(false);
+      setPendingNavigation(null);
+    });
   };
 
   const handleCancelNavigation = () => {
@@ -467,7 +472,7 @@ const Questions: React.FC<QuestionsProps> = ({
               Unsaved Changes
             </h3>
             <p className="text-white text-lg mb-6 font-coolvetica">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -481,8 +486,9 @@ const Questions: React.FC<QuestionsProps> = ({
                 onClick={handleConfirmNavigation}
                 className="px-6 py-2 bg-[#F55F4B] text-white font-coolvetica hover:bg-[#d64f3a] transition-colors"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
