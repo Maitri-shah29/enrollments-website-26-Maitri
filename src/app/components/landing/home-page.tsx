@@ -205,23 +205,26 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             </h1>
           </div>
 
-          <section className="flex w-full h-full flex-col gap-3 row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2">
-            <div className="relative flex-1 min-h-[14vh] sm:min-h-[15vh] lg:min-h-[16vh] xl:min-h-[17vh] 2xl:min-h-[18vh] w-full items-center justify-center col-span-12 flex flex-col overflow-hidden rounded-2xl bg-[#292625]">
+          <section
+            className="grid w-full h-full relative row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2 overflow-hidden rounded-xl"
+            style={{ gridTemplateRows: "1fr 1fr" }}
+          >
+            <div className="max-h-[200px] w-full overflow-hidden rounded-t-xl">
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
                 src="https://open.spotify.com/embed/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ?utm_source=generator&theme=0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                className="absolute inset-0 w-full h-full rounded-2xl"
+                className="w-full h-full border-0"
               ></iframe>
             </div>
-            <div className="relative flex-1 w-full gap-2 flex flex-col items-center justify-center rounded-2xl bg-[#292625]">
-              <h1 className="font-poppins text-2xl lg:text-[1.6rem] text-center tracking-wider select-none">
+            <div className="row-start-2 absolute row-end-3 h-full w-full gap-4 flex flex-col items-center justify-center rounded-2xl bg-[#292625] px-4 py-2">
+              <h1 className="font-poppins lg:text-md xl:text-2xl 2xl:text-2xl text-center tracking-wider select-none">
                 Games
               </h1>
 
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none px-2">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
                 <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"
@@ -229,7 +232,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   width={100}
                   height={100}
                   draggable={false}
-                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("snake")}
@@ -238,25 +241,25 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   width={100}
                   height={100}
                   draggable={false}
-                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("krunker.io")}
                   src="/images/krunker-logo.png"
                   alt="Krunker"
-                  width={100}
-                  height={100}
+                  width={80}
+                  height={80}
                   draggable={false}
-                  className="object-contain w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
                 <Image
                   onClick={handleKeyword("classic.minecraft.net")}
                   src="/images/minecraft-logo.svg"
                   alt="Minecraft"
-                  width={100}
-                  height={100}
+                  width={80}
+                  height={80}
                   draggable={false}
-                  className="object-contain p-0.5 w-8 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
+                  className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
                 />
 
                 <Image
@@ -272,8 +275,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   onClick={handleKeyword("skribbl.io")}
                   src="/images/skribbl-logo.svg"
                   alt="Games Placeholder"
-                  width={100}
-                  height={100}
+                  width={80}
+                  height={80}
                   className="object-contain p-0.5 w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all"
                 />
               </div>
