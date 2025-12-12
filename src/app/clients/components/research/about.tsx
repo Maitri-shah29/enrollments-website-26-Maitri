@@ -8,10 +8,10 @@ const About = () => {
       <NetworkGraph />
 
       <div className="relative z-10 px-16 py-20 max-w-7xl">
-        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4">
+        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4 font-monopoly-bold">
           About Research
         </h1>
-        <p className="text-gray-300 leading-relaxed text-justify">
+        <p className="text-gray-300 leading-relaxed text-justify font-monopoly">
           The Research domain of ACM-VIT is dedicated to fostering an
           environment of curiosity and innovation. We explore multiple areas of
           interest ranging from Artificial Intelligence and Blockchain to
