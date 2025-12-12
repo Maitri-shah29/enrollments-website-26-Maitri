@@ -89,6 +89,7 @@ const AOIs: React.FC<AOIsProps> = ({
                 width={1920}
                 height={1080}
                 className="w-full"
+                draggable={false}
               />
             </div>
             <div className="flex w-full lg:w-[50%] items-center flex-col justify-center gap-4 mt-5">

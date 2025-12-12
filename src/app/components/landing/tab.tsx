@@ -691,7 +691,7 @@ const Tab: React.FC<TabProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="3"
@@ -715,7 +715,7 @@ const Tab: React.FC<TabProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="3"

@@ -10,6 +10,7 @@ export default function Instructions() {
           alt="acm logo"
           width={700}
           height={700}
+          draggable={false}
         />
       </div>
       <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">

@@ -143,6 +143,7 @@ const AOIs: React.FC<AOIsProps> = ({ onSelect }) => {
       .attr("href", (d) => (d.id === "research" ? researchEllipse : aoiEllipse))
       .attr("width", (d) => (d.id === "research" ? researchSize : nodeSize))
       .attr("height", (d) => (d.id === "research" ? researchSize : nodeSize))
+      .attr("draggable", "false")
       // initial x/y left to tick handler; keep cursor/click/drag the same
       .style("cursor", (d) => (d.id === "research" ? "default" : "pointer"))
       .on("click", (_, d) => {
