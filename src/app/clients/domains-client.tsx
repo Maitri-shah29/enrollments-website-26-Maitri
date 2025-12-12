@@ -75,6 +75,7 @@ const domains: Domain[] = [
 
 const Domains = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -87,10 +88,14 @@ const Domains = () => {
   }, []);
 
   const goNext = useCallback(() => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
     setActiveIndex((prev) => (prev + 1) % domains.length);
   }, []);
 
   const goPrev = useCallback(() => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
   }, []);
 
@@ -223,7 +228,13 @@ const Domains = () => {
 
                 <div
                   className="absolute left-1/2 top-24 z-10 h-52 w-72 -translate-x-1/2 overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.55)] transform-gpu transition-transform duration-500 ease-out [transform:translate(-50%,-50%)_rotate(-2deg)_scale(1)] group-hover:[transform:translate(-35%,-60%)_rotate(-6deg)_scale(1.05)]"
-                  style={{ border: "6px solid white" }}
+                  style={{
+                    border: "6px solid white",
+                    ...(isAnimating && {
+                      transform:
+                        "translate(-35%, -60%) rotate(-6deg) scale(1.05)",
+                    }),
+                  }}
                 >
                   <Image
                     src={active.image}
@@ -240,6 +251,10 @@ const Domains = () => {
                   style={{
                     transformStyle: "preserve-3d",
                     transformOrigin: "50% 100%",
+                    ...(isAnimating && {
+                      transform:
+                        "translateY(-2px) rotateX(-16deg) translateZ(14px)",
+                    }),
                   }}
                 >
                   <svg
