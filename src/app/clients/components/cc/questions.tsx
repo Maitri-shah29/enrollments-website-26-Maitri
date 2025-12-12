@@ -404,9 +404,9 @@ const Questions = ({
       </div>
     );
   }
-
+  const isAnnounced = !!roundUser?.round?.announced;
   // Status-based rendering
-  if (roundUserStatus === "evaluate") {
+  if (roundUserStatus === "evaluate" || !isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -421,7 +421,7 @@ const Questions = ({
     );
   }
 
-  if (roundUserStatus === "promoted") {
+  if (roundUserStatus === "promoted" && isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -436,7 +436,7 @@ const Questions = ({
     );
   }
 
-  if (roundUserStatus === "rejected") {
+  if (roundUserStatus === "rejected" && isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">

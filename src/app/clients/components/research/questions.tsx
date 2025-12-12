@@ -465,9 +465,24 @@ const Questions: React.FC<QuestionsProps> = ({
   };
 
   const roundUserStatus = roundUser?.status || "pending";
-
+  const isAnnounced = !!roundUser?.round?.announced;
+  const isHidden = !!roundUser?.round?.hidden;
+  if (isHidden) {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+            The round youre looking for is not available.
+          </h2>
+          <p className="text-white text-lg">
+            Please contact support for more information.
+          </p>
+        </div>
+      </div>
+    );
+  }
   // Status-based rendering
-  if (roundUserStatus === "evaluate") {
+  if (roundUserStatus === "evaluate" || !isAnnounced) {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
@@ -482,7 +497,7 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
-  if (roundUserStatus === "promoted") {
+  if (roundUserStatus === "promoted" && isAnnounced) {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
@@ -497,7 +512,7 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
-  if (roundUserStatus === "rejected") {
+  if (roundUserStatus === "rejected" && isAnnounced) {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
@@ -560,8 +575,8 @@ const Questions: React.FC<QuestionsProps> = ({
         </div>
       )}
 
-      <div className="flex-shrink-0 mb-6">
-        <h1 className="text-white break-words leading-tight font-bold text-[18px]">
+      <div className="shrink-0 mb-6">
+        <h1 className="text-white wrap-break-words leading-tight font-bold text-[18px]">
           Question {safeIndex + 1}: {currentQuestion?.question}
         </h1>
       </div>

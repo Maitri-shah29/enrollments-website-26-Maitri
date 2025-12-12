@@ -39,12 +39,10 @@ const IFRAME_WHITELIST = new Set([
   "comick.live",
 
   // 🎮 Games & Game Sites
-  "agar.io",
   "slither.io",
   "krunker.io",
   "diep.io",
   "splix.io",
-  "paper.io",
   "skribbl.io",
   "1v1.lol",
   "ev.io",
@@ -56,39 +54,12 @@ const IFRAME_WHITELIST = new Set([
   "classic.minecraft.net",
   "2048game.com",
   "lichess.org",
-  "poki.com",
-  "crazygames.com",
-  "miniclip.com",
-  "itch.io",
-  "cardgames.io",
   "worldsbiggestpacman.com",
   "snowrider3d.com",
   "slopegame.online",
   "tetr.io",
   "wanderers.io",
   "wormate.io",
-  "hole.io",
-  "skibiditoilet.io",
-
-  // 📚 Educational / Math / Science
-  "desmos.com",
-  "geogebra.org",
-  "symbolab.com",
-  "mathplayground.com",
-  "mathsisfun.com",
-  "openstax.org",
-  "khanacademy.org",
-  "brilliant.org",
-  "quizizz.com",
-  "quizlet.com",
-  "kahoot.it",
-  "h5p.org",
-  "phet.colorado.edu",
-  "edpuzzle.com",
-  "ixl.com",
-  "codecademy.com",
-  "projecteuler.net",
-  "scratch.mit.edu",
 
   // 💻 Coding / Developer Tools
   "codepen.io",
@@ -180,36 +151,12 @@ const IFRAME_WHITELIST = new Set([
   "tunein.com",
   "anchor.fm",
 
-  // ✅ Productivity / Collaboration
-  "notion.so",
-  "airtable.com",
-  "trello.com",
-  "typeform.com",
-  "forms.gle",
-
   // 📖 Info / Knowledge / Open Data
   "wikipedia.org",
   "wikimedia.org",
   "archive.org",
   "openlibrary.org",
   "britannica.com",
-  "worldtimeapi.org",
-  "timeanddate.com",
-  "weather.com",
-  "ecosia.org",
-  "duckduckgo.com",
-  "startpage.com",
-
-  // ⚙️ Utilities / File / Media Tools
-  "remove.bg",
-  "ilovepdf.com",
-  "smallpdf.com",
-  "cloudconvert.com",
-  "convertio.co",
-  "tinywow.com",
-  "ezgif.com",
-  "pdfescape.com",
-  "compressjpeg.com",
 
   // ACM-VIT legacy websites
   "c2c.acmvit.in",
@@ -226,7 +173,7 @@ const IFRAME_WHITELIST = new Set([
 
 const isWhitelisted = (url: string) => {
   try {
-    const host = new URL(ensureHttps(url)).hostname; // normalize
+    const host = new URL(ensureHttps(url)).hostname;
     return IFRAME_WHITELIST.has(host);
   } catch {
     return false;
@@ -935,8 +882,8 @@ const Tab: React.FC<TabProps> = ({
             ></iframe>
           )
         ) : (
-          <div>
-            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
+          <div className="h-full">
+            {/* <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} /> */}
             <HomePage
               query={homeInput}
               onQueryChange={handleHomeChange}

@@ -1,4 +1,5 @@
 "use client";
+import { active } from "d3";
 import { useEffect, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { DOMAIN_CAP } from "@/lib/constants";
@@ -55,6 +56,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   } | null>(null);
   const hasUnsavedChangesRef = useRef<boolean>(false);
   const roundActive = !!roundUser?.round?.active;
+  const isAnnounced = !!roundUser?.round?.announced;
   const roundHidden = !!roundUser?.round?.hidden;
 
   useEffect(() => {
@@ -181,9 +183,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     }
-
     // Status-based rendering for evaluate, promoted, rejected
-    if (roundUserStatus === "evaluate") {
+    if (
+      roundUserStatus === "evaluate" ||
+      (!isAnnounced && activeSection === "round1")
+    ) {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
@@ -198,7 +202,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
       );
     }
 
-    if (roundUserStatus === "promoted") {
+    if (
+      roundUserStatus === "promoted" &&
+      isAnnounced &&
+      activeSection === "round1"
+    ) {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
@@ -213,7 +221,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
       );
     }
 
-    if (roundUserStatus === "rejected") {
+    if (
+      roundUserStatus === "rejected" &&
+      isAnnounced &&
+      activeSection === "round1"
+    ) {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">

@@ -65,7 +65,7 @@ export default function ExploreAOIs({
           return (
             <div
               key={aoi}
-              className="border-2 border-[#993C7A] p-6 bg-[#08111D] hover:bg-[#0f1a2b] transition-colors"
+              className="border-2 h-50 border-[#993C7A] p-6 bg-[#08111D] hover:bg-[#0f1a2b] transition-colors relative flex flex-col items-center"
             >
               <h3 className="text-white text-xl font-semibold mb-2">{title}</h3>
               <p className="text-gray-400 text-sm mb-4">{description}</p>
@@ -79,7 +79,7 @@ export default function ExploreAOIs({
                   }
                 }}
                 disabled={disableJoin}
-                className={`w-full py-2 px-4 font-semibold transition-colors ${
+                className={`absolute bottom-5 w-50 py-2 px-4 font-semibold transition-colors ${
                   isJoined
                     ? "bg-gray-600 hover:bg-gray-700 text-white"
                     : disableJoin
