@@ -10,10 +10,19 @@ const FullscreenToggle = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && document.fullscreenElement) {
+        event.preventDefault();
+        document.exitFullscreen();
+      }
+    };
+
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
