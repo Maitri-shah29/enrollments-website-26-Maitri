@@ -4,9 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import PintooRun from "@/app/clients/PintooRun-client";
-import ResearchClient from "@/app/clients/research-client";
 import SnakeClient from "@/app/clients/snake-client";
-import TechWebsite from "@/app/clients/tech-client";
 import { Loader } from "@/components/loader";
 import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
@@ -235,7 +233,7 @@ const isWhitelisted = (url: string) => {
 
 const useRotatingPlaceholder = (
   websites: string[],
-  interval: number = 1000,
+  interval: number = 1000
 ) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -377,10 +375,10 @@ const Tab: React.FC<TabProps> = ({
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData),
+    currentHostFromPointer(tabData)
   );
   const [homeInput, setHomeInput] = useState<string>(() =>
-    currentHostFromPointer(tabData),
+    currentHostFromPointer(tabData)
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
@@ -444,7 +442,7 @@ const Tab: React.FC<TabProps> = ({
     const trimmed = inputValue.toLowerCase();
 
     const currentUrl =
-      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
+      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
 
     requestFullscreen();
 
@@ -600,7 +598,7 @@ const Tab: React.FC<TabProps> = ({
 
   const goHome = () => {
     const currentUrl =
-      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
+      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
     if (currentUrl === "") return;
 
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
@@ -695,7 +693,7 @@ const Tab: React.FC<TabProps> = ({
 
     // Also reload iframe if present
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]',
+      'iframe[title="Browser Tab"]'
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
@@ -937,12 +935,7 @@ const Tab: React.FC<TabProps> = ({
         ) : (
           <div>
             <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
-            <HomePage
-              query={homeInput}
-              onQueryChange={handleHomeChange}
-              onQueryKeyDown={handleHomeKeyPress}
-              onNavigateKeyword={(keyword) => commitFrom(keyword)}
-            />
+            <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
           </div>
         )}
       </div>
