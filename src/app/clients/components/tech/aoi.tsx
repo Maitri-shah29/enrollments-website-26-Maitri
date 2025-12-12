@@ -16,31 +16,61 @@ export default function AOIContent({ activeAOI }: Props) {
     }
   > = {
     app: {
-      text: "The App Development domain focuses on building robust mobile and desktop applications. Members learn cutting-edge technologies like React Native, Flutter, and Kotlin to design apps that are not only user-centric but also highly scalable and performant. We explore platform-specific features, learn about cross-platform development strategies, and understand how to optimize apps for different screen sizes and device capabilities. The domain also covers essential topics like state management, API integration, local storage, push notifications, and app store deployment, preparing members to launch production-ready applications.",
+      text: `AppDev teaches members how to design and build mobile apps that feel great to use. From UI basics to full-fledged features, this track focuses on practical, hands-on app creation.
+
+Focus Areas:
+- Android & iOS fundamentals
+- UI/UX essentials
+- APIs & backend integration
+- Building and shipping real apps`,
       image: "/images/tech-aois/app.svg",
       width: 500,
       height: 500,
     },
     web: {
-      text: "The Web Development domain emphasizes creating full-stack web solutions. Participants gain comprehensive skills in both frontend and backend technologies, mastering frameworks like Next.js, React, Express, and databases like PostgreSQL and MongoDB to build high-performance, modern websites and web applications. We cover responsive design principles and accessibility standards to RESTful API development and server-side rendering. The domain also delves into modern web practices including Progressive Web Apps (PWAs), WebSockets for real-time communication, GraphQL for efficient data fetching, and containerization with Docker.",
+      text: `WebDev covers everything needed to build modern websites and web apps. Members work with front-end, back-end, and deployment tools to create smooth, functional online experiences.
+
+Focus Areas:
+- HTML, CSS, JS fundamentals
+- Frontend frameworks
+- Backend & databases
+- Hosting & deployment`,
       image: "/images/tech-aois/web.svg",
       width: 500,
       height: 500,
     },
     gamedev: {
-      text: "The Game Development domain brings creativity and logic together. Developers explore Unity, Unreal Engine, and Godot to create immersive experiences, learning both design and real-time rendering techniques.",
+      text: `GameDev brings creativity and tech together. Members learn game engines, storytelling basics, and how to turn ideas into playable experiences.
+
+Focus Areas:
+- Game engine fundamentals
+- Gameplay design
+- Art, animation & sound basics
+- Building small, complete games`,
       image: "/images/tech-aois/gamedev.svg",
       width: 800,
       height: 800,
     },
     foss: {
-      text: "The FOSS (Free and Open Source Software) domain nurtures collaborative software development. Students contribute to open-source projects on GitHub, learning version control, documentation, and large-scale code management.",
+      text: `FOSS is all about building software in the open. Members learn how open-source communities work, contribute to real projects, and understand what makes collaborative development so powerful.
+
+Focus Areas:
+- Open-source tools & ecosystems
+- Version control & collaboration
+- Contributing to real projects
+- Community-driven development`,
       image: "/images/tech-aois/foss.svg",
       width: 600,
       height: 600,
     },
     devops: {
-      text: "The DevOps domain bridges development and operations, focusing on automation, continuous integration, and deployment. Members learn tools like Docker, Kubernetes, Jenkins, and Terraform to build robust CI/CD pipelines and manage cloud infrastructure efficiently.",
+      text: `DevOps focuses on making development faster, smoother, and more reliable. Members explore how automation, CI/CD, and cloud tooling keep modern engineering teams moving without chaos.
+
+Focus Areas:
+- CI/CD pipelines
+- Containerization & orchestration
+- Cloud deployment basics
+- Monitoring & automation`,
       image: [
         { src: "/images/tech-aois/devops.svg", width: 510, height: 510 },
         { src: "/images/dockerdevopsascii.svg", width: 218, height: 271 },
