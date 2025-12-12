@@ -358,7 +358,7 @@ const Questions: React.FC<QuestionsProps> = ({
   // Status-based rendering
   if (roundUserStatus === "evaluate" || !isAnnounced) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <div className="text-center">
           <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
             Your responses are being evaluated
@@ -386,7 +386,7 @@ const Questions: React.FC<QuestionsProps> = ({
 
   if (roundUserStatus === "rejected" && isAnnounced) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <div className="text-center">
           <h2 className="text-red-500 text-9xl font-brushwell mb-4">
             Sorry 😞
@@ -403,7 +403,7 @@ const Questions: React.FC<QuestionsProps> = ({
   // If no AOIs are joined, show a message
   if (joinedAOIs.size === 0) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
           Questions
         </h1>
@@ -421,7 +421,7 @@ const Questions: React.FC<QuestionsProps> = ({
   // If no questions available for joined AOIs
   if (aoiData.length === 0) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
           Questions
         </h1>
@@ -459,7 +459,7 @@ const Questions: React.FC<QuestionsProps> = ({
   };
 
   return (
-    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] [--scrollbar-thumb:#F55F4B] pb-[3%]">
       {showUnsavedDialog && (
         <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-2000">
           <div className="bg-[#302E2E] border-2 border-[#F55F4B] p-8 rounded-lg max-w-md w-full mx-4">

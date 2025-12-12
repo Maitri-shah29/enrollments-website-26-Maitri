@@ -601,9 +601,14 @@ export default function Management({
           draggable={false}
           className="mb-8 select-none"
         />
-        <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20">
+        <a
+          href="https://www.instagram.com/acmvit/#"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20 hover: transition-transform cursor-pointer"
+        >
           <Pencil /> <span className="font-medium">Compose</span>
-        </div>
+        </a>
         <nav className="flex flex-col space-y-2 text-lg">
           {(() => {
             const allSections = [
