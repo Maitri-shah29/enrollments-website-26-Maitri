@@ -37,13 +37,14 @@ const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
 const value = Math.floor(Math.random() * 7);
 const phrases = [
-  "Xyz Says Hello!",
-  "Welcome to Xyz Browser!",
-  "Welcome to OCS'26",
+  "ACM-VIT Says Hello!",
+  "Welcome to ACM-VIT's Browser!",
+  "Welcome to OCS'26!",
   "Gear Up for an Incredible Journey!",
   "Your Adventure Starts Now!",
   "Innovation Begins Here",
   "Dream Big. Achieve Bigger.",
+  "Because Technology Matters",
 ];
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
@@ -121,28 +122,27 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
         <div className="grid gap-4 2xl:gap-5 auto-rows-[22vh] sm:auto-rows-[24vh] lg:auto-rows-[26vh] xl:auto-rows-[28vh] 2xl:auto-rows-[30vh] grid-cols-12 h-full">
           <div
-            className="col-span-6 relative overflow-hidden rounded-2xl"
+            className="col-span-6 relative"
             onClick={handleKeyword("acmvit.in")}
           >
-            <div className="w-full h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] 2xl:min-h-[28vh] bg-[#292625] rounded-2xl flex items-center text-4xl lg:text-[2.6rem] xl:text-[2.5rem] 2xl:text-[2.6rem] font-poppins pl-[4%] pr-[18%]">
-              <h1 className="relative">About ACM</h1>
+            <div className="w-full h-full bg-[#292625] rounded-xl flex items-center text-5xl font-poppins pl-10">
+              <h1>About ACM</h1>
               <Image
                 src="/images/addons/Group 1000007435.png"
-                width={520}
-                height={520}
-                alt="ACM background motif"
-                className="absolute right-[-6%] lg:right-[-4%] xl:right-[-2%] top-1/2 -translate-y-1/4 w-[42%] lg:w-[40%] xl:w-[38%] 2xl:w-[36%] max-w-[420px]"
+                width={400}
+                height={400}
+                alt="acmacmacm"
+                className="absolute right-0 z-0 h-full"
               />
             </div>
             <Image
               src="/images/addons/Phone 2.svg"
-              width={2500}
-              height={2500}
+              width={1500}
+              height={1500}
               alt="ACM VIT Website Preview"
-              className="absolute w-[112%] h-[112%] lg:w-[110%] z-30 lg:h-[110%] xl:w-[108%] xl:h-[108%] 2xl:w-[116%] 2xl:h-[106%] bottom-[10%] right-[-20%]"
+              className="absolute w-[130%] h-[130%] bottom-0 -right-50"
             />
           </div>
-
           <section className="relative col-span-12 flex h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] overflow-hidden rounded-2xl border border-white/10 bg-white/14 shadow-[0_16px_36px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
             <div className="pointer-events-none absolute inset-0">
               <span className="absolute left-0 top-0 h-5 w-5 border-t-[7px] border-l-[7px] border-white" />
