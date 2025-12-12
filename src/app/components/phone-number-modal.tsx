@@ -57,7 +57,7 @@ const PhoneNumberModal = () => {
       }
     };
 
-    checkPhone().catch((err) => console.error(err));
+    checkPhone();
   }, [session, isPending, hasChecked]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,14 +82,14 @@ const PhoneNumberModal = () => {
 
     if (trimmed.length < selectedCountry.minLength) {
       setError(
-        `Mobile number must be at least ${selectedCountry.minLength} digits for ${selectedCountry.country}`,
+        `Mobile number must be at least ${selectedCountry.minLength} digits for ${selectedCountry.country}`
       );
       return;
     }
 
     if (trimmed.length > selectedCountry.maxLength) {
       setError(
-        `Mobile number must not exceed ${selectedCountry.maxLength} digits for ${selectedCountry.country}`,
+        `Mobile number must not exceed ${selectedCountry.maxLength} digits for ${selectedCountry.country}`
       );
       return;
     }
