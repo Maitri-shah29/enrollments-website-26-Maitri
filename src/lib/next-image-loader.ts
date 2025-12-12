@@ -10,7 +10,10 @@ function isSpecialScheme(src: string) {
   return /^(data:|blob:)/i.test(src);
 }
 
-function appendQuery(url: string, params: Record<string, string | number | undefined>) {
+function appendQuery(
+  url: string,
+  params: Record<string, string | number | undefined>,
+) {
   const [beforeHash, hash = ""] = url.split("#");
   const [base, query = ""] = beforeHash.split("?");
 
