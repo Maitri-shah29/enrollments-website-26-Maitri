@@ -4,7 +4,9 @@ import Image from "next/image";
 import {
   type ChangeEvent,
   type KeyboardEvent,
+  memo,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import Gravity, { MatterBody } from "@/app/components/gravity";
@@ -46,12 +48,11 @@ const phrases = [
   "Dream Big. Achieve Bigger.",
 ];
 
-const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-
-  const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
-  const goToDomains = handleKeyword("domains");
+const PhotoPanel: React.FC = memo(() => {
+  const photosRef = useRef<string[]>([]);
+  const photoElementRef = useRef<HTMLImageElement | null>(null);
+  const [hasPhotos, setHasPhotos] = useState(false);
+  const [initialPhoto, setInitialPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPhotos = async () => {
@@ -62,8 +63,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
         }
 
         const data = await response.json();
-        setPhotos(Array.isArray(data.photos) ? data.photos : []);
-        setCurrentPhotoIndex(0);
+        const fetchedPhotos = Array.isArray(data.photos) ? data.photos : [];
+        photosRef.current = fetchedPhotos;
+        setHasPhotos(fetchedPhotos.length > 0);
+        setInitialPhoto(fetchedPhotos[0] ?? null);
       } catch (error) {
         console.error("Failed to fetch photos", error);
       }
@@ -73,14 +76,56 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
   }, []);
 
   useEffect(() => {
-    if (photos.length <= 1) return;
+    if (!hasPhotos || photosRef.current.length === 0) return;
+    if (photoElementRef.current && photosRef.current[0]) {
+      photoElementRef.current.src = photosRef.current[0];
+    }
 
+    if (photosRef.current.length <= 1) return;
+
+    let index = 0;
     const timer = setInterval(() => {
-      setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
-    }, 3000);
+      index = (index + 1) % photosRef.current.length;
+      const el = photoElementRef.current;
+      if (el) {
+        el.src = photosRef.current[index];
+      }
+    }, 5000);
 
     return () => clearInterval(timer);
-  }, [photos]);
+  }, [hasPhotos]);
+
+  return (
+    <section className="relative col-span-12 flex h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] overflow-hidden rounded-2xl border border-white/10 bg-white/14 shadow-[0_16px_36px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
+      <div className="pointer-events-none absolute inset-0">
+        <span className="absolute left-0 top-0 h-5 w-5 border-t-[7px] border-l-[7px] border-white" />
+        <span className="absolute right-0 top-0 h-5 w-5 border-t-[7px] border-r-[7px] border-white" />
+        <span className="absolute left-0 bottom-0 h-5 w-5 border-b-[7px] border-l-[7px] border-white" />
+        <span className="absolute right-0 bottom-0 h-5 w-5 border-b-[7px] border-r-[7px] border-white" />
+      </div>
+      <div className="relative z-10 flex h-full w-full">
+        {!hasPhotos ? (
+          <div className="flex h-full w-full items-center justify-center bg-black/30 text-lg text-white/60">
+            Loading :/
+          </div>
+        ) : (
+          <img
+            ref={photoElementRef}
+            src={initialPhoto ?? ""}
+            alt="ACM club activities"
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        )}
+      </div>
+    </section>
+  );
+});
+PhotoPanel.displayName = "PhotoPanel";
+
+const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
+  const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
+  const goToDomains = handleKeyword("domains");
 
   return (
     <div className="flex justify-center items-center h-full w-full text-white select-none">
@@ -143,28 +188,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             />
           </div>
 
-          <section className="relative col-span-12 flex h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] overflow-hidden rounded-2xl border border-white/10 bg-white/14 shadow-[0_16px_36px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
-            <div className="pointer-events-none absolute inset-0">
-              <span className="absolute left-0 top-0 h-5 w-5 border-t-[7px] border-l-[7px] border-white" />
-              <span className="absolute right-0 top-0 h-5 w-5 border-t-[7px] border-r-[7px] border-white" />
-              <span className="absolute left-0 bottom-0 h-5 w-5 border-b-[7px] border-l-[7px] border-white" />
-              <span className="absolute right-0 bottom-0 h-5 w-5 border-b-[7px] border-r-[7px] border-white" />
-            </div>
-            <div className="relative z-10 flex h-full w-full">
-              {photos.length === 0 ? (
-                <div className="flex h-full w-full items-center justify-center bg-black/30 text-lg text-white/60">
-                  No photos :/
-                </div>
-              ) : (
-                <img
-                  src={photos[currentPhotoIndex]}
-                  alt="ACM club activities"
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              )}
-            </div>
-          </section>
+          <PhotoPanel />
 
           <div
             className="col-span-3 row-span-2 bg-[#292625] rounded-2xl relative overflow-hidden min-h-[38vh] lg:min-h-[40vh] xl:min-h-[44vh] 2xl:min-h-[48vh]"
@@ -257,7 +281,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
           </section>
 
           <div
-            onDoubleClick={goToDomains}
+            onClick={goToDomains}
             className="relative col-span-6 row-span-1 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_14px_32px_rgba(0,0,0,0.32)]"
           >
             <Gravity
