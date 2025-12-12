@@ -262,7 +262,31 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                           {Array.from(
                             { length: getQuestionsPerAOI(aoi) },
                             (_, qIdx) => {
-                              const questionKey = `${aoi}-question${qIdx + 1}`;
+                              let aoiname = "";
+                              switch (aoi) {
+                                case "Common":
+                                  aoiname = "common";
+                                  break;
+                                case "AI/ML":
+                                  aoiname = "aiml";
+                                  break;
+                                case "Cybersecurity":
+                                  aoiname = "cybersec";
+                                  break;
+                                case "Quantum Computing":
+                                  aoiname = "quantum";
+                                  break;
+                                case "Bioinformatics":
+                                  aoiname = "bioinfo";
+                                  break;
+                                case "Blockchain":
+                                  aoiname = "blockchain";
+                                  break;
+                                case "IoT":
+                                  aoiname = "iot";
+                                  break;
+                              }
+                              const questionKey = `${aoiname}-question${qIdx + 1}`;
                               const isSaved =
                                 submittedQuestions.has(questionKey);
                               const hasUnsaved =
