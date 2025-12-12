@@ -191,7 +191,7 @@ const Events = () => {
 
       <header className="px-8 pt-8 flex items-center justify-center mb-16 relative z-10">
         <h2
-          className="text-center text-6xl xl:text-7xl 2xl:text-8xl font-black uppercase tracking-wide"
+          className="text-center text-6xl xl:text-7xl 2xl:text-8xl font-black  tracking-wide"
           style={{
             WebkitTextStrokeWidth: "3px",
             WebkitTextStrokeColor: "#FFF",
