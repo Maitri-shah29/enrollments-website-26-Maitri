@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
 import AIML from "@/app/clients/components/research/aoi-pages/aiml";
@@ -13,6 +13,7 @@ import ResearchHome from "@/app/clients/components/research/home";
 import Instructions from "@/app/clients/components/research/instructions";
 import Interview from "@/app/clients/components/research/interview";
 import Questions, {
+  type QuestionsRef,
   type RoundUserExtended,
 } from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
@@ -113,6 +114,8 @@ const ResearchClient = ({
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
     new Set(),
   );
+  const childRef = useRef<QuestionsRef>(null);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   // Load joined AOIs from localStorage on mount
   useEffect(() => {
@@ -299,24 +302,49 @@ const ResearchClient = ({
   );
 
   const handleConfirmNavigation = useCallback(() => {
-    setShowUnsavedDialog(false);
-    if (!pendingNavigation) return;
+    if (childRef.current?.trigger) {
+      setIsProceeding(true);
+      childRef.current.trigger().then(() => {
+        setIsProceeding(false);
+        setShowUnsavedDialog(false);
+        if (!pendingNavigation) return;
 
-    if (pendingNavigation.type === "aoi") {
-      const aoi = pendingNavigation.value as string;
-      const key = toAoiKey(aoi);
-      if (key) {
-        setSelectedAOI(keyToLabel[key]);
-        setSelectedPanel(key);
-        setSelectedQuestionIdx(0);
-      } else {
-        setSelectedPanel(aoi);
+        if (pendingNavigation.type === "aoi") {
+          const aoi = pendingNavigation.value as string;
+          const key = toAoiKey(aoi);
+          if (key) {
+            setSelectedAOI(keyToLabel[key]);
+            setSelectedPanel(key);
+            setSelectedQuestionIdx(0);
+          } else {
+            setSelectedPanel(aoi);
+          }
+        } else if (pendingNavigation.type === "question") {
+          setSelectedQuestionIdx(pendingNavigation.value as number);
+          setSelectedPanel("Round 1");
+        }
+        setPendingNavigation(null);
+      });
+    } else {
+      setShowUnsavedDialog(false);
+      if (!pendingNavigation) return;
+
+      if (pendingNavigation.type === "aoi") {
+        const aoi = pendingNavigation.value as string;
+        const key = toAoiKey(aoi);
+        if (key) {
+          setSelectedAOI(keyToLabel[key]);
+          setSelectedPanel(key);
+          setSelectedQuestionIdx(0);
+        } else {
+          setSelectedPanel(aoi);
+        }
+      } else if (pendingNavigation.type === "question") {
+        setSelectedQuestionIdx(pendingNavigation.value as number);
+        setSelectedPanel("Round 1");
       }
-    } else if (pendingNavigation.type === "question") {
-      setSelectedQuestionIdx(pendingNavigation.value as number);
-      setSelectedPanel("Round 1");
+      setPendingNavigation(null);
     }
-    setPendingNavigation(null);
   }, [pendingNavigation]);
 
   const handleCancelNavigation = useCallback(() => {
@@ -368,7 +396,7 @@ const ResearchClient = ({
                 onClick={handleConfirmNavigation}
                 className="px-6 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors rounded-lg"
               >
-                Proceed and Save
+                {isProceeding ? "Saving..." : "Proceed and Save"}
               </button>
             </div>
           </div>
@@ -425,6 +453,7 @@ const ResearchClient = ({
           </div>
         ) : selectedPanel === "Round 1" ? (
           <Questions
+            ref={childRef}
             roundUser={roundUser ?? undefined}
             loading={loading}
             error={error}

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { asciiArt } from "./ascii-art";
@@ -18,75 +18,28 @@ type Props = {
   onMarkUnsaved?: (key: string) => void;
 };
 
-export default function Questions({
-  activeRoundFolder,
-  activeQuestion,
-  roundUser,
-  answers,
-  onChangeAnswer,
-  onSubmit,
-  savedAnswers = {},
-  onSaveAnswer,
-  hasUnsavedChangesRef,
-  onMarkUnsaved,
-}: Props) {
+export interface QuestionsRef {
+  trigger: () => Promise<void>;
+}
+
+const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
+  const {
+    activeRoundFolder,
+    activeQuestion,
+    roundUser,
+    answers,
+    onChangeAnswer,
+    onSubmit,
+    savedAnswers = {},
+    onSaveAnswer,
+    hasUnsavedChangesRef,
+    onMarkUnsaved,
+  } = props;
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
     "success",
   );
-
-  if (
-    !roundUser ||
-    !roundUser.round ||
-    !Array.isArray(roundUser.round.Question)
-  ) {
-    return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
-        <h1>Loading Round Data...</h1>
-        <p className="mt-4 text-lg text-white">
-          Please wait while we fetch your questions.
-        </p>
-      </div>
-    );
-  }
-
-  if (!activeRoundFolder) {
-    return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
-        <h1>Round 1 Overview</h1>
-        <p className="mt-4 text-lg text-white">
-          Choose a folder from the sidebar to get started.
-        </p>
-      </div>
-    );
-  }
-
-  const folderQuestions = roundUser.round.Question.filter(
-    (q) => q.varName === activeRoundFolder,
-  );
-
-  if (folderQuestions.length === 0) {
-    return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
-        <h1>{activeRoundFolder}</h1>
-        <p className="mt-4 text-lg text-white">
-          No questions available for this area of interest.
-        </p>
-      </div>
-    );
-  }
-
-  if (!activeQuestion) {
-    return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
-        <h1>{activeRoundFolder}</h1>
-        <p className="mt-4 text-lg text-white">
-          Select a question to get started with {activeRoundFolder}.
-        </p>
-      </div>
-    );
-  }
 
   const questionNumber = Number.parseInt(
     activeQuestion.replace("question", ""),
@@ -94,32 +47,17 @@ export default function Questions({
   );
   const questionKey = `${activeRoundFolder}-${activeQuestion}`;
 
+  const folderQuestions =
+    roundUser?.round?.Question?.filter(
+      (q) => q.varName === activeRoundFolder,
+    ) || [];
+
   const sortedQuestions = [...folderQuestions].sort(
     (a, b) => a.serial - b.serial,
   );
   const currentQuestion = sortedQuestions[questionNumber - 1];
 
-  if (!currentQuestion) {
-    return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
-        <h1>Question Not Found</h1>
-        <p className="mt-4 text-lg text-white">
-          The selected question does not exist for {activeRoundFolder}.
-        </p>
-        <p className="mt-2 text-sm text-gray-400">
-          Question #{questionNumber} not found in {folderQuestions.length}{" "}
-          available questions.
-        </p>
-      </div>
-    );
-  }
-
-  const questionTitle =
-    currentQuestion.helpText || `Question ${questionNumber}`;
-  const questionDescription =
-    currentQuestion.question || "No description available for this question.";
-
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!currentQuestion || !roundUser?.formSubmission?.id) {
       setNotificationType("error");
       setNotification("No active question or form submission found");
@@ -170,7 +108,91 @@ export default function Questions({
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [
+    currentQuestion,
+    roundUser,
+    answers,
+    questionKey,
+    onSaveAnswer,
+    hasUnsavedChangesRef,
+    onSubmit,
+  ]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      trigger: handleSubmit,
+    }),
+    [handleSubmit],
+  );
+
+  if (
+    !roundUser ||
+    !roundUser.round ||
+    !Array.isArray(roundUser.round.Question)
+  ) {
+    return (
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+        <h1>Loading Round Data...</h1>
+        <p className="mt-4 text-lg text-white">
+          Please wait while we fetch your questions.
+        </p>
+      </div>
+    );
+  }
+
+  if (!activeRoundFolder) {
+    return (
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+        <h1>Round 1 Overview</h1>
+        <p className="mt-4 text-lg text-white">
+          Choose a folder from the sidebar to get started.
+        </p>
+      </div>
+    );
+  }
+
+  if (folderQuestions.length === 0) {
+    return (
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+        <h1>{activeRoundFolder}</h1>
+        <p className="mt-4 text-lg text-white">
+          No questions available for this area of interest.
+        </p>
+      </div>
+    );
+  }
+
+  if (!activeQuestion) {
+    return (
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+        <h1>{activeRoundFolder}</h1>
+        <p className="mt-4 text-lg text-white">
+          Select a question to get started with {activeRoundFolder}.
+        </p>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+        <h1>Question Not Found</h1>
+        <p className="mt-4 text-lg text-white">
+          The selected question does not exist for {activeRoundFolder}.
+        </p>
+        <p className="mt-2 text-sm text-gray-400">
+          Question #{questionNumber} not found in {folderQuestions.length}{" "}
+          available questions.
+        </p>
+      </div>
+    );
+  }
+
+  const questionTitle =
+    currentQuestion.helpText || `Question ${questionNumber}`;
+  const questionDescription =
+    currentQuestion.question || "No description available for this question.";
 
   return (
     <div className="w-full h-full relative">
@@ -266,4 +288,8 @@ export default function Questions({
       </div>
     </div>
   );
-}
+});
+
+Questions.displayName = "Questions";
+
+export default Questions;

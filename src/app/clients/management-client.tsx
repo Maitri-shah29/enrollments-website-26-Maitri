@@ -54,6 +54,7 @@ export default function Management({
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const roundActive = !!roundUser?.round?.active;
   const _roundHidden = !!roundUser?.round?.hidden;
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   const questions = useMemo(() => {
     const qs = (roundUser?.round?.Question ||
@@ -554,7 +555,9 @@ export default function Management({
               <button
                 onClick={() => {
                   if (activeIndex != null) {
+                    setIsProceeding(false);
                     onSubmitAnswer(questions[activeIndex]).then(() => {
+                      setIsProceeding(true);
                       setShowUnsavedDialog(false);
                       if (pendingBackNavigation) {
                         setActiveIndex(null);
@@ -572,8 +575,9 @@ export default function Management({
                 }}
                 className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg font-medium"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
