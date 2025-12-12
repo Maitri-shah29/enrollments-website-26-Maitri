@@ -126,6 +126,7 @@ const PhotoPanel: React.FC = memo(() => {
 PhotoPanel.displayName = "PhotoPanel";
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
+  const [spotifyLoaded, setSpotifyLoaded] = useState(false);
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
   const goToDomains = handleKeyword("domains");
 
@@ -211,13 +212,19 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             className="grid w-full h-full relative row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2 overflow-hidden rounded-xl"
             style={{ gridTemplateRows: "1fr 1fr" }}
           >
-            <div className="max-h-[200px] w-full overflow-hidden rounded-t-xl">
+            <div className="max-h-[100px] w-full overflow-hidden rounded-t-xl relative">
+              {!spotifyLoaded && (
+                <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-600 to-white backdrop-blur-md flex items-center justify-center z-10 rounded-xl">
+                  <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
                 src="https://open.spotify.com/embed/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ?utm_source=generator&theme=0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
+                onLoad={() => setSpotifyLoaded(true)}
                 className="w-full h-full border-0"
               ></iframe>
             </div>
@@ -284,10 +291,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
               </div>
             </div>
           </section>
-          <div
-            onClick={goToDomains}
-            className="relative col-span-6 row-span-1 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_14px_32px_rgba(0,0,0,0.32)]"
-          >
+          <div className="relative col-span-6 row-span-1 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_14px_32px_rgba(0,0,0,0.32)]">
             <Gravity
               className="absolute inset-0 z-0 overflow-visible pointer-events-auto"
               gravity={{ x: 0, y: 1 }}
@@ -299,7 +303,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 y="44%"
                 angle={-10}
                 {...stickerPhysics}
-                onClick={goToDomains}
+                onClick={handleKeyword("tech")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#7b2ff7]"
@@ -314,7 +318,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 y="46%"
                 angle={-6}
                 {...stickerPhysics}
-                onClick={goToDomains}
+                onClick={handleKeyword("design")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#ff8a1f]"
@@ -329,7 +333,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 y="58%"
                 angle={-4}
                 {...stickerPhysics}
-                onClick={goToDomains}
+                onClick={handleKeyword("management")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#3aa7ff]"
@@ -344,10 +348,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 y="38%"
                 angle={8}
                 {...stickerPhysics}
-                onClick={goToDomains}
+                onClick={handleKeyword("research")}
               >
                 <div
-                  className="select-none text-[30px] font-black leading-[1] tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
+                  className="select-none text-[30px] font-black leading-none tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
                   style={stickerTextBase}
                 >
                   Research
@@ -359,10 +363,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 y="52%"
                 angle={4}
                 {...stickerPhysics}
-                onClick={goToDomains}
+                onClick={handleKeyword("cc")}
               >
                 <div
-                  className="select-none text-[34px] font-black leading-[1] tracking-tight text-[#4f7d1a]"
+                  className="select-none text-[34px] font-black leading-none tracking-tight text-[#4f7d1a]"
                   style={stickerTextBase}
                 >
                   CC
@@ -370,8 +374,11 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
               </MatterBody>
             </Gravity>
 
-            <div className="pointer-events-none relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
-              <span className="text-[40px] font-black leading-tight text-white drop-shadow-[0_14px_28px_rgba(0,0,0,0.4)] sm:text-[48px] lg:text-[50px]">
+            <div className="pointer-events-none absolute inset-0 flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
+              <span
+                className="pointer-events-auto cursor-pointer text-[40px] font-black leading-tight text-white drop-shadow-[0_14px_28px_rgba(0,0,0,0.4)] sm:text-[48px] lg:text-[50px]"
+                onClick={goToDomains}
+              >
                 Domains
               </span>
             </div>
