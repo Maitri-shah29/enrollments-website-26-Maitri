@@ -84,7 +84,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
     { key: "AOIs", icon: <Image src={Aoi} alt="Aoi" width={20} height={20} /> },
     {
       key: "Explore",
-      icon: <Image src={Aoi} alt="Explore" width={20} height={20} />,
+      icon: <Image src={Vault} alt="Explore" width={20} height={20} />,
     },
     {
       key: "Instructions",
@@ -301,47 +301,6 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               )}
             </div>
           )}
-        </div>
-        <div
-          className="flex flex-col items-start mt-auto"
-          style={{ marginBottom: "-0px" }}
-        >
-          <button
-            className="p-2 hover:scale-105 transition-transform"
-            type="button"
-          >
-            <Image
-              src={Vault}
-              alt="vault"
-              width={40}
-              height={40}
-              className="w-5 h-5"
-            />
-          </button>
-          <button
-            className="p-2 hover:scale-105 transition-transform"
-            type="button"
-          >
-            <Image
-              src={Help}
-              alt="help"
-              width={40}
-              height={40}
-              className="w-5 h-5"
-            />
-          </button>
-          <button
-            className="p-2 hover:scale-105 transition-transform"
-            type="button"
-          >
-            <Image
-              src={Settings}
-              alt="settings"
-              width={40}
-              height={40}
-              className="w-5 h-5"
-            />
-          </button>
         </div>
       </div>
 

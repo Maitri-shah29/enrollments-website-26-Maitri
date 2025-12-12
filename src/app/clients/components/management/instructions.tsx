@@ -31,7 +31,7 @@ export default function Instructions({ onBack }: InstructionsProps) {
           <p>
             The instructions for the Management round are pretty
             straightforward. Answer each question honestly and be true to
-            yourself. After answering a question hit the submit button then
+            yourself. After answering a question hit the save button then
             proceed to answering the rest. After all questions have been
             answered, hit the submit form button at the bottom of the page.
           </p>

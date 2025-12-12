@@ -362,7 +362,7 @@ const Questions: React.FC<QuestionsProps> = ({
         return newSet;
       });
       setNotificationType("success");
-      setNotification("Answer submitted successfully!");
+      setNotification("Answer saved successfully!");
       setTimeout(() => setNotification(null), 3000);
     } catch (err) {
       console.error("Submit error:", err);
@@ -513,7 +513,7 @@ const Questions: React.FC<QuestionsProps> = ({
   }
 
   const canSubmit = currentResponse.trim() && !submitting;
-  const buttonText = submitting ? "Submitting..." : "Submit";
+  const buttonText = submitting ? "Saving..." : "Save Answer";
   const buttonColor = canSubmit ? "#7D5BED" : "#4A4A4A";
 
   return (

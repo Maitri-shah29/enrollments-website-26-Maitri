@@ -247,7 +247,7 @@ const Questions: React.FC<QuestionsProps> = ({
       });
       setHasUnsavedChanges(false);
       console.log("Response saved successfully");
-      showToast("Response submitted successfully!", "success");
+      showToast("Response saved successfully!", "success");
     } catch (error) {
       console.error("Failed to save response:", error);
       const msg = error instanceof Error ? error.message : "Submission failed";
@@ -675,7 +675,7 @@ const Questions: React.FC<QuestionsProps> = ({
                   }
                   className="px-10 py-4 border-2 border-white font-coolvetica rounded-lg hover:bg-[#F55F4B] hover:border-[#F55F4B] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white"
                 >
-                  {isSaving ? "Saving..." : "Submit"}
+                  {isSaving ? "Saving..." : "Save Answer"}
                 </button>
                 <button
                   type="button"

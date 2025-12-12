@@ -9,9 +9,10 @@ const Instructions: React.FC = () => {
       <NeonSection title="INSTRUCTIONS">
         <ul className="list-disc pl-6 space-y-2 text-white">
           <li>Answer all the questions in the form round.</li>
+          <li>After answering a question, click on "Save Answer" to save your response.</li>
           <li>Next round will be a CC contest round.</li>
           <li>It will be organised on 9th January, 2026.</li>
-          <li>Link will be shared later</li>
+          <li>Link will be shared later.</li>
         </ul>
       </NeonSection>
 
