@@ -14,40 +14,21 @@ const blockchainPage: React.FC = () => {
           Blockchain
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
-          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
-            The Blockchain AOI focuses on the technology redefining trust and
-            transparency in the digital era. Members explore decentralised
-            systems, smart contracts, and secure data frameworks, uncovering how
-            blockchain is transforming industries through innovation and
-            reliability.
-            <br />
-            Key Focus Areas:
-            <br />
-            1. Blockchain Fundamentals: Distributed ledgers, consensus
-            mechanisms (PoW, PoS, BFT)
-            <br />
-            2. Cryptocurrencies: Bitcoin, Ethereum, tokenomics, and digital
-            asset management
-            <br />
-            3. Smart Contracts: Self-executing contracts, Solidity programming,
-            and security
-            <br />
-            4. Decentralized Applications: Building DApps on blockchain
-            infrastructure
-            <br />
-            5. DeFi: Lending protocols, decentralized exchanges, and liquidity
-            pools
-            <br />
-            6. NFTs & Digital Assets: Non-fungible tokens and blockchain in
-            creative industries
-            <br />
-            7. Enterprise Blockchain: Hyperledger, Corda, and permissioned
-            blockchains
-            <br />
-            8. Scalability Solutions: Layer 2 protocols, sharding, and
-            cross-chain interoperability
-            <br />
+          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed mb-4">
+            Blockchain dives into decentralized tech that enables trust without
+            intermediaries. Members learn how blockchains work, write smart
+            contracts, and build transparent, secure applications.
           </p>
+          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed font-semibold mb-2">
+            Focus Areas:
+          </p>
+          <ul className="text-white text-sm sm:text-base md:text-lg leading-relaxed list-disc list-inside space-y-1">
+            <li>Blockchain fundamentals</li>
+            <li>Cryptocurrencies & wallets</li>
+            <li>Smart contract development</li>
+            <li>DApps & DeFi</li>
+            <li>Scaling & security concepts</li>
+          </ul>
         </div>
       </div>
     </div>

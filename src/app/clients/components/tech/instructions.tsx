@@ -19,7 +19,7 @@ export default function Instructions() {
           ))}
         </pre>
         <pre className="whitespace-pre-wrap text-[#E097CE]">
-          {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel nisi at nisl luctus tincidunt. Aliquam semper erat et nibh scelerisque vulputate.`}
+          {`Before you dive into showcasing your creativity, please take a moment to read the following instructions carefully\n⁠After answering a question, click on "Save Answer".\nYou can save multiple times and only your most recent saved answer will be considered.\nYou can apply to a maximum of three Areas of Interest (AOIs) within the Design Domain.\nTo know more about each AOI, head over to the AOI Page from the navigation bar for detailed information.\nThat’s it! Trust your instincts, play with ideas, and let creativity take the wheel. And hey don’t forget to have fun while you’re at it!`}
         </pre>
       </div>
     </div>

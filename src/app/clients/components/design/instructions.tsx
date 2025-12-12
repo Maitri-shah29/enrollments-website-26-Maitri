@@ -19,28 +19,20 @@ const Instructions: React.FC = () => {
             height={500}
             className="w-[8%] lg:w-[10%] absolute -top-7 -left-7"
           />
-          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl mb-5">
-            Before you dive into showcasing your creativity, please take a
-            moment to read the following instructions carefully:
-          </p>
-          <ol className="list-decimal px-[10%] lg:px-[12%]  font-coolvetica text-2xl mb-5">
-            <li>⁠After answering a question, click on “Save Answer”.</li>
-            <li>
-              You can save multiple times and only your most recent saved answer
-              will be considered.
-            </li>
-            <li>
-              You can apply to a maximum of three Areas of Interest (AOIs)
-              within the Design Domain.
-            </li>
-            <li>
-              To know more about each AOI, head over to the AOI Page from the
-              navigation bar for detailed information.
-            </li>
-          </ol>
-          <p className="px-[5%] lg:px-[8%] font-coolvetica text-2xl">
-            That’s it! Trust your instincts, play with ideas, and let creativity
-            take the wheel. And hey don’t forget to have fun while you’re at it!
+          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl">
+            Welcome to the first round of ACM-VIT's Design Domain recruitment!
+            In this round, you'll have the opportunity to showcase your creative
+            skills and design thinking. You'll be presented with a series of
+            questions that test your understanding of design principles.
+            <br />
+            <br />
+            You can select a maximum of 2 Areas of Interest (AOIs) that align
+            with your passion and skills. These AOIs will help us understand
+            your interests better and may influence the type of projects you'll
+            work on if you’re selected. Once you've answered all the questions
+            to the best of your ability, review your responses and click submit.
+            We're looking for creativity, originality, and your personal
+            approach to solving design challenges. Good luck!
           </p>
         </div>
         <Image
