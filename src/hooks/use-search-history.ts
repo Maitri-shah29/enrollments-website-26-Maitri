@@ -56,5 +56,19 @@ export const useSearchHistory = () => {
   //     }
   //   };
 
-  return { history, addToHistory };
+  const removeFromHistory = (term: string) => {
+    setHistory((prev) => {
+      const filtered = prev.filter(
+        (item) => item.toLowerCase() !== term.toLowerCase(),
+      );
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
+      } catch (error) {
+        console.error("Failed to update search history:", error);
+      }
+      return filtered;
+    });
+  };
+
+  return { history, addToHistory, removeFromHistory };
 };

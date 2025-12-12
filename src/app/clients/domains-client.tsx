@@ -76,6 +76,9 @@ const domains: Domain[] = [
 const Domains = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null,
+  );
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -88,16 +91,26 @@ const Domains = () => {
   }, []);
 
   const goNext = useCallback(() => {
+    if (isAnimating) return;
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
+    setSlideDirection("left");
+    setTimeout(() => {
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 800);
     setActiveIndex((prev) => (prev + 1) % domains.length);
-  }, []);
+  }, [isAnimating]);
 
   const goPrev = useCallback(() => {
+    if (isAnimating) return;
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
+    setSlideDirection("right");
+    setTimeout(() => {
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 800);
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
-  }, []);
+  }, [isAnimating]);
 
   const handleNavigateKey = useCallback(
     (event: React.KeyboardEvent<HTMLElement>, slug: string) => {
@@ -120,7 +133,7 @@ const Domains = () => {
   }, [goNext, goPrev]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
+    <div className="relative h-screen w-full overflow-hidden bg-black text-white font-doppio">
       <div
         className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
         style={{
@@ -202,7 +215,13 @@ const Domains = () => {
           >
             <div className="relative w-full max-w-4xl flex justify-center">
               <div
-                className="relative h-[460px] w-[420px] sm:w-[520px]"
+                className={`relative h-[460px] w-[420px] sm:w-[520px] transition-all duration-500 ease-out ${
+                  slideDirection === "left"
+                    ? "animate-slide-left"
+                    : slideDirection === "right"
+                      ? "animate-slide-right"
+                      : ""
+                }`}
                 style={{ perspective: "1400px" }}
               >
                 <div
