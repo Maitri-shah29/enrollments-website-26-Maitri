@@ -129,6 +129,7 @@ const Landing: React.FC<{
   });
 
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
+  const [showMaxTabsNotification, setShowMaxTabsNotification] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -153,7 +154,11 @@ const Landing: React.FC<{
   if (isPending) return null;
 
   const addTab = () => {
-    if (tabs.length >= 6) return;
+    if (tabs.length >= 6) {
+      setShowMaxTabsNotification(true);
+      setTimeout(() => setShowMaxTabsNotification(false), 3000);
+      return;
+    }
     const newId = Date.now();
     const newTab: TabData = {
       id: newId,
@@ -180,11 +185,13 @@ const Landing: React.FC<{
     );
 
     if (existingTab) {
-      setActiveTabId(existingTab.id);
-      return;
+      //setActiveTabId(existingTab.id);
+      //return;
     }
 
     if (tabs.length >= 6) {
+      setShowMaxTabsNotification(true);
+      setTimeout(() => setShowMaxTabsNotification(false), 3000);
       return;
     }
 
@@ -295,6 +302,18 @@ const Landing: React.FC<{
 
   return (
     <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
+      {showMaxTabsNotification && (
+        <div className="fixed top-35 left-1/2 transform -translate-x-1/2 z-[9999] animate-in slide-in-from-top-5 duration-300">
+          <div className="bg-gradient-to-r from-red-800 to-red-600 text-white px-6 py-3 rounded-lg shadow-2xl border border-red-400/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <p className="font-medium text-sm">
+                You have opened maximum no. of tabs
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
         <div className="flex items-end">
           <div className="flex items-end overflow-x-auto overflow-y-visible">
