@@ -120,9 +120,9 @@ const Domains = () => {
   }, [goNext, goPrev]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black text-white font-doppio">
+    <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
       <div
-        className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500"
+        className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
         style={{
           backgroundImage,
           backgroundSize: "cover",
@@ -131,10 +131,10 @@ const Domains = () => {
         }}
       />
 
-      <div className="relative z-10 mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-6 py-6 md:px-10 lg:px-12">
-        <header className="mb-15 flex w-full items-center justify-center">
+      <div className="z-10 flex items-center xl:justify-center h-full flex-col px-6 py-6 md:px-10 lg:px-12 overflow-auto">
+        <header className="mb-5 flex w-full items-center justify-center">
           <h2
-            className="text-center text-5xl font-poppins tracking-tight drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] md:text-6xl"
+            className="text-center text-5xl mt-5 font-poppins tracking-tight drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
             style={{
               color: "transparent",
               WebkitTextStroke: "3px white",
