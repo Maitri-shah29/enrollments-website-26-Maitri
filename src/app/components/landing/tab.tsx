@@ -1,12 +1,13 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { logSearch } from "@/app/actions/log-search";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import PintooRun from "@/app/clients/PintooRun-client";
-import ResearchClient from "@/app/clients/research-client";
 import SnakeClient from "@/app/clients/snake-client";
-import TechWebsite from "@/app/clients/tech-client";
+import { Loader } from "@/components/loader";
+import { useSearchHistory } from "@/hooks/use-search-history";
 import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
@@ -38,12 +39,10 @@ const IFRAME_WHITELIST = new Set([
   "comick.live",
 
   // 🎮 Games & Game Sites
-  "agar.io",
   "slither.io",
   "krunker.io",
   "diep.io",
   "splix.io",
-  "paper.io",
   "skribbl.io",
   "1v1.lol",
   "ev.io",
@@ -55,39 +54,12 @@ const IFRAME_WHITELIST = new Set([
   "classic.minecraft.net",
   "2048game.com",
   "lichess.org",
-  "poki.com",
-  "crazygames.com",
-  "miniclip.com",
-  "itch.io",
-  "cardgames.io",
   "worldsbiggestpacman.com",
   "snowrider3d.com",
   "slopegame.online",
   "tetr.io",
   "wanderers.io",
   "wormate.io",
-  "hole.io",
-  "skibiditoilet.io",
-
-  // 📚 Educational / Math / Science
-  "desmos.com",
-  "geogebra.org",
-  "symbolab.com",
-  "mathplayground.com",
-  "mathsisfun.com",
-  "openstax.org",
-  "khanacademy.org",
-  "brilliant.org",
-  "quizizz.com",
-  "quizlet.com",
-  "kahoot.it",
-  "h5p.org",
-  "phet.colorado.edu",
-  "edpuzzle.com",
-  "ixl.com",
-  "codecademy.com",
-  "projecteuler.net",
-  "scratch.mit.edu",
 
   // 💻 Coding / Developer Tools
   "codepen.io",
@@ -179,36 +151,12 @@ const IFRAME_WHITELIST = new Set([
   "tunein.com",
   "anchor.fm",
 
-  // ✅ Productivity / Collaboration
-  "notion.so",
-  "airtable.com",
-  "trello.com",
-  "typeform.com",
-  "forms.gle",
-
   // 📖 Info / Knowledge / Open Data
   "wikipedia.org",
   "wikimedia.org",
   "archive.org",
   "openlibrary.org",
   "britannica.com",
-  "worldtimeapi.org",
-  "timeanddate.com",
-  "weather.com",
-  "ecosia.org",
-  "duckduckgo.com",
-  "startpage.com",
-
-  // ⚙️ Utilities / File / Media Tools
-  "remove.bg",
-  "ilovepdf.com",
-  "smallpdf.com",
-  "cloudconvert.com",
-  "convertio.co",
-  "tinywow.com",
-  "ezgif.com",
-  "pdfescape.com",
-  "compressjpeg.com",
 
   // ACM-VIT legacy websites
   "c2c.acmvit.in",
@@ -225,7 +173,7 @@ const IFRAME_WHITELIST = new Set([
 
 const isWhitelisted = (url: string) => {
   try {
-    const host = new URL(ensureHttps(url)).hostname; // normalize
+    const host = new URL(ensureHttps(url)).hostname;
     return IFRAME_WHITELIST.has(host);
   } catch {
     return false;
@@ -383,7 +331,10 @@ const Tab: React.FC<TabProps> = ({
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
+  const [navLoading, setNavLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const navInputRef = useRef<HTMLInputElement>(null);
+  const { history, addToHistory } = useSearchHistory();
 
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
@@ -393,6 +344,21 @@ const Tab: React.FC<TabProps> = ({
     setHomeInput(v);
     setIframeError(false);
   }, [tabData]);
+
+  useEffect(() => {
+    if (!tabData.pendingUrl) {
+      setNavLoading(false);
+      return;
+    }
+
+    setNavLoading(true);
+    const timer = setTimeout(() => {
+      onUpdateTab({ ...tabData, pendingUrl: undefined });
+      setNavLoading(false);
+    }, 650);
+
+    return () => clearTimeout(timer);
+  }, [tabData, onUpdateTab]);
 
   useEffect(() => {
     const activePageData = tabData.history[tabData.pointer];
@@ -425,6 +391,11 @@ const Tab: React.FC<TabProps> = ({
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
+
+    addToHistory(trimmed);
+    if (session?.data?.user?.email) {
+      logSearch(trimmed, session.data.user.email);
+    }
 
     const currentUrl =
       tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
@@ -781,7 +752,7 @@ const Tab: React.FC<TabProps> = ({
           </div>
 
           <div className="flex flex-1 items-center gap-3">
-            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-gradient-to-b from-[#9e9e9e] to-[#cdcdcd] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-[#252525] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0 relative">
               <span className="text-neutral-50 select-none font-medium tracking-tight">
                 https://
               </span>
@@ -791,8 +762,48 @@ const Tab: React.FC<TabProps> = ({
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                 placeholder={rotatingPlaceholder}
               />
+              {isFocused && history.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#252525] rounded-lg shadow-xl border border-white/10 overflow-hidden z-[100]">
+                  {history
+                    .filter((item) =>
+                      item.toLowerCase().includes(navInput.toLowerCase()),
+                    )
+                    .map((item) => (
+                      <button
+                        type="button"
+                        key={item}
+                        className="w-full text-left px-4 py-2 text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                        onClick={() => {
+                          setNavInput(item);
+                          commitFrom(item);
+                        }}
+                      >
+                        <span className="opacity-50">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <title>History</title>
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                        </span>
+                        {item}
+                      </button>
+                    ))}
+                </div>
+              )}
               <button
                 type="button"
                 aria-label="Search"
@@ -823,6 +834,12 @@ const Tab: React.FC<TabProps> = ({
       </div>
       {/* Content Area */}
       <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {(navLoading || tabData.pendingUrl) && (
+          <Loader
+            size={800}
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          />
+        )}
         {!session?.data &&
         (tabData.showManagement ||
           tabData.showCc ||
@@ -912,14 +929,8 @@ const Tab: React.FC<TabProps> = ({
             ></iframe>
           )
         ) : (
-          <div>
-            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
-            <HomePage
-              query={homeInput}
-              onQueryChange={handleHomeChange}
-              onQueryKeyDown={handleHomeKeyPress}
-              onNavigateKeyword={(keyword) => commitFrom(keyword)}
-            />
+          <div className="h-full">
+            <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
           </div>
         )}
       </div>

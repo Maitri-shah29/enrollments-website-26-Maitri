@@ -214,7 +214,6 @@ export default function Management({
   }
 
   const handleSubmitForm = () => {
-    // Frontend validation - check all questions are answered
     const unansweredQuestions = questions.filter((q) => !answers[q.id]?.trim());
 
     if (unansweredQuestions.length > 0) {
@@ -230,7 +229,6 @@ export default function Management({
     const unsavedQuestions = questions.filter((q) => {
       const currentAnswer = answers[q.id] || "";
       const savedAnswer = savedAnswers[q.id];
-      // Question is unsaved if: no saved answer exists OR current answer differs from saved
       return savedAnswer === undefined || currentAnswer !== savedAnswer;
     });
 
@@ -276,7 +274,6 @@ export default function Management({
       setNotificationType("success");
       setNotification("Form submitted successfully!");
 
-      // Refresh the round user data to get updated status
       const data = await fetchRoundUser("management");
       if (data && typeof data === "object" && !Array.isArray(data)) {
         setRoundUser(data as RoundUserExtended);
@@ -333,7 +330,7 @@ export default function Management({
       }
     }
   };
-
+  const isAnnounced = !!roundUser?.round?.announced;
   const renderActiveSection = () => {
     switch (activeSection) {
       case "Landing":
@@ -369,7 +366,7 @@ export default function Management({
         }
 
         // Status-based rendering
-        if (roundUser?.status === "evaluate") {
+        if (roundUser?.status === "evaluate" || !isAnnounced) {
           return (
             <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
               <h2 className="text-3xl font-bold text-gray-800 mb-4">
@@ -383,9 +380,9 @@ export default function Management({
           );
         }
 
-        if (roundUser?.status === "promoted") {
+        if (roundUser?.status === "promoted" && isAnnounced) {
           return (
-            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
               <h2 className="text-3xl font-bold text-green-700 mb-4">
                 Congratulations! 🎉
               </h2>
@@ -396,9 +393,9 @@ export default function Management({
           );
         }
 
-        if (roundUser?.status === "rejected") {
+        if (roundUser?.status === "rejected" && isAnnounced) {
           return (
-            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
               <h2 className="text-3xl font-bold text-red-700 mb-4">
                 Thank You for Participating
               </h2>
@@ -478,7 +475,7 @@ export default function Management({
     <div className="h-full flex w-full overflow-hidden font-helvetica">
       {/* Error Popup */}
       {error && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-2000 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white border-2 border-red-400 rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-red-500 text-2xl font-bold mb-4">Oops!</h3>
             <p className="text-gray-700 text-lg mb-6">{error}</p>
@@ -534,7 +531,7 @@ export default function Management({
         </div>
       )}
       {showUnsavedDialog && (
-        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-2000">
           <div className="bg-white border-2 border-gray-300 p-8 rounded-2xl max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-gray-800 text-2xl font-bold mb-4">
               Unsaved Changes
@@ -622,6 +619,9 @@ export default function Management({
             return allSections.map((section) => {
               const isDisabled =
                 (!roundUser && section !== "Landing") || isLimitReached;
+              if (section === "Round 1") {
+                return <div key="round 1"></div>;
+              }
               return (
                 <button
                   type="button"

@@ -247,7 +247,7 @@ const Questions: React.FC<QuestionsProps> = ({
       });
       setHasUnsavedChanges(false);
       console.log("Response saved successfully");
-      showToast("Response submitted successfully!", "success");
+      showToast("Response saved successfully!", "success");
     } catch (error) {
       console.error("Failed to save response:", error);
       const msg = error instanceof Error ? error.message : "Submission failed";
@@ -353,9 +353,10 @@ const Questions: React.FC<QuestionsProps> = ({
   };
 
   const roundUserStatus = roundUser?.status || "pending";
-
+  const isAnnounced = !!roundUser?.round?.announced;
+  const isHidden = !!roundUser?.round?.hidden;
   // Status-based rendering
-  if (roundUserStatus === "evaluate") {
+  if (roundUserStatus === "evaluate" || !isAnnounced) {
     return (
       <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
         <div className="text-center">
@@ -370,29 +371,28 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
-  if (roundUserStatus === "promoted") {
+  if (roundUserStatus === "promoted" && isAnnounced) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
-        <div className="text-center">
-          <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
-            Congratulations! 🎉
-          </h2>
-          <p className="text-white text-lg font-coolvetica">
-            You are promoted to the next round
-          </p>
-        </div>
+      <div className="flex-1 w-full flex items-center justify-center flex-col">
+        <h2 className="text-[#F55F4B] text-9xl font-brushwell mb-4">
+          Congratulations! 🎉
+        </h2>
+        <p className="text-white text-3xl font-coolvetica">
+          You have been promoted to the next round
+        </p>
       </div>
     );
   }
 
-  if (roundUserStatus === "rejected") {
+  if (roundUserStatus === "rejected" && isAnnounced) {
     return (
       <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
         <div className="text-center">
-          <h2 className="text-red-500 text-3xl font-brushwell mb-4">
-            Unfortunately, you could not pass this round
+          <h2 className="text-red-500 text-9xl font-brushwell mb-4">
+            Sorry 😞
           </h2>
-          <p className="text-white text-lg font-coolvetica">
+          <p className="text-white text-3xl font-coolvetica">
+            Unfortunately you did not pass this round. <br />
             Thank you for participating. Better luck next time!
           </p>
         </div>
@@ -461,7 +461,7 @@ const Questions: React.FC<QuestionsProps> = ({
   return (
     <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
       {showUnsavedDialog && (
-        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-2000">
           <div className="bg-[#302E2E] border-2 border-[#F55F4B] p-8 rounded-lg max-w-md w-full mx-4">
             <h3 className="text-[#F55F4B] text-2xl font-brushwell mb-4">
               Unsaved Changes
@@ -490,7 +490,7 @@ const Questions: React.FC<QuestionsProps> = ({
       )}
       {toast && (
         <div
-          className={`fixed top-5 right-5 z-[1000] p-4 rounded-lg shadow-xl text-white font-coolvetica transition-opacity duration-300 ${getToastClasses(
+          className={`fixed top-5 right-5 z-1000 p-4 rounded-lg shadow-xl text-white font-coolvetica transition-opacity duration-300 ${getToastClasses(
             toast.type,
           )} border-2`}
         >
@@ -498,7 +498,7 @@ const Questions: React.FC<QuestionsProps> = ({
         </div>
       )}
       {showConfirmDialog && (
-        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-2000">
           <div className="bg-[#302E2E] border-2 border-[#F55F4B] p-8 rounded-lg max-w-md w-full mx-4">
             <h3 className="text-[#F55F4B] text-2xl font-brushwell mb-4">
               Confirm Submission
@@ -532,7 +532,7 @@ const Questions: React.FC<QuestionsProps> = ({
       <div className="flex flex-col lg:flex-row w-full px-[3%] gap-[3%]">
         <div className="w-full lg:w-[25%] mb-[3%] lg:mb-0">
           <div className="relative mb-4 lg:mb-8">
-            <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
+            <div className="absolute -bottom-2.5 -right-2.5 w-full h-full rounded-xl border-2 border-[#43A363]/60"></div>
             <div className="bg-[#43A363] p-4 lg:p-6 rounded-xl flex flex-col gap-2">
               {aoiData.map((aoi) => {
                 const allAnswered = aoi.questions.every((q) => {
@@ -569,7 +569,7 @@ const Questions: React.FC<QuestionsProps> = ({
           </div>
 
           <div className="relative">
-            <div className="absolute bottom-[-10px] right-[-10px] w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
+            <div className="absolute -bottom-2.5 -right-2.5 w-full h-full rounded-xl border-2 border-[#3389E5]/60"></div>
             <div className="bg-[#3389E5] p-8 rounded-xl flex flex-col gap-2">
               {selectedAoi?.questions.map((question) => {
                 const hasSavedAnswer =
@@ -615,7 +615,7 @@ const Questions: React.FC<QuestionsProps> = ({
               <p className="text-base lg:text-lg font-coolvetica">
                 {selectedQuestion.content}
               </p>
-              <div className="h-[1px] my-3 lg:my-5 w-full bg-white"></div>
+              <div className="h-px my-3 lg:my-5 w-full bg-white"></div>
               <h2 className="text-lg lg:text-xl font-coolvetica mb-1 font-bold text-[#EA86B5]">
                 Answer
               </h2>
@@ -675,7 +675,7 @@ const Questions: React.FC<QuestionsProps> = ({
                   }
                   className="px-10 py-4 border-2 border-white font-coolvetica rounded-lg hover:bg-[#F55F4B] hover:border-[#F55F4B] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-white"
                 >
-                  {isSaving ? "Saving..." : "Submit"}
+                  {isSaving ? "Saving..." : "Save Answer"}
                 </button>
                 <button
                   type="button"

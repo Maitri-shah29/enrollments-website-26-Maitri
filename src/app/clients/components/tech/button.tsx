@@ -6,7 +6,7 @@ type TechButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#993C7A] focus-visible:ring-offset-[#08111D] disabled:cursor-not-allowed";
+  "transition-all duration-150 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#993C7A] focus-visible:ring-offset-[#08111D] disabled:cursor-not-allowed";
 
 export default function TechButton({
   className = "",

@@ -129,6 +129,7 @@ const Landing: React.FC<{
   });
 
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
+  const [showMaxTabsNotification, setShowMaxTabsNotification] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -153,7 +154,11 @@ const Landing: React.FC<{
   if (isPending) return null;
 
   const addTab = () => {
-    if (tabs.length >= 6) return;
+    if (tabs.length >= 6) {
+      setShowMaxTabsNotification(true);
+      setTimeout(() => setShowMaxTabsNotification(false), 3000);
+      return;
+    }
     const newId = Date.now();
     const newTab: TabData = {
       id: newId,
@@ -180,11 +185,13 @@ const Landing: React.FC<{
     );
 
     if (existingTab) {
-      setActiveTabId(existingTab.id);
-      return;
+      //setActiveTabId(existingTab.id);
+      //return;
     }
 
     if (tabs.length >= 6) {
+      setShowMaxTabsNotification(true);
+      setTimeout(() => setShowMaxTabsNotification(false), 3000);
       return;
     }
 
@@ -295,6 +302,18 @@ const Landing: React.FC<{
 
   return (
     <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
+      {showMaxTabsNotification && (
+        <div className="fixed top-35 left-1/2 transform -translate-x-1/2 z-[9999] animate-in slide-in-from-top-5 duration-300">
+          <div className="bg-gradient-to-r from-red-800 to-red-600 text-white px-6 py-3 rounded-lg shadow-2xl border border-red-400/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <p className="font-medium text-sm">
+                You have opened maximum no. of tabs
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
         <div className="flex items-end">
           <div className="flex items-end overflow-x-auto overflow-y-visible">
@@ -319,8 +338,8 @@ const Landing: React.FC<{
                   onDragEnd={handleDragEnd}
                   className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
                     isActive
-                      ? "z-40 text-neutral-900 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.35)]"
-                      : "z-20 text-neutral-200 bg-gradient-to-b from-[#585858] to-[#BDBDBD] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      ? "z-40 text-neutral-900 bg-[#FCF7F2]"
+                      : "z-20 text-[#FCF7F2] bg-[#252525]"
                   } ${index > 0 ? "-ml-6" : ""} ${
                     draggingTabId === tab.id ? "opacity-70" : ""
                   }`}
@@ -368,10 +387,10 @@ const Landing: React.FC<{
             type="button"
             onClick={addTab}
             disabled={tabs.length >= 6}
-            className={`relative -left-3 flex h-7 w-16 border-[#454545] bg-gradient-to-b from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
+            className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-gradient-to-b items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
               tabs.length >= 6
                 ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
-                : "cursor-pointer text-neutral-200 bg-gradient-to-b from-[#585858] to-[#bdbdbd] hover:from-neutral-500/90 hover:to-neutral-600/90"
+                : "cursor-pointer text-[#FCF7F2] bg-[#252525] hover:from-neutral-500/90 hover:to-neutral-600/90"
             } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
             style={{
               WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,

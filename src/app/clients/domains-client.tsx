@@ -24,7 +24,7 @@ const domains: Domain[] = [
     accent: "#8C3428",
     folder: "#F55F4B",
     text: "#ffffff",
-    image: "/images/domains/design.svg",
+    image: "/images/domains/design.webp",
     background: "url('/images/domains/design-bg.png')",
   },
   {
@@ -46,7 +46,7 @@ const domains: Domain[] = [
     accent: "#0E3A60",
     folder: "#46A8FF",
     text: "#ffffff",
-    image: "/images/domains/management.svg",
+    image: "/images/domains/management.webp",
     background: "url('/images/domains/management-bg.png')",
   },
   {
@@ -57,7 +57,7 @@ const domains: Domain[] = [
     accent: "#3C2C73",
     folder: "#A98FFF",
     text: "#ffffff",
-    image: "/images/domains/research.svg",
+    image: "/images/domains/research.webp",
     background: "url('/images/domains/research-bg.png')",
   },
   {
@@ -68,13 +68,14 @@ const domains: Domain[] = [
     accent: "#7B336E",
     folder: "#FF6CD9",
     text: "#ffffff",
-    image: "/images/domains/tech.svg",
+    image: "/images/domains/tech.webp",
     background: "url('/images/domains/tech-bg.png')",
   },
 ];
 
 const Domains = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -87,10 +88,14 @@ const Domains = () => {
   }, []);
 
   const goNext = useCallback(() => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
     setActiveIndex((prev) => (prev + 1) % domains.length);
   }, []);
 
   const goPrev = useCallback(() => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
   }, []);
 

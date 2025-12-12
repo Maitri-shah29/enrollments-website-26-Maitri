@@ -238,17 +238,17 @@ const Questions = ({
 
   const getSubmitMessage = (language: string): string => {
     const messages: Record<string, string> = {
-      plaintext: "Still using notepad? Answer Submitted",
-      cpp: "Still hand-cranking those memory allocations? Answer Submitted",
-      c: "Still trusting yourself with pointers? Answer Submitted",
-      java: "Still waiting for the Garbage Collector?  Answer Submitted",
-      python: "Still relying on dynamic typing? Answer Submitted",
-      javascript: "Still managing callback hell? Answer Submitted",
-      typescript: "TypeScript solution compiled and submitted! 💙",
-      rust: "Still fighting the borrow checker? Answer Submitted",
-      go: "Still waiting on generics? Wait, you got 'em now! Answer Submitted",
+      plaintext: "Still using notepad? Answer saved",
+      cpp: "Still hand-cranking those memory allocations? Answer saved",
+      c: "Still trusting yourself with pointers? Answer saved",
+      java: "Still waiting for the Garbage Collector?  Answer saved",
+      python: "Still relying on dynamic typing? Answer saved",
+      javascript: "Still managing callback hell? Answer saved",
+      typescript: "TypeScript solution compiled and saved! 💙",
+      rust: "Still fighting the borrow checker? Answer saved",
+      go: "Still waiting on generics? Wait, you got 'em now! Answer saved",
     };
-    return messages[language] || "Answer submitted successfully!";
+    return messages[language] || "Answer saved successfully!";
   };
 
   const handleSubmit = async () => {
@@ -404,9 +404,9 @@ const Questions = ({
       </div>
     );
   }
-
+  const isAnnounced = !!roundUser?.round?.announced;
   // Status-based rendering
-  if (roundUserStatus === "evaluate") {
+  if (roundUserStatus === "evaluate" || !isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -421,7 +421,7 @@ const Questions = ({
     );
   }
 
-  if (roundUserStatus === "promoted") {
+  if (roundUserStatus === "promoted" && isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -436,7 +436,7 @@ const Questions = ({
     );
   }
 
-  if (roundUserStatus === "rejected") {
+  if (roundUserStatus === "rejected" && isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -559,7 +559,7 @@ const Questions = ({
                 </div>
                 <div className="flex justify-end space-x-4">
                   <Button
-                    label={submitting ? "Submitting..." : "Submit Answer"}
+                    label={submitting ? "Saving..." : "Save Answer"}
                     onClick={handleSubmit}
                   />
                   <Button
