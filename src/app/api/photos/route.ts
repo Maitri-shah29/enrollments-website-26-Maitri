@@ -2,6 +2,8 @@ import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
+import { publicAssetUrl } from "@/lib/public-asset-url";
+
 const allowedExtensions = new Set([
   ".jpg",
   ".jpeg",
@@ -43,7 +45,7 @@ export async function GET() {
   }
 
   try {
-    const photos = collectPhotos(photosDir);
+    const photos = collectPhotos(photosDir).map((p) => publicAssetUrl(p));
     return NextResponse.json({ photos });
   } catch (error) {
     console.error("Failed to load photos", error);
