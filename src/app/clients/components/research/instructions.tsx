@@ -12,11 +12,11 @@ export default function Instructions() {
 
       {/* Foreground Content */}
       <div className="relative z-10 px-16 py-20 max-w-7xl">
-        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4">
+        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4 font-monopoly-bold">
           Instructions
         </h1>
 
-        <p className="text-gray-300 leading-relaxed text-justify">
+        <p className="text-gray-300 leading-relaxed text-justify font-monopoly">
           Welcome to the first round of ACM-VIT's Research Domain recruitment!
           In this round, you'll have the opportunity to demonstrate your
           analytical thinking, curiosity, and passion for exploring cutting-edge
