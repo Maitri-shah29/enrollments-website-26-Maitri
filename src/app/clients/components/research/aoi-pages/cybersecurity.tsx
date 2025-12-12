@@ -14,40 +14,21 @@ const cybersecPage: React.FC = () => {
           Cybersecurity
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
-          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed">
-            The Cybersecurity AOI is dedicated to protecting the digital
-            landscape. Members explore ethical hacking, cryptography, and
-            network defence to identify vulnerabilities and develop strategies
-            that ensure privacy, resilience, and system integrity.
-            <br />
-            Key Focus Areas:
-            <br />
-            1. Ethical Hacking: Vulnerability assessment, exploitation
-            techniques, and responsible disclosure
-            <br />
-            2. Cryptography: Encryption algorithms, hashing, digital signatures,
-            and quantum-resistant methods
-            <br />
-            3. Network Security: Firewalls, IDS/IPS, VPNs, and secure
-            architecture
-            <br />
-            4. Application Security: Secure coding, OWASP Top 10, and security
-            testing
-            <br />
-            5. Malware Analysis: Reverse engineering and threat intelligence
-            <br />
-            6. Incident Response: Forensics, threat hunting, and response
-            playbooks
-            <br />
-            7. Identity Management: Authentication, zero-trust architecture, and
-            access control
-            <br />
-            8. Cloud Security: Infrastructure protection and compliance
-            frameworks
-            <br />
-            9. Security Operations: SIEM tools and security monitoring
-            <br />
+          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed mb-4">
+            Cybersecurity focuses on defending digital systems. Members learn
+            how attackers think, how to uncover vulnerabilities, and how to
+            build stronger, safer environments.
           </p>
+          <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed font-semibold mb-2">
+            Focus Areas:
+          </p>
+          <ul className="text-white text-sm sm:text-base md:text-lg leading-relaxed list-disc list-inside space-y-1">
+            <li>Ethical hacking</li>
+            <li>Cryptography basics</li>
+            <li>Secure networks & applications</li>
+            <li>Malware & threat analysis</li>
+            <li>Incident response</li>
+          </ul>
         </div>
       </div>
     </div>

@@ -1,13 +1,13 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { logSearch } from "@/app/actions/log-search";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import PintooRun from "@/app/clients/PintooRun-client";
-import ResearchClient from "@/app/clients/research-client";
 import SnakeClient from "@/app/clients/snake-client";
-import TechWebsite from "@/app/clients/tech-client";
 import { Loader } from "@/components/loader";
+import { useSearchHistory } from "@/hooks/use-search-history";
 import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
@@ -331,7 +331,9 @@ const Tab: React.FC<TabProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const navInputRef = useRef<HTMLInputElement>(null);
+  const { history, addToHistory } = useSearchHistory();
 
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
@@ -388,6 +390,11 @@ const Tab: React.FC<TabProps> = ({
     const inputValue = raw.trim();
     if (!inputValue) return;
     const trimmed = inputValue.toLowerCase();
+
+    addToHistory(trimmed);
+    if (session?.data?.user?.email) {
+      logSearch(trimmed, session.data.user.email);
+    }
 
     const currentUrl =
       tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
@@ -744,7 +751,7 @@ const Tab: React.FC<TabProps> = ({
           </div>
 
           <div className="flex flex-1 items-center gap-3">
-            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-[#252525] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-[#252525] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0 relative">
               <span className="text-neutral-50 select-none font-medium tracking-tight">
                 https://
               </span>
@@ -754,8 +761,48 @@ const Tab: React.FC<TabProps> = ({
                 value={navInput}
                 onChange={handleNavChange}
                 onKeyDown={handleNavKeyPress}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                 placeholder={rotatingPlaceholder}
               />
+              {isFocused && history.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#252525] rounded-lg shadow-xl border border-white/10 overflow-hidden z-[100]">
+                  {history
+                    .filter((item) =>
+                      item.toLowerCase().includes(navInput.toLowerCase()),
+                    )
+                    .map((item) => (
+                      <button
+                        type="button"
+                        key={item}
+                        className="w-full text-left px-4 py-2 text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                        onClick={() => {
+                          setNavInput(item);
+                          commitFrom(item);
+                        }}
+                      >
+                        <span className="opacity-50">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <title>History</title>
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                        </span>
+                        {item}
+                      </button>
+                    ))}
+                </div>
+              )}
               <button
                 type="button"
                 aria-label="Search"
@@ -882,13 +929,7 @@ const Tab: React.FC<TabProps> = ({
           )
         ) : (
           <div className="h-full">
-            {/* <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} /> */}
-            <HomePage
-              query={homeInput}
-              onQueryChange={handleHomeChange}
-              onQueryKeyDown={handleHomeKeyPress}
-              onNavigateKeyword={(keyword) => commitFrom(keyword)}
-            />
+            <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
           </div>
         )}
       </div>
