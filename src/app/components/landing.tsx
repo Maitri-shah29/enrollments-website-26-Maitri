@@ -341,9 +341,7 @@ const Landing: React.FC<{
                   >
                     {tab.title}
                   </span>
-                  <button
-                    type="button"
-                    tabIndex={0}
+                  <div
                     onClick={(e) => {
                       e.stopPropagation();
                       closeTab(tab.id);
@@ -361,7 +359,7 @@ const Landing: React.FC<{
                     }`}
                   >
                     ×
-                  </button>
+                  </div>
                 </button>
               );
             })}
