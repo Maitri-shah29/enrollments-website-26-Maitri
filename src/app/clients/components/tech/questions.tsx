@@ -256,7 +256,7 @@ export default function Questions({
         <div className="flex justify-end">
           <TechButton
             type="button"
-            className="bg-transparent border border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-transparent border text-white border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSubmit}
             disabled={!(answers[questionKey] || "").trim() || submitting}
           >
