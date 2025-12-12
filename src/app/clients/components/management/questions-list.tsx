@@ -183,8 +183,8 @@ export default function QuestionsList({
                       }}
                     >
                       {index + 1}.{" "}
-                      {q.question.length > 120
-                        ? `${q.question.slice(0, 120)}...`
+                      {q.question.length > 100
+                        ? `${q.question.slice(0, 100)}...`
                         : q.question}
                     </span>
                   </label>

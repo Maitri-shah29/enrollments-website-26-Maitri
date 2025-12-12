@@ -24,9 +24,9 @@ const Instructions: React.FC = () => {
             moment to read the following instructions carefully:
           </p>
           <ol className="list-decimal px-[10%] lg:px-[12%]  font-coolvetica text-2xl mb-5">
-            <li>⁠After answering a question, click on “Submit.”</li>
+            <li>⁠After answering a question, click on “Save Answer”.</li>
             <li>
-              You can submit multiple times and only your most recent submission
+              You can save multiple times and only your most recent submission
               will be considered.
             </li>
             <li>

@@ -156,7 +156,7 @@ export default function Questions({
       }
 
       setNotificationType("success");
-      setNotification("Answer submitted successfully!");
+      setNotification("Answer saved successfully!");
       onSubmit(questionKey);
 
       setTimeout(() => setNotification(null), 3000);
@@ -260,7 +260,7 @@ export default function Questions({
             onClick={handleSubmit}
             disabled={!(answers[questionKey] || "").trim() || submitting}
           >
-            {submitting ? "submitting..." : "submit"}
+            {submitting ? "saving..." : "save"}
           </TechButton>
         </div>
       </div>

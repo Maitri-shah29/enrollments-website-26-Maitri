@@ -118,7 +118,7 @@ export default function Question({
                     "bg-[#AD3232] hover:bg-[#AD3232]/80"
               }`}
             >
-              {submitting ? "Submitting..." : "Submit"}
+              {submitting ? "Saving..." : "Save Answer"}
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-1">

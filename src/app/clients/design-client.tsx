@@ -13,7 +13,7 @@ import Instructions from "./components/design/instructions";
 import Interview from "./components/design/interview";
 import Questions from "./components/design/questions";
 
-const AOI_JOIN_LIMIT = 3;
+const AOI_JOIN_LIMIT = 2;
 
 interface DesignClientProps {
   initialRoundUser?: RoundUserExtended | null;
