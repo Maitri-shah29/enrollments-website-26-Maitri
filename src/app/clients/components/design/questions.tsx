@@ -549,6 +549,14 @@ const Questions: React.FC<QuestionsProps> = ({
                   );
                   return hasSavedAnswer && !hasUnsavedEdit;
                 });
+                const anyAnswered = aoi.questions.some((q) => {
+                  const hasSavedAnswer =
+                    savedAnswers[q.questionId]?.trim().length > 0;
+                  const hasUnsavedEdit = questionsWithUnsavedEdits.has(
+                    q.questionId,
+                  );
+                  return hasSavedAnswer && !hasUnsavedEdit;
+                });
                 return (
                   <button
                     type="button"
@@ -558,7 +566,11 @@ const Questions: React.FC<QuestionsProps> = ({
                   >
                     <div
                       className={`w-6 aspect-square rounded-sm ${
-                        allAnswered ? "bg-green-500" : "bg-white"
+                        allAnswered
+                          ? "bg-green-500"
+                          : anyAnswered
+                            ? "bg-amber-500"
+                            : "bg-white"
                       }`}
                     ></div>
                     <p
