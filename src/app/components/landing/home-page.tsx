@@ -10,9 +10,6 @@ import {
 import Gravity, { MatterBody } from "@/app/components/gravity";
 
 interface HomePageProps {
-  query: string;
-  onQueryChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onQueryKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onNavigateKeyword?: (keyword: string) => void;
 }
 
@@ -49,12 +46,7 @@ const phrases = [
   "Dream Big. Achieve Bigger.",
 ];
 
-const HomePage: React.FC<HomePageProps> = ({
-  query,
-  onQueryChange,
-  onQueryKeyDown,
-  onNavigateKeyword,
-}) => {
+const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
