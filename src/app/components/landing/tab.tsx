@@ -7,6 +7,7 @@ import PintooRun from "@/app/clients/PintooRun-client";
 import ResearchClient from "@/app/clients/research-client";
 import SnakeClient from "@/app/clients/snake-client";
 import TechWebsite from "@/app/clients/tech-client";
+import { Loader } from "@/components/loader";
 import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
@@ -383,6 +384,7 @@ const Tab: React.FC<TabProps> = ({
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
+  const [navLoading, setNavLoading] = useState(false);
   const navInputRef = useRef<HTMLInputElement>(null);
 
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
@@ -393,6 +395,21 @@ const Tab: React.FC<TabProps> = ({
     setHomeInput(v);
     setIframeError(false);
   }, [tabData]);
+
+  useEffect(() => {
+    if (!tabData.pendingUrl) {
+      setNavLoading(false);
+      return;
+    }
+
+    setNavLoading(true);
+    const timer = setTimeout(() => {
+      onUpdateTab({ ...tabData, pendingUrl: undefined });
+      setNavLoading(false);
+    }, 650);
+
+    return () => clearTimeout(timer);
+  }, [tabData, onUpdateTab]);
 
   useEffect(() => {
     const activePageData = tabData.history[tabData.pointer];
@@ -781,7 +798,7 @@ const Tab: React.FC<TabProps> = ({
           </div>
 
           <div className="flex flex-1 items-center gap-3">
-            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-gradient-to-b from-[#9e9e9e] to-[#cdcdcd] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-[#252525] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
               <span className="text-neutral-50 select-none font-medium tracking-tight">
                 https://
               </span>
@@ -823,6 +840,12 @@ const Tab: React.FC<TabProps> = ({
       </div>
       {/* Content Area */}
       <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {(navLoading || tabData.pendingUrl) && (
+          <Loader
+            size={800}
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          />
+        )}
         {!session?.data &&
         (tabData.showManagement ||
           tabData.showCc ||
