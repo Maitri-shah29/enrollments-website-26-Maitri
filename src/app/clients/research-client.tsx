@@ -361,14 +361,14 @@ const ResearchClient = ({
                 onClick={handleCancelNavigation}
                 className="px-6 py-2 bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-colors rounded-lg"
               >
-                Stay
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmNavigation}
                 className="px-6 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors rounded-lg"
               >
-                Leave
+                Proceed and Save
               </button>
             </div>
           </div>

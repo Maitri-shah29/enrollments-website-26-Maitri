@@ -553,17 +553,21 @@ export default function Management({
               </button>
               <button
                 onClick={() => {
-                  setShowUnsavedDialog(false);
-                  if (pendingBackNavigation) {
-                    setActiveIndex(null);
-                    setPendingBackNavigation(false);
-                  } else if (pendingQuestionIndex !== null) {
-                    // Proceed with navigation - this will be handled in QuestionsList
-                    const event = new CustomEvent("proceedWithNavigation", {
-                      detail: { index: pendingQuestionIndex },
+                  if (activeIndex != null) {
+                    onSubmitAnswer(questions[activeIndex]).then(() => {
+                      setShowUnsavedDialog(false);
+                      if (pendingBackNavigation) {
+                        setActiveIndex(null);
+                        setPendingBackNavigation(false);
+                      } else if (pendingQuestionIndex !== null) {
+                        // Proceed with navigation - this will be handled in QuestionsList
+                        const event = new CustomEvent("proceedWithNavigation", {
+                          detail: { index: pendingQuestionIndex },
+                        });
+                        window.dispatchEvent(event);
+                        setPendingQuestionIndex(null);
+                      }
                     });
-                    window.dispatchEvent(event);
-                    setPendingQuestionIndex(null);
                   }
                 }}
                 className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg font-medium"
@@ -619,9 +623,9 @@ export default function Management({
             return allSections.map((section) => {
               const isDisabled =
                 (!roundUser && section !== "Landing") || isLimitReached;
-              if (section === "Round 1") {
-                return <div key="round 1"></div>;
-              }
+              // if (section === "Round 1") {
+              //   return <div key="round 1"></div>;
+              // }
               return (
                 <button
                   type="button"
