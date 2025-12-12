@@ -1,5 +1,6 @@
 "use client";
 import type { Prisma } from "@prisma/client";
+import Image from "next/image";
 import type React from "react";
 import { useEffect, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
@@ -594,22 +595,13 @@ const Questions: React.FC<QuestionsProps> = ({
               aria-label="Edit"
               className="absolute right-4 top-4 z-10 text-gray-400 hover:text-white transition-colors"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                role="img"
-                aria-label="Edit icon"
-              >
-                <title>Edit</title>
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+              <Image
+                src="/images/research/question-edit-icon.svg"
+                width={20}
+                height={20}
+                alt="Edit"
+                draggable={false}
+              />
             </button>
 
             <textarea
@@ -625,6 +617,7 @@ const Questions: React.FC<QuestionsProps> = ({
                 p-0
                 placeholder-gray-500
                 selection:bg-[#7D5BED]
+                select-text
               "
               placeholder="Type your answer here..."
               value={currentResponse}

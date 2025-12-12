@@ -99,6 +99,7 @@ Focus Areas:
             alt={`${activeAOI} logo ${index + 1}`}
             width={img.width}
             height={img.height}
+            draggable={false}
           />
         ))}
       </div>
