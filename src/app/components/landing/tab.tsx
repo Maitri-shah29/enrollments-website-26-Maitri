@@ -798,7 +798,7 @@ const Tab: React.FC<TabProps> = ({
           </div>
 
           <div className="flex flex-1 items-center gap-3">
-            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-gradient-to-b from-[#9e9e9e] to-[#cdcdcd] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
+            <div className="flex flex-1 items-center h-10 font-poppinsReg rounded-lg bg-[#252525] pl-4 pr-1 shadow-[inset_0_1px_3px_rgba(255,255,255,0.35),inset_0_4px_10px_rgba(0,0,0,0.3)] gap-0">
               <span className="text-neutral-50 select-none font-medium tracking-tight">
                 https://
               </span>
