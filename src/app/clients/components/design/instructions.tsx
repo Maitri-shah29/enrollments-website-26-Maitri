@@ -26,7 +26,7 @@ const Instructions: React.FC = () => {
           <ol className="list-decimal px-[10%] lg:px-[12%]  font-coolvetica text-2xl mb-5">
             <li>⁠After answering a question, click on “Save Answer”.</li>
             <li>
-              You can save multiple times and only your most recent submission
+              You can save multiple times and only your most recent saved answer
               will be considered.
             </li>
             <li>
