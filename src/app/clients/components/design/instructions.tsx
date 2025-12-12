@@ -30,8 +30,8 @@ const Instructions: React.FC = () => {
               will be considered.
             </li>
             <li>
-              You can apply to a maximum of three Areas of Interest (AOIs)
-              within the Design Domain.
+              You can apply to a maximum of two Areas of Interest (AOIs) within
+              the Design Domain.
             </li>
             <li>
               To know more about each AOI, head over to the AOI Page from the

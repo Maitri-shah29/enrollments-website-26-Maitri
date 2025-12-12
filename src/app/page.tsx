@@ -7,6 +7,7 @@ import TechServer from "@/app/clients/tech-server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Landing from "./components/landing";
+import PhoneNumberModal from "./components/phone-number-modal";
 import { SessionProvider } from "./components/session-provider";
 
 export default async function Home() {
@@ -34,6 +35,7 @@ export default async function Home() {
   return (
     <div className="h-screen w-screen">
       <SessionProvider>
+        <PhoneNumberModal />
         <Landing
           session={session}
           isAllowed={true}
