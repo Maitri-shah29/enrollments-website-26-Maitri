@@ -1,6 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -92,7 +91,7 @@ const HomePage: React.FC<HomePageProps> = ({
   }, [photos]);
 
   return (
-    <div className="flex justify-center items-center min-h-full w-full bg-[#080808] text-white select-none">
+    <div className="flex justify-center items-center h-full w-full text-white select-none">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
       <div className="pointer-events-none absolute inset-0 flex h-full w-full">
         <Image
@@ -105,8 +104,8 @@ const HomePage: React.FC<HomePageProps> = ({
         />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1500px] flex-col gap-10 px-4 py-8 sm:px-6 lg:px-10">
-        <div className="grid w-full gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+      <div className="relative mx-auto flex min-h-full w-full max-w-[90vw] md:max-w-[92vw] xl:max-w-[94vw] 2xl:max-w-[96vw] flex-col gap-8 px-4 pt-8 sm:px-6 lg:px-10 2xl:px-12">
+        <div className="grid w-full gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
           <div className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56">
             <Image
               src="/images/acmlogo.svg"
@@ -118,18 +117,8 @@ const HomePage: React.FC<HomePageProps> = ({
               className="object-contain select-none"
             />
           </div>
-          {/* <div className="flex w-full min-w-60 max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
-            <input
-              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400 select-text"
-              placeholder="Search"
-              value={query}
-              onChange={onQueryChange}
-              onKeyDown={onQueryKeyDown}
-            />
-            <Search className="text-[#525252] p-0.5" />
-          </div> */}
 
-          <div className="w-full text-center text-4xl font-poppins pb-10">
+          <div className="w-full h-full flex items-center justify-center text-center text-3xl sm:text-4xl 2xl:text-[2.6rem] font-poppins">
             {phrases[value]}
           </div>
           <div
@@ -138,31 +127,31 @@ const HomePage: React.FC<HomePageProps> = ({
           />
         </div>
 
-        <div className="grid gap-5 lg:auto-rows-[280px] grid-cols-12 h-full">
+        <div className="grid gap-4 2xl:gap-5 auto-rows-[22vh] sm:auto-rows-[24vh] lg:auto-rows-[26vh] xl:auto-rows-[28vh] 2xl:auto-rows-[30vh] grid-cols-12 h-full">
           <div
-            className="col-span-6 relative"
+            className="col-span-6 relative overflow-hidden rounded-2xl"
             onClick={handleKeyword("acmvit.in")}
           >
-            <div className="w-full h-full bg-[#292625] rounded-xl flex items-center text-5xl font-poppins pl-10">
-              <h1>About ACM</h1>
+            <div className="w-full h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] 2xl:min-h-[28vh] bg-[#292625] rounded-2xl flex items-center text-4xl lg:text-[2.6rem] xl:text-[2.5rem] 2xl:text-[2.6rem] font-poppins pl-[4%] pr-[18%]">
+              <h1 className="relative">About ACM</h1>
               <Image
                 src="/images/addons/Group 1000007435.png"
-                width={400}
-                height={400}
-                alt="acmacmacm"
-                className="absolute right-0"
+                width={520}
+                height={520}
+                alt="ACM background motif"
+                className="absolute right-[-6%] lg:right-[-4%] xl:right-[-2%] top-1/2 -translate-y-1/4 w-[42%] lg:w-[40%] xl:w-[38%] 2xl:w-[36%] max-w-[420px]"
               />
             </div>
             <Image
               src="/images/addons/Phone 2.svg"
-              width={1500}
-              height={1500}
+              width={2500}
+              height={2500}
               alt="ACM VIT Website Preview"
-              className="absolute w-[130%] h-[130%] bottom-0 -right-50"
+              className="absolute w-[112%] h-[112%] lg:w-[110%] z-30 lg:h-[110%] xl:w-[108%] xl:h-[108%] 2xl:w-[116%] 2xl:h-[106%] bottom-[10%] right-[-20%]"
             />
           </div>
 
-          <section className="relative col-span-12 flex h-full overflow-hidden rounded-xl border border-white/10 bg-white/14 shadow-[0_20px_48px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
+          <section className="relative col-span-12 flex h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] overflow-hidden rounded-2xl border border-white/10 bg-white/14 shadow-[0_16px_36px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
             <div className="pointer-events-none absolute inset-0">
               <span className="absolute left-0 top-0 h-5 w-5 border-t-[7px] border-l-[7px] border-white" />
               <span className="absolute right-0 top-0 h-5 w-5 border-t-[7px] border-r-[7px] border-white" />
@@ -186,7 +175,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </section>
 
           <div
-            className="col-span-3 row-span-2 bg-[#292625] rounded-xl relative"
+            className="col-span-3 row-span-2 bg-[#292625] rounded-2xl relative overflow-hidden min-h-[38vh] lg:min-h-[40vh] xl:min-h-[44vh] 2xl:min-h-[48vh]"
             onClick={handleKeyword("events")}
           >
             <Image
@@ -195,35 +184,28 @@ const HomePage: React.FC<HomePageProps> = ({
               width={500}
               height={500}
             ></Image>
-            <h1 className="text-center text-4xl font-poppins bottom-10 absolute">
+            <h1 className="w-full text-center text-3xl lg:text-[2.2rem] xl:text-[2rem] 2xl:text-[2.1rem] font-poppins bottom-6 absolute px-4 leading-tight">
               Events and Projects
             </h1>
           </div>
 
-          <section className="flex w-full h-full flex-col gap-2 lg:col-span-3 lg:col-start-1 lg:row-start-2">
-            <div className="relative h-39 w-full items-center justify-center  col-span-12 flex flex-col overflow-hidden rounded-xl bg-[#292625]">
+          <section className="flex w-full h-full flex-col gap-3 row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2">
+            <div className="relative flex-1 min-h-[14vh] sm:min-h-[15vh] lg:min-h-[16vh] xl:min-h-[17vh] 2xl:min-h-[18vh] w-full items-center justify-center col-span-12 flex flex-col overflow-hidden rounded-2xl bg-[#292625]">
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
                 src="https://open.spotify.com/embed/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ?utm_source=generator&theme=0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                className="absolute inset-0 w-full h-full rounded-xl"
+                className="absolute inset-0 w-full h-full rounded-2xl"
               ></iframe>
             </div>
-            <div className="relative h-30 w-full gap-2 flex flex-col items-center justify-center rounded-xl bg-[#292625]">
-              <h1
-                className="font-poppins text-3xl text-center tracking-wider select-none"
-                // style={{
-                //   color: "transparent",
-                //   WebkitTextStroke: "1px white",
-                //   textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-                // }}
-              >
+            <div className="relative flex-1 w-full gap-2 flex flex-col items-center justify-center rounded-2xl bg-[#292625]">
+              <h1 className="font-poppins text-2xl lg:text-[1.6rem] text-center tracking-wider select-none">
                 Games
               </h1>
 
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none px-2">
                 <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"
@@ -280,13 +262,11 @@ const HomePage: React.FC<HomePageProps> = ({
                 />
               </div>
             </div>
-
-            {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" /> */}
           </section>
 
           <div
             onDoubleClick={goToDomains}
-            className="relative col-span-6 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+            className="relative col-span-6 row-span-1 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_14px_32px_rgba(0,0,0,0.32)]"
           >
             <Gravity
               className="absolute inset-0 z-0 overflow-visible pointer-events-auto"
@@ -295,9 +275,9 @@ const HomePage: React.FC<HomePageProps> = ({
               grabCursor={true}
             >
               <MatterBody
-                x="18%"
-                y="76%"
-                angle={-12}
+                x="28%"
+                y="44%"
+                angle={-10}
                 {...stickerPhysics}
                 onClick={goToDomains}
               >
@@ -310,9 +290,9 @@ const HomePage: React.FC<HomePageProps> = ({
               </MatterBody>
 
               <MatterBody
-                x="28%"
-                y="80%"
-                angle={-8}
+                x="42%"
+                y="46%"
+                angle={-6}
                 {...stickerPhysics}
                 onClick={goToDomains}
               >
@@ -325,9 +305,9 @@ const HomePage: React.FC<HomePageProps> = ({
               </MatterBody>
 
               <MatterBody
-                x="21%"
-                y="86%"
-                angle={-6}
+                x="32%"
+                y="58%"
+                angle={-4}
                 {...stickerPhysics}
                 onClick={goToDomains}
               >
@@ -340,9 +320,9 @@ const HomePage: React.FC<HomePageProps> = ({
               </MatterBody>
 
               <MatterBody
-                x="76%"
-                y="18%"
-                angle={6}
+                x="64%"
+                y="38%"
+                angle={8}
                 {...stickerPhysics}
                 onClick={goToDomains}
               >
@@ -355,9 +335,9 @@ const HomePage: React.FC<HomePageProps> = ({
               </MatterBody>
 
               <MatterBody
-                x="87%"
-                y="24%"
-                angle={2}
+                x="74%"
+                y="52%"
+                angle={4}
                 {...stickerPhysics}
                 onClick={goToDomains}
               >
@@ -371,7 +351,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </Gravity>
 
             <div className="pointer-events-none relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
-              <span className="text-[48px] font-black leading-tight text-white drop-shadow-[0_18px_36px_rgba(0,0,0,0.45)] sm:text-[54px]">
+              <span className="text-[40px] font-black leading-tight text-white drop-shadow-[0_14px_28px_rgba(0,0,0,0.4)] sm:text-[48px] lg:text-[50px]">
                 Domains
               </span>
             </div>
