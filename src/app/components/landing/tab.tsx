@@ -16,12 +16,11 @@ import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 
 const ROTATING_WEBSITES = [
-  "ocs.acmvit.in",
+  "os.acmvit.in",
   "fast.com",
   "acmvit.in",
   "krunker.io",
   "slither.io",
-  "comick.live",
   "skrbbl.io",
   "wikipedia.org",
   "classic.minecraft.net",
@@ -36,7 +35,7 @@ const IFRAME_WHITELIST = new Set([
   "acmvit.in",
   "fast.com",
   "icpc.global",
-  "comick.live",
+  //"comick.live",
 
   // 🎮 Games & Game Sites
   "slither.io",
