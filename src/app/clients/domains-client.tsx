@@ -133,7 +133,7 @@ const Domains = () => {
   }, [goNext, goPrev]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black text-white font-doppio">
+    <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
       <style jsx>{`
         @keyframes slide-left {
           0% {
@@ -168,16 +168,15 @@ const Domains = () => {
           animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
       `}</style>
-      <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
-          style={{
-            backgroundImage,
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-          }}
-        />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
+        style={{
+          backgroundImage,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+        }}
+      />
 
         <div className="z-10 flex items-center xl:justify-center h-full flex-col px-6 py-6 md:px-10 lg:px-12 overflow-auto">
           <header className="mb-5 flex w-full items-center justify-center">

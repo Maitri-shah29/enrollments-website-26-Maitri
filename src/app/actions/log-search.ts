@@ -2,7 +2,15 @@
 
 import clientPromise from "@/lib/mongo";
 
-const filters = ["research", "design", "tech", "management", "cc"];
+const filters = [
+  "research",
+  "design",
+  "tech",
+  "management",
+  "cc",
+  "domain",
+  "events",
+];
 export async function logSearch(query: string, email?: string | null) {
   console.log("hii");
   if (!query || query.length > 25 || !email || filters.includes(query)) return;
