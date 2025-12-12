@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "postbuild": "node scripts/upload-r2-assets.cjs --all --concurrency=6",
+    "upload:r2": "node scripts/upload-r2-assets.cjs --all --concurrency=6",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
