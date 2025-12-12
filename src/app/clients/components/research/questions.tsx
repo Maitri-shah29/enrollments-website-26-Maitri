@@ -486,10 +486,10 @@ const Questions: React.FC<QuestionsProps> = ({
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
             Your responses are being evaluated
           </h2>
-          <p className="text-white text-lg">
+          <p className="text-white text-lg font-monopoly">
             Please wait while we review your submission.
           </p>
         </div>
@@ -501,10 +501,10 @@ const Questions: React.FC<QuestionsProps> = ({
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
             Congratulations! 🎉
           </h2>
-          <p className="text-white text-lg">
+          <p className="text-white text-lg font-monopoly">
             You are promoted to the next round
           </p>
         </div>
@@ -516,10 +516,10 @@ const Questions: React.FC<QuestionsProps> = ({
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-red-500 text-3xl font-bold mb-4">
+          <h2 className="text-red-500 text-3xl font-bold mb-4 font-monopoly-bold">
             Unfortunately, you could not pass this round
           </h2>
-          <p className="text-white text-lg">
+          <p className="text-white text-lg font-monopoly">
             Thank you for participating. Better luck next time!
           </p>
         </div>
@@ -547,10 +547,10 @@ const Questions: React.FC<QuestionsProps> = ({
       {showConfirmDialog && (
         <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
           <div className="bg-[#1a1a1a] border-2 border-[#7D5BED] p-8 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-[#7D5BED] text-2xl font-bold mb-4">
+            <h3 className="text-[#7D5BED] text-2xl font-bold mb-4 font-monopoly-bold">
               Confirm Submission
             </h3>
-            <p className="text-white text-lg mb-6">
+            <p className="text-white text-lg mb-6 font-monopoly">
               You won't be able to edit your responses after this. Are you sure
               you want to submit?
             </p>
@@ -576,7 +576,7 @@ const Questions: React.FC<QuestionsProps> = ({
       )}
 
       <div className="shrink-0 mb-6">
-        <h1 className="text-white wrap-break-words leading-tight font-bold text-[18px]">
+        <h1 className="text-white wrap-break-words leading-tight font-bold text-[18px] font-monopoly-bold">
           Question {safeIndex + 1}: {currentQuestion?.question}
         </h1>
       </div>
@@ -625,6 +625,7 @@ const Questions: React.FC<QuestionsProps> = ({
                 p-0
                 placeholder-gray-500
                 selection:bg-[#7D5BED]
+                font-monopoly
               "
               placeholder="Type your answer here..."
               value={currentResponse}
@@ -640,7 +641,7 @@ const Questions: React.FC<QuestionsProps> = ({
               onBlur={() => setIsFocused(false)}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1 font-monopoly">
             {1500 - currentResponse.length} characters left
           </p>
         </div>
@@ -650,7 +651,7 @@ const Questions: React.FC<QuestionsProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className={`text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[${buttonColor}] border-1 hover:cursor-pointer`}
+            className={`text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[${buttonColor}] border-1 hover:cursor-pointer font-monopoly-bold`}
             style={{
               opacity: canSubmit ? 1 : 0.5,
               cursor: canSubmit ? "pointer" : "not-allowed",
@@ -663,7 +664,7 @@ const Questions: React.FC<QuestionsProps> = ({
               type="button"
               onClick={handleSubmitForm}
               disabled={submittingForm}
-              className="text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[#7D5BED] border-1 hover:bg-[#6a4dd4] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[#7D5BED] border-1 hover:bg-[#6a4dd4] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-monopoly-bold"
             >
               {submittingForm ? "Submitting..." : "Submit Form"}
             </button>
