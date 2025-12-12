@@ -39,13 +39,14 @@ const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
 const value = Math.floor(Math.random() * 7);
 const phrases = [
-  "ACM-VIT Says Hello!",
-  "Welcome to ACM-VIT's Browser!",
-  "Welcome to OCS'26!",
+  "Welcome to OCS'26",
   "Gear Up for an Incredible Journey!",
   "Your Adventure Starts Now!",
   "Innovation Begins Here",
   "Dream Big. Achieve Bigger.",
+  "ACM-VIT Says Hello!",
+  "Welcome to ACM-VIT's Browser!",
+  "Welcome to OCS'26!",
   "Because Technology Matters",
 ];
 
@@ -188,28 +189,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
               className="absolute w-[130%] h-[130%] bottom-0 -right-50"
             />
           </div>
-          <section className="relative col-span-12 flex h-full min-h-[20vh] sm:min-h-[22vh] lg:min-h-[24vh] xl:min-h-[26vh] overflow-hidden rounded-2xl border border-white/10 bg-white/14 shadow-[0_16px_36px_rgba(0,0,0,0.45)] lg:col-span-3 lg:col-start-7 lg:row-start-1">
-            <div className="pointer-events-none absolute inset-0">
-              <span className="absolute left-0 top-0 h-5 w-5 border-t-[7px] border-l-[7px] border-white" />
-              <span className="absolute right-0 top-0 h-5 w-5 border-t-[7px] border-r-[7px] border-white" />
-              <span className="absolute left-0 bottom-0 h-5 w-5 border-b-[7px] border-l-[7px] border-white" />
-              <span className="absolute right-0 bottom-0 h-5 w-5 border-b-[7px] border-r-[7px] border-white" />
-            </div>
-            <div className="relative z-10 flex h-full w-full">
-              {photos.length === 0 ? (
-                <div className="flex h-full w-full items-center justify-center bg-black/30 text-lg text-white/60">
-                  No photos :/
-                </div>
-              ) : (
-                <img
-                  src={photos[currentPhotoIndex]}
-                  alt="ACM club activities"
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              )}
-            </div>
-          </section>
+
+          <PhotoPanel />
 
           <div
             className="col-span-3 row-span-2 bg-[#292625] rounded-2xl relative overflow-hidden min-h-[38vh] lg:min-h-[40vh] xl:min-h-[44vh] 2xl:min-h-[48vh]"
