@@ -18,6 +18,7 @@ const Instructions: React.FC = () => {
             width={500}
             height={500}
             className="w-[8%] lg:w-[10%] absolute -top-7 -left-7"
+            draggable={false}
           />
           <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl">
             Welcome to the first round of ACM-VIT's Design Domain recruitment!
@@ -41,6 +42,7 @@ const Instructions: React.FC = () => {
           width={500}
           height={500}
           className="w-[60%] lg:w-[30%] mx-auto lg:mx-0 lg:mr-[3%] mt-[3%] lg:mt-0"
+          draggable={false}
         />
       </div>
     </div>

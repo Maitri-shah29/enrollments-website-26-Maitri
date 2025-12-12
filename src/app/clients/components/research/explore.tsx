@@ -62,10 +62,10 @@ export default function ExploreResearchAOIs({
 
   return (
     <div className="w-full h-full overflow-y-auto px-8 py-6">
-      <h1 className="text-[#9b7fff] text-3xl font-bold mb-4">
+      <h1 className="text-[#9b7fff] text-3xl font-bold mb-4 font-monopoly-bold">
         Explore Research Areas of Interest
       </h1>
-      <p className="text-white/80 text-base mb-6">
+      <p className="text-white/80 text-base mb-6 font-monopoly">
         Select up to{" "}
         <span className="text-[#9b7fff] font-semibold">{AOI_JOIN_LIMIT}</span>{" "}
         areas of interest you'd like to participate in. Joining an AOI unlocks
@@ -74,7 +74,7 @@ export default function ExploreResearchAOIs({
         You can leave an AOI to join another.
       </p>
       {atLimit && (
-        <div className="text-[#c8b7ff] text-lg font-bold mb-6 bg-[#9b7fff]/10 p-4 rounded border border-[#9b7fff]/30">
+        <div className="text-[#c8b7ff] text-lg font-bold mb-6 bg-[#9b7fff]/10 p-4 rounded border border-[#9b7fff]/30 font-monopoly-bold">
           You can join up to {AOI_JOIN_LIMIT} AOIs only. Leave one to join
           another.
         </div>
@@ -88,8 +88,10 @@ export default function ExploreResearchAOIs({
               key={aoi}
               className="border-2 border-[#9b7fff] p-6 bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors rounded"
             >
-              <h3 className="text-white text-xl font-semibold mb-3">{title}</h3>
-              <p className="text-gray-400 text-sm mb-4 min-h-[60px]">
+              <h3 className="text-white text-xl font-semibold mb-3 font-monopoly-bold">
+                {title}
+              </h3>
+              <p className="text-gray-400 text-sm mb-4 min-h-[60px] font-monopoly">
                 {description}
               </p>
               <button

@@ -16,12 +16,11 @@ import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 
 const ROTATING_WEBSITES = [
-  "ocs.acmvit.in",
+  //"os.acmvit.in",
   "fast.com",
   "acmvit.in",
   "krunker.io",
   "slither.io",
-  "comick.live",
   "skrbbl.io",
   "wikipedia.org",
   "classic.minecraft.net",
@@ -36,7 +35,7 @@ const IFRAME_WHITELIST = new Set([
   "acmvit.in",
   "fast.com",
   "icpc.global",
-  "comick.live",
+  //"comick.live",
 
   // 🎮 Games & Game Sites
   "slither.io",
@@ -692,7 +691,7 @@ const Tab: React.FC<TabProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="3"
@@ -716,7 +715,7 @@ const Tab: React.FC<TabProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="3"
@@ -869,9 +868,9 @@ const Tab: React.FC<TabProps> = ({
         ) : tabData.showDomains ? (
           <div
             key={refreshKey}
-            className="w-full h-full bg-white overflow-auto hide-scrollbar relative"
+            className="w-full h-full overflow-auto hide-scrollbar relative"
           >
-            <div className="min-h-screen flex items-center justify-center">
+            <div className=" flex h-full items-center justify-center">
               <Domains />
             </div>
           </div>
@@ -930,6 +929,7 @@ const Tab: React.FC<TabProps> = ({
           )
         ) : (
           <div className="h-full">
+            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
             <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
           </div>
         )}

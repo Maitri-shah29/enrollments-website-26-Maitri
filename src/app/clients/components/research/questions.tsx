@@ -1,5 +1,6 @@
 "use client";
 import type { Prisma } from "@prisma/client";
+import Image from "next/image";
 import type React from "react";
 import {
   forwardRef,
@@ -510,10 +511,10 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
             Your responses are being evaluated
           </h2>
-          <p className="text-white text-lg">
+          <p className="text-white text-lg font-monopoly">
             Please wait while we review your submission.
           </p>
         </div>
@@ -525,10 +526,10 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
             Congratulations! 🎉
           </h2>
-          <p className="text-white text-lg">
+          <p className="text-white text-lg font-monopoly">
             You are promoted to the next round
           </p>
         </div>
@@ -540,10 +541,10 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-red-500 text-3xl font-bold mb-4">
+          <h2 className="text-red-500 text-3xl font-bold mb-4 font-monopoly-bold">
             Unfortunately, you could not pass this round
           </h2>
-          <p className="text-white text-lg">
+          <p className="text-white text-lg font-monopoly">
             Thank you for participating. Better luck next time!
           </p>
         </div>
@@ -571,10 +572,10 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
       {showConfirmDialog && (
         <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[2000]">
           <div className="bg-[#1a1a1a] border-2 border-[#7D5BED] p-8 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-[#7D5BED] text-2xl font-bold mb-4">
+            <h3 className="text-[#7D5BED] text-2xl font-bold mb-4 font-monopoly-bold">
               Confirm Submission
             </h3>
-            <p className="text-white text-lg mb-6">
+            <p className="text-white text-lg mb-6 font-monopoly">
               You won't be able to edit your responses after this. Are you sure
               you want to submit?
             </p>
@@ -600,7 +601,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
       )}
 
       <div className="shrink-0 mb-6">
-        <h1 className="text-white wrap-break-words leading-tight font-bold text-[18px]">
+        <h1 className="text-white wrap-break-words leading-tight font-bold text-[18px] font-monopoly-bold">
           Question {safeIndex + 1}: {currentQuestion?.question}
         </h1>
       </div>
@@ -618,22 +619,13 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
               aria-label="Edit"
               className="absolute right-4 top-4 z-10 text-gray-400 hover:text-white transition-colors"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                role="img"
-                aria-label="Edit icon"
-              >
-                <title>Edit</title>
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+              <Image
+                src="/images/research/question-edit-icon.svg"
+                width={20}
+                height={20}
+                alt="Edit"
+                draggable={false}
+              />
             </button>
 
             <textarea
@@ -649,6 +641,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
                 p-0
                 placeholder-gray-500
                 selection:bg-[#7D5BED]
+                font-monopoly
               "
               placeholder="Type your answer here..."
               value={currentResponse}
@@ -664,7 +657,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
               onBlur={() => setIsFocused(false)}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1 font-monopoly">
             {1500 - currentResponse.length} characters left
           </p>
         </div>
@@ -674,7 +667,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className={`text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[${buttonColor}] border-1 hover:cursor-pointer`}
+            className={`text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[${buttonColor}] border-1 hover:cursor-pointer font-monopoly-bold`}
             style={{
               opacity: canSubmit ? 1 : 0.5,
               cursor: canSubmit ? "pointer" : "not-allowed",
@@ -687,7 +680,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
               type="button"
               onClick={handleSubmitForm}
               disabled={submittingForm}
-              className="text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[#7D5BED] border-1 hover:bg-[#6a4dd4] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-white font-medium transition-all duration-200 w-45 h-10 rounded-md bg-[#7D5BED] border-1 hover:bg-[#6a4dd4] hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-monopoly-bold"
             >
               {submittingForm ? "Submitting..." : "Submit Form"}
             </button>

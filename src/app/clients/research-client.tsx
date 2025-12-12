@@ -353,7 +353,7 @@ const ResearchClient = ({
   }, []);
 
   return (
-    <div className="flex h-full w-full bg-[#1a1a1a]">
+    <div className="flex h-full w-full bg-[#1a1a1a] select-none">
       {/* Error Popup */}
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
