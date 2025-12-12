@@ -16,14 +16,14 @@ export default function Home({
   onContinue,
 }: Props) {
   return (
-    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center overflow-y-auto  [--scrollbar-thumb:#F55F4B]">
       <Image
         src="/images/design/flower.svg"
         alt="Home Design"
         width={250}
         height={250}
         draggable={false}
-        className="object-cover absolute top-20 -right-20 animate-spin-slow select-none"
+        className="object-cover absolute top-20 right-10 animate-spin-slow select-none"
       />
       <Image
         src="/images/design/disc.svg"
