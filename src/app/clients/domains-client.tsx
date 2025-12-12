@@ -24,7 +24,7 @@ const domains: Domain[] = [
     accent: "#8C3428",
     folder: "#F55F4B",
     text: "#ffffff",
-    image: "/images/domains/design.svg",
+    image: "/images/domains/design.webp",
     background: "url('/images/domains/design-bg.png')",
   },
   {
@@ -35,7 +35,7 @@ const domains: Domain[] = [
     accent: "#7E9328",
     folder: "#BBD842",
     text: "#292625",
-    image: "/images/domains/cc.svg",
+    image: "/images/domains/cc.webp",
     background: "url('/images/domains/cc-bg.png')",
   },
   {
@@ -46,7 +46,7 @@ const domains: Domain[] = [
     accent: "#0E3A60",
     folder: "#46A8FF",
     text: "#ffffff",
-    image: "/images/domains/management.svg",
+    image: "/images/domains/management.webp",
     background: "url('/images/domains/management-bg.png')",
   },
   {
@@ -57,7 +57,7 @@ const domains: Domain[] = [
     accent: "#3C2C73",
     folder: "#A98FFF",
     text: "#ffffff",
-    image: "/images/domains/research.svg",
+    image: "/images/domains/research.webp",
     background: "url('/images/domains/research-bg.png')",
   },
   {
@@ -68,7 +68,7 @@ const domains: Domain[] = [
     accent: "#7B336E",
     folder: "#FF6CD9",
     text: "#ffffff",
-    image: "/images/domains/tech.svg",
+    image: "/images/domains/tech.webp",
     background: "url('/images/domains/tech-bg.png')",
   },
 ];
