@@ -39,7 +39,6 @@ const DesignClient = ({
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
-  // Load joined AOIs from localStorage on mount
   useEffect(() => {
     const savedAOIs = localStorage.getItem("design-joined-aois");
     if (savedAOIs) {
@@ -54,7 +53,6 @@ const DesignClient = ({
     setAoisLoaded(true);
   }, []);
 
-  // Save joined AOIs to localStorage when they change
   useEffect(() => {
     if (!aoisLoaded) return;
     const aoiArray = [...joinedAOIs];
@@ -163,7 +161,7 @@ const DesignClient = ({
       />
       <div
         key={selectedPanel}
-        className="flex overflow-hidden z-10 animate-panel-transition"
+        className="flex overflow-hidden z-10 animate-panel-transition h-full"
       >
         {selectedPanel === "Home" && (
           <Home

@@ -35,6 +35,17 @@ const stickerTextBase: React.CSSProperties = {
 
 const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
+const value = Math.floor(Math.random() * 10);
+const phrases = [
+  "Xyz Says Hello!",
+  "Welcome to Xyz Browser!",
+  "Welcome to OCS'26",
+  "Gear Up for an Incredible Journey!",
+  "Your Adventure Starts Now!",
+  "Innovation Begins Here",
+  "Dream Big. Achieve Bigger.",
+];
+
 const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -73,7 +84,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
   return (
     <div className="flex justify-center items-center min-h-full w-full bg-[#080808] text-white select-none">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),rgba(0,0,0,0.25)_38%,rgba(0,0,0,0.85)_70%)]" />
       <div className="pointer-events-none absolute inset-0 flex h-full w-full">
         <Image
           src="/images/acm-mascot.png"
@@ -98,6 +109,24 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
               className="object-contain select-none"
             />
           </div>
+          {/* <div className="flex w-full min-w-60 max-w-2xl items-center justify-self-center rounded-2xl bg-white/90 px-6 py-3 text-neutral-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
+            <input
+              className="w-full text-lg font-medium outline-none placeholder:text-neutral-400 select-text"
+              placeholder="Search"
+              value={query}
+              onChange={onQueryChange}
+              onKeyDown={onQueryKeyDown}
+            />
+            <Search className="text-[#525252] p-0.5" />
+          </div> */}
+
+          <div className="w-full text-center text-4xl font-poppins pb-10">
+            {phrases[value]}
+          </div>
+          <div
+            className="hidden h-16 w-44 justify-self-end sm:block sm:h-20 sm:w-56"
+            aria-hidden="true"
+          />
         </div>
 
         <div className="grid gap-5 lg:auto-rows-[280px] grid-cols-12 h-full">
@@ -163,7 +192,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
           </div>
 
           <section className="flex w-full h-full flex-col gap-2 lg:col-span-3 lg:col-start-1 lg:row-start-2">
-            <div className="relative h-full w-full items-center justify-center  col-span-12 flex flex-col overflow-hidden rounded-xl bg-[#292625]">
+            <div className="relative h-39 w-full items-center justify-center  col-span-12 flex flex-col overflow-hidden rounded-xl bg-[#292625]">
               <iframe
                 data-testid="embed-iframe"
                 title="Spotify Player"
@@ -173,17 +202,17 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 className="absolute inset-0 w-full h-full rounded-xl"
               ></iframe>
             </div>
-            <div className="relative h-30 w-full flex flex-col items-center justify-center rounded-xl bg-[#292625]">
-              {/* <h1
-                className="font-poppins text-2xl text-center tracking-wider select-none"
-                style={{
-                  color: "transparent",
-                  WebkitTextStroke: "1px white",
-                  textShadow: "0 8px 24px rgba(0,0,0,0.45)",
-                }}
+            <div className="relative h-30 w-full gap-2 flex flex-col items-center justify-center rounded-xl bg-[#292625]">
+              <h1
+                className="font-poppins text-3xl text-center tracking-wider select-none"
+                // style={{
+                //   color: "transparent",
+                //   WebkitTextStroke: "1px white",
+                //   textShadow: "0 8px 24px rgba(0,0,0,0.45)",
+                // }}
               >
                 Games
-              </h1> */}
+              </h1>
 
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
                 <Image
@@ -247,7 +276,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
           </section>
 
           <div
-            onClick={goToDomains}
+            onDoubleClick={goToDomains}
             className="relative col-span-6 overflow-hidden rounded-3xl bg-[#292625] font-poppins shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
           >
             <Gravity
@@ -309,7 +338,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 onClick={goToDomains}
               >
                 <div
-                  className="select-none text-[30px] font-black leading-[1] tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
+                  className="select-none text-[30px] font-black leading-none tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
                   style={stickerTextBase}
                 >
                   Research
@@ -324,7 +353,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 onClick={goToDomains}
               >
                 <div
-                  className="select-none text-[34px] font-black leading-[1] tracking-tight text-[#4f7d1a]"
+                  className="select-none text-[34px] font-black leading-none tracking-tight text-[#4f7d1a]"
                   style={stickerTextBase}
                 >
                   CC
@@ -332,7 +361,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
               </MatterBody>
             </Gravity>
 
-            <div className="pointer-events-none relative z-10 flex min-h-[360px] w-full flex-col items-center justify-center gap-2 px-6 text-center">
+            <div className="pointer-events-none relative z-10 flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
               <span className="text-[48px] font-black leading-tight text-white drop-shadow-[0_18px_36px_rgba(0,0,0,0.45)] sm:text-[54px]">
                 Domains
               </span>

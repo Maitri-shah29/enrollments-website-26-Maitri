@@ -65,13 +65,11 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
                   alt=""
                   width={120}
                   height={120}
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 pointer-events-none"
+                  className="absolute scale-[105%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 pointer-events-none"
                 />
               )}
 
-              <span className={selected === item ? "font-bold" : ""}>
-                {item}
-              </span>
+              <span className={selected === item ? "" : ""}>{item}</span>
             </button>
           );
         })}
