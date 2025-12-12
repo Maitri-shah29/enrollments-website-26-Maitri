@@ -1171,14 +1171,36 @@ const Events = () => {
     },
   ];
   return (
-    <div className="bg-gradient-to-br from-black via-gray-950 to-black w-full min-h-screen text-white font-doppio overflow-hidden hide-scrollbar p-20 relative">
-      {/* Animated background elements */}
+    <div
+      className="bg-gradient-to-br from-black via-gray-950 to-black w-full h-screen text-white font-doppio overflow-y-scroll p-20 relative"
+      style={{
+        scrollbarWidth: "thin",
+        scrollbarColor: "#6b7280 #1f2937",
+      }}
+    >
+      <style jsx global>{`
+        .bg-gradient-to-br::-webkit-scrollbar {
+          width: 14px;
+        }
+        .bg-gradient-to-br::-webkit-scrollbar-track {
+          background: #1f2937;
+        }
+        .bg-gradient-to-br::-webkit-scrollbar-thumb {
+          background: #6b7280;
+          border-radius: 7px;
+          border: 2px solid #1f2937;
+        }
+        .bg-gradient-to-br::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+      `}</style>
+      {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-10 left-0 w-[600px] h-[600px] bg-emerald-500/30 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute top-1/3 right-0 w-[550px] h-[550px] bg-cyan-500/30 rounded-full blur-[120px] animate-pulse [animation-delay:1s]" />
         <div className="absolute bottom-20 left-1/4 w-[500px] h-[500px] bg-purple-500/25 rounded-full blur-[120px] animate-pulse [animation-delay:0.5s]" />
         <div className="absolute top-2/3 left-1/2 w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[100px] animate-pulse [animation-delay:1.5s]" />
-        {/* Subtle grid overlay */}
+        {/* grid overlay */}
         <div
           className="absolute inset-0 opacity-[0.06]"
           style={{

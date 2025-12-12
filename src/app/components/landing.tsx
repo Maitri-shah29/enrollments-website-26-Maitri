@@ -1,5 +1,6 @@
 "use client";
 import { type DragEvent, useEffect, useState } from "react";
+import FullscreenToggle from "./fullscreen-toggle";
 import Tab, { type TabData } from "./landing/tab";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
@@ -403,6 +404,9 @@ const Landing: React.FC<{
           >
             <span className="relative z-10 text-xl leading-none">+</span>
           </button>
+          <div className="ml-auto mb-[6px]">
+            <FullscreenToggle />
+          </div>
         </div>
       </div>
 
