@@ -169,8 +169,8 @@ export function NokiaSnakeGame() {
     if (isGameOver || isPaused || !isStarted) return;
 
     const gameLoop = setInterval(() => {
-      if (directionQueueRef.current.length > 0) {
-        const nextDirection = directionQueueRef.current.shift()!;
+      const nextDirection = directionQueueRef.current.shift();
+      if (nextDirection) {
         directionRef.current = nextDirection;
         setDirection(nextDirection);
       }
