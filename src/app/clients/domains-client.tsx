@@ -20,18 +20,18 @@ const domains: Domain[] = [
     slug: "design",
     title: "Design",
     summary:
-      "Every ACM VIT initiative benefits from the creativity and clarity provided by the Design Domain. Designers create powerful experiences that define the chapter's visual identity, from UI/UX and illustrations to motion graphics and 3D visuals.",
+      "Craft beautiful digital experiences through design. From UI/UX to motion graphics, illustrations to 3D design, our designers bring creative visions to life with stunning visual storytelling.",
     accent: "#8C3428",
     folder: "#F55F4B",
     text: "#ffffff",
-    image: "/images/domains/design.svg",
+    image: "/images/domains/design.webp",
     background: "url('/images/domains/design-bg.png')",
   },
   {
     slug: "cc",
     title: "Competitive Coding",
     summary:
-      "The Competitive Coding Domain improves algorithmic thinking and problem-solving skills. Through competitions, hackathons, and peer learning, members hone their technical and analytical skills by practicing data structures, algorithms, and logic.",
+      "Master algorithmic thinking and problem-solving through rigorous competitive coding. Our members tackle complex data structures and algorithms while building speed and precision in high-stakes programming contests.",
     accent: "#7E9328",
     folder: "#BBD842",
     text: "#292625",
@@ -42,39 +42,40 @@ const domains: Domain[] = [
     slug: "management",
     title: "Management",
     summary:
-      "ACM VIT's events and initiatives are planned, coordinated, and carried out by the Management Domain. In order to guarantee that every project proceeds smoothly from concept to impact, it places a strong emphasis on organisation, communication, and strategy.",
+      "Transform big ideas into unforgettable events. We handle everything from brainstorming and sponsorships to logistics and content creation. We're the extroverts ensuring every event is smooth, well-organized, and unforgettable.",
     accent: "#0E3A60",
     folder: "#46A8FF",
     text: "#ffffff",
-    image: "/images/domains/management.svg",
+    image: "/images/domains/management.webp",
     background: "url('/images/domains/management-bg.png')",
   },
   {
     slug: "research",
     title: "Research",
     summary:
-      "The Research Domain explores cutting-edge technologies and creative approaches to problem-solving. Members work on projects that link research with practical applications, exploring fields like AI/ML, IoT, blockchain, and quantum computing.",
+      "Foster curiosity and innovation across cutting-edge fields. From AI and Blockchain to Quantum Computing and Bioinformatics, we bridge theory and real-world application through collaboration and continuous learning.",
     accent: "#3C2C73",
     folder: "#A98FFF",
     text: "#ffffff",
-    image: "/images/domains/research.svg",
+    image: "/images/domains/research.webp",
     background: "url('/images/domains/research-bg.png')",
   },
   {
     slug: "tech",
     title: "Tech",
     summary:
-      "ACM VIT's engineering core, the Tech Domain, is devoted to using code to create, test, and innovate. Members gain practical experience while bringing innovative ideas to life by working on real-world projects related to web, app, and AI development.",
+      "Build the future with cutting-edge technology. From web and app development to DevOps and open-source contribution, our members master full-stack solutions and modern development practices.",
     accent: "#7B336E",
     folder: "#FF6CD9",
     text: "#ffffff",
-    image: "/images/domains/tech.svg",
+    image: "/images/domains/tech.webp",
     background: "url('/images/domains/tech-bg.png')",
   },
 ];
 
 const Domains = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -87,10 +88,14 @@ const Domains = () => {
   }, []);
 
   const goNext = useCallback(() => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
     setActiveIndex((prev) => (prev + 1) % domains.length);
   }, []);
 
   const goPrev = useCallback(() => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
   }, []);
 

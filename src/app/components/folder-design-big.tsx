@@ -17,7 +17,7 @@ const FolderDesignBig = ({
     <button
       type="button"
       tabIndex={0}
-      className="fixed inset-0 z-50 flex items-start justify-center p-6 md:p-8 pt-32 md:pt-36 lg:pt-44"
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-8"
       onClick={onClose} // use onClick, NOT onSubmit
       onKeyDown={(e) => {
         if (e.key === "Escape" || e.key === "Enter") {
@@ -37,16 +37,29 @@ const FolderDesignBig = ({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative max-w-2xl w-[92%]"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
+        className="relative max-w-2xl w-[92%] pointer-events-none"
       >
         {/* Background Folder Image */}
-        <div className="relative w-full h-[460px] md:h-[520px] flex items-center justify-center">
+        <div className="relative w-full h-[400px] md:h-[400px] flex items-center justify-center translate-y-16">
+          {/* Background Folder (behind, slightly above) */}
           <svg
             viewBox="0 0 300 180"
             xmlns="http://www.w3.org/2000/svg"
-            className="absolute inset-0 h-full w-full"
+            className="absolute inset-0 h-full w-full -translate-y-[67px]"
+          >
+            <title>Folder Background</title>
+            <path
+              d="M 25 0 L 180 0 C 195 0 200 35 220 35 L 275 35 C 288.8 35 300 46.2 300 60 L 300 155 C 300 168.8 288.8 180 275 180 L 25 180 C 11.2 180 0 168.8 0 155 L 0 25 C 0 11.2 11.2 0 25 0 Z"
+              fill={color}
+              opacity={0.6}
+            />
+          </svg>
+          {/* Main Folder */}
+          <svg
+            viewBox="0 0 300 180"
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute inset-0 h-full w-full pointer-events-auto cursor-default"
+            onClick={(e) => e.stopPropagation()}
           >
             <title>Folder</title>
             <path
@@ -54,7 +67,10 @@ const FolderDesignBig = ({
               fill={color}
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-16 py-10 md:py-12">
+          <div
+            className="absolute inset-0 flex flex-col justify-center px-6 md:px-8 py-6 md:py-8 pointer-events-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Title */}
             <h2 className="text-white font-bold text-4xl md:text-5xl mb-4 md:mb-6 drop-shadow-lg">
               {title}
