@@ -57,7 +57,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       next:
-        specifier: ^16.0.7
+        specifier: ^16.0.10
         version: 16.0.10(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       poly-decomp:
         specifier: ^0.3.0
