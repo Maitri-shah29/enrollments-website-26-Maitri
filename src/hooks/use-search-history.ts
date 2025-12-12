@@ -31,7 +31,7 @@ export const useSearchHistory = () => {
     setHistory((prev) => {
       // Remove duplicates
       const filtered = prev.filter(
-        (item) => item.toLowerCase() !== trimmedTerm.toLowerCase()
+        (item) => item.toLowerCase() !== trimmedTerm.toLowerCase(),
       );
       // Add new term to the beginning
       const newHistory = [trimmedTerm, ...filtered].slice(0, MAX_HISTORY);

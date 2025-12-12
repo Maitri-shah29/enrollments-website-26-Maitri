@@ -1,19 +1,19 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { logSearch } from "@/app/actions/log-search";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import PintooRun from "@/app/clients/PintooRun-client";
 import SnakeClient from "@/app/clients/snake-client";
 import { Loader } from "@/components/loader";
+import { useSearchHistory } from "@/hooks/use-search-history";
 import BrickGame404 from "../brick-game-404";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
-import { useSearchHistory } from "@/hooks/use-search-history";
-import { logSearch } from "@/app/actions/log-search";
 
 const ROTATING_WEBSITES = [
   "ocs.acmvit.in",
@@ -182,7 +182,7 @@ const isWhitelisted = (url: string) => {
 
 const useRotatingPlaceholder = (
   websites: string[],
-  interval: number = 1000
+  interval: number = 1000,
 ) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -324,10 +324,10 @@ const Tab: React.FC<TabProps> = ({
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [homeInput, setHomeInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
@@ -398,7 +398,7 @@ const Tab: React.FC<TabProps> = ({
     }
 
     const currentUrl =
-      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
+      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
 
     requestFullscreen();
 
@@ -554,7 +554,7 @@ const Tab: React.FC<TabProps> = ({
 
   const goHome = () => {
     const currentUrl =
-      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
+      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
     if (currentUrl === "") return;
 
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
@@ -649,7 +649,7 @@ const Tab: React.FC<TabProps> = ({
 
     // Also reload iframe if present
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]'
+      'iframe[title="Browser Tab"]',
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
@@ -770,7 +770,7 @@ const Tab: React.FC<TabProps> = ({
                 <div className="absolute top-full left-0 right-0 mt-2 bg-[#252525] rounded-lg shadow-xl border border-white/10 overflow-hidden z-[100]">
                   {history
                     .filter((item) =>
-                      item.toLowerCase().includes(navInput.toLowerCase())
+                      item.toLowerCase().includes(navInput.toLowerCase()),
                     )
                     .map((item) => (
                       <button
