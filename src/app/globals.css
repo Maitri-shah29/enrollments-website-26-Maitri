@@ -119,6 +119,22 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "MonopolyBold";
+  src: url("/fonts/Monopoly Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "MonopolyRegular";
+  src: url("/fonts/Monopoly Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-poppins {
   font-family: "PoppinsBlack", monospace;
 }
@@ -143,6 +159,14 @@
 
 .font-doppio {
   font-family: "DoppioOne", monospace;
+}
+
+.font-monopoly-bold {
+  font-family: "MonopolyBold", monospace;
+}
+
+.font-monopoly {
+  font-family: "MonopolyRegular", monospace;
 }
 
 /* Container for the checkbox and text */
