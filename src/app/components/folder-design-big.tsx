@@ -17,7 +17,7 @@ const FolderDesignBig = ({
     <button
       type="button"
       tabIndex={0}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center p-6 md:p-8 pt-32 md:pt-36 lg:pt-44"
       onClick={onClose} // use onClick, NOT onSubmit
       onKeyDown={(e) => {
         if (e.key === "Escape" || e.key === "Enter") {
@@ -26,25 +26,27 @@ const FolderDesignBig = ({
       }}
     >
       <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0px, transparent 104px, black 114px, black 100%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0px, transparent 104px, black 114px, black 100%)",
+        }}
+      />
+      <div
         role="dialog"
         aria-modal="true"
-        className="relative max-w-3xl w-full"
+        className="relative max-w-2xl w-[92%]"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
         {/* Background Folder Image */}
-        <div className="relative w-full h-[560px] flex items-center justify-center">
+        <div className="relative w-full h-[460px] md:h-[520px] flex items-center justify-center">
           <svg
-            width="1200"
-            height="560"
             viewBox="0 0 300 180"
             xmlns="http://www.w3.org/2000/svg"
-            className="absolute"
-            style={{
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
+            className="absolute inset-0 h-full w-full"
           >
             <title>Folder</title>
             <path
@@ -52,9 +54,9 @@ const FolderDesignBig = ({
               fill={color}
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col justify-center px-16 py-12">
+          <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-16 py-10 md:py-12">
             {/* Title */}
-            <h2 className="text-white font-bold text-5xl mb-6 drop-shadow-lg">
+            <h2 className="text-white font-bold text-4xl md:text-5xl mb-4 md:mb-6 drop-shadow-lg">
               {title}
             </h2>
 
@@ -62,7 +64,7 @@ const FolderDesignBig = ({
             <div className="w-full h-[2px] bg-white/60 mb-6" />
 
             {/* Description */}
-            <p className="text-white text-xl leading-relaxed drop-shadow-md">
+            <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md">
               {description}
             </p>
           </div>
