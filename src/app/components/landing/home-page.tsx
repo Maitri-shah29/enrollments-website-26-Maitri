@@ -37,18 +37,8 @@ const stickerTextBase: React.CSSProperties = {
 
 const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
-const value = Math.floor(Math.random() * 7);
-const phrases = [
-  "Welcome to OCS'26",
-  "Gear Up for an Incredible Journey!",
-  "Your Adventure Starts Now!",
-  "Innovation Begins Here",
-  "Dream Big. Achieve Bigger.",
-  "ACM-VIT Says Hello!",
-  "Welcome to ACM-VIT's Browser!",
-  "Welcome to OCS'26!",
-  "Because Technology Matters",
-];
+const value = 0;
+const phrases = ["Because Technology Matters."];
 
 const PhotoPanel: React.FC = memo(() => {
   const photosRef = useRef<string[]>([]);
@@ -145,7 +135,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
       </div>
 
       <div className="relative mx-auto flex h-full w-full max-w-[90vw] md:max-w-[92vw] xl:max-w-[94vw] 2xl:max-w-[96vw] flex-col gap-8 px-4 pt-8 sm:px-6 lg:px-10 2xl:px-12">
-        <div className="grid w-full gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+        <div
+          className="grid w-full gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5"
+          onClick={handleKeyword("acmvit.in")}
+        >
           <div className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56">
             <Image
               src="/images/acmlogo.svg"
@@ -168,10 +161,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
         </div>
 
         <div className="grid gap-4 2xl:gap-5 auto-rows-[22vh] sm:auto-rows-[24vh] lg:auto-rows-[26vh] xl:auto-rows-[28vh] 2xl:auto-rows-[30vh] grid-cols-12 h-full">
-          <div
-            className="col-span-6 relative"
-            onClick={handleKeyword("acmvit.in")}
-          >
+          <div className="col-span-6 relative" onClick={handleKeyword("about")}>
             <div className="w-full h-full bg-[#292625] rounded-xl flex items-center text-5xl font-poppins pl-10">
               <h1>About ACM</h1>
               <Image

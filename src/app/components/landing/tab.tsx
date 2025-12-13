@@ -2,6 +2,7 @@
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { logSearch } from "@/app/actions/log-search";
+import About from "@/app/clients/about-acm-client";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
 import PintooRun from "@/app/clients/PintooRun-client";
@@ -207,6 +208,7 @@ const INTERNAL_KEYWORDS = new Set([
   "domains",
   "pintoorun",
   "snake",
+  "about",
 ]);
 
 interface HomePageNavbarProps {
@@ -224,6 +226,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
     domains: "Domains",
     pintoorun: "PintooRun",
     snake: "SnakeGame",
+    about: "About",
   };
 
   return (
@@ -272,6 +275,7 @@ export interface TabData {
   pendingUrl?: string;
   showPintooRun: boolean;
   showSnake: boolean;
+  showAbout: boolean;
 }
 
 interface TabProps {
@@ -428,6 +432,7 @@ const Tab: React.FC<TabProps> = ({
         showDomains: trimmed === "domains",
         showPintooRun: trimmed === "pintoorun",
         showSnake: trimmed === "snake",
+        showAbout: trimmed === "about",
         history: newHistory,
         pointer: newHistory.length - 1,
         title:
@@ -471,6 +476,7 @@ const Tab: React.FC<TabProps> = ({
       showEvents: false,
       showDomains: false,
       showSnake: false,
+      showAbout: false,
     });
 
     if (!isWhitelisted(formatted)) {
@@ -526,6 +532,7 @@ const Tab: React.FC<TabProps> = ({
           showResearch: false,
           showPintooRun: false,
           showSnake: false,
+          showAbout: false,
         });
         setNavInput("");
         setHomeInput("");
@@ -546,6 +553,7 @@ const Tab: React.FC<TabProps> = ({
         showDomains: v === "domains",
         showSnake: v === "snake",
         showPintooRun: v === "pintoorun",
+        showAbout: v === "about",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -579,6 +587,7 @@ const Tab: React.FC<TabProps> = ({
       showResearch: false,
       showPintooRun: false,
       showSnake: false,
+      showAbout: false,
     });
 
     setNavInput("");
@@ -607,6 +616,7 @@ const Tab: React.FC<TabProps> = ({
           showResearch: false,
           showPintooRun: false,
           showSnake: false,
+          showAbout: false,
         });
         setNavInput("");
         setHomeInput("");
@@ -627,6 +637,7 @@ const Tab: React.FC<TabProps> = ({
         showEvents: v === "events",
         showPintooRun: v === "pintoorun",
         showSnake: v === "snake",
+        showAbout: v === "about",
       });
       setNavInput(v);
       setHomeInput(v);
@@ -634,20 +645,10 @@ const Tab: React.FC<TabProps> = ({
   };
 
   const handleRefresh = () => {
-    if (
-      tabData.showManagement ||
-      tabData.showCc ||
-      tabData.showTech ||
-      tabData.showDesign ||
-      tabData.showResearch
-    ) {
-      return;
-    }
-
     // Increment refresh key to force re-render of client components
     setRefreshKey((prev) => prev + 1);
 
-    // Also reload iframe if present
+    // Also reload iframe if present (for non-client components)
     const iframe = document.querySelector(
       'iframe[title="Browser Tab"]',
     ) as HTMLIFrameElement;
@@ -944,6 +945,10 @@ const Tab: React.FC<TabProps> = ({
         ) : tabData.showSnake ? (
           <div className="w-full h-full bg-[#1A1A1A] overflow-auto relative">
             <SnakeClient key={refreshKey} />
+          </div>
+        ) : tabData.showAbout ? (
+          <div className="w-full h-full bg-black overflow-auto relative">
+            <About key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
           iframeError || !isWhitelisted(activePageData.url) ? (
