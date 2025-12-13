@@ -8,14 +8,23 @@ function normalizePath(pathname: string) {
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 }
 
-const PUBLIC_ASSET_PREFIX = normalizePrefix(
-  process.env.NEXT_PUBLIC_PUBLIC_ASSET_PREFIX ||
-    process.env.CDN_ASSET_PREFIX ||
-    "https://assets.acmvit.in/ocs",
-);
+const DEFAULT_PUBLIC_ASSET_PREFIX = "https://assets.acmvit.in/ocs";
+
+function getPublicAssetPrefix() {
+  const clientPrefix = process.env.NEXT_PUBLIC_PUBLIC_ASSET_PREFIX;
+  if (clientPrefix) return normalizePrefix(clientPrefix);
+
+  if (typeof window === "undefined") {
+    const serverPrefix = process.env.CDN_ASSET_PREFIX;
+    if (serverPrefix) return normalizePrefix(serverPrefix);
+  }
+
+  return normalizePrefix(DEFAULT_PUBLIC_ASSET_PREFIX);
+}
 
 export function publicAssetUrl(pathname: string): string {
   const path = normalizePath(pathname);
-  if (!PUBLIC_ASSET_PREFIX) return path;
-  return `${PUBLIC_ASSET_PREFIX}${path}`;
+  const prefix = getPublicAssetPrefix();
+  if (!prefix) return path;
+  return `${prefix}${path}`;
 }
