@@ -1,7 +1,9 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
 
 export default async function submitTask(
@@ -22,7 +24,7 @@ export default async function submitTask(
       select: {
         userId: true,
         status: true,
-        round: { select: { active: true, hidden: true } },
+        round: { select: { active: true, hidden: true, domain: true } },
       },
     });
     if (!ru) throw new Error("Round User does not exist");
@@ -60,6 +62,11 @@ export default async function submitTask(
           submittedAt: new Date(),
         },
       });
+
+      updateTag(cacheTags.tasks(userId));
+      if (ru.round.domain) {
+        updateTag(cacheTags.roundUser(userId, ru.round.domain));
+      }
       return updatedTask;
     } else {
       const newTask = await prisma.taskSubmission.create({
@@ -68,6 +75,11 @@ export default async function submitTask(
           roundUserId: roundUserId,
         },
       });
+
+      updateTag(cacheTags.tasks(userId));
+      if (ru.round.domain) {
+        updateTag(cacheTags.roundUser(userId, ru.round.domain));
+      }
       return newTask;
     }
   } catch (error) {

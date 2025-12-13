@@ -1,5 +1,7 @@
 "use server";
 
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
 import type { RuleType, ValidationRuleInput } from "@/lib/validation";
 
@@ -38,7 +40,28 @@ function mapRule(r: {
 export default async function getRoundQuestions(roundId: string) {
   if (!roundId) return { questions: [] as QuestionPayload[] };
 
-  const questions = await prisma.question.findMany({
+  const questions = await getRoundQuestionsCached(roundId);
+
+  const payload: QuestionPayload[] = questions.map((q) => ({
+    id: q.id,
+    serial: q.serial,
+    question: q.question,
+    helpText: q.helpText,
+    varName: q.varName,
+    type: q.type,
+    options: q.options,
+    validators: q.validators.map(mapRule),
+  }));
+
+  return { questions: payload };
+}
+
+async function getRoundQuestionsCached(roundId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(cacheTags.roundQuestions(roundId));
+
+  return prisma.question.findMany({
     where: { roundId },
     orderBy: { serial: "asc" },
     select: {
@@ -61,17 +84,4 @@ export default async function getRoundQuestions(roundId: string) {
       },
     },
   });
-
-  const payload: QuestionPayload[] = questions.map((q) => ({
-    id: q.id,
-    serial: q.serial,
-    question: q.question,
-    helpText: q.helpText,
-    varName: q.varName,
-    type: q.type,
-    options: q.options,
-    validators: q.validators.map(mapRule),
-  }));
-
-  return { questions: payload };
 }

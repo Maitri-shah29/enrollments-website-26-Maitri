@@ -1,6 +1,8 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
+import { cacheTags } from "@/lib/cache-tags";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 
@@ -25,7 +27,7 @@ export default async function createFormSubmission(roundId: string) {
       select: {
         id: true,
         status: true,
-        round: { select: { active: true, hidden: true } },
+        round: { select: { active: true, hidden: true, domain: true } },
       },
     });
 
@@ -60,6 +62,13 @@ export default async function createFormSubmission(roundId: string) {
         valid: true,
       },
     });
+
+    updateTag(cacheTags.formSubmission(roundDetail.id));
+    if (roundDetail.round.domain) {
+      updateTag(
+        cacheTags.roundUser(user.session.userId, roundDetail.round.domain),
+      );
+    }
 
     return { success: true as const, formSubmission: newForm };
   } catch (e) {
