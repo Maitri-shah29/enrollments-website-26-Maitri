@@ -118,10 +118,8 @@ const Events = () => {
         <Image src="inspiher.svg" alt="Insipher" width={120} height={120} />
       ),
       description:
-        "The InspiHER Podcast ignites ambition through connection and empowerment. Featuring remarkable women leaders globally, we amplify diverse stories of resilience, innovation, and the unwavering spirit that fuels change.",
-      color: "#E557A1",
-      backColor: "#7C355A",
-      glowOpacity: "opacity-100",
+        "The InspiHER Podcast series has always been about more than just conversations; it’s about connection, empowerment, and igniting ambition. This year, we’re raising the bar. With an expanded lineup of remarkable women leaders from across the globe, we aim to amplify diverse voices and share stories that matter — stories of resilience, innovation, leadership, and the unwavering spirit that fuels change.",
+      color: "#FF6B6B",
     },
     {
       id: 8,
@@ -132,7 +130,7 @@ const Events = () => {
         <Image src="Frame 8.svg" alt="The Tiny Hack" width={120} height={120} />
       ),
       description:
-        "The Tiny Hack (2023) was a 10-hour sprint for rapid creative prototyping, Aimed at developing technical solutions for real-world problems, it fostered collaboration across diverse academic and professional backgrounds.",
+        "The Tiny Hack was a 10-hour hackathon that took place in 2023 and was intended for people who were keen to create and construct creative projects quickly. The event's main goal was to use technology to develop modest but significant solutions to real-world issues. In order to realise their ideas, participants worked closely with like-minded people from a variety of academic and professional backgrounds.",
       color: "#F3D055",
     },
     {
@@ -149,7 +147,7 @@ const Events = () => {
         />
       ),
       description:
-        "A specialized workshop on cryptography and cybersecurity since Sept 2022. Participants master advanced skills in cybersecurity and cryptography through hands-on sessions and expert interactions.",
+        "Codex Cryptum began as a specialised workshop in September 2022 with the goal of expanding participants' knowledge of cryptography and cybersecurity. Attendees can delve into advanced topics and gain practical insights through the event's hands-on sessions and interactions with industry experts. Participants can broaden their knowledge, hone their skills, and have insightful conversations with colleagues and subject matter experts through this workshop.",
       color: "#D96700",
     },
   ];
