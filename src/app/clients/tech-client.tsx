@@ -401,7 +401,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
               Unsaved Changes
             </h3>
             <p className="text-white text-lg mb-6">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
