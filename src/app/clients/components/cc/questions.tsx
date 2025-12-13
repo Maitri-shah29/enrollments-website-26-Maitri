@@ -551,7 +551,7 @@ const Questions = ({
                     body={activeQuestion.question}
                   />
                 </div>
-                <div className="flex-1 min-h-[300px] sm:min-h-[420px]">
+                <div className="min-h-[200px] sm:min-h-[280px] max-h-[50vh] flex-1">
                   <AnswerBox
                     key={activeQuestion.id}
                     subject="Answer"

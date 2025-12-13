@@ -1,5 +1,7 @@
 "use server";
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
+import { cacheTags } from "@/lib/cache-tags";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 export default async function updateResponse(
@@ -30,7 +32,7 @@ export default async function updateResponse(
               select: {
                 userId: true,
                 status: true,
-                round: { select: { active: true, hidden: true } },
+                round: { select: { active: true, hidden: true, domain: true } },
               },
             },
           },
@@ -63,6 +65,14 @@ export default async function updateResponse(
         response: text,
       },
     });
+
+    updateTag(cacheTags.responses(formId));
+    updateTag(
+      cacheTags.questionResponse(user.session.userId, formId, questionId),
+    );
+    if (owner.round.domain) {
+      updateTag(cacheTags.roundUser(user.session.userId, owner.round.domain));
+    }
     return updateResponse;
   } catch (e) {
     console.error("Error: ", e);
