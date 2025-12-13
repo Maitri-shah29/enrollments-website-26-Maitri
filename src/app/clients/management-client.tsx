@@ -492,7 +492,7 @@ export default function Management({
       )}
       {notification && (
         <div
-          className={`fixed top-8 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
+          className={`fixed top-35 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
             notificationType === "success"
               ? "bg-green-600 border-green-500"
               : "bg-red-600 border-red-500"
@@ -538,7 +538,7 @@ export default function Management({
               Unsaved Changes
             </h3>
             <p className="text-gray-700 text-lg mb-6">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -555,9 +555,9 @@ export default function Management({
               <button
                 onClick={() => {
                   if (activeIndex != null) {
-                    setIsProceeding(false);
+                    setIsProceeding(true);
                     onSubmitAnswer(questions[activeIndex]).then(() => {
-                      setIsProceeding(true);
+                      setIsProceeding(false);
                       setShowUnsavedDialog(false);
                       if (pendingBackNavigation) {
                         setActiveIndex(null);

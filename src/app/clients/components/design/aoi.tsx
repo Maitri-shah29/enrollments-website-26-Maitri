@@ -21,35 +21,35 @@ const AOI_DATA: {
     title: "UI/UX Design",
     banner: "/images/design/aoi_banners/uiux_banner.svg",
     description:
-      "Good design shouldn’t make you think twice; it should just feel right. From quick sketches to full prototypes, every button and layout is made to look great and work even better. The goal is simple: smooth, easy, and satisfying. Our motto? Design that looks good and feels natural.",
+      "Good design shouldn’t make you think twice; it should just feel right. Every button and layout is made to look great and work even better. Our motto emphasises on design that looks good and feels natural.",
   },
   {
     aoi: "videoediting",
     title: "Video Editing",
     banner: "/images/design/aoi_banners/videoediting_banner.svg",
     description:
-      "Every clip has a story, it just needs the right cuts. Whether it’s a hype reel, event edit, or promo, we blend timing, music, and mood to make everything flow perfectly. If it makes you smile, rewind, or share it twice, we’ve done our job. Great editing isn’t just seen, it’s felt.",
+      "Every clip has a story, it just needs the right cuts. Whether it’s a hype reel, event edit or promo, we blend timing, music and tone to make sure that everything flows perfectly.c",
   },
   {
     aoi: "illustrations",
     title: "Illustrations",
     banner: "/images/design/aoi_banners/illustrations_banner.svg",
     description:
-      "Sometimes words just aren’t enough, and that’s where art steps in. From quick doodles to detailed digital pieces, illustrations add heart and style to every project. Cute, clever, or completely wild, we love bringing ideas to life in every form.",
+      "Sometimes words just aren’t enough, and that’s where art steps in. Quick doodles, detailed digital pieces and thus illustrations add heart and style to every project. We love bringing ideas to life in every form.",
   },
   {
     aoi: "motiongraphics",
     title: "Motion Graphics",
     banner: "/images/design/aoi_banners/motiongraphics_banner.svg",
     description:
-      'Static designs are cool, but motion brings them to life. We love adding movement, bounce, and personality to visuals, turning simple ideas into something that instantly grabs attention. If it makes you say "whoa," we know it worked.',
+      "Static designs are cool, but motion brings them to life. We love adding movement, bounce and personality to visuals, turning simple ideas into something that instantly grabs attention.",
   },
   {
     aoi: "3d",
     title: "3D Design",
     banner: "/images/design/aoi_banners/3d-banner-fixed.svg",
     description:
-      "Think imagination, but in HD. From dreamy concepts to jaw-dropping renders, we use 3D to create things that don’t even exist yet and make them look real enough to touch. It’s designed with extra dimensions, where creativity meets realism.",
+      "We transform raw ideas into lifelike worlds with Blender in order to turn imagination into immersive 3D experiences. Whether it’s modelling, animation, lighting or simulations, every project compliments technical mastery. ",
   },
 ];
 

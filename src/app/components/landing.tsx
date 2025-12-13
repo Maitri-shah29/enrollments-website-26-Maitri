@@ -153,6 +153,38 @@ const Landing: React.FC<{
     }
   }, [activeTabId]);
 
+  // Dynamic Favicon Logic
+  useEffect(() => {
+    const activeTab = tabs.find((tab) => tab.id === activeTabId);
+    if (!activeTab) return;
+
+    let currentUrl = "";
+    if (activeTab.pointer >= 0 && activeTab.history[activeTab.pointer]) {
+      currentUrl = activeTab.history[activeTab.pointer].url.toLowerCase();
+    }
+
+    const faviconMapping: Record<string, string> = {
+      cc: "/cc.png",
+      tech: "/tech.png",
+      design: "/design.png",
+      management: "/mgmt.png",
+      research: "/research.png",
+    };
+
+    const newFavicon = faviconMapping[currentUrl] || "/acm-logo.png";
+
+    const link =
+      (document.querySelector("link[rel*='icon']") as HTMLLinkElement) ||
+      document.createElement("link");
+    link.type = "image/png";
+    link.rel = "icon";
+    link.href = newFavicon;
+
+    if (!document.querySelector("link[rel*='icon']")) {
+      document.head.appendChild(link);
+    }
+  }, [activeTabId, tabs]);
+
   // Show animation only on true first load (first visit in this browser session)
   // null = loading (checking localStorage), true = show animation, false = skip animation
   const [showAnimation, setShowAnimation] = useState<boolean | null>(null);
