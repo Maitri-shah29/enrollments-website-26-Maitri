@@ -28,7 +28,7 @@ const AOI_DATA: {
     title: "Video Editing",
     banner: "/images/design/aoi_banners/videoediting_banner.svg",
     description:
-      "Every clip has a story, it just needs the right cuts. Whether it’s a hype reel, event edit or promo, we blend timing, music and tone to make sure that everything flows perfectly.c",
+      "Every clip has a story, it just needs the right cuts. Whether it’s a hype reel, event edit or promo, we blend timing, music and tone to make sure that everything flows perfectly.",
   },
   {
     aoi: "illustrations",
