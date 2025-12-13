@@ -20,7 +20,7 @@ const domains: Domain[] = [
     slug: "design",
     title: "Design",
     summary:
-      "Craft beautiful digital experiences through design. From UI/UX to motion graphics, illustrations to 3D design, our designers bring creative visions to life with stunning visual storytelling.",
+      "Every ACM-VIT initiative gets its glow-up because of the Design Domain. We’re the creative ones who make everything presentable. Through UI/UX, motion graphics, video edits and 3D modelling, we craft the visuals that give the chapter its entire vibe.",
     accent: "#8C3428",
     folder: "#F55F4B",
     text: "#ffffff",
@@ -31,7 +31,7 @@ const domains: Domain[] = [
     slug: "cc",
     title: "Competitive Coding",
     summary:
-      "Master algorithmic thinking and problem-solving through rigorous competitive coding. Our members tackle complex data structures and algorithms while building speed and precision in high-stakes programming contests.",
+      "The Competitive Coding Domain is our way of solving challenges through contests, hacks and of course, leetcode. We might not agree on the language but we surely agree that passing a test case is pure happiness.",
     accent: "#7E9328",
     folder: "#BBD842",
     text: "#292625",
@@ -42,7 +42,7 @@ const domains: Domain[] = [
     slug: "management",
     title: "Management",
     summary:
-      "Transform big ideas into unforgettable events. We handle everything from brainstorming and sponsorships to logistics and content creation. We're the extroverts ensuring every event is smooth, well-organized, and unforgettable.",
+      "ACM-VIT’s Management Domain is basically the squad that makes sure everything actually happens. We make proper plans and make sure things don’t fall apart five minutes before the event. Organisation, communication, strategy and execution - that’s what defines us.",
     accent: "#0E3A60",
     folder: "#46A8FF",
     text: "#ffffff",
@@ -53,7 +53,7 @@ const domains: Domain[] = [
     slug: "research",
     title: "Research",
     summary:
-      "Foster curiosity and innovation across cutting-edge fields. From AI and Blockchain to Quantum Computing and Bioinformatics, we bridge theory and real-world application through collaboration and continuous learning.",
+      "The Research Domain is the place to bring out your inner scientist. From diving deep into our interests to exploring new fields, we work on projects that turn research into real, practical stuff. Be it fields like AI/ML, IoT, cybersecurity and quantum computing - we got it all!",
     accent: "#3C2C73",
     folder: "#A98FFF",
     text: "#ffffff",
@@ -64,7 +64,7 @@ const domains: Domain[] = [
     slug: "tech",
     title: "Tech",
     summary:
-      "Build the future with cutting-edge technology. From web and app development to DevOps and open-source contribution, our members master full-stack solutions and modern development practices.",
+      "ACM-VIT’s Tech Domain is where we work on real projects related to web, app, gamedev, FOSS and DevOps. We learn, build, break things, fix them again, and somehow grow together through it all.",
     accent: "#7B336E",
     folder: "#FF6CD9",
     text: "#ffffff",
