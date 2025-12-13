@@ -37,18 +37,8 @@ const stickerTextBase: React.CSSProperties = {
 
 const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
-const value = Math.floor(Math.random() * 7);
-const phrases = [
-  "Welcome to OCS'26",
-  "Gear Up for an Incredible Journey!",
-  "Your Adventure Starts Now!",
-  "Innovation Begins Here",
-  "Dream Big. Achieve Bigger.",
-  "ACM-VIT Says Hello!",
-  "Welcome to ACM-VIT's Browser!",
-  "Welcome to OCS'26!",
-  "Because Technology Matters",
-];
+const value = 0;
+const phrases = ["Because Technology Matters."];
 
 const PhotoPanel: React.FC = memo(() => {
   const photosRef = useRef<string[]>([]);

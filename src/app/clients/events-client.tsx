@@ -107,7 +107,7 @@ const Events = () => {
         />
       ),
       description:
-        "Annual open-source contribution challenge where participants contribute to real-world projects. Learn collaborative development, version control, and make meaningful contributions to the tech community.",
+        "Riding on the spirit of Hacktoberfest - the month-long celebration of open-source software by DigitalOcean, we introduced Forktober in October 2021 to promote open source in VIT. With beginner friendly and impactful repositories across app dev, web dev and machine learning, Forktober is our way of building and upskilling the community. ",
       color: "#4A5F7F",
     },
     {
@@ -119,7 +119,7 @@ const Events = () => {
         <Image src="inspiher.svg" alt="Insipher" width={120} height={120} />
       ),
       description:
-        "The InspiHER Podcast series has always been about more than just conversations; it’s about connection, empowerment, and igniting ambition. This year, we’re raising the bar. With an expanded lineup of remarkable women leaders from across the globe, we aim to amplify diverse voices and share stories that matter — stories of resilience, innovation, leadership, and the unwavering spirit that fuels change.",
+        "InspiHER is ACM-W’s powerful speaker series featuring accomplished women in STEM. These sessions spark meaningful conversations, offer real-life insights into career growth, and most importantly, encourage young women to pursue technical fields with confidence. ",
       color: "#f58f8fff",
       glowColor: "#000000ee",
     },
@@ -132,7 +132,7 @@ const Events = () => {
         <Image src="Frame 8.svg" alt="The Tiny Hack" width={120} height={120} />
       ),
       description:
-        "The Tiny Hack was a 10-hour hackathon that took place in 2023 and was intended for people who were keen to create and construct creative projects quickly. The event's main goal was to use technology to develop modest but significant solutions to real-world issues. In order to realise their ideas, participants worked closely with like-minded people from a variety of academic and professional backgrounds.",
+        "Another one-of-a-kind ACM event, Tiny Hack is a 10-hour long hackathon designed for students eager to develop and build innovative projects within a short time frame. It focuses on creating small yet impactful solutions to real-world problems using modern technologies.",
       color: "#F3D055",
     },
     {
@@ -149,7 +149,7 @@ const Events = () => {
         />
       ),
       description:
-        "Codex Cryptum began as a specialised workshop in September 2022 with the goal of expanding participants' knowledge of cryptography and cybersecurity. Attendees can delve into advanced topics and gain practical insights through the event's hands-on sessions and interactions with industry experts. Participants can broaden their knowledge, hone their skills, and have insightful conversations with colleagues and subject matter experts through this workshop.",
+        "Codex Cryptum is a specialized hands-on workshop on cybersecurity and cryptography. Through this event, we aim to connect industry specialists with students and provide them with practical insights and advanced learning in the fields.",
       color: "#D96700",
     },
   ];

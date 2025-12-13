@@ -36,10 +36,10 @@ const About: React.FC = () => {
             different levels.
           </li>
           <li>
-            <span className="text-[#C9EB3E]">CODEX CRYPTUM</span> – A hybrid
-            event combining interactive workshops, coding exercises, and live
-            problem‑solving, Codex Cryptum provides an immersive learning
-            experience.
+            <span className="text-[#C9EB3E]">CONTESTS</span> – We participate in
+            Contests on platforms such as Leetcode and CodeForces, and have
+            discussions on approaches and solutions. We also have internal
+            contests for upskilling.
           </li>
         </ul>
       </NeonSection>
