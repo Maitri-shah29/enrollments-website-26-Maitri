@@ -8,11 +8,19 @@ const Instructions: React.FC = () => {
       <div></div>
       <NeonSection title="INSTRUCTIONS">
         <ul className="list-disc pl-6 space-y-2 text-white">
-          <li>Answer all the questions in the form round.</li>
-          <li>After answering a question, click on "Save Answer" to save your response.</li>
+          <li>Answer all the questions of Round 1.</li>
+          <li>
+            After answering every question, click on "Save Answer" to save your
+            response.
+          </li>
+          <li>
+            Click on “Submit Form” after answering and reviewing all questions.
+          </li>
           <li>Next round will be a CC contest round.</li>
-          <li>It will be organised on 9th January, 2026.</li>
-          <li>Link will be shared later.</li>
+          <li>
+            It will be organised on 9th January, 2026 for which the link will be
+            shared later.
+          </li>
         </ul>
       </NeonSection>
 

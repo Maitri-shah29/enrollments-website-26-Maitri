@@ -12,7 +12,7 @@ const filters = [
   "events",
 ];
 export async function logSearch(query: string, email?: string | null) {
-  console.log("hii");
+  // console.log("hii");
   if (!query || query.length > 25 || !email || filters.includes(query)) return;
 
   // if (!query || query.length > 25 || !email) return;

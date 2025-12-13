@@ -20,13 +20,12 @@ export default function Instructions() {
           ))}
         </pre> */}
         <pre className="whitespace-pre-wrap text-[#E097CE]">
-          {`1. Go to the explore tab on the left sidebar and join upto 2 areas of interest according to your preferences.
-2. Proceed to Round 1 from the left sidebar
-3. Answer the common questions first, make sure to click on save after every answer.
-4. If you see the "saved successfully" popup on the top right, your answer has been saved.
-5. Answer the domain-wise questions next, ensure that you click on save after every answer.
-6. After answering all questions, click on submit form at the bottom of the left sidebar.
-7. You will be judged on your technical skills but more importantly on your ability to quickly learn new concepts. Points will be given for originality.
+          {`1. Go to the Explore tab on the left sidebar and join up to 3 AoIs based on your preferences.
+2. Proceed to Round 1. Answer the common questions first, and then the domain-wise questions. 
+3. Make sure you click on Save after every answer. If you see the "Saved Successfully" popup on the top right, your answer has been saved.
+4. After answering all questions, click on ‘Submit Form’ at the bottom of the left sidebar.
+
+Bonus - You will be judged on your technical skills but more importantly, on your ability to quickly learn new concepts. Points will be given for originality.
 
 All the Best!`}
         </pre>
