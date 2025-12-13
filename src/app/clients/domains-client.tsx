@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Domain = {
   slug: string;
@@ -79,6 +79,11 @@ const Domains = () => {
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
     null,
   );
+  const [autoHover, setAutoHover] = useState(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -132,6 +137,36 @@ const Domains = () => {
     return () => window.removeEventListener("keydown", listener);
   }, [goNext, goPrev]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeIndex is intentionally used as a trigger to re-run the animation effect
+  useEffect(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    if (hoverStartTimeoutRef.current) {
+      clearTimeout(hoverStartTimeoutRef.current);
+    }
+    setAutoHover(false);
+    hoverStartTimeoutRef.current = setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setAutoHover(true);
+          hoverTimeoutRef.current = setTimeout(() => setAutoHover(false), 1100);
+        });
+      });
+    }, 180);
+  }, [activeIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      if (hoverStartTimeoutRef.current) {
+        clearTimeout(hoverStartTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
       <style jsx>{`
@@ -166,6 +201,12 @@ const Domains = () => {
         }
         .animate-slide-right {
           animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        :global([data-auto-hover="true"] .auto-hover-image) {
+          transform: translate(-35%, -60%) rotate(-6deg) scale(1.05) !important;
+        }
+        :global([data-auto-hover="true"] .auto-hover-flap) {
+          transform: translateY(-2px) rotateX(-16deg) translateZ(14px) !important;
         }
       `}</style>
       <div
@@ -246,6 +287,7 @@ const Domains = () => {
             className="group relative mx-auto flex max-w-5xl cursor-pointer flex-col items-center gap-6 overflow-visible px-4 pb-6 pt-4 sm:px-8 md:px-12"
             onClick={() => handleNavigate(active.slug)}
             onKeyDown={(event) => handleNavigateKey(event, active.slug)}
+            data-auto-hover={autoHover ? "true" : "false"}
           >
             <div className="relative w-full max-w-4xl flex justify-center">
               <div
@@ -280,7 +322,7 @@ const Domains = () => {
                 </div>
 
                 <div
-                  className="absolute left-1/2 top-24 z-10 h-52 w-72 -translate-x-1/2 overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.55)] transform-gpu transition-transform duration-500 ease-out [transform:translate(-50%,-50%)_rotate(-2deg)_scale(1)] group-hover:[transform:translate(-35%,-60%)_rotate(-6deg)_scale(1.05)]"
+                  className="absolute left-1/2 top-24 z-10 h-52 w-72 -translate-x-1/2 overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.55)] transform-gpu transition-transform duration-500 ease-out [transform:translate(-50%,-50%)_rotate(-2deg)_scale(1)] group-hover:[transform:translate(-35%,-60%)_rotate(-6deg)_scale(1.05)] auto-hover-image"
                   style={{ border: "6px solid white" }}
                 >
                   <Image
@@ -294,7 +336,7 @@ const Domains = () => {
                 </div>
 
                 <div
-                  className="absolute left-0 right-0 top-28 z-20 origin-bottom transform-gpu transition-transform duration-500 ease-out [transform:translateY(0)_rotateX(0deg)_translateZ(0)] group-hover:[transform:translateY(-2px)_rotateX(-16deg)_translateZ(14px)]"
+                  className="absolute left-0 right-0 top-28 z-20 origin-bottom transform-gpu transition-transform duration-500 ease-out [transform:translateY(0)_rotateX(0deg)_translateZ(0)] group-hover:[transform:translateY(-2px)_rotateX(-16deg)_translateZ(14px)] auto-hover-flap"
                   style={{
                     transformStyle: "preserve-3d",
                     transformOrigin: "50% 100%",
