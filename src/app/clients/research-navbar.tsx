@@ -9,7 +9,6 @@ import { DOMAIN_CAP } from "@/lib/constants";
 import type { ResearchAOI, ResearchSection } from "@/lib/research-navigation";
 
 const About = "/images/research/about.svg";
-const ACM = "/images/research/acm-logo.svg";
 const Aoi = "/images/research/aoi.svg";
 const Help = "/images/research/help.svg";
 const Instructions = "/images/research/instructions.svg";
@@ -163,7 +162,12 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             onClick={() => onSelect("Home")}
             className="p-2 mb-5 ml-1 cursor-pointer"
           >
-            <Image src={ACM} width={175} height={175} alt="ACM" />
+            <Image
+              src="images/research/acm-logo.svg"
+              width={175}
+              height={175}
+              alt="ACM"
+            />
           </button>
 
           {items.map((it) => (
@@ -288,7 +292,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                                   aoiname = "iot";
                                   break;
                               }
-                              const questionKey = `${aoiname}-question${qIdx + 1}`;
+                              const questionKey = `${aoiname}-question${
+                                qIdx + 1
+                              }`;
                               const isSaved =
                                 submittedQuestions.has(questionKey);
                               const hasUnsaved =
