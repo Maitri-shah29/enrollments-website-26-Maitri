@@ -1,347 +1,494 @@
-//research-navbar
 "use client";
-
-import Image from "next/image";
-import type React from "react";
-import { useState } from "react";
-import type { RoundUserExtended } from "@/app/clients/components/research/questions";
+import { useCallback, useEffect, useRef, useState } from "react";
+import About from "@/app/clients/components/research/about";
+import AOIs from "@/app/clients/components/research/aoi";
+import AIML from "@/app/clients/components/research/aoi-pages/aiml";
+import Bioinformatics from "@/app/clients/components/research/aoi-pages/bioinformatics";
+import Blockchain from "@/app/clients/components/research/aoi-pages/blockchain";
+import Cybersecurity from "@/app/clients/components/research/aoi-pages/cybersecurity";
+import IoT from "@/app/clients/components/research/aoi-pages/iot";
+import QuantumComputing from "@/app/clients/components/research/aoi-pages/quantumcomputing";
+import ExploreResearchAOIs from "@/app/clients/components/research/explore";
+import ResearchHome from "@/app/clients/components/research/home";
+import Instructions from "@/app/clients/components/research/instructions";
+import Interview from "@/app/clients/components/research/interview";
+import Questions, {
+  type QuestionsRef,
+  type RoundUserExtended,
+} from "@/app/clients/components/research/questions";
+import ResearchNavbar from "@/app/clients/components/research/research-navbar";
 import { DOMAIN_CAP } from "@/lib/constants";
-import type { ResearchAOI, ResearchSection } from "@/lib/research-navigation";
+import type { ResearchAOI } from "@/lib/research-navigation";
+import { useResearchNavigation } from "@/lib/research-navigation";
+import createRoundUser from "../actions/create-round-user";
 
-const About = "/images/research/about.svg";
-const Aoi = "/images/research/aoi.svg";
-const Help = "/images/research/help.svg";
-const Instructions = "/images/research/instructions.svg";
-const Interview = "/images/research/interview.svg";
-const RightArrow = "/images/research/right-arrow.svg";
-const Round = "/images/research/round-icon.svg";
-const Settings = "/images/research/settings.svg";
-const Vault = "/images/research/vault.svg";
+const AOI_KEYS = [
+  "COMMON",
+  "AIML",
+  "CYBERSECURITY",
+  "BLOCKCHAIN",
+  "BIOINFORMATICS",
+  "QUANTUMCOMPUTING",
+  "IOT",
+] as const;
+type AoiKey = (typeof AOI_KEYS)[number];
 
-interface ResearchNavbarProps {
-  activeSection: string;
-  onChangeSection: (s: ResearchSection) => void;
-  aoiExpanded: boolean;
-  onToggleAoi: () => void;
-  roundExpanded: boolean;
-  onToggleRound: () => void;
-  activeQuestion: string;
-  activeRoundFolder: string;
-  selected: string;
-  onSelect: (panel: string) => void;
-  selectedAOI?: string;
-  selectedQuestionIdx?: number | null;
-  submittedQuestions: Set<string>;
-  questionsWithUnsavedEdits?: Set<string>;
-  onAOISelect?: (aoi: string) => void;
-  onQuestionSelect?: (idx: number) => void;
-  roundUser: RoundUserExtended | null;
-  joinedAOIs?: Set<ResearchAOI>;
-  roundHidden?: boolean;
-  roundUserCount?: number;
-}
+const AOI_JOIN_LIMIT = 2;
 
-const Icon = {
-  ChevronRight: (_props: React.SVGProps<SVGSVGElement>) => (
-    <Image src={RightArrow} width={6} height={6} alt="RightArrow" />
-  ),
+const keyToLabel: Record<AoiKey, string> = {
+  COMMON: "Common",
+  AIML: "AI/ML",
+  CYBERSECURITY: "Cybersecurity",
+  BLOCKCHAIN: "Blockchain",
+  BIOINFORMATICS: "Bioinformatics",
+  QUANTUMCOMPUTING: "Quantum Computing",
+  IOT: "IoT",
 };
 
-const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
-  submittedQuestions,
-  questionsWithUnsavedEdits = new Set(),
-  selected,
-  onSelect,
-  selectedAOI,
-  selectedQuestionIdx,
-  onAOISelect,
-  onQuestionSelect,
-  roundUser,
-  joinedAOIs = new Set(),
-  roundHidden = false,
-  roundUserCount = 0,
-}) => {
-  const [expandedRound, setExpandedRound] = useState<boolean>(false);
-  const [AOIState, setAoiState] = useState<string>("");
-  const [questionState, setQuestionState] = useState<number | null>(null);
+const labelToKey: Record<string, AoiKey> = Object.fromEntries(
+  (Object.keys(keyToLabel) as AoiKey[]).map((k) => [
+    keyToLabel[k].toLowerCase(),
+    k,
+  ]),
+) as Record<string, AoiKey>;
 
-  const effectiveAOI = selectedAOI ?? AOIState;
-  const effectiveQuestionIdx =
-    typeof selectedQuestionIdx === "number"
-      ? selectedQuestionIdx
-      : questionState;
+function toAoiKey(input: string): AoiKey | null {
+  if (!input) return null;
+  const trimmed = input.trim();
+  const upper = trimmed.toUpperCase().replace(/\s+/g, "");
+  const keyMatch = (AOI_KEYS as readonly string[]).find(
+    (k) => k === upper || k === trimmed.toUpperCase(),
+  ) as AoiKey | undefined;
+  if (keyMatch) return keyMatch;
 
-  const isDisabled = !roundUser;
-  const isLimitReached =
-    roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
+  const labelMatch = labelToKey[trimmed.toLowerCase()];
+  return labelMatch ?? null;
+}
 
-  const items = [
-    {
-      key: "About",
-      icon: <Image src={About} alt="About" width={40} height={40} />,
-    },
-    { key: "AOIs", icon: <Image src={Aoi} alt="Aoi" width={20} height={20} /> },
-    {
-      key: "Explore",
-      icon: <Image src={Vault} alt="Explore" width={20} height={20} />,
-    },
-    {
-      key: "Instructions",
-      icon: (
-        <Image src={Instructions} alt="Instructions" width={20} height={20} />
-      ),
-    },
-  ];
+type ResearchClientProps = {
+  initialRoundUser?: RoundUserExtended | null;
+  roundUserCount: number;
+};
 
-  const roundAOIs = [
-    "Common",
-    "AI/ML",
-    "Cybersecurity",
-    "Blockchain",
-    "Bioinformatics",
-    "Quantum Computing",
-    "IoT",
-  ];
+const ResearchClient = ({
+  initialRoundUser,
+  roundUserCount,
+}: ResearchClientProps) => {
+  const [selectedPanel, setSelectedPanel] = useState<string>("Home");
+  const [selectedAOI, setSelectedAOI] = useState<string>("Common");
+  const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
+  const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
+    initialRoundUser ?? null,
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
+    {},
+  );
+  const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
+    Set<string>
+  >(new Set());
+  const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
+  const [joinedAOIs, setJoinedAOIs] = useState<Set<ResearchAOI>>(new Set());
+  const [aoisLoaded, setAoisLoaded] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    type: "aoi" | "question";
+    value: string | number;
+  } | null>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
+  const roundActive = !!roundUser?.round?.active;
+  const roundHidden = !!roundUser?.round?.hidden;
+  const {
+    activeSection,
+    aoiExpanded,
+    roundExpanded,
+    activeRoundFolder,
+    activeQuestion,
+    setSection,
+    toggleAoi,
+    toggleRound,
+  } = useResearchNavigation();
 
-  // Map ResearchAOI to display labels
-  const researchAOIToLabel: Record<ResearchAOI, string> = {
-    aiml: "AI/ML",
-    cybersecurity: "Cybersecurity",
-    blockchain: "Blockchain",
-    bioinformatics: "Bioinformatics",
-    quantumcomputing: "Quantum Computing",
-    iot: "IoT",
-  };
+  const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
+    new Set(),
+  );
+  const childRef = useRef<QuestionsRef>(null);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
-  // Filter AOIs to only show joined ones + Common
-  const visibleAOIs = roundAOIs.filter((aoi) => {
-    if (aoi === "Common") {
-      // Show Common only if at least one AOI is joined
-      return joinedAOIs.size > 0;
+  // Load joined AOIs from localStorage on mount
+  useEffect(() => {
+    const savedAOIs = localStorage.getItem("research-joined-aois");
+    if (savedAOIs) {
+      try {
+        const parsed = JSON.parse(savedAOIs) as ResearchAOI[];
+        console.log("Restored Research AOIs from localStorage:", parsed);
+        setJoinedAOIs(new Set(parsed));
+      } catch (err) {
+        console.error("Failed to parse saved Research AOIs:", err);
+      }
     }
-    // Check if this AOI is in the joined set
-    const researchAOI = Object.entries(researchAOIToLabel).find(
-      ([_, label]) => label === aoi,
-    )?.[0] as ResearchAOI | undefined;
-    return researchAOI && joinedAOIs.has(researchAOI);
-  });
+    setAoisLoaded(true);
+  }, []);
 
-  // Map AOI names to varName prefixes
-  const aoiToPrefixMap: Record<string, string> = {
-    Common: "common",
-    "AI/ML": "aiml",
-    Cybersecurity: "cybersec",
-    Blockchain: "blockchain",
-    Bioinformatics: "bioinfo",
-    "Quantum Computing": "quantum",
-    IoT: "iot",
+  // Save joined AOIs to localStorage when they change
+  useEffect(() => {
+    if (!aoisLoaded) return;
+    const aoiArray = [...joinedAOIs];
+    console.log("Saving Research AOIs to localStorage:", aoiArray);
+    localStorage.setItem("research-joined-aois", JSON.stringify(aoiArray));
+  }, [joinedAOIs, aoisLoaded]);
+
+  // Track if current question has unsaved changes
+  useEffect(() => {
+    const currentKey = `${selectedAOI}-question${selectedQuestionIdx + 1}`;
+    setHasUnsavedChanges(questionsWithUnsavedEdits.has(currentKey));
+  }, [selectedAOI, selectedQuestionIdx, questionsWithUnsavedEdits]);
+
+  const handleJoinAOI = (aoi: ResearchAOI) => {
+    if (joinedAOIs.size < AOI_JOIN_LIMIT) {
+      setJoinedAOIs((prev) => new Set([...prev, aoi]));
+    }
   };
 
-  // Get number of questions per AOI dynamically
-  const getQuestionsPerAOI = (aoi: string) => {
-    const prefix = aoiToPrefixMap[aoi] || "common";
-    const questions = roundUser?.round?.Question || [];
-    const aoiQuestions = questions.filter(
-      (q) =>
-        (q.type === "stq" || q.type === "ltq") &&
-        q.varName?.toLowerCase().startsWith(prefix),
-    );
-    return aoiQuestions.length;
+  const handleLeaveAOI = (aoi: ResearchAOI) => {
+    setJoinedAOIs((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(aoi);
+      return newSet;
+    });
   };
+
+  const initializeRoundUser = async () => {
+    setLoading(true);
+    setError(null);
+    // console.log(await createRoundUser(Domain.cc));
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
+    try {
+      const result = await createRoundUser("research");
+      console.log(result);
+
+      if ("error" in result) {
+        if (result.error === "Round is not active") {
+          setError("Enrollments for this domain haven't started yet");
+        } else if (result.error === "No form round found for this domain") {
+          setError("This domain is not available for enrollment at the moment");
+        } else if (result.error === "Internal server error") {
+          setError("Something went wrong. Please try again later");
+        } else {
+          setError(result.error ?? "Unknown error");
+        }
+        return;
+      }
+
+      setRoundUser(result.roundUser as RoundUserExtended);
+      setSelectedPanel("About");
+    } catch (err) {
+      console.error("Error initializing round user:", err);
+
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize round user",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!roundUser?.formSubmission) return;
+    const _savedAnswers: Record<string, string | null> = {};
+    const currentFsId = roundUser.formSubmission.id;
+    const questions = roundUser.round?.Question || [];
+    const submittedResponses: string[] = [];
+    if (formSubmissionId !== currentFsId) {
+      const initial: Record<string, string> = {};
+      const saved: Record<string, string> = {};
+      const serverResponses = roundUser.formSubmission.responses ?? [];
+      serverResponses.forEach((r) => {
+        const question = questions.find((q) => q.id === r.questionId);
+        if (question) {
+          const AOIQuestions = questions
+            .filter((q) => q.varName === question.varName)
+            .sort((a, b) => a.serial - b.serial);
+          const questionIndex = AOIQuestions.findIndex(
+            (q) => q.id === question.id,
+          );
+          if (questionIndex !== -1) {
+            const questionKey = `${question.varName}-question${
+              questionIndex + 1
+            }`;
+            submittedResponses.push(questionKey);
+          }
+          if (r.response) {
+            initial[r.questionId] = r.response;
+            saved[r.questionId] = r.response;
+          }
+        }
+      });
+      setResponses(initial);
+      setSavedResponses(saved);
+      setSubmittedQuestions(new Set(submittedResponses));
+      setFormSubmissionId(currentFsId);
+    }
+  }, [roundUser?.formSubmission, roundUser?.round?.Question, formSubmissionId]);
+
+  // ✅ Memoized so it never re-creates between renders
+  const handleAOISelect = useCallback(
+    (aoi: string) => {
+      if (hasUnsavedChanges && selectedPanel === "Round 1") {
+        setPendingNavigation({ type: "aoi", value: aoi });
+        setShowUnsavedDialog(true);
+        return;
+      }
+      const key = toAoiKey(aoi);
+      if (key) {
+        setSelectedAOI(keyToLabel[key]);
+        setSelectedPanel(key);
+        setSelectedQuestionIdx(0);
+      } else {
+        setSelectedPanel("AOIs");
+      }
+    },
+    [hasUnsavedChanges, selectedPanel],
+  );
+
+  // ✅ Memoized to keep `onSelect` stable for AOIs
+  const handlePanelSelect = useCallback(
+    (panelName: string) => {
+      if (
+        hasUnsavedChanges &&
+        selectedPanel === "Round 1" &&
+        panelName !== "Round 1"
+      ) {
+        setPendingNavigation({ type: "aoi", value: panelName });
+        setShowUnsavedDialog(true);
+        return;
+      }
+      const key = toAoiKey(panelName);
+      if (key) {
+        setSelectedAOI(keyToLabel[key]);
+        setSelectedQuestionIdx(0);
+        setSelectedPanel(key);
+        return;
+      }
+
+      setSelectedPanel(panelName);
+    },
+    [hasUnsavedChanges, selectedPanel],
+  );
+
+  const handleQuestionSelect = useCallback(
+    (idx: number) => {
+      if (
+        hasUnsavedChanges &&
+        selectedPanel === "Round 1" &&
+        idx !== selectedQuestionIdx
+      ) {
+        setPendingNavigation({ type: "question", value: idx });
+        setShowUnsavedDialog(true);
+        return;
+      }
+      setSelectedQuestionIdx(idx);
+      setSelectedPanel("Round 1");
+    },
+    [hasUnsavedChanges, selectedPanel, selectedQuestionIdx],
+  );
+
+  const handleConfirmNavigation = useCallback(() => {
+    if (childRef.current?.trigger) {
+      setIsProceeding(true);
+      childRef.current.trigger().then(() => {
+        setIsProceeding(false);
+        setShowUnsavedDialog(false);
+        if (!pendingNavigation) return;
+
+        if (pendingNavigation.type === "aoi") {
+          const aoi = pendingNavigation.value as string;
+          const key = toAoiKey(aoi);
+          if (key) {
+            setSelectedAOI(keyToLabel[key]);
+            setSelectedPanel(key);
+            setSelectedQuestionIdx(0);
+          } else {
+            setSelectedPanel(aoi);
+          }
+        } else if (pendingNavigation.type === "question") {
+          setSelectedQuestionIdx(pendingNavigation.value as number);
+          setSelectedPanel("Round 1");
+        }
+        setPendingNavigation(null);
+      });
+    } else {
+      setShowUnsavedDialog(false);
+      if (!pendingNavigation) return;
+
+      if (pendingNavigation.type === "aoi") {
+        const aoi = pendingNavigation.value as string;
+        const key = toAoiKey(aoi);
+        if (key) {
+          setSelectedAOI(keyToLabel[key]);
+          setSelectedPanel(key);
+          setSelectedQuestionIdx(0);
+        } else {
+          setSelectedPanel(aoi);
+        }
+      } else if (pendingNavigation.type === "question") {
+        setSelectedQuestionIdx(pendingNavigation.value as number);
+        setSelectedPanel("Round 1");
+      }
+      setPendingNavigation(null);
+    }
+  }, [pendingNavigation]);
+
+  const handleCancelNavigation = useCallback(() => {
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  }, []);
 
   return (
-    <aside
-      className="w-72 h-full bg-[#1A1A1A] text-white select-none relative overflow-hidden"
-      aria-label="Research sidebar"
-    >
-      <div className="flex flex-col h-full p-2 overflow-auto pr-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="space-y-0 mb-10">
-          <button
-            type="button"
-            aria-label="Go to Home"
-            onClick={() => onSelect("Home")}
-            className="p-2 mb-5 ml-1 cursor-pointer"
-          >
-            <Image
-              src="images/research/acm-logo.svg"
-              width={175}
-              height={175}
-              alt="ACM"
-            />
-          </button>
-
-          {items.map((it) => (
+    <div className="flex h-full w-full bg-[#1a1a1a] select-none">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border-2 border-[#C8B7FF] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#C8B7FF] text-2xl font-semibold mb-4">
+              Oops!
+            </h3>
+            <p className="text-white text-lg mb-6">{error}</p>
             <button
-              key={it.key}
               type="button"
-              onClick={() => {
-                if (!isDisabled && !isLimitReached) {
-                  onSelect(it.key);
-                }
-              }}
-              disabled={isDisabled || isLimitReached}
-              className={`w-full my-1 flex items-center gap-3 pl-3 py-1.5 text-left transition-colors rounded font-monopoly ${
-                isDisabled || isLimitReached
-                  ? "cursor-not-allowed opacity-40"
-                  : selected === it.key
-                    ? "bg-[#7d5bed] cursor-pointer"
-                    : "hover:bg-white/3 cursor-pointer"
-              }`}
+              onClick={() => setError(null)}
+              className="w-full px-6 py-2 bg-[#C8B7FF] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#a89be0] transition-colors"
             >
-              <span className="w-5 h-full text-white/90">{it.icon}</span>
-              <span className="text-sm font-monopoly">{it.key}</span>
+              Close
             </button>
-          ))}
-
-          {!roundHidden && (
-            <button
-              className={`w-full flex items-center justify-end pl-3 py-1.5 rounded transition-colors ${
-                isDisabled || isLimitReached
-                  ? "cursor-not-allowed opacity-40"
-                  : selected === "Round 1"
-                    ? "bg-[#7d5bed] cursor-pointer"
-                    : "hover:bg-white/3 cursor-pointer"
-              }`}
-              onClick={(e) => {
-                if (!isDisabled && !isLimitReached) {
-                  setExpandedRound((s) => !s);
-                  onSelect(expandedRound ? "" : "Round 1");
-                }
-                e.stopPropagation();
-              }}
-              disabled={isDisabled || isLimitReached}
-              type="button"
-              tabIndex={0}
-            >
-              <div className={`flex items-center gap-3 w-full`}>
-                <div className="w-5 h-full relative">
-                  <Image src={Round} alt="Round" width={20} height={20} />
-                </div>
-                <span className={`text-sm text-left font-monopoly`}>
-                  Round 1
-                </span>
-              </div>
-            </button>
-          )}
-
-          {!roundHidden && expandedRound && (
-            <div className="space-y-1 pl-6">
-              {visibleAOIs.length === 0 ? (
-                <div className="text-white/60 text-sm px-2 py-2 font-monopoly">
-                  No AOIs joined. Visit Explore to join AOIs.
-                </div>
-              ) : (
-                visibleAOIs.map((aoi) => (
-                  <div key={aoi} className="space-y-1">
-                    <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-md hover:bg-white/3 transition-colors">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = aoi;
-                          setAoiState(next);
-                          setQuestionState(null);
-                          onAOISelect?.(next);
-                          onSelect("Round 1");
-                        }}
-                        className="flex items-center gap-3 text-left w-full cursor-pointer"
-                      >
-                        <span className="text-white/80">
-                          <Icon.ChevronRight
-                            className={`w-4 h-3.5 transform transition-transform`}
-                          />
-                        </span>
-                        <span className="text-sm font-monopoly">{aoi}</span>
-                      </button>
-
-                      <div className="inline-flex items-center">
-                        <div
-                          className={`w-4 h-4 border-white border-1 rounded-[25%] ${
-                            aoi === effectiveAOI ? "bg-[#C8B7FF]" : ""
-                          }`}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {effectiveAOI === aoi &&
-                      roundUser?.status === "pending" && (
-                        <div className="pl-6 space-y-1">
-                          {Array.from(
-                            { length: getQuestionsPerAOI(aoi) },
-                            (_, qIdx) => {
-                              let aoiname = "";
-                              switch (aoi) {
-                                case "Common":
-                                  aoiname = "common";
-                                  break;
-                                case "AI/ML":
-                                  aoiname = "aiml";
-                                  break;
-                                case "Cybersecurity":
-                                  aoiname = "cybersec";
-                                  break;
-                                case "Quantum Computing":
-                                  aoiname = "quantum";
-                                  break;
-                                case "Bioinformatics":
-                                  aoiname = "bioinfo";
-                                  break;
-                                case "Blockchain":
-                                  aoiname = "blockchain";
-                                  break;
-                                case "IoT":
-                                  aoiname = "iot";
-                                  break;
-                              }
-                              const questionKey = `${aoiname}-question${
-                                qIdx + 1
-                              }`;
-                              const isSaved =
-                                submittedQuestions.has(questionKey);
-                              const hasUnsaved =
-                                questionsWithUnsavedEdits.has(questionKey);
-
-                              let borderClass =
-                                "border-[#DBD3D3]/25 border-b-2";
-                              if (hasUnsaved) {
-                                borderClass = "border-orange-500 border-b-3";
-                              } else if (isSaved) {
-                                borderClass = "border-[#7D5BED] border-b-3";
-                              }
-
-                              return (
-                                <button
-                                  key={questionKey}
-                                  type="button"
-                                  onClick={() => {
-                                    setQuestionState(qIdx);
-                                    onQuestionSelect?.(qIdx);
-                                    onSelect("Round 1");
-                                  }}
-                                  className={`w-full text-left px-3 py-0.5 ${borderClass} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3 font-monopoly`}
-                                >
-                                  <span className="text-left font-monopoly">
-                                    Question {qIdx + 1}
-                                  </span>
-                                  {effectiveQuestionIdx === qIdx && (
-                                    <Icon.ChevronRight className="w-4 h-3.5 text-gray-500" />
-                                  )}
-                                </button>
-                              );
-                            },
-                          )}
-                        </div>
-                      )}
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+      {/* Unsaved Changes Dialog */}
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border-2 border-[#7D5BED] rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-[#7D5BED] text-2xl font-semibold mb-4">
+              Unsaved Changes
+            </h3>
+            <p className="text-white text-lg mb-6">
+              You have unsaved changes. If you leave now, your changes will be
+              lost. Do you want to continue?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={handleCancelNavigation}
+                className="px-6 py-2 bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-colors rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmNavigation}
+                className="px-6 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors rounded-lg"
+              >
+                {isProceeding ? "Saving..." : "Proceed and Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <ResearchNavbar
+        activeSection={activeSection}
+        onChangeSection={setSection}
+        aoiExpanded={aoiExpanded}
+        onToggleAoi={toggleAoi}
+        roundExpanded={roundExpanded}
+        onToggleRound={toggleRound}
+        activeQuestion={`question${activeQuestion + 1}`}
+        activeRoundFolder={activeRoundFolder}
+        selected={selectedPanel}
+        onSelect={handlePanelSelect}
+        selectedAOI={selectedAOI}
+        selectedQuestionIdx={selectedQuestionIdx}
+        submittedQuestions={submittedQuestions}
+        questionsWithUnsavedEdits={questionsWithUnsavedEdits}
+        onAOISelect={handleAOISelect}
+        onQuestionSelect={handleQuestionSelect}
+        roundUser={roundUser}
+        joinedAOIs={joinedAOIs}
+        roundHidden={roundHidden}
+        roundUserCount={roundUserCount}
+      />
 
-      <div className="pointer-events-none absolute top-0 right-0 h-full w-px bg-white" />
-    </aside>
+      <div className="flex-1 min-w-0 h-full overflow-hidden">
+        {selectedPanel === "Home" && (
+          <ResearchHome
+            onGetStarted={initializeRoundUser}
+            loading={loading}
+            hasRoundUser={!!roundUser}
+            onContinue={() => setSelectedPanel("About")}
+          />
+        )}
+        {selectedPanel === "About" && <About />}
+        {selectedPanel === "Instructions" && <Instructions />}
+        {selectedPanel === "AOIs" && <AOIs onSelect={handlePanelSelect} />}
+        {selectedPanel === "Explore" && (
+          <ExploreResearchAOIs
+            joinedAOIs={joinedAOIs}
+            onJoinAOI={handleJoinAOI}
+            onLeaveAOI={handleLeaveAOI}
+          />
+        )}
+        {selectedPanel === "Round 1" && !roundActive ? (
+          <div className="text-center text-white text-xl py-12">
+            <h1 className="text-2xl font-bold mb-4">
+              Round currently inactive.
+            </h1>
+            <p>This round will start soon...</p>
+          </div>
+        ) : selectedPanel === "Round 1" ? (
+          <Questions
+            ref={childRef}
+            roundUser={roundUser ?? undefined}
+            loading={loading}
+            error={error}
+            responses={responses}
+            setResponses={setResponses}
+            savedResponses={savedResponses}
+            setSavedResponses={setSavedResponses}
+            questionsWithUnsavedEdits={questionsWithUnsavedEdits}
+            setQuestionsWithUnsavedEdits={setQuestionsWithUnsavedEdits}
+            selectedAOI={selectedAOI}
+            selectedQuestionIdx={selectedQuestionIdx}
+            onAOIChange={setSelectedAOI}
+            onQuestionChange={setSelectedQuestionIdx}
+            joinedAOIs={joinedAOIs}
+            onSubmit={(key) => {
+              setSubmittedQuestions((prev) => new Set([...prev, key]));
+              setQuestionsWithUnsavedEdits((prev) => {
+                const updated = new Set(prev);
+                updated.delete(key);
+                return updated;
+              });
+            }}
+          />
+        ) : null}
+        {selectedPanel === "Interview" && <Interview />}
+
+        {selectedPanel === "AIML" && <AIML />}
+        {selectedPanel === "CYBERSECURITY" && <Cybersecurity />}
+        {selectedPanel === "BLOCKCHAIN" && <Blockchain />}
+        {selectedPanel === "BIOINFORMATICS" && <Bioinformatics />}
+        {selectedPanel === "QUANTUMCOMPUTING" && <QuantumComputing />}
+        {selectedPanel === "IOT" && <IoT />}
+      </div>
+    </div>
   );
 };
 
-export default ResearchNavbar;
+export default ResearchClient;
