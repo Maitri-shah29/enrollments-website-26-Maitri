@@ -18,8 +18,6 @@ export default async function TechServer({
     console.error("Failed to fetch round user on server:", e);
   }
 
-  console.log(initialRoundUser);
-
   return (
     <TechWebsite
       initialRoundUser={initialRoundUser}

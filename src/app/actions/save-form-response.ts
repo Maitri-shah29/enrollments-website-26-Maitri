@@ -1,7 +1,9 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import {
@@ -75,7 +77,7 @@ export default async function saveFormResponse(
           userId: true,
           roundId: true,
           status: true,
-          round: { select: { active: true, hidden: true } },
+          round: { select: { active: true, hidden: true, domain: true } },
         },
       },
     },
@@ -141,6 +143,13 @@ export default async function saveFormResponse(
     create: { questionId, formId, response: response ?? null, error: null },
     select: { id: true, questionId: true, formId: true, response: true },
   });
+
+  updateTag(cacheTags.homeRoundUserCount(userId));
+  updateTag(cacheTags.responses(formId));
+  updateTag(cacheTags.formSubmission(form.roundUser.id));
+  if (form.roundUser.round.domain) {
+    updateTag(cacheTags.roundUser(userId, form.roundUser.round.domain));
+  }
 
   return saved;
 }
