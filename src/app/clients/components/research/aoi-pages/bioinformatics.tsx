@@ -15,9 +15,10 @@ const bioinfoPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed mb-4 font-monopoly">
-            Bioinformatics blends biology and computing to decode complex
-            biological data. Members explore how algorithms help us understand
-            genes, proteins, diseases, and the science behind modern medicine.
+            Bioinformatics sits at the intersection of code and life. Members
+            use computational techniques to explore biological data - uncovering
+            patterns in genes, proteins, and diseases, and understanding how
+            technology drives modern medical research.
           </p>
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed font-semibold mb-2">
             Focus Areas:

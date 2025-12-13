@@ -15,9 +15,10 @@ const cybersecPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed mb-4 font-monopoly">
-            Cybersecurity focuses on defending digital systems. Members learn
-            how attackers think, how to uncover vulnerabilities, and how to
-            build stronger, safer environments.
+            Cybersecurity is a constant game of offense and defense. Members
+            learn how systems are attacked, how vulnerabilities are discovered,
+            and how strong security is designed. It’s about thinking like an
+            attacker to build safer digital worlds.
           </p>
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed font-semibold mb-2">
             Focus Areas:
