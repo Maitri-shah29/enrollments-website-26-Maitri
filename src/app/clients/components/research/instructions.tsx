@@ -17,22 +17,23 @@ export default function Instructions() {
         </h1>
 
         <p className="text-gray-300 leading-relaxed text-justify font-monopoly">
-          Welcome to the first round of ACM-VIT's Research Domain recruitment!
-          In this round, you'll have the opportunity to demonstrate your
-          analytical thinking, curiosity, and passion for exploring cutting-edge
-          topics in computer science. You'll be presented with a series of
-          questions that assess your research aptitude, critical thinking
-          skills, and ability to engage with complex technical concepts.
+          Welcome to the first round of ACM-VIT's Research Domain selections!{" "}
+          <br></br>
+          1. Go to the Explore tab on the left sidebar and join up to 3 AoIs
+          based on your preferences.
           <br />
+          2. Proceed to Round 1. Answer the common questions first, and then the
+          domain-wise questions.
           <br />
-          You can select a maximum of 2 Areas of Interest (AOIs) that resonate
-          with your research aspirations and academic goals. These AOIs will
-          help us understand your focus areas and may guide the research
-          projects you'll contribute to if selected. Once you've completed all
-          the questions, review your answers thoroughly and click submit. We're
-          looking for individuals who demonstrate genuine curiosity, strong
-          analytical skills, and the dedication to contribute meaningfully to
-          the advancement of knowledge in their chosen fields. Good luck!
+          3. Make sure you click on Save after every answer. If you see the
+          "Saved Successfully" popup on the top right, your answer has been
+          saved. You may change your answers after you save answer. You cannot
+          change your answers once you have submitted the form.
+          <br />
+          4. After answering all questions, click on ‘Submit Form’ at the bottom
+          of the left sidebar.
+          <br />
+          All the best!
         </p>
       </div>
     </div>

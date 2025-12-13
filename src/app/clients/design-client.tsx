@@ -62,7 +62,7 @@ const DesignClient = ({
 }: DesignClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null,
+    initialRoundUser ?? null
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +116,7 @@ const DesignClient = ({
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
       );
       setLoading(false);
       return;
@@ -144,7 +144,7 @@ const DesignClient = ({
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user",
+        err instanceof Error ? err.message : "Failed to initialize round user"
       );
     } finally {
       setLoading(false);

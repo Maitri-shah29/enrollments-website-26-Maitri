@@ -30,10 +30,8 @@ async function HomeWithSession() {
   if (userId) {
     roundUserCount = await getRoundUserCountCached(userId);
   }
-
   return (
     <SessionProvider initialSession={session}>
-      <PhoneNumberModal />
       <Landing
         session={session}
         isAllowed={true}

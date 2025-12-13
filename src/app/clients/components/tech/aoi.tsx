@@ -16,10 +16,10 @@ export default function AOIContent({ activeAOI }: Props) {
     }
   > = {
     app: {
-      text: `AppDev teaches members how to design and build mobile apps that feel great to use. From UI basics to full-fledged features, this track focuses on practical, hands-on app creation.
+      text: `AppDev is all about building experiences that live in people’s pockets. From crafting clean interfaces to wiring up powerful features, you’ll learn how to turn ideas into polished mobile apps that feel intuitive, responsive, and ready for real users.
 
 Focus Areas:
-- Android & iOS fundamentals
+- Android & iOS Development
 - UI/UX essentials
 - APIs & backend integration
 - Building and shipping real apps`,
@@ -28,10 +28,10 @@ Focus Areas:
       height: 500,
     },
     web: {
-      text: `WebDev covers everything needed to build modern websites and web apps. Members work with front-end, back-end, and deployment tools to create smooth, functional online experiences.
+      text: `WebDev is about building the digital spaces people interact with every day. From sleek frontends to solid backends, you’ll learn how modern websites and web apps are designed, built, and deployed - creating experiences that are fast, functional, and built to scale.
 
 Focus Areas:
-- HTML, CSS, JS fundamentals
+- HTML, CSS, JS, Python and beyond.
 - Frontend frameworks
 - Backend & databases
 - Hosting & deployment`,
@@ -40,7 +40,7 @@ Focus Areas:
       height: 500,
     },
     gamedev: {
-      text: `GameDev brings creativity and tech together. Members learn game engines, storytelling basics, and how to turn ideas into playable experiences.
+      text: `GameDev is where imagination turns interactive. You’ll explore how games are built from the ground up - mechanics, visuals, sound, and storytelling, then bring it all together into something playable. It’s creativity, logic, and a lot of fun rolled into one.
 
 Focus Areas:
 - Game engine fundamentals
@@ -52,25 +52,25 @@ Focus Areas:
       height: 800,
     },
     foss: {
-      text: `FOSS is all about building software in the open. Members learn how open-source communities work, contribute to real projects, and understand what makes collaborative development so powerful.
+      text: `FOSS is where code meets community. You don’t just write software - you build it in the open, alongside people from across the world. From your first pull request to meaningful contributions, this is where you learn how real collaboration happens and why open-source powers so much of modern tech.
 
 Focus Areas:
 - Open-source tools & ecosystems
-- Version control & collaboration
 - Contributing to real projects
-- Community-driven development`,
+- Community-driven development
+- We love Linux :)`,
       image: "/images/tech-aois/foss.svg",
       width: 600,
       height: 600,
     },
     devops: {
-      text: `DevOps focuses on making development faster, smoother, and more reliable. Members explore how automation, CI/CD, and cloud tooling keep modern engineering teams moving without chaos.
+      text: `DevOps is the art of making things just work. You’ll learn how software goes from a developer’s laptop to the real world - fast, stable, and without panic. Automation, pipelines, and cloud tools come together here to keep systems running smoothly even when things scale.
 
 Focus Areas:
 - CI/CD pipelines
 - Containerization & orchestration
 - Cloud deployment basics
-- Monitoring & automation`,
+- Monitoring at scale`,
       image: [
         { src: "/images/tech-aois/devops.svg", width: 510, height: 510 },
         { src: "/images/dockerdevopsascii.svg", width: 218, height: 271 },
