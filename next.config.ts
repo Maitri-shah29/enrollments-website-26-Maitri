@@ -9,6 +9,7 @@ const publicAssetPrefix =
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  cacheComponents: true,
   assetPrefix: cdnAssetPrefix,
   env: {
     NEXT_PUBLIC_PUBLIC_ASSET_PREFIX: publicAssetPrefix,

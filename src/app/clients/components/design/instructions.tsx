@@ -27,8 +27,8 @@ const Instructions: React.FC = () => {
             questions that test your understanding of design principles.
             <br />
             <br />
-            You can select a maximum of 2 Areas of Interest (AOIs) that align
-            with your passion and skills. These AOIs will help us understand
+            You can select a maximum of 3 Areas of Interest (AoIs) that align
+            with your passion and skills. These AoIs will help us understand
             your interests better and may influence the type of projects you'll
             work on if you’re selected. Once you've answered all the questions
             to the best of your ability, review your responses and click submit.

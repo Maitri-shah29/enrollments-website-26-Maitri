@@ -1,9 +1,10 @@
 "use server";
 
 import type { Domain, Prisma } from "@prisma/client";
-import { headers } from "next/headers";
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
-import { auth } from "../../lib/auth";
+import { getRequestUserId } from "@/lib/request-session";
 
 export type RoundWithRelations = Prisma.RoundGetPayload<{
   include: {
@@ -19,32 +20,38 @@ export type RoundWithRelations = Prisma.RoundGetPayload<{
 
 export default async function fetchRound(domain: Domain) {
   try {
-    const user = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!user?.session?.userId) {
+    const userId = await getRequestUserId();
+    if (!userId) {
       console.error("You are not logged in!");
       return { error: "Not logged in" };
     }
-    const rounds = await prisma.round.findMany({
-      where: {
-        domain: domain,
-        hidden: false,
-        active: true,
-      },
-      include: {
-        Question: {
-          include: {
-            round: true,
-            validators: true,
-          },
-        },
-        Meet: true,
-      },
-    });
-    return rounds;
+
+    return getRoundsCached(domain);
   } catch (e) {
     console.error("Error: ", e);
     throw new Error("Error fetching rounds");
   }
+}
+
+async function getRoundsCached(domain: Domain) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(cacheTags.rounds(domain));
+
+  return prisma.round.findMany({
+    where: {
+      domain,
+      hidden: false,
+      active: true,
+    },
+    include: {
+      Question: {
+        include: {
+          round: true,
+          validators: true,
+        },
+      },
+      Meet: true,
+    },
+  });
 }

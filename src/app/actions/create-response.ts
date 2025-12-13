@@ -1,7 +1,9 @@
 "use server";
 import { RoundStatus } from "@prisma/client";
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -74,6 +76,13 @@ export default async function createResponse(
           response: text,
         },
       });
+
+      updateTag(cacheTags.homeRoundUserCount(userId));
+      updateTag(cacheTags.responses(formId));
+      updateTag(cacheTags.formSubmission(roundUserId));
+      if (roundUser.round.domain) {
+        updateTag(cacheTags.roundUser(userId, roundUser.round.domain));
+      }
       return response;
     } else {
       return { error: "Round is not active or user status invalid" };

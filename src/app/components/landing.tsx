@@ -6,14 +6,14 @@ import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
 const buildMaskUrl = (path: string) =>
   `url("data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`,
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`
   )}")`;
 
 const TAB_MASK_IMAGE = buildMaskUrl(
-  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z",
+  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z"
 );
 const PLUS_BUTTON_MASK_IMAGE = buildMaskUrl(
-  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z",
+  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z"
 );
 
 // Main Landing Component
@@ -116,7 +116,7 @@ const Landing: React.FC<{
       if (savedActiveTabId && savedTabs) {
         const parsed = JSON.parse(savedTabs);
         const tabExists = parsed.some(
-          (tab: TabData) => tab.id === Number(savedActiveTabId),
+          (tab: TabData) => tab.id === Number(savedActiveTabId)
         );
         if (tabExists) {
           return Number(savedActiveTabId);
@@ -151,6 +151,38 @@ const Landing: React.FC<{
       }
     }
   }, [activeTabId]);
+
+  // Dynamic Favicon Logic
+  useEffect(() => {
+    const activeTab = tabs.find((tab) => tab.id === activeTabId);
+    if (!activeTab) return;
+
+    let currentUrl = "";
+    if (activeTab.pointer >= 0 && activeTab.history[activeTab.pointer]) {
+      currentUrl = activeTab.history[activeTab.pointer].url.toLowerCase();
+    }
+
+    const faviconMapping: Record<string, string> = {
+      cc: "/cc.png",
+      tech: "/tech.png",
+      design: "/design.png",
+      management: "/mgmt.png",
+      research: "/research.png",
+    };
+
+    const newFavicon = faviconMapping[currentUrl] || "/acm-logo.png";
+
+    const link =
+      (document.querySelector("link[rel*='icon']") as HTMLLinkElement) ||
+      document.createElement("link");
+    link.type = "image/png";
+    link.rel = "icon";
+    link.href = newFavicon;
+
+    if (!document.querySelector("link[rel*='icon']")) {
+      document.head.appendChild(link);
+    }
+  }, [activeTabId, tabs]);
 
   if (isPending) return null;
 
@@ -269,7 +301,7 @@ const Landing: React.FC<{
 
   const handleDragOver = (
     event: DragEvent<HTMLButtonElement>,
-    targetId: number,
+    targetId: number
   ) => {
     event.preventDefault();
     if (draggingTabId === null || draggingTabId === targetId) return;
@@ -278,7 +310,7 @@ const Landing: React.FC<{
 
   const handleDrop = (
     event: DragEvent<HTMLButtonElement>,
-    targetId: number,
+    targetId: number
   ) => {
     event.preventDefault();
     const payload = event.dataTransfer.getData("text/plain");

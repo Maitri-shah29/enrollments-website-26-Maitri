@@ -1,17 +1,14 @@
 "use server";
 // import { Domain, RoundStatus } from "@prisma/client";
 import { Domain } from "@prisma/client";
-import { headers } from "next/headers";
-import { auth } from "../../lib/auth";
-import { DOMAIN_CAP } from "../../lib/constants";
-import { prisma } from "../../lib/prisma";
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
+import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/request-session";
 export default async function fetchRoundUser(domain: string) {
   try {
-    const user = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!user?.session?.userId) {
+    const userId = await getRequestUserId();
+    if (!userId) {
       return "user is not logged in!";
     }
 
@@ -45,82 +42,90 @@ export default async function fetchRoundUser(domain: string) {
       throw new Error("Invalid domain provided");
     }
 
-    const round = await prisma.round.findFirst({
-      where: {
+    return getRoundUserCached(enumDomain, userId);
+  } catch (e) {
+    console.error("Error: ", e);
+    throw new Error("Error fetching round user");
+  }
+}
+
+async function getRoundUserCached(enumDomain: Domain, userId: string) {
+  "use cache";
+  cacheLife({ stale: 15, revalidate: 30, expire: 180 });
+  cacheTag(cacheTags.roundUser(userId, enumDomain));
+
+  const round = await prisma.round.findFirst({
+    where: {
+      domain: enumDomain,
+      type: "form",
+      active: true,
+      number: 1,
+    },
+    select: {
+      hidden: true,
+    },
+  });
+
+  const basicRoundUser = await prisma.roundUser.findFirst({
+    where: {
+      round: {
         domain: enumDomain,
         type: "form",
-        active: true,
         number: 1,
+        active: true,
       },
-      select: {
-        hidden: true,
-      },
-    });
+      userId,
+    },
+    include: {
+      round: true,
+      Task: true,
+      Meet_User: true,
+      user: true,
+    },
+  });
 
-    const basicRoundUser = await prisma.roundUser.findFirst({
-      where: {
-        round: {
-          domain: enumDomain,
-          type: "form",
-          number: 1,
-          active: true,
+  if (!basicRoundUser) {
+    return null;
+  }
+
+  // if (!round?.hidden && basicRoundUser.status === RoundStatus.pending) {
+  // this breaks a bunch of promoted checks so sending questions to clients for now
+  if (!round?.hidden) {
+    const [questions, formSubmission] = await Promise.all([
+      prisma.question.findMany({
+        where: {
+          roundId: basicRoundUser.roundId,
         },
-        userId: user.session.userId,
-      },
-      include: {
-        round: true,
-        Task: true,
-        Meet_User: true,
-        user: true,
-      },
-    });
-
-    if (!basicRoundUser) {
-      return null;
-    }
-
-    // if (!round?.hidden && basicRoundUser.status === RoundStatus.pending) {
-    //this breaks a bunch of promoted checks so sending questions to clients for now
-    if (!round?.hidden) {
-      const [questions, formSubmission] = await Promise.all([
-        prisma.question.findMany({
-          where: {
-            roundId: basicRoundUser.roundId,
-          },
-          orderBy: {
-            serial: "asc",
-          },
-        }),
-        prisma.formSubmission.findFirst({
-          where: {
-            roundUserId: basicRoundUser.id,
-          },
-          include: {
-            responses: true,
-          },
-        }),
-      ]);
-
-      return {
-        ...basicRoundUser,
-        round: {
-          ...basicRoundUser.round,
-          Question: questions,
+        orderBy: {
+          serial: "asc",
         },
-        formSubmission,
-      };
-    }
+      }),
+      prisma.formSubmission.findFirst({
+        where: {
+          roundUserId: basicRoundUser.id,
+        },
+        include: {
+          responses: true,
+        },
+      }),
+    ]);
 
     return {
       ...basicRoundUser,
       round: {
         ...basicRoundUser.round,
-        Question: [],
+        Question: questions,
       },
-      formSubmission: null,
+      formSubmission,
     };
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Error fetching round user");
   }
+
+  return {
+    ...basicRoundUser,
+    round: {
+      ...basicRoundUser.round,
+      Question: [],
+    },
+    formSubmission: null,
+  };
 }

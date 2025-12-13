@@ -35,7 +35,7 @@ export default function Instructions({ onBack }: InstructionsProps) {
             vision for creating impactful events and initiatives. You'll be
             presented with a series of questions that assess your strategic
             thinking, team coordination capabilities, and understanding of what
-            it takes to manage successful technical communities.
+            it takes to manage successful communities.
           </p>
           <p>
             Once you've completed all the questions, review your answers

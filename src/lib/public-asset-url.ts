@@ -9,6 +9,7 @@ function normalizePath(pathname: string) {
 }
 
 const DEFAULT_PUBLIC_ASSET_PREFIX = "https://assets.acmvit.in/ocs";
+const DEV_PUBLIC_ASSET_PREFIX = "http://localhost:3000";
 
 function getPublicAssetPrefix() {
   const clientPrefix = process.env.NEXT_PUBLIC_PUBLIC_ASSET_PREFIX;
@@ -17,6 +18,10 @@ function getPublicAssetPrefix() {
   if (typeof window === "undefined") {
     const serverPrefix = process.env.CDN_ASSET_PREFIX;
     if (serverPrefix) return normalizePrefix(serverPrefix);
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return normalizePrefix(DEV_PUBLIC_ASSET_PREFIX);
   }
 
   return normalizePrefix(DEFAULT_PUBLIC_ASSET_PREFIX);
