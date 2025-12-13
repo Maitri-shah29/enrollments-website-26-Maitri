@@ -584,7 +584,7 @@ export default function Management({
         </div>
       )}
       <Image
-        src={`/images/management/wallpapers/${wallpaper}.svg`}
+        src={`/images/management/wallpapers/${wallpaper}.avif`}
         width={1920}
         height={1080}
         alt="bg"
