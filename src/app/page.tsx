@@ -15,7 +15,7 @@ import { SessionProvider } from "./components/session-provider";
 export default function Home() {
   return (
     <div className="h-screen w-screen">
-      <Suspense fallback={<div className="h-screen w-screen" />}>
+      <Suspense fallback={<div className="h-screen w-screen bg-neutral-950" />}>
         <HomeWithSession />
       </Suspense>
     </div>
@@ -32,7 +32,7 @@ async function HomeWithSession() {
   }
 
   return (
-    <SessionProvider>
+    <SessionProvider initialSession={session}>
       <PhoneNumberModal />
       <Landing
         session={session}
