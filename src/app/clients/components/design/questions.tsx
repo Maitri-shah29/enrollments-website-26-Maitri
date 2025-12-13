@@ -1,5 +1,5 @@
 "use client";
-import type { Question } from "@prisma/client";
+import type { Question, Response } from "@prisma/client";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
@@ -7,25 +7,10 @@ import submitForm from "@/app/actions/submit-form";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { DesignAOI } from "@/lib/types";
 
-//this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
-interface QuestionsProps {
-  questions: Question[];
-  roundUser: RoundUserExtended;
-  joinedAOIs: Set<DesignAOI>;
-  savedAnswers?: Record<string, string>; // lifted state from parent
-  setSavedAnswers?: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >; // setter from parent
-  questionsWithUnsavedEdits?: Set<string>; // lifted state from parent
-  setQuestionsWithUnsavedEdits?: React.Dispatch<
-    React.SetStateAction<Set<string>>
-  >; // setter from parent
-}
-
 interface TransformedQuestion {
   header: string;
   content: string;
-  questionId: string; // Added to track question ID for responses
+  questionId: string;
 }
 
 interface AOIData {
@@ -33,119 +18,75 @@ interface AOIData {
   questions: TransformedQuestion[];
 }
 
+//this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
+interface QuestionsProps {
+  questions: Question[];
+  roundUser: RoundUserExtended;
+  joinedAOIs: Set<DesignAOI>;
+  savedAnswers: Record<string, string>; // lifted state from parent
+  setSavedAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>; // setter from parent
+  questionsWithUnsavedEdits: Set<string>; // lifted state from parent
+  setQuestionsWithUnsavedEdits: React.Dispatch<
+    React.SetStateAction<Set<string>>
+  >; // setter from parent
+  filteredQuestions: Question[];
+  aoiData: AOIData[];
+  selectedAoi: AOIData | null;
+  setSelectedAoi: React.Dispatch<React.SetStateAction<AOIData | null>>;
+  selectedQuestion: TransformedQuestion | null;
+  setSelectedQuestion: React.Dispatch<
+    React.SetStateAction<TransformedQuestion | null>
+  >;
+  isSaving: boolean;
+  setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
+  submittingForm: boolean;
+  setSubmittingForm: React.Dispatch<React.SetStateAction<boolean>>;
+  showConfirmDialog: boolean;
+  setShowConfirmDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  isProceeding: boolean;
+  setIsProceeding: React.Dispatch<React.SetStateAction<boolean>>;
+  answers: Record<string, string>;
+  setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: React.Dispatch<React.SetStateAction<boolean>>;
+  savedResponses: Response[];
+  setSavedResponses: React.Dispatch<React.SetStateAction<Response[]>>;
+}
+
 interface Toast {
   message: string;
   type: "success" | "error";
 }
 
-const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
-  const grouped = questions.reduce(
-    (acc, question) => {
-      const varName = question.varName;
-      if (!acc[varName]) {
-        acc[varName] = [];
-      }
-      acc[varName].push(question);
-      return acc;
-    },
-    {} as Record<string, Question[]>,
-  );
-
-  return Object.entries(grouped).map(([varName, questions]) => ({
-    name: varName,
-    questions: questions
-      .sort((a, b) => a.serial - b.serial)
-      .map((q) => ({
-        header: `Question ${q.serial}`,
-        content: q.question,
-        questionId: q.id, // Include question ID
-      })),
-  }));
-};
-
 const Questions: React.FC<QuestionsProps> = ({
   questions,
   roundUser,
   joinedAOIs,
-  savedAnswers: externalSavedAnswers,
-  setSavedAnswers: externalSetSavedAnswers,
-  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
-  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
+  savedAnswers,
+  setSavedAnswers,
+  questionsWithUnsavedEdits,
+  setQuestionsWithUnsavedEdits,
+  filteredQuestions,
+  aoiData,
+  selectedAoi,
+  setSelectedAoi,
+  selectedQuestion,
+  setSelectedQuestion,
+  isSaving,
+  setIsSaving,
+  submittingForm,
+  setSubmittingForm,
+  showConfirmDialog,
+  setShowConfirmDialog,
+  isProceeding,
+  setIsProceeding,
+  answers,
+  setAnswers,
+  hasUnsavedChanges,
+  setHasUnsavedChanges,
+  savedResponses,
+  setSavedResponses,
 }) => {
-  // Map DesignAOI to varName prefixes (these should match the question varNames in your database)
-  const designAOIToVarName: Record<DesignAOI, string> = {
-    uiux: "uiux",
-    videoediting: "videoediting",
-    illustrations: "illustrations",
-    motiongraphics: "motiongraphics",
-    "3d": "3d",
-  };
-
-  // Filter questions based on joined AOIs
-  const filteredQuestions = useMemo(() => {
-    if (joinedAOIs.size === 0) {
-      return [];
-    }
-
-    const allowedVarNames = new Set<string>();
-    // Always include common questions if any AOI is joined
-    allowedVarNames.add("common");
-
-    for (const aoi of joinedAOIs) {
-      allowedVarNames.add(designAOIToVarName[aoi]);
-    }
-
-    return questions.filter((q) =>
-      Array.from(allowedVarNames).some((varName) =>
-        q.varName?.toLowerCase().includes(varName.toLowerCase()),
-      ),
-    );
-  }, [questions, joinedAOIs]);
-
-  const aoiData = useMemo(
-    () => groupQuestionsByVarName(filteredQuestions),
-    [filteredQuestions],
-  );
-
-  const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
-    aoiData[0] || null,
-  );
-  const [selectedQuestion, setSelectedQuestion] =
-    useState<TransformedQuestion | null>(aoiData[0]?.questions[0] || null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [submittingForm, setSubmittingForm] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [isProceeding, setIsProceeding] = useState<boolean>(false);
-
-  const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
-
-  // Use external state if provided, otherwise use internal
-  const [internalSavedAnswers, setInternalSavedAnswers] = useState<
-    Record<string, string>
-  >({});
-  const [
-    internalQuestionsWithUnsavedEdits,
-    setInternalQuestionsWithUnsavedEdits,
-  ] = useState<Set<string>>(new Set());
-
-  const useExternalSavedState =
-    !!externalSavedAnswers &&
-    !!externalSetSavedAnswers &&
-    !!externalSetQuestionsWithUnsavedEdits;
-  const savedAnswers = useExternalSavedState
-    ? externalSavedAnswers
-    : internalSavedAnswers;
-  const setSavedAnswers = useExternalSavedState
-    ? externalSetSavedAnswers
-    : setInternalSavedAnswers;
-  const questionsWithUnsavedEdits = useExternalSavedState
-    ? externalQuestionsWithUnsavedEdits || new Set()
-    : internalQuestionsWithUnsavedEdits;
-  const setQuestionsWithUnsavedEdits = useExternalSavedState
-    ? externalSetQuestionsWithUnsavedEdits
-    : setInternalQuestionsWithUnsavedEdits;
-
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
   const [pendingNavigation, setPendingNavigation] = useState<{
     type: "aoi" | "question";
@@ -164,26 +105,6 @@ const Questions: React.FC<QuestionsProps> = ({
   );
 
   const formSubmissionId = roundUser?.formSubmission?.id || null;
-  const savedResponses = roundUser?.formSubmission?.responses || [];
-
-  // Load saved responses into answers state
-  useEffect(() => {
-    if (savedResponses.length > 0) {
-      const loadedAnswers: Record<string, string> = {};
-      for (const response of savedResponses) {
-        if (response.response) {
-          loadedAnswers[response.questionId] = response.response;
-        }
-      }
-      setAnswers(loadedAnswers);
-      if (!useExternalSavedState) {
-        setInternalSavedAnswers(loadedAnswers);
-      } else if (externalSetSavedAnswers) {
-        externalSetSavedAnswers(loadedAnswers);
-      }
-      console.log("Loaded answers from saved responses:", loadedAnswers);
-    }
-  }, [savedResponses, useExternalSavedState, externalSetSavedAnswers]);
 
   const handleAoiClick = (aoi: AOIData) => {
     if (hasUnsavedChanges) {
@@ -264,7 +185,17 @@ const Questions: React.FC<QuestionsProps> = ({
     setSavedAnswers,
     setQuestionsWithUnsavedEdits,
     roundUser.id,
+    setHasUnsavedChanges,
+    setIsSaving,
   ]);
+
+  const designAOIToVarName: Record<DesignAOI, string> = {
+    uiux: "uiux",
+    videoediting: "videoediting",
+    illustrations: "illustrations",
+    motiongraphics: "motiongraphics",
+    "3d": "3d",
+  };
 
   const handleSubmitForm = () => {
     // Frontend validation before showing confirm dialog
@@ -647,6 +578,8 @@ const Questions: React.FC<QuestionsProps> = ({
 
                     const questionId = selectedQuestion.questionId;
                     const newAnswer = e.target.value;
+
+                    console.log(newAnswer);
                     setAnswers((prev) => ({
                       ...prev,
                       [questionId]: newAnswer,

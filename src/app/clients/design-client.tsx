@@ -1,6 +1,8 @@
 "use client";
+import type { Question, Response } from "@prisma/client";
+import { s } from "framer-motion/client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { DOMAIN_CAP } from "@/lib/constants";
 import type { DesignAOI } from "@/lib/types";
@@ -19,6 +21,40 @@ interface DesignClientProps {
   initialRoundUser?: RoundUserExtended | null;
   roundUserCount: number;
 }
+interface TransformedQuestion {
+  header: string;
+  content: string;
+  questionId: string; // Added to track question ID for responses
+}
+interface AOIData {
+  name: string;
+  questions: TransformedQuestion[];
+}
+
+const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
+  const grouped = questions.reduce(
+    (acc, question) => {
+      const varName = question.varName;
+      if (!acc[varName]) {
+        acc[varName] = [];
+      }
+      acc[varName].push(question);
+      return acc;
+    },
+    {} as Record<string, Question[]>,
+  );
+
+  return Object.entries(grouped).map(([varName, questions]) => ({
+    name: varName,
+    questions: questions
+      .sort((a, b) => a.serial - b.serial)
+      .map((q) => ({
+        header: `Question ${q.serial}`,
+        content: q.question,
+        questionId: q.id, // Include question ID
+      })),
+  }));
+};
 
 const DesignClient = ({
   initialRoundUser,
@@ -117,6 +153,72 @@ const DesignClient = ({
   // get questions from the round
   const formQuestions = roundUser?.round?.Question || [];
 
+  const designAOIToVarName: Record<DesignAOI, string> = {
+    uiux: "uiux",
+    videoediting: "videoediting",
+    illustrations: "illustrations",
+    motiongraphics: "motiongraphics",
+    "3d": "3d",
+  };
+
+  const filteredQuestions = useMemo(() => {
+    if (joinedAOIs.size === 0) {
+      return [];
+    }
+
+    const allowedVarNames = new Set<string>();
+    // Always include common questions if any AOI is joined
+    allowedVarNames.add("common");
+
+    for (const aoi of joinedAOIs) {
+      allowedVarNames.add(designAOIToVarName[aoi]);
+    }
+
+    return formQuestions.filter((q) =>
+      Array.from(allowedVarNames).some((varName) =>
+        q.varName?.toLowerCase().includes(varName.toLowerCase()),
+      ),
+    );
+  }, [formQuestions, joinedAOIs]);
+
+  const aoiData = useMemo(
+    () => groupQuestionsByVarName(filteredQuestions),
+    [filteredQuestions],
+  );
+
+  const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
+    aoiData[0] || null,
+  );
+  const [selectedQuestion, setSelectedQuestion] =
+    useState<TransformedQuestion | null>(aoiData[0]?.questions[0] || null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [submittingForm, setSubmittingForm] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
+
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+
+  const [savedResponses, setSavedResponses] = useState<Response[]>(
+    (roundUser?.formSubmission?.responses as Response[]) || [],
+  );
+
+  useEffect(() => {
+    if (savedResponses.length > 0) {
+      const loadedAnswers: Record<string, string> = {};
+      for (const response of savedResponses) {
+        if (response.response) {
+          loadedAnswers[response.questionId] = response.response;
+        }
+      }
+      setAnswers(loadedAnswers);
+      setSavedAnswers(loadedAnswers);
+
+      console.log("Loaded answers from saved responses:", loadedAnswers);
+    }
+  }, [savedResponses]);
+
   return (
     <div className="flex flex-col w-full h-full border border-black text-white figma-cursor overflow-hidden">
       {/* Error Popup */}
@@ -202,6 +304,26 @@ const DesignClient = ({
               setSavedAnswers={setSavedAnswers}
               questionsWithUnsavedEdits={questionsWithUnsavedEdits}
               setQuestionsWithUnsavedEdits={setQuestionsWithUnsavedEdits}
+              filteredQuestions={filteredQuestions}
+              aoiData={aoiData}
+              selectedAoi={selectedAoi}
+              setSelectedAoi={setSelectedAoi}
+              selectedQuestion={selectedQuestion}
+              setSelectedQuestion={setSelectedQuestion}
+              isSaving={isSaving}
+              setIsSaving={setIsSaving}
+              submittingForm={submittingForm}
+              setSubmittingForm={setSubmittingForm}
+              showConfirmDialog={showConfirmDialog}
+              setShowConfirmDialog={setShowConfirmDialog}
+              isProceeding={isProceeding}
+              setIsProceeding={setIsProceeding}
+              answers={answers}
+              setAnswers={setAnswers}
+              hasUnsavedChanges={hasUnsavedChanges}
+              setHasUnsavedChanges={setHasUnsavedChanges}
+              savedResponses={savedResponses}
+              setSavedResponses={setSavedResponses}
             />
           )
         )}
