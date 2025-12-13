@@ -22,7 +22,7 @@ export default function Instructions() {
         <pre className="whitespace-pre-wrap text-[#E097CE]">
           {`1. Go to the Explore tab on the left sidebar and join up to 3 AoIs based on your preferences.
 2. Proceed to Round 1. Answer the common questions first, and then the domain-wise questions. 
-3. Make sure you click on Save after every answer. If you see the "Saved Successfully" popup on the top right, your answer has been saved.
+3. Make sure you click on Save after every answer. If you see the "Saved Successfully" popup on the top right, your answer has been saved. You may change your answers after you save answer. You cannot change your answers once you have submitted the form.
 4. After answering all questions, click on ‘Submit Form’ at the bottom of the left sidebar.
 
 Bonus - You will be judged on your technical skills but more importantly, on your ability to quickly learn new concepts. Points will be given for originality.

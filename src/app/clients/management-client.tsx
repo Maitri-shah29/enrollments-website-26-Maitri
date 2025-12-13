@@ -610,7 +610,7 @@ export default function Management({
           className="mb-8 select-none"
         />
         <a
-          href="https://www.instagram.com/acmvit/#"
+          href="mailto:outreach@acmvit.in"
           target="_blank"
           rel="noopener noreferrer"
           className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20 hover: transition-transform cursor-pointer"
