@@ -223,7 +223,7 @@ const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
     events: "Events",
     domains: "Domains",
     pintoorun: "PintooRun",
-    snake: "SnakeGame",
+    snake: "Snake",
   };
 
   return (
