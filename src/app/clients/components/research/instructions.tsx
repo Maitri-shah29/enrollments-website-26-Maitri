@@ -27,7 +27,8 @@ export default function Instructions() {
           <br />
           3. Make sure you click on Save after every answer. If you see the
           "Saved Successfully" popup on the top right, your answer has been
-          saved.
+          saved. You may change your answers after you save answer. You cannot
+          change your answers once you have submitted the form.
           <br />
           4. After answering all questions, click on ‘Submit Form’ at the bottom
           of the left sidebar.
