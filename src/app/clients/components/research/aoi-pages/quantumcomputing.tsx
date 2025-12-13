@@ -15,9 +15,10 @@ const quantumcomputingPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed mb-4 font-monopoly">
-            Quantum Computing introduces computation beyond classical limits.
-            Members explore qubits, quantum circuits, and algorithms that could
-            redefine problem-solving.
+            Quantum Computing looks beyond classical limits. Members explore how
+            qubits, superposition, and quantum algorithms can solve problems in
+            entirely new ways - offering a glimpse into the future of
+            computation and security.
           </p>
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed font-semibold mb-2">
             Focus Areas:
