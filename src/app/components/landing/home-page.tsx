@@ -306,7 +306,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 // onClick={handleKeyword("tech")}
               >
                 <div
-                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#7b2ff7]"
+                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#ff9cd9]"
                   style={stickerTextBase}
                 >
                   Tech
