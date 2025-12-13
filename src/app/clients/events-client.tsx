@@ -26,7 +26,7 @@ const Events = () => {
       textColor: "#fff",
       logo: <Image src="Group.svg" alt="c2c logo" width={120} height={120} />,
       description:
-        " Code2Create, a 36 hour long hackathon, is ACM-VIT's flagship event and one of the grandest annual events hosted in VIT.",
+        "Code2Create is ACM-VIT's flagship 48-hour national hackathon and one of the largest  events hosted in VIT. Bringing together thousands of innovative minds, participants collaborate intensively to build groundbreaking solutions, competing for exciting prizes while networking with industry mentors.",
       color: "#5EBF94",
     },
     {
@@ -43,7 +43,7 @@ const Events = () => {
         />
       ),
       description:
-        "graVITas' most participated event, Cryptic Hunt is ACM's elaborate scavenger hunt which mastery of logic and tech.",
+        "Cryptic Hunt is ACM's elaborate app-based scavenger hunt which demands mastery of logic and creative thinking. Participants solve cryptic puzzles, riddles, and mind-bending challenges by scanning QR codes placed all over the campus. Teams race against time and fellow hunters to decode clues and climb the leaderboard.",
       color: "#E67E50",
     },
     {
@@ -60,7 +60,7 @@ const Events = () => {
         />
       ),
       description:
-        "Your one-stop solution to Cram before Exams with its curated resources, notes and previous year question papers. Perfect for last minute revision and comprehensive exam preparation!",
+        "ACM-VIT's comprehensive platform for VITians to access previous year question papers and curated notes for every subject. The site helps students prepare effectively for exams by enabling them to understand exam patterns, practice past questions, and ace their academics with confidence.",
       color: "#5B9FD8",
     },
     {
@@ -77,7 +77,7 @@ const Events = () => {
         />
       ),
       description:
-        "Simplistic app for VITians to share cab rides and split costs during travel.",
+        "An ACM-VIT initiative for users to share cab rides and split costs during travel. The platform provides real-time ride matching, secure payment splitting, and secure authorization, making commutes to airports, railway stations, and weekend destinations more affordable and sustainable for students.",
       color: "#C8D96F",
     },
     {
@@ -89,9 +89,8 @@ const Events = () => {
         <Image src="Vector.svg" alt="Reverse Coding" width={120} height={120} />
       ),
       description:
-        "Competitive coding event with a twist, ACM's Reverse Coding requires participants to quirkily reverse engineer solutions.",
-      color: "#894fa4ff",
-      glowOpacity: "opacity-100",
+        "Competitive coding with a twist, ACM's Reverse Coding requires participants to reverse engineer solutions. Instead of solving problems traditionally, coders must work backwards from expected outputs to deduce the original problem statement, testing their analytical thinking and pattern recognition in this brain-teasing competition.",
+      color: "#9B6FB0",
     },
     {
       id: 6,

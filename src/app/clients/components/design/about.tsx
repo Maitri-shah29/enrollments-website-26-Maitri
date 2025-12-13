@@ -25,8 +25,8 @@ const About: React.FC = () => {
             creativity with clarity, shaping visuals, stories, and experiences
             that leave a mark. From clean UI/UX designs to bold motion graphics,
             from cinematic edits to immersive 3D worlds and expressive
-            illustrations every detail is crafted with purpose. We design to
-            connect, inspire, and bring ideas to life.
+            illustrations, every detail is crafted with purpose. We design to
+            connect, inspire and bring ideas to life.
           </p>
         </div>
         <Image
