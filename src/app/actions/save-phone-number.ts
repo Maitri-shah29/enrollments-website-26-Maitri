@@ -1,7 +1,9 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
 
 export default async function savePhoneNumber(phone: string) {
@@ -41,6 +43,8 @@ export default async function savePhoneNumber(phone: string) {
       data: { phone: trimmedPhone },
       select: { id: true, phone: true },
     });
+
+    updateTag(cacheTags.user(session.session.userId));
 
     return { success: true, user: updatedUser };
   } catch (error) {

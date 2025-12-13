@@ -1,9 +1,10 @@
 "use server";
 
 import type { Prisma } from "@prisma/client";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/request-session";
 
 export type TaskRoundUser = Prisma.RoundUserGetPayload<{
   include: {
@@ -21,19 +22,24 @@ export type GroupedTasksByDomain = {
 };
 
 export default async function getGroupedTasks() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.session.userId) {
+  const userId = await getRequestUserId();
+  if (!userId) {
     console.error("Login to use this feature!");
     return [];
   }
 
+  return getGroupedTasksCached(userId);
+}
+
+async function getGroupedTasksCached(userId: string) {
+  "use cache";
+  cacheLife({ stale: 30, revalidate: 60, expire: 300 });
+  cacheTag(cacheTags.tasks(userId));
+
   try {
     const taskRoundUsers = await prisma.roundUser.findMany({
       where: {
-        userId: session?.session.userId,
+        userId,
         round: {
           type: "task",
         },

@@ -1,26 +1,31 @@
 "use server";
-import { headers } from "next/headers";
-import { auth } from "../../lib/auth";
-import { prisma } from "../../lib/prisma";
+
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
+import { prisma } from "@/lib/prisma";
+import { getRequestUserId } from "@/lib/request-session";
 export default async function fetchQuestion(roundId: string) {
   try {
-    const user = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!user?.session?.userId) {
+    const userId = await getRequestUserId();
+    if (!userId) {
       return "User is not logged in!";
     }
 
-    const question = await prisma.question.findMany({
-      where: {
-        roundId: roundId,
-      },
-    });
-
-    return question;
+    return getQuestionsCached(roundId);
   } catch (e) {
     console.error("Error: ", e);
     throw new Error("Error fetching questions");
   }
+}
+
+async function getQuestionsCached(roundId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(cacheTags.roundQuestions(roundId));
+
+  return prisma.question.findMany({
+    where: {
+      roundId,
+    },
+  });
 }

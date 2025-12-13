@@ -1,7 +1,9 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -49,6 +51,7 @@ export default async function submitForm(
           select: {
             active: true,
             hidden: true,
+            domain: true,
             Question: {
               select: {
                 id: true,
@@ -202,6 +205,13 @@ export default async function submitForm(
         },
       },
     });
+
+    updateTag(cacheTags.homeRoundUserCount(userId));
+    updateTag(cacheTags.formSubmission(roundUserId));
+    updateTag(cacheTags.responses(formSubmissionId));
+    if (roundUser.round.domain) {
+      updateTag(cacheTags.roundUser(userId, roundUser.round.domain));
+    }
 
     return { success: true, roundUser: updated };
   } catch (error) {

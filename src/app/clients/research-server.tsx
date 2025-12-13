@@ -17,7 +17,6 @@ export default async function ResearchServer({
   } catch (e) {
     console.error("Failed to fetch round user on server:", e);
   }
-  console.log(initialRoundUser);
   return (
     <ResearchClient
       initialRoundUser={initialRoundUser}

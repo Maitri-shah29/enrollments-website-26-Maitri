@@ -1,51 +1,65 @@
-import { headers } from "next/headers";
+import { cacheLife, cacheTag } from "next/cache";
+import { Suspense } from "react";
 import CCServer from "@/app/clients/cc-server";
 import DesignServer from "@/app/clients/design-server";
 import ManagementServer from "@/app/clients/management-server";
 import ResearchServer from "@/app/clients/research-server";
 import TechServer from "@/app/clients/tech-server";
-import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
+import { getRequestSession } from "@/lib/request-session";
 import Landing from "./components/landing";
 import PhoneNumberModal from "./components/phone-number-modal";
 import { SessionProvider } from "./components/session-provider";
 
-export default async function Home() {
-  // Make the root page itself async and fetch session directly
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+export default function Home() {
+  return (
+    <div className="h-screen w-screen">
+      <Suspense fallback={<div className="h-screen w-screen bg-neutral-950" />}>
+        <HomeWithSession />
+      </Suspense>
+    </div>
+  );
+}
+
+async function HomeWithSession() {
+  const session = await getRequestSession();
 
   let roundUserCount = 0;
-  if (session?.session?.userId) {
-    roundUserCount = await prisma.roundUser.count({
-      where: {
-        userId: session.session.userId,
-        status: { not: "pending" },
-        round: {
-          number: 1,
-          type: "form",
-        },
-      },
-    });
-
-    console.log(roundUserCount);
+  const userId = session?.session?.userId;
+  if (userId) {
+    roundUserCount = await getRoundUserCountCached(userId);
   }
 
   return (
-    <div className="h-screen w-screen">
-      <SessionProvider>
-        <PhoneNumberModal />
-        <Landing
-          session={session}
-          isAllowed={true}
-          ccChild={<CCServer roundUserCount={roundUserCount} />}
-          designChild={<DesignServer roundUserCount={roundUserCount} />}
-          managementChild={<ManagementServer roundUserCount={roundUserCount} />}
-          techChild={<TechServer roundUserCount={roundUserCount} />}
-          researchChild={<ResearchServer roundUserCount={roundUserCount} />}
-        />
-      </SessionProvider>
-    </div>
+    <SessionProvider initialSession={session}>
+      <PhoneNumberModal />
+      <Landing
+        session={session}
+        isAllowed={true}
+        ccChild={<CCServer roundUserCount={roundUserCount} />}
+        designChild={<DesignServer roundUserCount={roundUserCount} />}
+        managementChild={<ManagementServer roundUserCount={roundUserCount} />}
+        techChild={<TechServer roundUserCount={roundUserCount} />}
+        researchChild={<ResearchServer roundUserCount={roundUserCount} />}
+      />
+    </SessionProvider>
   );
+}
+
+async function getRoundUserCountCached(userId: string) {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 120, expire: 600 });
+  cacheTag(cacheTags.homeRoundUserCount(userId));
+
+  return prisma.roundUser.count({
+    where: {
+      userId,
+      status: { not: "pending" },
+      round: {
+        number: 1,
+        type: "form",
+      },
+    },
+  });
 }
