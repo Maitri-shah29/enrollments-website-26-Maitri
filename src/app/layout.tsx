@@ -27,11 +27,11 @@ const metadataBase = new URL(metadataBaseUrl);
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | OCS '25",
-    default: "OCS '25 | ACM-VIT",
+    template: "%s | OCS '26",
+    default: "OCS '26 | ACM-VIT",
   },
   description:
-    "The ACM-VIT Organizing Committee Selections 2025 portal is your gateway to VIT's most dynamic tech chapter. Make an impact!",
+    "The ACM-VIT Organizing Committee Selections 2026 portal is your gateway to VIT's most dynamic tech chapter. Make an impact!",
   keywords: [
     "ACM",
     "VIT",
