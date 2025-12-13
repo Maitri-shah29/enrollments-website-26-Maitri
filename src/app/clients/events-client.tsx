@@ -151,7 +151,7 @@ const Events = () => {
   ];
   return (
     <div
-      className="bg-gradient-to-br from-black via-gray-950 to-black w-full h-screen text-white font-doppio overflow-y-scroll p-20 relative"
+      className="bg-gradient-to-br from-black via-gray-950 to-black w-full text-white font-doppio overflow-y-scroll p-20 relative"
       style={{
         scrollbarWidth: "thin",
         scrollbarColor: "#6b7280 #1f2937",
@@ -225,9 +225,26 @@ const Events = () => {
               }}
             >
               <div
-                className="absolute bottom-0 left-0 right-0 h-64 xl:h-80 2xl:h-96 rounded-2xl opacity-40 z-0"
-                style={{ backgroundColor: event.color }}
-              />
+                className="absolute inset-0 z-0"
+                style={{
+                  filter: `drop-shadow(0 28px 60px 40)`,
+                }}
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 300 180"
+                  className="h-auto w-full"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M 25 0 L 180 0 C 195 0 200 35 220 35 L 275 35 C 288.8 35 300 46.2 300 60 L 300 155 C 300 168.8 288.8 180 275 180 L 25 180 C 11.2 180 0 168.8 0 155 L 0 25 C 0 11.2 11.2 0 25 0 Z"
+                    fill={event.color}
+                    opacity={0.7}
+                  />
+                </svg>
+              </div>
 
               {/* Logo with 3D hover animation */}
               <div className="relative w-full h-24 xl:h-32 2xl:h-40 -mb-4 flex items-center justify-center z-[5]">
