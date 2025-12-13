@@ -13,6 +13,7 @@ interface EventData {
   logoScale?: number;
   textColor?: string;
   glowOpacity?: string;
+  glowColor?: string;
 }
 
 const Events = () => {
@@ -119,7 +120,8 @@ const Events = () => {
       ),
       description:
         "The InspiHER Podcast series has always been about more than just conversations; it’s about connection, empowerment, and igniting ambition. This year, we’re raising the bar. With an expanded lineup of remarkable women leaders from across the globe, we aim to amplify diverse voices and share stories that matter — stories of resilience, innovation, leadership, and the unwavering spirit that fuels change.",
-      color: "#FF6B6B",
+      color: "#f58f8fff",
+      glowColor: "#000000ee",
     },
     {
       id: 8,
@@ -257,7 +259,7 @@ const Events = () => {
                   {/* Glow Effect */}
                   <div
                     className={`absolute inset-0 rounded-full blur-2xl ${event.glowOpacity || "opacity-60"} transition-all duration-500 -z-10`}
-                    style={{ backgroundColor: event.color }}
+                    style={{ backgroundColor: event.glowColor || event.color }}
                   />
                   {event.logo}
                 </div>
