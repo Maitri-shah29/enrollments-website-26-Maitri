@@ -31,7 +31,7 @@ const ALL_AOIS: { aoi: AOI; title: string; description: string }[] = [
   },
 ];
 
-const AOI_JOIN_LIMIT = 3;
+const AOI_JOIN_LIMIT = 2;
 
 type ExploreAOIsProps = {
   joinedAOIs: Set<AOI>;
@@ -83,8 +83,8 @@ export default function ExploreAOIs({
                   isJoined
                     ? "bg-gray-600 hover:bg-gray-700 text-white"
                     : disableJoin
-                      ? "bg-gray-300 text-gray-400 cursor-not-allowed"
-                      : "bg-[#993C7A] hover:bg-[#b84a92] text-white"
+                    ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                    : "bg-[#993C7A] hover:bg-[#b84a92] text-white"
                 }`}
               >
                 {isJoined ? "Leave" : disableJoin ? "Limit reached" : "Join"}
