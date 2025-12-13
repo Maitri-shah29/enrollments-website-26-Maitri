@@ -44,7 +44,7 @@ const ALL_RESEARCH_AOIS: {
   },
 ];
 
-const AOI_JOIN_LIMIT = 3;
+const AOI_JOIN_LIMIT = 2;
 
 type ExploreResearchAOIsProps = {
   joinedAOIs: Set<ResearchAOI>;
@@ -108,8 +108,8 @@ export default function ExploreResearchAOIs({
                   isJoined
                     ? "bg-gray-600 hover:bg-gray-700 text-white"
                     : disableJoin
-                      ? "bg-gray-300 text-gray-400 cursor-not-allowed"
-                      : "bg-[#9b7fff] hover:bg-[#7d5bed] text-white"
+                    ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                    : "bg-[#9b7fff] hover:bg-[#7d5bed] text-white"
                 }`}
               >
                 {isJoined ? "Leave" : disableJoin ? "Limit reached" : "Join"}

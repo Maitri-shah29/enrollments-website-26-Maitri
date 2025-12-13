@@ -37,18 +37,8 @@ const stickerTextBase: React.CSSProperties = {
 
 const aboutMarqueeRows = Array.from({ length: 5 }, (_, index) => index);
 
-const value = Math.floor(Math.random() * 7);
-const phrases = [
-  "Welcome to OCS'26",
-  "Gear Up for an Incredible Journey!",
-  "Your Adventure Starts Now!",
-  "Innovation Begins Here",
-  "Dream Big. Achieve Bigger.",
-  "ACM-VIT Says Hello!",
-  "Welcome to ACM-VIT's Browser!",
-  "Welcome to OCS'26!",
-  "Because Technology Matters",
-];
+const value = 0;
+const phrases = ["Because Technology Matters."];
 
 const PhotoPanel: React.FC = memo(() => {
   const photosRef = useRef<string[]>([]);
@@ -300,10 +290,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             >
               <MatterBody
                 x="28%"
-                y="44%"
+                y="10%"
                 angle={-10}
                 {...stickerPhysics}
-                onClick={handleKeyword("tech")}
+                // onClick={handleKeyword("tech")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#7b2ff7]"
@@ -315,10 +305,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
               <MatterBody
                 x="42%"
-                y="46%"
+                y="5%"
                 angle={-6}
                 {...stickerPhysics}
-                onClick={handleKeyword("design")}
+                // onClick={handleKeyword("design")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#ff8a1f]"
@@ -330,10 +320,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
               <MatterBody
                 x="32%"
-                y="58%"
+                y="15%"
                 angle={-4}
                 {...stickerPhysics}
-                onClick={handleKeyword("management")}
+                // onClick={handleKeyword("management")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#3aa7ff]"
@@ -345,10 +335,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
               <MatterBody
                 x="64%"
-                y="38%"
+                y="10%"
                 angle={8}
                 {...stickerPhysics}
-                onClick={handleKeyword("research")}
+                // onClick={handleKeyword("research")}
               >
                 <div
                   className="select-none text-[30px] font-black leading-none tracking-tight text-[#7751ff] drop-shadow-[0_6px_12px_rgba(0,0,0,0.3)]"
@@ -360,10 +350,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
 
               <MatterBody
                 x="74%"
-                y="52%"
+                y="5%"
                 angle={4}
                 {...stickerPhysics}
-                onClick={handleKeyword("cc")}
+                // onClick={handleKeyword("cc")}
               >
                 <div
                   className="select-none text-[34px] font-black leading-none tracking-tight text-[#4f7d1a]"
