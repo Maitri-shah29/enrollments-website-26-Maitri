@@ -9,8 +9,10 @@ interface EventData {
   logo: React.ReactNode;
   description: string;
   color: string;
+  backColor?: string;
   logoScale?: number;
   textColor?: string;
+  glowOpacity?: string;
 }
 
 const Events = () => {
@@ -88,7 +90,8 @@ const Events = () => {
       ),
       description:
         "Competitive coding event with a twist, ACM's Reverse Coding requires participants to quirkily reverse engineer solutions.",
-      color: "#9B6FB0",
+      color: "#894fa4ff",
+      glowOpacity: "opacity-100",
     },
     {
       id: 6,
@@ -116,8 +119,10 @@ const Events = () => {
         <Image src="inspiher.svg" alt="Insipher" width={120} height={120} />
       ),
       description:
-        "The InspiHER Podcast series has always been about more than just conversations; it’s about connection, empowerment, and igniting ambition. This year, we’re raising the bar. With an expanded lineup of remarkable women leaders from across the globe, we aim to amplify diverse voices and share stories that matter — stories of resilience, innovation, leadership, and the unwavering spirit that fuels change.",
-      color: "#FF6B6B",
+        "The InspiHER Podcast ignites ambition through connection and empowerment. Featuring remarkable women leaders globally, we amplify diverse stories of resilience, innovation, and the unwavering spirit that fuels change.",
+      color: "#E557A1",
+      backColor: "#7C355A",
+      glowOpacity: "opacity-100",
     },
     {
       id: 8,
@@ -128,7 +133,7 @@ const Events = () => {
         <Image src="Frame 8.svg" alt="The Tiny Hack" width={120} height={120} />
       ),
       description:
-        "The Tiny Hack was a 10-hour hackathon that took place in 2023 and was intended for people who were keen to create and construct creative projects quickly. The event's main goal was to use technology to develop modest but significant solutions to real-world issues. In order to realise their ideas, participants worked closely with like-minded people from a variety of academic and professional backgrounds.",
+        "The Tiny Hack (2023) was a 10-hour sprint for rapid creative prototyping, Aimed at developing technical solutions for real-world problems, it fostered collaboration across diverse academic and professional backgrounds.",
       color: "#F3D055",
     },
     {
@@ -145,7 +150,7 @@ const Events = () => {
         />
       ),
       description:
-        "Codex Cryptum began as a specialised workshop in September 2022 with the goal of expanding participants' knowledge of cryptography and cybersecurity. Attendees can delve into advanced topics and gain practical insights through the event's hands-on sessions and interactions with industry experts. Participants can broaden their knowledge, hone their skills, and have insightful conversations with colleagues and subject matter experts through this workshop.",
+        "A specialized workshop on cryptography and cybersecurity since Sept 2022. Participants master advanced skills in cybersecurity and cryptography through hands-on sessions and expert interactions.",
       color: "#D96700",
     },
   ];
@@ -175,11 +180,7 @@ const Events = () => {
       `}</style>
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-0 w-[600px] h-[600px] bg-emerald-500/30 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-1/3 right-0 w-[550px] h-[550px] bg-cyan-500/30 rounded-full blur-[120px] animate-pulse [animation-delay:1s]" />
-        <div className="absolute bottom-20 left-1/4 w-[500px] h-[500px] bg-purple-500/25 rounded-full blur-[120px] animate-pulse [animation-delay:0.5s]" />
-        <div className="absolute top-2/3 left-1/2 w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[100px] animate-pulse [animation-delay:1.5s]" />
-        {/* grid overlay */}
+        {/* hmm */}
         <div
           className="absolute inset-0 opacity-[0.06]"
           style={{
@@ -240,7 +241,7 @@ const Events = () => {
                 >
                   <path
                     d="M 25 0 L 180 0 C 195 0 200 35 220 35 L 275 35 C 288.8 35 300 46.2 300 60 L 300 155 C 300 168.8 288.8 180 275 180 L 25 180 C 11.2 180 0 168.8 0 155 L 0 25 C 0 11.2 11.2 0 25 0 Z"
-                    fill={event.color}
+                    fill={event.backColor || event.color}
                     opacity={0.7}
                   />
                 </svg>
@@ -256,6 +257,11 @@ const Events = () => {
                     })`,
                   }}
                 >
+                  {/* Glow Effect */}
+                  <div
+                    className={`absolute inset-0 rounded-full blur-2xl ${event.glowOpacity || "opacity-60"} transition-all duration-500 -z-10`}
+                    style={{ backgroundColor: event.color }}
+                  />
                   {event.logo}
                 </div>
               </div>
