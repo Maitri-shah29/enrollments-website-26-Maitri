@@ -54,6 +54,7 @@ const Landing: React.FC<{
           showDomains: false,
           showPintooRun: false,
           showSnake: false,
+          showAbout: false,
           history: [],
           pointer: -1,
         },
@@ -79,6 +80,7 @@ const Landing: React.FC<{
                 showDomains: false,
                 showPintooRun: false,
                 showSnake: false,
+                showAbout: false,
                 history: [],
                 pointer: -1,
               },
@@ -101,6 +103,7 @@ const Landing: React.FC<{
         showDomains: false,
         showPintooRun: false,
         showSnake: false,
+        showAbout: false,
         history: [],
         pointer: -1,
       },
@@ -277,6 +280,7 @@ const Landing: React.FC<{
       showDomains: false,
       showPintooRun: false,
       showSnake: false,
+      showAbout: false,
       history: [],
       pointer: -1,
     };
@@ -316,6 +320,7 @@ const Landing: React.FC<{
       showDomains: url === "domains",
       showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
+      showAbout: url === "about",
       history: [
         {
           id: Date.now(),
@@ -346,6 +351,7 @@ const Landing: React.FC<{
           showDomains: false,
           showPintooRun: false,
           showSnake: false,
+          showAbout: false,
           history: [],
           pointer: -1,
         },
@@ -500,6 +506,9 @@ const Landing: React.FC<{
             >
               <span className="relative z-10 text-xl leading-none">+</span>
             </button>
+            <div className="ml-auto mb-[6px]">
+              <FullscreenToggle />
+            </div>
           </div>
         </div>
 
