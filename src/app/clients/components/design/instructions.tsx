@@ -33,7 +33,11 @@ const Instructions: React.FC = () => {
                 understand your interests better and may influence the type of
                 projects you'll work on if you’re selected.{" "}
               </li>
-              <li>Click on “Save Answer” after every question you answer.</li>
+              <li>
+                Click on “Save Answer” after every question you answer. You may
+                change your answers after you save answer. You cannot change
+                your answers once you have submitted the form.
+              </li>
               <li>
                 Once you've answered all the questions, review your responses
                 and click “Submit Form”.{" "}

@@ -15,6 +15,8 @@ const Instructions: React.FC = () => {
           </li>
           <li>
             Click on “Submit Form” after answering and reviewing all questions.
+            You may change your answers after you save answer. You cannot change
+            your answers once you have submitted the form.
           </li>
           <li>Next round will be a CC contest round.</li>
           <li>

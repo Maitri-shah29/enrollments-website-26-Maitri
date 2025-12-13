@@ -35,7 +35,9 @@ export default function Instructions({ onBack }: InstructionsProps) {
             &nbsp;1. Answer all the questions of Round 1.
             <br />
             &nbsp;2. Click on "Save Answer" after answering every question, to
-            save your response.
+            save your response. You may change your answers after you save
+            answer. You cannot change your answers once you have submitted the
+            form.
             <br />
             &nbsp;3. Click on “Submit Form” after answering and reviewing all
             questions.
