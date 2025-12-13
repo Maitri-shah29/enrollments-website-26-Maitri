@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import MobileBlocker from "./components/mobile-blocker";
 
+// Loader removed from global layout; rendered only in landing page
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
