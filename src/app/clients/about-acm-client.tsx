@@ -93,10 +93,13 @@ const About = () => {
 
       setCards((prev) => {
         const next = [...prev];
-        const last = next.pop();
-        const first = next.shift();
-        if (e.deltaY > 0 && last) next.unshift(last);
-        else if (first) next.push(first);
+        if (e.deltaY > 0) {
+          const first = next.shift();
+          if (first) next.push(first);
+        } else {
+          const last = next.pop();
+          if (last) next.unshift(last);
+        }
         return next;
       });
 

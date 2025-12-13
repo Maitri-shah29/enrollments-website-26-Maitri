@@ -209,7 +209,6 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
       setNotification("No active question or form submission found");
       return;
     }
-    onSubmit(questionKey);
     setSubmitting(true);
     setNotification(null);
 
@@ -228,6 +227,34 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
         newSet.delete(questionKey);
         return newSet;
       });
+      let aoiname = "";
+      switch (propSelectedAOI) {
+        case "Common":
+          aoiname = "common";
+          break;
+        case "AI/ML":
+          aoiname = "aiml";
+          break;
+        case "Cybersecurity":
+          aoiname = "cybersec";
+          break;
+        case "Quantum Computing":
+          aoiname = "quantum";
+          break;
+        case "Bioinformatics":
+          aoiname = "bioinfo";
+          break;
+        case "Blockchain":
+          aoiname = "blockchain";
+          break;
+        case "IoT":
+          aoiname = "iot";
+          break;
+        default:
+          aoiname = propSelectedAOI;
+      }
+      const newQuestionKey = `${aoiname}-question${propSelectedQuestionIdx + 1}`;
+      onSubmit(newQuestionKey);
       setNotificationType("success");
       setNotification("Answer saved successfully!");
       setTimeout(() => setNotification(null), 3000);
@@ -248,6 +275,8 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     onSubmit,
     setSavedResponses,
     setQuestionsWithUnsavedEdits,
+    propSelectedQuestionIdx,
+    propSelectedAOI,
   ]);
 
   useImperativeHandle(
@@ -652,6 +681,42 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
 
                 currentQuestion &&
                   handleResponseChange(currentQuestion.id, e.target.value);
+                let aoiname = "";
+                switch (propSelectedAOI) {
+                  case "Common":
+                    aoiname = "common";
+                    break;
+                  case "AI/ML":
+                    aoiname = "aiml";
+                    break;
+                  case "Cybersecurity":
+                    aoiname = "cybersec";
+                    break;
+                  case "Quantum Computing":
+                    aoiname = "quantum";
+                    break;
+                  case "Bioinformatics":
+                    aoiname = "bioinfo";
+                    break;
+                  case "Blockchain":
+                    aoiname = "blockchain";
+                    break;
+                  case "IoT":
+                    aoiname = "iot";
+                    break;
+                  default:
+                    aoiname = propSelectedAOI;
+                }
+                const newQuestionKey = `${aoiname}-question${propSelectedQuestionIdx + 1}`;
+                if (externalSetQuestionsWithUnsavedEdits) {
+                  externalSetQuestionsWithUnsavedEdits((prev) =>
+                    new Set(prev).add(newQuestionKey),
+                  );
+                } else {
+                  setQuestionsWithUnsavedEdits((prev) =>
+                    new Set(prev).add(newQuestionKey),
+                  );
+                }
               }}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
