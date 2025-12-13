@@ -1,5 +1,7 @@
 "use server";
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
+import { cacheTags } from "@/lib/cache-tags";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 export default async function updateDetails(phone: string) {
@@ -19,6 +21,7 @@ export default async function updateDetails(phone: string) {
         phone: phone,
       },
     });
+    updateTag(cacheTags.user(user.session.userId));
     return updateDetails;
   } catch (e) {
     console.error("Error: ", e);

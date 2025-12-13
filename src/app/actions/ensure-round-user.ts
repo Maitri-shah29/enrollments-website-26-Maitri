@@ -1,7 +1,9 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { prisma } from "@/lib/prisma";
 
 export default async function ensureRoundUser(roundId: string) {
@@ -27,6 +29,10 @@ export default async function ensureRoundUser(roundId: string) {
       data: { roundId, userId },
       select: { id: true },
     });
+
+    if (round.domain) {
+      updateTag(cacheTags.roundUser(userId, round.domain));
+    }
     return { success: true as const, roundUserId: created.id };
   } catch (e) {
     console.error("ensureRoundUser error", e);
