@@ -62,7 +62,7 @@ const DesignClient = ({
 }: DesignClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null
+    initialRoundUser ?? null,
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +74,43 @@ const DesignClient = ({
   >(new Set());
   const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
+
+  const designAOIToVarName: Record<DesignAOI, string> = {
+    uiux: "uiux",
+    videoediting: "videoediting",
+    illustrations: "illustrations",
+    motiongraphics: "motiongraphics",
+    "3d": "3d",
+  };
+
+  const [selectedQuestion, setSelectedQuestion] =
+    useState<TransformedQuestion | null>(null);
+
+  const formQuestions = roundUser?.round?.Question || [];
+  const filteredQuestions = useMemo(() => {
+    if (joinedAOIs.size === 0) {
+      return [];
+    }
+
+    const allowedVarNames = new Set<string>();
+    // Always include common questions if any AOI is joined
+    allowedVarNames.add("common");
+
+    for (const aoi of joinedAOIs) {
+      allowedVarNames.add(designAOIToVarName[aoi]);
+    }
+
+    return formQuestions.filter((q) =>
+      Array.from(allowedVarNames).some((varName) =>
+        q.varName?.toLowerCase().includes(varName.toLowerCase()),
+      ),
+    );
+  }, [formQuestions, joinedAOIs]);
+
+  const aoiData = useMemo(
+    () => groupQuestionsByVarName(filteredQuestions),
+    [filteredQuestions],
+  );
 
   useEffect(() => {
     const savedAOIs = localStorage.getItem("design-joined-aois");
@@ -88,6 +125,11 @@ const DesignClient = ({
     }
     setAoisLoaded(true);
   }, []);
+
+  useEffect(() => {
+    setSelectedAoi(aoiData[0] || null);
+    setSelectedQuestion(aoiData[0]?.questions[0] || null);
+  }, [aoiData]);
 
   useEffect(() => {
     if (!aoisLoaded) return;
@@ -116,7 +158,7 @@ const DesignClient = ({
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -144,53 +186,17 @@ const DesignClient = ({
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user"
+        err instanceof Error ? err.message : "Failed to initialize round user",
       );
     } finally {
       setLoading(false);
     }
   };
   // get questions from the round
-  const formQuestions = roundUser?.round?.Question || [];
-
-  const designAOIToVarName: Record<DesignAOI, string> = {
-    uiux: "uiux",
-    videoediting: "videoediting",
-    illustrations: "illustrations",
-    motiongraphics: "motiongraphics",
-    "3d": "3d",
-  };
-
-  const filteredQuestions = useMemo(() => {
-    if (joinedAOIs.size === 0) {
-      return [];
-    }
-
-    const allowedVarNames = new Set<string>();
-    // Always include common questions if any AOI is joined
-    allowedVarNames.add("common");
-
-    for (const aoi of joinedAOIs) {
-      allowedVarNames.add(designAOIToVarName[aoi]);
-    }
-
-    return formQuestions.filter((q) =>
-      Array.from(allowedVarNames).some((varName) =>
-        q.varName?.toLowerCase().includes(varName.toLowerCase()),
-      ),
-    );
-  }, [formQuestions, joinedAOIs]);
-
-  const aoiData = useMemo(
-    () => groupQuestionsByVarName(filteredQuestions),
-    [filteredQuestions],
-  );
 
   const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
     aoiData[0] || null,
   );
-  const [selectedQuestion, setSelectedQuestion] =
-    useState<TransformedQuestion | null>(aoiData[0]?.questions[0] || null);
   const [isSaving, setIsSaving] = useState(false);
   const [submittingForm, setSubmittingForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
