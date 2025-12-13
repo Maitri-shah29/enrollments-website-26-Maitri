@@ -9,6 +9,7 @@ import SnakeClient from "@/app/clients/snake-client";
 import { Loader } from "@/components/loader";
 import { useSearchHistory } from "@/hooks/use-search-history";
 import BrickGame404 from "../brick-game-404";
+import PhoneNumberModal from "../phone-number-modal";
 import ProfileButton from "../profile-button";
 import RefreshButton from "../refresh-button";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
@@ -676,7 +677,8 @@ const Tab: React.FC<TabProps> = ({
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Navigation Bar */}
+      {/* Phone Number Modal - shows automatically when user is logged in without phone */}
+      <PhoneNumberModal />
       <div className="w-full bg-[#ffffff]">
         <div className="flex items-center gap-2.5 px-4 py-2">
           <div className="flex items-center gap-1.5">

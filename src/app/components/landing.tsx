@@ -154,18 +154,8 @@ const Landing: React.FC<{
   }, [activeTabId]);
 
   // Show animation only on true first load (first visit in this browser session)
-  const [showAnimation, setShowAnimation] = useState(false);
-
-  useEffect(() => {
-    const hasSeenAnimation = localStorage.getItem("hasSeenAnimation");
-
-    if (hasSeenAnimation) {
-      setShowAnimation(false);
-    } else {
-      setShowAnimation(true);
-      localStorage.setItem("hasSeenAnimation", "true");
-    }
-  }, []);
+  // null = loading (checking localStorage), true = show animation, false = skip animation
+  const [showAnimation, setShowAnimation] = useState<boolean | null>(null);
   const [startAnimation, setStartAnimation] = useState(false);
 
   useEffect(() => {
@@ -173,10 +163,13 @@ const Landing: React.FC<{
 
     const hasSeenAnimation = localStorage.getItem("hasSeenAnimation");
 
-    if (hasSeenAnimation) {
+    if (hasSeenAnimation === "true") {
       setShowAnimation(false);
       return;
     }
+
+    // First visit - show animation
+    setShowAnimation(true);
 
     // Add keydown listener to start animation on any key press
     const handleKeyDown = () => {
@@ -193,7 +186,7 @@ const Landing: React.FC<{
     if (!startAnimation) return;
 
     // Play audio when animation starts
-    const audio = new Audio("/bgm.mp3");
+    const audio = new Audio("/ambient-piano.mp3");
     audio.play().catch(() => {});
 
     // Hide animation after 15 seconds
@@ -207,6 +200,11 @@ const Landing: React.FC<{
       audio.pause();
     };
   }, [startAnimation]);
+
+  // Show black screen while checking localStorage (prevents white flash)
+  if (showAnimation === null) {
+    return <div className="fixed inset-0 z-[1000] bg-black" />;
+  }
 
   if (showAnimation && startAnimation)
     return (

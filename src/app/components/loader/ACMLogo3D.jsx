@@ -11,6 +11,11 @@ function ACMLogo3D({ startTime }) {
   const lightRef = useRef();
   const taglineLightRef = useRef();
   const welcomeLightRef = useRef();
+  // Trail lights to keep letters illuminated after the sweep passes
+  const trailLight1Ref = useRef();
+  const trailLight2Ref = useRef();
+  const trailLight3Ref = useRef();
+  const trailLight4Ref = useRef();
   const groupRef = useRef();
   const shadowRef = useRef();
   const diamondMaterialRef = useRef();
@@ -104,19 +109,90 @@ function ACMLogo3D({ startTime }) {
     }
 
     // Sweep position only during active sweep window
+    const west = -sweepRange / 2;
+    const east = sweepRange / 2;
+
     if (time >= sweepStart && time < sweepEnd) {
-      const west = -sweepRange / 2;
       if (time < sweepHoldEnd) {
         // Move light to the west and hold briefly before sweeping
-        welcomeLightRef.current.position.set(west, -0.2, 2.6);
+        welcomeLightRef.current.position.set(west, -0.2, 4);
       } else {
         const sweepProgress = (time - sweepHoldEnd) / sweepPeriod;
-        const sweepX = THREE.MathUtils.lerp(
-          west,
-          sweepRange / 2,
-          sweepProgress,
+        const sweepX = THREE.MathUtils.lerp(west, east, sweepProgress);
+        welcomeLightRef.current.position.set(sweepX, -0.2, 4);
+
+        // Trail lights spread across the already-swept area to keep letters lit
+        const sweptDistance = sweepX - west;
+        if (trailLight1Ref.current && sweptDistance > 0) {
+          trailLight1Ref.current.position.set(
+            west + sweptDistance * 0.15,
+            -0.2,
+            3.5,
+          );
+          trailLight1Ref.current.intensity =
+            60 * welcomeFade * smoothStep(sweepProgress);
+        }
+        if (trailLight2Ref.current && sweptDistance > 0) {
+          trailLight2Ref.current.position.set(
+            west + sweptDistance * 0.4,
+            -0.2,
+            3.5,
+          );
+          trailLight2Ref.current.intensity =
+            60 * welcomeFade * smoothStep(sweepProgress);
+        }
+        if (trailLight3Ref.current && sweptDistance > 0) {
+          trailLight3Ref.current.position.set(
+            west + sweptDistance * 0.65,
+            -0.2,
+            3.5,
+          );
+          trailLight3Ref.current.intensity =
+            60 * welcomeFade * smoothStep(sweepProgress * 0.9);
+        }
+        if (trailLight4Ref.current && sweptDistance > 0) {
+          trailLight4Ref.current.position.set(
+            west + sweptDistance * 0.85,
+            -0.2,
+            3.5,
+          );
+          trailLight4Ref.current.intensity =
+            60 * welcomeFade * smoothStep(sweepProgress * 0.8);
+        }
+      }
+    } else if (time >= sweepEnd && time < welcomeOutEnd) {
+      // After sweep completes, keep trail lights on until fade out
+      if (trailLight1Ref.current) {
+        trailLight1Ref.current.position.set(
+          west + (east - west) * 0.15,
+          -0.2,
+          3.5,
         );
-        welcomeLightRef.current.position.set(sweepX, -0.2, 2.6);
+        trailLight1Ref.current.intensity = 60 * welcomeFade;
+      }
+      if (trailLight2Ref.current) {
+        trailLight2Ref.current.position.set(
+          west + (east - west) * 0.4,
+          -0.2,
+          3.5,
+        );
+        trailLight2Ref.current.intensity = 60 * welcomeFade;
+      }
+      if (trailLight3Ref.current) {
+        trailLight3Ref.current.position.set(
+          west + (east - west) * 0.65,
+          -0.2,
+          3.5,
+        );
+        trailLight3Ref.current.intensity = 60 * welcomeFade;
+      }
+      if (trailLight4Ref.current) {
+        trailLight4Ref.current.position.set(
+          west + (east - west) * 0.85,
+          -0.2,
+          3.5,
+        );
+        trailLight4Ref.current.intensity = 60 * welcomeFade;
       }
     }
     const welcomeBaseIntensity = 120;
@@ -212,6 +288,36 @@ function ACMLogo3D({ startTime }) {
         ref={welcomeLightRef}
         intensity={0}
         distance={15}
+        decay={2}
+        color="#ffffff"
+      />
+
+      {/* Trail lights - keep letters illuminated after the sweep passes */}
+      <pointLight
+        ref={trailLight1Ref}
+        intensity={0}
+        distance={12}
+        decay={2}
+        color="#ffffff"
+      />
+      <pointLight
+        ref={trailLight2Ref}
+        intensity={0}
+        distance={12}
+        decay={2}
+        color="#ffffff"
+      />
+      <pointLight
+        ref={trailLight3Ref}
+        intensity={0}
+        distance={12}
+        decay={2}
+        color="#ffffff"
+      />
+      <pointLight
+        ref={trailLight4Ref}
+        intensity={0}
+        distance={12}
         decay={2}
         color="#ffffff"
       />
