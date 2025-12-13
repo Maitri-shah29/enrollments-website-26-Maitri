@@ -1,7 +1,14 @@
 "use client";
 import type { Prisma } from "@prisma/client";
+import Image from "next/image";
 import type React from "react";
-import { useEffect, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import submitForm from "@/app/actions/submit-form";
 import type { ResearchAOI } from "@/lib/research-navigation";
@@ -67,23 +74,28 @@ interface QuestionsProps {
   onSubmit: (key: string) => void;
 }
 
-const Questions: React.FC<QuestionsProps> = ({
-  roundUser,
-  loading = false,
-  error = null,
-  responses,
-  setResponses,
-  savedResponses: externalSavedResponses,
-  setSavedResponses: externalSetSavedResponses,
-  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
-  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
-  selectedAOI: propSelectedAOI = "Blockchain",
-  selectedQuestionIdx: propSelectedQuestionIdx = 0,
-  onAOIChange: _onAOIChange,
-  onQuestionChange: _onQuestionChange,
-  onSubmit,
-  joinedAOIs = new Set(),
-}) => {
+export interface QuestionsRef {
+  trigger: () => Promise<void>;
+}
+
+const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
+  const {
+    roundUser,
+    loading = false,
+    error = null,
+    responses,
+    setResponses,
+    savedResponses: externalSavedResponses,
+    setSavedResponses: externalSetSavedResponses,
+    questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
+    setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
+    selectedAOI: propSelectedAOI = "Blockchain",
+    selectedQuestionIdx: propSelectedQuestionIdx = 0,
+    onAOIChange: _onAOIChange,
+    onQuestionChange: _onQuestionChange,
+    onSubmit,
+    joinedAOIs = new Set(),
+  } = props;
   const questionKey = `${propSelectedAOI}-question${
     propSelectedQuestionIdx + 1
   }`;
@@ -133,6 +145,118 @@ const Questions: React.FC<QuestionsProps> = ({
   const [submittingForm, setSubmittingForm] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Pre-compute values needed for handleSubmit
+  const subjectiveQuestions =
+    roundUser?.round?.Question?.filter(
+      (question) => question.type === "stq" || question.type === "ltq",
+    ) || [];
+
+  const aoiToPrefixMap: Record<string, string> = {
+    Common: "common",
+    "AI/ML": "aiml",
+    Cybersecurity: "cybersec",
+    Blockchain: "blockchain",
+    Bioinformatics: "bioinfo",
+    "Quantum Computing": "quantum",
+    IoT: "iot",
+  };
+
+  const researchAOIToLabel: Record<ResearchAOI, string> = {
+    aiml: "AI/ML",
+    cybersecurity: "Cybersecurity",
+    blockchain: "Blockchain",
+    bioinformatics: "Bioinformatics",
+    quantumcomputing: "Quantum Computing",
+    iot: "IoT",
+  };
+
+  const allowedPrefixes = new Set<string>();
+  allowedPrefixes.add("common");
+  for (const aoi of joinedAOIs) {
+    const label = researchAOIToLabel[aoi];
+    const prefix = aoiToPrefixMap[label];
+    if (prefix) {
+      allowedPrefixes.add(prefix);
+    }
+  }
+
+  const accessibleQuestions = subjectiveQuestions.filter((q) => {
+    const varNameLower = q.varName?.toLowerCase() || "";
+    return Array.from(allowedPrefixes).some((prefix) =>
+      varNameLower.startsWith(prefix),
+    );
+  });
+
+  const aoiPrefix = aoiToPrefixMap[propSelectedAOI] || "common";
+  const aoiQuestions = accessibleQuestions.filter((q) =>
+    q.varName?.toLowerCase().startsWith(aoiPrefix),
+  );
+
+  const safeIndex =
+    propSelectedQuestionIdx >= 0 &&
+    propSelectedQuestionIdx < aoiQuestions.length
+      ? propSelectedQuestionIdx
+      : 0;
+  const currentQuestion = aoiQuestions[safeIndex];
+  const currentResponse = currentQuestion
+    ? effectiveResponses[currentQuestion.id] || ""
+    : "";
+
+  const handleSubmit = useCallback(async () => {
+    if (!currentQuestion || !roundUser?.formSubmission?.id) {
+      setNotificationType("error");
+      setNotification("No active question or form submission found");
+      return;
+    }
+    onSubmit(questionKey);
+    setSubmitting(true);
+    setNotification(null);
+
+    try {
+      await saveFormResponse(
+        roundUser.formSubmission.id,
+        currentQuestion.id,
+        currentResponse,
+      );
+      setSavedResponses((prev) => ({
+        ...prev,
+        [currentQuestion.id]: currentResponse,
+      }));
+      setQuestionsWithUnsavedEdits((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(questionKey);
+        return newSet;
+      });
+      setNotificationType("success");
+      setNotification("Answer saved successfully!");
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      console.error("Submit error:", err);
+      setNotificationType("error");
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to save response";
+      setNotification(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    currentQuestion,
+    roundUser,
+    currentResponse,
+    questionKey,
+    onSubmit,
+    setSavedResponses,
+    setQuestionsWithUnsavedEdits,
+  ]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      trigger: handleSubmit,
+    }),
+    [handleSubmit],
+  );
 
   // Initialize responses from server data
   useEffect(() => {
@@ -217,10 +341,6 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
-  const subjectiveQuestions = roundUser.round.Question.filter(
-    (question) => question.type === "stq" || question.type === "ltq",
-  );
-
   if (subjectiveQuestions.length === 0) {
     return (
       <div className="text-white text-lg text-center py-8">
@@ -241,51 +361,9 @@ const Questions: React.FC<QuestionsProps> = ({
     );
   }
 
-  // Map AOI names to varName prefixes
-  const aoiToPrefixMap: Record<string, string> = {
-    Common: "common",
-    "AI/ML": "aiml",
-    Cybersecurity: "cybersec",
-    Blockchain: "blockchain",
-    Bioinformatics: "bioinfo",
-    "Quantum Computing": "quantum",
-    IoT: "iot",
-  };
-
-  const researchAOIToLabel: Record<ResearchAOI, string> = {
-    aiml: "AI/ML",
-    cybersecurity: "Cybersecurity",
-    blockchain: "Blockchain",
-    bioinformatics: "Bioinformatics",
-    quantumcomputing: "Quantum Computing",
-    iot: "IoT",
-  };
-
-  const allowedPrefixes = new Set<string>();
-  allowedPrefixes.add("common");
-
-  // Add prefixes for joined AOIs
-  for (const aoi of joinedAOIs) {
-    const label = researchAOIToLabel[aoi];
-    const prefix = aoiToPrefixMap[label];
-    if (prefix) {
-      allowedPrefixes.add(prefix);
-    }
-  }
-
   console.log("Joined AOIs:", Array.from(joinedAOIs));
   console.log("Allowed prefixes:", Array.from(allowedPrefixes));
-
-  const accessibleQuestions = subjectiveQuestions.filter((q) => {
-    const varNameLower = q.varName?.toLowerCase() || "";
-    return Array.from(allowedPrefixes).some((prefix) =>
-      varNameLower.startsWith(prefix),
-    );
-  });
-
   console.log("Total accessible questions:", accessibleQuestions.length);
-
-  const aoiPrefix = aoiToPrefixMap[propSelectedAOI] || "common";
 
   if (!allowedPrefixes.has(aoiPrefix) && aoiPrefix !== "common") {
     return (
@@ -299,10 +377,6 @@ const Questions: React.FC<QuestionsProps> = ({
       </div>
     );
   }
-
-  const aoiQuestions = accessibleQuestions.filter((q) =>
-    q.varName?.toLowerCase().startsWith(aoiPrefix),
-  );
 
   console.log("Selected AOI:", propSelectedAOI);
   console.log("AOI Prefix:", aoiPrefix);
@@ -325,55 +399,6 @@ const Questions: React.FC<QuestionsProps> = ({
       </div>
     );
   }
-
-  const safeIndex =
-    propSelectedQuestionIdx >= 0 &&
-    propSelectedQuestionIdx < aoiQuestions.length
-      ? propSelectedQuestionIdx
-      : 0;
-  const currentQuestion = aoiQuestions[safeIndex];
-  const currentResponse = currentQuestion
-    ? effectiveResponses[currentQuestion.id] || ""
-    : "";
-
-  const handleSubmit = async () => {
-    if (!currentQuestion || !roundUser?.formSubmission?.id) {
-      setNotificationType("error");
-      setNotification("No active question or form submission found");
-      return;
-    }
-    onSubmit(questionKey);
-    setSubmitting(true);
-    setNotification(null);
-
-    try {
-      await saveFormResponse(
-        roundUser.formSubmission.id,
-        currentQuestion.id,
-        currentResponse,
-      );
-      setSavedResponses((prev) => ({
-        ...prev,
-        [currentQuestion.id]: currentResponse,
-      }));
-      setQuestionsWithUnsavedEdits((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(questionKey);
-        return newSet;
-      });
-      setNotificationType("success");
-      setNotification("Answer saved successfully!");
-      setTimeout(() => setNotification(null), 3000);
-    } catch (err) {
-      console.error("Submit error:", err);
-      setNotificationType("error");
-      const errorMsg =
-        err instanceof Error ? err.message : "Failed to save response";
-      setNotification(errorMsg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleSubmitForm = () => {
     // Frontend validation before showing confirm dialog
@@ -594,22 +619,13 @@ const Questions: React.FC<QuestionsProps> = ({
               aria-label="Edit"
               className="absolute right-4 top-4 z-10 text-gray-400 hover:text-white transition-colors"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                role="img"
-                aria-label="Edit icon"
-              >
-                <title>Edit</title>
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+              <Image
+                src="/images/research/question-edit-icon.svg"
+                width={20}
+                height={20}
+                alt="Edit"
+                draggable={false}
+              />
             </button>
 
             <textarea
@@ -673,6 +689,8 @@ const Questions: React.FC<QuestionsProps> = ({
       </div>
     </div>
   );
-};
+});
+
+Questions.displayName = "Questions";
 
 export default Questions;

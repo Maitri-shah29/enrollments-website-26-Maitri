@@ -132,6 +132,7 @@ const Questions = ({
     : setInternalQuestionsWithUnsavedEdits;
 
   const serverResponses = roundUser?.formSubmission?.responses;
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   useEffect(() => {
     if (useExternal) return;
@@ -367,12 +368,16 @@ const Questions = ({
   };
 
   const handleConfirmQuestionChange = () => {
-    setHasUnsavedChanges(false);
-    setShowUnsavedDialog(false);
-    if (pendingQuestionId) {
-      setActiveQuestionId(pendingQuestionId);
-      setPendingQuestionId(null);
-    }
+    setIsProceeding(true);
+    handleSubmit().then(() => {
+      setIsProceeding(false);
+      setHasUnsavedChanges(false);
+      setShowUnsavedDialog(false);
+      if (pendingQuestionId) {
+        setActiveQuestionId(pendingQuestionId);
+        setPendingQuestionId(null);
+      }
+    });
   };
 
   const handleCancelQuestionChange = () => {
@@ -498,13 +503,14 @@ const Questions = ({
               Unsaved Changes
             </h3>
             <p className="text-white text-lg mb-6 font-ShareTechMono">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCancelQuestionChange}
                 className="px-6 py-2 bg-transparent border-2 border-white text-white font-ShareTechMono hover:bg-white hover:text-black transition-colors"
                 type="button"
+                disabled={isProceeding}
               >
                 Cancel
               </button>
@@ -512,8 +518,9 @@ const Questions = ({
                 onClick={handleConfirmQuestionChange}
                 className="px-6 py-2 bg-[#C9EB3E] text-black font-ShareTechMono hover:bg-[#a8c932] transition-colors"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
@@ -544,7 +551,7 @@ const Questions = ({
                     body={activeQuestion.question}
                   />
                 </div>
-                <div className="flex-1 min-h-[300px] sm:min-h-[420px]">
+                <div className="min-h-[200px] sm:min-h-[280px] max-h-[50vh] flex-1">
                   <AnswerBox
                     key={activeQuestion.id}
                     subject="Answer"

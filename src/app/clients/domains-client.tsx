@@ -76,6 +76,9 @@ const domains: Domain[] = [
 const Domains = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null,
+  );
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -88,16 +91,26 @@ const Domains = () => {
   }, []);
 
   const goNext = useCallback(() => {
+    if (isAnimating) return;
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
+    setSlideDirection("left");
+    setTimeout(() => {
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 800);
     setActiveIndex((prev) => (prev + 1) % domains.length);
-  }, []);
+  }, [isAnimating]);
 
   const goPrev = useCallback(() => {
+    if (isAnimating) return;
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
+    setSlideDirection("right");
+    setTimeout(() => {
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 800);
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
-  }, []);
+  }, [isAnimating]);
 
   const handleNavigateKey = useCallback(
     (event: React.KeyboardEvent<HTMLElement>, slug: string) => {
@@ -120,9 +133,43 @@ const Domains = () => {
   }, [goNext, goPrev]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black text-white font-doppio">
+    <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
+      <style jsx>{`
+        @keyframes slide-left {
+          0% {
+            opacity: 0;
+            transform: translateX(60px) scale(0.95);
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        @keyframes slide-right {
+          0% {
+            opacity: 0;
+            transform: translateX(-60px) scale(0.95);
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        .animate-slide-left {
+          animation: slide-left 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .animate-slide-right {
+          animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+      `}</style>
       <div
-        className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500"
+        className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
         style={{
           backgroundImage,
           backgroundSize: "cover",
@@ -131,10 +178,10 @@ const Domains = () => {
         }}
       />
 
-      <div className="relative z-10 mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-6 py-6 md:px-10 lg:px-12">
-        <header className="mb-15 flex w-full items-center justify-center">
+      <div className="z-10 flex items-center xl:justify-center h-full flex-col px-6 py-6 md:px-10 lg:px-12 overflow-auto">
+        <header className="mb-5 flex w-full items-center justify-center">
           <h2
-            className="text-center text-5xl font-poppins tracking-tight drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] md:text-6xl"
+            className="text-center text-5xl mt-5 font-poppins tracking-tight drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
             style={{
               color: "transparent",
               WebkitTextStroke: "3px white",
@@ -202,7 +249,13 @@ const Domains = () => {
           >
             <div className="relative w-full max-w-4xl flex justify-center">
               <div
-                className="relative h-[460px] w-[420px] sm:w-[520px]"
+                className={`relative h-[460px] w-[420px] sm:w-[520px] transition-all duration-500 ease-out ${
+                  slideDirection === "left"
+                    ? "animate-slide-left"
+                    : slideDirection === "right"
+                      ? "animate-slide-right"
+                      : ""
+                }`}
                 style={{ perspective: "1400px" }}
               >
                 <div

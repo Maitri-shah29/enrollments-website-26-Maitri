@@ -57,7 +57,7 @@ const PhoneNumberModal = () => {
       }
     };
 
-    checkPhone().catch((err) => console.error(err));
+    checkPhone();
   }, [session, isPending, hasChecked]);
 
   const handleSubmit = async (e: React.FormEvent) => {

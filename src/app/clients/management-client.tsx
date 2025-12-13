@@ -54,6 +54,7 @@ export default function Management({
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const roundActive = !!roundUser?.round?.active;
   const _roundHidden = !!roundUser?.round?.hidden;
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   const questions = useMemo(() => {
     const qs = (roundUser?.round?.Question ||
@@ -553,23 +554,30 @@ export default function Management({
               </button>
               <button
                 onClick={() => {
-                  setShowUnsavedDialog(false);
-                  if (pendingBackNavigation) {
-                    setActiveIndex(null);
-                    setPendingBackNavigation(false);
-                  } else if (pendingQuestionIndex !== null) {
-                    // Proceed with navigation - this will be handled in QuestionsList
-                    const event = new CustomEvent("proceedWithNavigation", {
-                      detail: { index: pendingQuestionIndex },
+                  if (activeIndex != null) {
+                    setIsProceeding(false);
+                    onSubmitAnswer(questions[activeIndex]).then(() => {
+                      setIsProceeding(true);
+                      setShowUnsavedDialog(false);
+                      if (pendingBackNavigation) {
+                        setActiveIndex(null);
+                        setPendingBackNavigation(false);
+                      } else if (pendingQuestionIndex !== null) {
+                        // Proceed with navigation - this will be handled in QuestionsList
+                        const event = new CustomEvent("proceedWithNavigation", {
+                          detail: { index: pendingQuestionIndex },
+                        });
+                        window.dispatchEvent(event);
+                        setPendingQuestionIndex(null);
+                      }
                     });
-                    window.dispatchEvent(event);
-                    setPendingQuestionIndex(null);
                   }
                 }}
                 className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg font-medium"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
@@ -601,9 +609,14 @@ export default function Management({
           draggable={false}
           className="mb-8 select-none"
         />
-        <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20">
+        <a
+          href="https://www.instagram.com/acmvit/#"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20 hover: transition-transform cursor-pointer"
+        >
           <Pencil /> <span className="font-medium">Compose</span>
-        </div>
+        </a>
         <nav className="flex flex-col space-y-2 text-lg">
           {(() => {
             const allSections = [
@@ -619,9 +632,9 @@ export default function Management({
             return allSections.map((section) => {
               const isDisabled =
                 (!roundUser && section !== "Landing") || isLimitReached;
-              if (section === "Round 1") {
-                return <div key="round 1"></div>;
-              }
+              // if (section === "Round 1") {
+              //   return <div key="round 1"></div>;
+              // }
               return (
                 <button
                   type="button"

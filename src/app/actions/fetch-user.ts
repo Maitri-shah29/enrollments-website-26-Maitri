@@ -22,5 +22,6 @@ export default async function fetchUser() {
   } catch (e) {
     console.error("Error: ", e);
     throw new Error("User not found");
+    // return null;
   }
 }

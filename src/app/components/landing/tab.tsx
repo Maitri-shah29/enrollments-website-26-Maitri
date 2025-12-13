@@ -16,12 +16,11 @@ import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 
 const ROTATING_WEBSITES = [
-  "ocs.acmvit.in",
+  //"os.acmvit.in",
   "fast.com",
   "acmvit.in",
   "krunker.io",
   "slither.io",
-  "comick.live",
   "skrbbl.io",
   "wikipedia.org",
   "classic.minecraft.net",
@@ -36,9 +35,9 @@ const IFRAME_WHITELIST = new Set([
   "acmvit.in",
   "fast.com",
   "icpc.global",
-  "comick.live",
+  //"comick.live",
 
-  // 🎮 Games & Game Sites
+  // Games & Game Sites
   "slither.io",
   "krunker.io",
   "diep.io",
@@ -61,7 +60,7 @@ const IFRAME_WHITELIST = new Set([
   "wanderers.io",
   "wormate.io",
 
-  // 💻 Coding / Developer Tools
+  // Coding / Developer Tools
   "codepen.io",
   "jsfiddle.net",
   "codesandbox.io",
@@ -102,7 +101,7 @@ const IFRAME_WHITELIST = new Set([
   "supabase.com",
   "render.com",
 
-  // 🎨 Design / Drawing / Whiteboards
+  // Design / Drawing / Whiteboards
   "tldraw.com",
   "excalidraw.com",
   "miro.com",
@@ -120,7 +119,7 @@ const IFRAME_WHITELIST = new Set([
   "pixilart.com",
   "jamboard.google.com",
 
-  // 🌍 Maps / Geo / Visualization
+  // Maps / Geo / Visualization
   "openstreetmap.org",
   "geojson.io",
   "earth.google.com",
@@ -134,7 +133,7 @@ const IFRAME_WHITELIST = new Set([
   "stellarium-web.org",
   "peakfinder.org",
 
-  // 📁 Google Embeds (Must Use /embed or /preview)
+  // Google Embeds (Must Use /embed or /preview)
   "docs.google.com/forms",
   "docs.google.com/presentation",
   "docs.google.com/spreadsheets",
@@ -143,7 +142,7 @@ const IFRAME_WHITELIST = new Set([
   "youtube.com/embed",
   "player.vimeo.com",
 
-  // 🎵 Audio / Media Embeds
+  // Audio / Media Embeds
   "open.spotify.com/embed",
   "soundcloud.com",
   "bandcamp.com",
@@ -151,7 +150,7 @@ const IFRAME_WHITELIST = new Set([
   "tunein.com",
   "anchor.fm",
 
-  // 📖 Info / Knowledge / Open Data
+  // Info / Knowledge / Open Data
   "wikipedia.org",
   "wikimedia.org",
   "archive.org",
@@ -334,7 +333,7 @@ const Tab: React.FC<TabProps> = ({
   const [navLoading, setNavLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const navInputRef = useRef<HTMLInputElement>(null);
-  const { history, addToHistory } = useSearchHistory();
+  const { history, addToHistory, removeFromHistory } = useSearchHistory();
 
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
@@ -692,7 +691,7 @@ const Tab: React.FC<TabProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="3"
@@ -716,7 +715,7 @@ const Tab: React.FC<TabProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="3"
@@ -773,34 +772,63 @@ const Tab: React.FC<TabProps> = ({
                       item.toLowerCase().includes(navInput.toLowerCase()),
                     )
                     .map((item) => (
-                      <button
-                        type="button"
+                      <div
                         key={item}
-                        className="w-full text-left px-4 py-2 text-white hover:bg-white/10 transition-colors flex items-center gap-2"
-                        onClick={() => {
-                          setNavInput(item);
-                          commitFrom(item);
-                        }}
+                        className="w-full flex items-center justify-between px-4 py-2 hover:bg-white/10 transition-colors group"
                       >
-                        <span className="opacity-50">
+                        <button
+                          type="button"
+                          className="flex-1 text-left text-white flex items-center gap-2"
+                          onClick={() => {
+                            setNavInput(item);
+                            commitFrom(item);
+                          }}
+                        >
+                          <span className="opacity-50">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <title>History</title>
+                              <circle cx="12" cy="12" r="10" />
+                              <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                          </span>
+                          {item}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Remove from history"
+                          className="p-1 hover:bg-white/10 rounded transition-colors"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeFromHistory(item);
+                          }}
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="14"
                             height="14"
                             viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            fill="#9ca3af"
                           >
-                            <title>History</title>
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
+                            <title>Remove</title>
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289Z"
+                            />
                           </svg>
-                        </span>
-                        {item}
-                      </button>
+                        </button>
+                      </div>
                     ))}
                 </div>
               )}
@@ -869,9 +897,9 @@ const Tab: React.FC<TabProps> = ({
         ) : tabData.showDomains ? (
           <div
             key={refreshKey}
-            className="w-full h-full bg-white overflow-auto hide-scrollbar relative"
+            className="w-full h-full overflow-auto hide-scrollbar relative"
           >
-            <div className="min-h-screen flex items-center justify-center">
+            <div className=" flex h-full items-center justify-center">
               <Domains />
             </div>
           </div>
@@ -930,6 +958,7 @@ const Tab: React.FC<TabProps> = ({
           )
         ) : (
           <div className="h-full">
+            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
             <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
           </div>
         )}

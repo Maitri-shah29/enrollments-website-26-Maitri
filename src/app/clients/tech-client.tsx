@@ -1,5 +1,4 @@
 "use client";
-import { active } from "d3";
 import { useEffect, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { DOMAIN_CAP } from "@/lib/constants";
@@ -11,7 +10,7 @@ import AOIContent from "./components/tech/aoi";
 import ExploreAOIs from "./components/tech/explore";
 import Instructions from "./components/tech/instructions";
 import TechLanding from "./components/tech/landing";
-import Questions from "./components/tech/questions";
+import Questions, { type QuestionsRef } from "./components/tech/questions";
 import Sidebar from "./components/tech/sidebar";
 
 const AOI_JOIN_LIMIT = 3;
@@ -55,6 +54,8 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     value: string;
   } | null>(null);
   const hasUnsavedChangesRef = useRef<boolean>(false);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
+  const childRef = useRef<QuestionsRef>(null);
   const roundActive = !!roundUser?.round?.active;
   const isAnnounced = !!roundUser?.round?.announced;
   const roundHidden = !!roundUser?.round?.hidden;
@@ -299,6 +300,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
       }
       return (
         <Questions
+          ref={childRef}
           activeRoundFolder={activeRoundFolder}
           activeQuestion={activeQuestion}
           roundUser={roundUser ?? undefined}
@@ -356,16 +358,33 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   };
 
   const handleConfirmNavigation = () => {
-    if (pendingNavigation) {
-      if (pendingNavigation.type === "folder") {
-        selectFolder(pendingNavigation.value as AOI);
-      } else {
-        selectQuestion(pendingNavigation.value as QuestionId);
+    if (childRef.current?.trigger) {
+      setIsProceeding(true);
+      childRef.current.trigger().then(() => {
+        if (pendingNavigation) {
+          if (pendingNavigation.type === "folder") {
+            selectFolder(pendingNavigation.value as AOI);
+          } else {
+            selectQuestion(pendingNavigation.value as QuestionId);
+          }
+        }
+        hasUnsavedChangesRef.current = false;
+        setShowUnsavedDialog(false);
+        setPendingNavigation(null);
+        setIsProceeding(false);
+      });
+    } else {
+      if (pendingNavigation) {
+        if (pendingNavigation.type === "folder") {
+          selectFolder(pendingNavigation.value as AOI);
+        } else {
+          selectQuestion(pendingNavigation.value as QuestionId);
+        }
       }
+      hasUnsavedChangesRef.current = false;
+      setShowUnsavedDialog(false);
+      setPendingNavigation(null);
     }
-    hasUnsavedChangesRef.current = false;
-    setShowUnsavedDialog(false);
-    setPendingNavigation(null);
   };
 
   const handleCancelNavigation = () => {
@@ -389,15 +408,17 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
                 onClick={handleCancelNavigation}
                 className="px-6 py-2 bg-transparent border-2 border-white text-white font-jetbrains hover:bg-white hover:text-black transition-colors"
                 type="button"
+                disabled={isProceeding}
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmNavigation}
-                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors"
+                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
