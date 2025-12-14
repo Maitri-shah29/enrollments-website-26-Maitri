@@ -54,7 +54,7 @@ function QuestionListBox({
         </div>
         <div className="flex flex-col items-center justify-center space-y-0.5 w-28 sm:w-28">
           <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal text-center">
-            {difficulty.charAt(0).toUpperCase() + difficulty.substring(1)}
+            {(difficulty?.charAt(0)?.toUpperCase() + difficulty?.slice(1)) || "Medium"}
           </div>
           <div className="flex justify-center space-x-1">
             {iconsToRender.map((id, _i) => (
