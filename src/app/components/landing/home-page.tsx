@@ -202,14 +202,22 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             style={{ gridTemplateRows: "1fr 1fr" }}
           >
             <div className="max-h-[100px] w-full overflow-hidden rounded-t-xl relative">
-              <Image
-                src="/spotify.svg"
-                alt="Spotify"
-                fill
-                draggable={false}
-                sizes="(min-width: 1024px) 25vw, 100vw"
-                className="object-contain"
-              />
+              <a
+                href="https://open.spotify.com/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full h-full flex items-center justify-center"
+                aria-label="Open ACM playlist on Spotify (opens in new tab)"
+              >
+                <Image
+                  src="/spotify.svg"
+                  alt="Spotify"
+                  fill
+                  draggable={false}
+                  sizes="(min-width: 1024px) 25vw, 100vw"
+                  className="object-contain"
+                />
+              </a>
             </div>
             <div className="row-start-2 absolute row-end-3 h-full w-full gap-4 flex flex-col items-center justify-center rounded-2xl bg-[#292625] px-4 py-2">
               <h1 className="font-poppins lg:text-md xl:text-2xl 2xl:text-2xl text-center tracking-wider select-none">
