@@ -3,7 +3,7 @@ import type React from "react";
 function QuestionListBox({
   slNo = 1,
   title = "Sample Question",
-  difficulty = "Medium",
+  difficulty = "medium",
   isActive = false,
   hasResponse = false,
   onClick,
@@ -15,7 +15,7 @@ function QuestionListBox({
   hasResponse?: boolean;
   onClick?: () => void;
 } = {}) {
-  const iconCount = difficulty === "Easy" ? 1 : difficulty === "Medium" ? 2 : 3;
+  const iconCount = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3;
   const iconIdentifiers = ["first", "second", "third"];
   const iconsToRender = iconIdentifiers.slice(0, iconCount);
 
@@ -54,7 +54,7 @@ function QuestionListBox({
         </div>
         <div className="flex flex-col items-center justify-center space-y-0.5 w-28 sm:w-28">
           <div className="text-[#C9EB3E] font-ShareTechMono text-[12px] font-normal leading-normal text-center">
-            {difficulty}
+            {difficulty.charAt(0).toUpperCase() + difficulty.substring(1)}
           </div>
           <div className="flex justify-center space-x-1">
             {iconsToRender.map((id, _i) => (
