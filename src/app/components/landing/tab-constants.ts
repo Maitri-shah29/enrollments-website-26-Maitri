@@ -6,7 +6,6 @@ export const ROTATING_WEBSITES = [
 ];
 
 export const IFRAME_WHITELIST = new Set([
-  // 🌐 Core / Existing
   "os.acmvit.in",
   "localhost.acmvit.in",
   "rcpc.acmvit.in",
@@ -16,7 +15,6 @@ export const IFRAME_WHITELIST = new Set([
   "icpc.global",
   //"comick.live",
 
-  // Games & Game Sites
   "slither.io",
   "krunker.io",
   "diep.io",
@@ -39,7 +37,6 @@ export const IFRAME_WHITELIST = new Set([
   "wanderers.io",
   "wormate.io",
 
-  // Coding / Developer Tools
   "codepen.io",
   "jsfiddle.net",
   "codesandbox.io",
@@ -80,7 +77,6 @@ export const IFRAME_WHITELIST = new Set([
   "supabase.com",
   "render.com",
 
-  // Design / Drawing / Whiteboards
   "tldraw.com",
   "excalidraw.com",
   "miro.com",
@@ -98,7 +94,6 @@ export const IFRAME_WHITELIST = new Set([
   "pixilart.com",
   "jamboard.google.com",
 
-  // Maps / Geo / Visualization
   "openstreetmap.org",
   "geojson.io",
   "earth.google.com",
@@ -112,7 +107,6 @@ export const IFRAME_WHITELIST = new Set([
   "stellarium-web.org",
   "peakfinder.org",
 
-  // Google Embeds (Must Use /embed or /preview)
   "docs.google.com/forms",
   "docs.google.com/presentation",
   "docs.google.com/spreadsheets",
@@ -121,7 +115,6 @@ export const IFRAME_WHITELIST = new Set([
   "youtube.com/embed",
   "player.vimeo.com",
 
-  // Audio / Media Embeds
   "open.spotify.com/embed",
   "soundcloud.com",
   "bandcamp.com",
@@ -129,19 +122,16 @@ export const IFRAME_WHITELIST = new Set([
   "tunein.com",
   "anchor.fm",
 
-  // Info / Knowledge / Open Data
   "archive.org",
   "openlibrary.org",
   "britannica.com",
 
-  // ACM-VIT legacy websites
   "c2c.acmvit.in",
   "cryptichunt.acmvit.in",
   "examcooker.acmvit.in",
   "unipool.acmvit.in",
   "cli-rpg.acmvit.in",
 
-  //CC Resources
   "neetcode.io",
   "cses.fi",
   "algomap.io",
@@ -169,6 +159,6 @@ export const BOOKMARK_LABELS: Record<string, string> = {
   events: "Events",
   domains: "Domains",
   pintoorun: "PintooRun",
-  snake: "SnakeGame",
+  snake: "Snake",
   about: "About",
 };
