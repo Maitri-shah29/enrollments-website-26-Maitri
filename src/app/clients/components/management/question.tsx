@@ -75,7 +75,7 @@ export default function Question({
           <div className="flex items-center text-sm text-gray-700 space-x-2 mb-3">
             <Reply size={16} />
             <p>
-              mgmt(management@acmvit.in) -{" "}
+              mgmt(management@acmvit.in) - {/* todo: check if saved draft */}
               <span className="text-gray-500 italic">Saved draft</span>
             </p>
           </div>

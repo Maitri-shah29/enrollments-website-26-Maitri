@@ -87,11 +87,11 @@ export default async function submitForm(
     }
 
     if (roundUser.round.hidden) {
-      return { error: "Round is hidden" };
+      return { error: "Round is not available" };
     }
 
     if (roundUser.status !== "pending") {
-      return { error: "Submission not allowed: user status is not pending" };
+      return { error: "Submission is already completed or in progress" };
     }
 
     // Get all subjective questions (stq and ltq)
