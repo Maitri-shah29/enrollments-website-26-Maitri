@@ -30,7 +30,6 @@ const DesignNavbar: React.FC<DesignNavbarProps> = ({
     roundUserCount >= DOMAIN_CAP && roundUser?.status === "pending";
 
   const handleItemClick = (item: string) => {
-    // If enrollment limit reached and user hasn't enrolled yet, block all navigation except Home
     if (isLimitReached && item !== "Home") {
       return;
     }

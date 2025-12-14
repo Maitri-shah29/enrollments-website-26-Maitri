@@ -5,7 +5,7 @@
 <!-- Project Title -->    
 <h2>ACM OCS Website 2025-26</h2>
  
-<p>The enrollments website for ACM OCS 2025-26</p>
+<p>The selections website for ACM OCS 2025-26</p>
 
 <p>
   <a href="https://acmvit.in/" target="_blank">
