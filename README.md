@@ -53,6 +53,17 @@ npm install
 npm run dev
 ```
 
+### Environment Variables
+
+To enable Upstash-backed rate limiting for saving form responses, set:
+
+```bash
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
+
+If these are not set, rate limiting is disabled (useful for local dev).
+
 ---
 
 ## Usage

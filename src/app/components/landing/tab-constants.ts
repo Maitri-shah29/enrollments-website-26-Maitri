@@ -1,12 +1,8 @@
 export const ROTATING_WEBSITES = [
-  //"os.acmvit.in",
-  "fast.com",
   "acmvit.in",
-  "krunker.io",
-  "slither.io",
-  "skrbbl.io",
-  "wikipedia.org",
-  "classic.minecraft.net",
+  "code2create.acmvit.in",
+  "examcooker.acmvit.in",
+  "",
 ];
 
 export const IFRAME_WHITELIST = new Set([
@@ -134,8 +130,6 @@ export const IFRAME_WHITELIST = new Set([
   "anchor.fm",
 
   // Info / Knowledge / Open Data
-  "wikipedia.org",
-  "wikimedia.org",
   "archive.org",
   "openlibrary.org",
   "britannica.com",

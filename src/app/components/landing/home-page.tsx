@@ -116,7 +116,6 @@ const PhotoPanel: React.FC = memo(() => {
 PhotoPanel.displayName = "PhotoPanel";
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
-  const [spotifyLoaded, setSpotifyLoaded] = useState(false);
   const handleKeyword = (keyword: string) => () => onNavigateKeyword?.(keyword);
   const goToDomains = handleKeyword("domains");
 
@@ -203,20 +202,14 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             style={{ gridTemplateRows: "1fr 1fr" }}
           >
             <div className="max-h-[100px] w-full overflow-hidden rounded-t-xl relative">
-              {!spotifyLoaded && (
-                <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-600 to-white backdrop-blur-md flex items-center justify-center z-10 rounded-xl">
-                  <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-              <iframe
-                data-testid="embed-iframe"
-                title="Spotify Player"
-                src="https://open.spotify.com/embed/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ?utm_source=generator&theme=0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-                onLoad={() => setSpotifyLoaded(true)}
-                className="w-full h-full border-0"
-              ></iframe>
+              <Image
+                src="/spotify.svg"
+                alt="Spotify"
+                fill
+                draggable={false}
+                sizes="(min-width: 1024px) 25vw, 100vw"
+                className="object-contain"
+              />
             </div>
             <div className="row-start-2 absolute row-end-3 h-full w-full gap-4 flex flex-col items-center justify-center rounded-2xl bg-[#292625] px-4 py-2">
               <h1 className="font-poppins lg:text-md xl:text-2xl 2xl:text-2xl text-center tracking-wider select-none">

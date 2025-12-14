@@ -460,9 +460,11 @@ const Tab: React.FC<TabProps> = ({
             ></iframe>
           )
         ) : (
-          <div className="h-full">
+          <div className="h-full flex flex-col overflow-hidden">
             <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
-            <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
+            <div className="flex-1 min-h-0 overflow-auto">
+              <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
+            </div>
           </div>
         )}
       </div>
