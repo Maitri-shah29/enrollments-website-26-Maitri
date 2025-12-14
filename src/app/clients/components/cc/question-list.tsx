@@ -34,7 +34,7 @@ const QuestionList = ({
             key={question.id}
             slNo={question.serial}
             title={question.title}
-            difficulty={question.difficulty.toLowerCase()}
+            difficulty={question.difficulty?.toLowerCase() ?? "medium"}
             isActive={activeQuestionId === question.id}
             hasResponse={isDone}
             onClick={() => onQuestionSelect(question.id)}
