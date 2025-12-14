@@ -367,7 +367,7 @@ export default function Management({
         }
 
         // Status-based rendering
-        if (roundUser?.status === "evaluate" || !isAnnounced) {
+        if (roundUser?.status === "evaluate" && !isAnnounced) {
           return (
             <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
               <h2 className="text-3xl font-bold text-gray-800 mb-4">

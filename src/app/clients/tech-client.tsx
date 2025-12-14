@@ -186,8 +186,9 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     }
     // Status-based rendering for evaluate, promoted, rejected
     if (
-      roundUserStatus === "evaluate" ||
-      (!isAnnounced && activeSection === "round1")
+      roundUserStatus === "evaluate" &&
+      !isAnnounced &&
+      activeSection === "round1"
     ) {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
