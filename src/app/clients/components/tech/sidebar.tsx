@@ -324,7 +324,7 @@ export default function Sidebar({
         <div className="mt-6 px-2">
           <button
             onClick={handleSubmitForm}
-            disabled={submittingForm}
+            disabled={submittingForm || joinedAOIs.size === 0}
             className="w-full bg-transparent border-2 border-[#993C7A] text-[#993C7A] hover:bg-[#993C7A] hover:text-white px-4 py-2 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
           >
