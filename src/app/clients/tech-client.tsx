@@ -128,6 +128,16 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     });
   };
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+      );
+      setLoading(false);
+      return;
+    }
+    setSection("about");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
@@ -332,7 +342,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           onGetStarted={initializeRoundUser}
           loading={loading}
           hasRoundUser={!!roundUser}
-          onContinue={() => setSection("about")}
+          onContinue={continueCheck}
         />
       );
     }

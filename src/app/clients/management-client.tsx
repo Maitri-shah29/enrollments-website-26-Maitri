@@ -30,7 +30,7 @@ export default function Management({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null,
+    initialRoundUser ?? null
   );
   const [searchInput, setSearchInput] = useState<string>("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -48,7 +48,7 @@ export default function Management({
   const [pendingBackNavigation, setPendingBackNavigation] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
-    "success",
+    "success"
   );
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -74,7 +74,7 @@ export default function Management({
 
     console.log(
       "[Management] Loading responses from DB:",
-      serverResponses.length,
+      serverResponses.length
     );
 
     for (const response of serverResponses) {
@@ -83,26 +83,36 @@ export default function Management({
         loadedSavedAnswers[response.questionId] = response.response;
         console.log(
           `[Management] Restored answer for question ${response.questionId}:`,
-          response.response.substring(0, 50),
+          response.response.substring(0, 50)
         );
       }
     }
 
     console.log(
       "[Management] Total restored answers:",
-      Object.keys(loadedAnswers).length,
+      Object.keys(loadedAnswers).length
     );
     setAnswers(loadedAnswers);
     setSavedAnswers(loadedSavedAnswers);
   }, [roundUser]);
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+      );
+      setLoading(false);
+      return;
+    }
+    setActiveSection("About");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
       );
       setLoading(false);
       return;
@@ -130,7 +140,7 @@ export default function Management({
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user",
+        err instanceof Error ? err.message : "Failed to initialize round user"
       );
     } finally {
       setLoading(false);
@@ -220,7 +230,7 @@ export default function Management({
     if (unansweredQuestions.length > 0) {
       setNotificationType("error");
       setNotification(
-        `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
+        `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`
       );
       setTimeout(() => setNotification(null), 5000);
       return;
@@ -236,7 +246,7 @@ export default function Management({
     if (unsavedQuestions.length > 0) {
       setNotificationType("error");
       setNotification(
-        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`,
+        `Please save all answers before submitting. ${unsavedQuestions.length} question(s) have unsaved changes.`
       );
       setTimeout(() => setNotification(null), 5000);
       return;
@@ -258,13 +268,10 @@ export default function Management({
 
     try {
       // Build currentResponses with all question IDs
-      const currentResponses = questions.reduce(
-        (acc, q) => {
-          acc[q.id] = answers[q.id] || "";
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
+      const currentResponses = questions.reduce((acc, q) => {
+        acc[q.id] = answers[q.id] || "";
+        return acc;
+      }, {} as Record<string, string>);
 
       const result = await submitForm(roundUser.id, currentResponses);
 
@@ -284,7 +291,7 @@ export default function Management({
     } catch (error) {
       setNotificationType("error");
       setNotification(
-        error instanceof Error ? error.message : "Failed to submit form",
+        error instanceof Error ? error.message : "Failed to submit form"
       );
       setTimeout(() => setNotification(null), 5000);
     } finally {
@@ -341,7 +348,7 @@ export default function Management({
             wallpaper={wallpaper}
             loading={loading}
             hasRoundUser={!!roundUser}
-            onContinue={() => setActiveSection("About")}
+            onContinue={continueCheck}
           />
         );
       case "About":
@@ -652,8 +659,8 @@ export default function Management({
                     activeSection === section
                       ? "bg-[#ececec] text-[#6b5f5f] drop-shadow-lg/"
                       : isDisabled
-                        ? "text-gray-900 cursor-not-allowed opacity-50"
-                        : "hover:text-gray-200 hover:bg-white/25 text-white"
+                      ? "text-gray-900 cursor-not-allowed opacity-50"
+                      : "hover:text-gray-200 hover:bg-white/25 text-white"
                   }`}
                 >
                   {section}
