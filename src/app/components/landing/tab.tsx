@@ -867,7 +867,7 @@ const Tab: React.FC<TabProps> = ({
       <div className="relative flex-1 min-h-0 w-full overflow-y-auto bg-[#080808] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {(navLoading || tabData.pendingUrl) && (
           <Loader
-            size={800}
+            size="100vw"
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           />
         )}

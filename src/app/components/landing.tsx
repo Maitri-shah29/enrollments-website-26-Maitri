@@ -211,10 +211,15 @@ const Landing: React.FC<{
       localStorage.setItem("hasSeenAnimation", "true");
       setStartAnimation(true);
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("click", handleKeyDown);
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("click", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("click", handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
