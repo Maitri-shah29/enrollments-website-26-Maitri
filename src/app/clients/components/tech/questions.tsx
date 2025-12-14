@@ -1,8 +1,8 @@
 "use client";
+import Image from "next/image";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
-import { asciiArt } from "./ascii-art";
 import TechButton from "./button";
 
 type Props = {
@@ -208,9 +208,19 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
         </div>
       )}
 
-      <pre className="text-white font-mono text-sm leading-tight mb-8">
-        {asciiArt[questionNumber] || `Question ${questionNumber}`}
-      </pre>
+      {questionNumber >= 1 && questionNumber <= 10 && (
+        <div className="mb-8">
+          <Image
+            src={`/images/tech/q${questionNumber}.svg`}
+            alt={`Question ${questionNumber}`}
+            width={200}
+            height={80}
+            className="h-16 w-auto"
+            priority
+            draggable={false}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <div className="text-[#b65cad] font-jetbrains text-sm mb-2">
