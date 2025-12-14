@@ -584,7 +584,7 @@ export default function Management({
         </div>
       )}
       <Image
-        src={`/images/management/wallpapers/${wallpaper}.svg`}
+        src={`/images/management/wallpapers/${wallpaper}.avif`}
         width={1920}
         height={1080}
         alt="bg"
@@ -601,16 +601,23 @@ export default function Management({
       />
 
       <aside className="flex flex-col h-full w-[20vw] py-8 px-4 text-white z-10 font-helvetica">
-        <Image
-          src="/acmviticon.svg"
-          alt="ACM VIT icon"
-          width={180}
-          height={180}
-          draggable={false}
-          className="mb-8 select-none"
-        />
+        <button
+          type="button"
+          aria-label="Go to Home"
+          onClick={() => setActiveSection("Landing")}
+          className="cursor-pointer"
+        >
+          <Image
+            src="/acmviticon.svg"
+            alt="ACM VIT icon"
+            width={180}
+            height={180}
+            draggable={false}
+            className="mb-8 select-none"
+          />
+        </button>
         <a
-          href="https://www.instagram.com/acmvit/#"
+          href="mailto:outreach@acmvit.in"
           target="_blank"
           rel="noopener noreferrer"
           className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20 hover: transition-transform cursor-pointer"

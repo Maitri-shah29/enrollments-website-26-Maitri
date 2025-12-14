@@ -54,6 +54,7 @@ const Landing: React.FC<{
           showDomains: false,
           showPintooRun: false,
           showSnake: false,
+          showAbout: false,
           history: [],
           pointer: -1,
         },
@@ -79,6 +80,7 @@ const Landing: React.FC<{
                 showDomains: false,
                 showPintooRun: false,
                 showSnake: false,
+                showAbout: false,
                 history: [],
                 pointer: -1,
               },
@@ -101,6 +103,7 @@ const Landing: React.FC<{
         showDomains: false,
         showPintooRun: false,
         showSnake: false,
+        showAbout: false,
         history: [],
         pointer: -1,
       },
@@ -277,6 +280,7 @@ const Landing: React.FC<{
       showDomains: false,
       showPintooRun: false,
       showSnake: false,
+      showAbout: false,
       history: [],
       pointer: -1,
     };
@@ -316,6 +320,7 @@ const Landing: React.FC<{
       showDomains: url === "domains",
       showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
+      showAbout: url === "about",
       history: [
         {
           id: Date.now(),
@@ -346,6 +351,7 @@ const Landing: React.FC<{
           showDomains: false,
           showPintooRun: false,
           showSnake: false,
+          showAbout: false,
           history: [],
           pointer: -1,
         },
@@ -435,8 +441,8 @@ const Landing: React.FC<{
                     onDragEnd={handleDragEnd}
                     className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
                       isActive
-                        ? "z-40 text-neutral-900 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.15),0_8px_24px_rgba(0,0,0,0.35)]"
-                        : "z-20 text-neutral-200 bg-gradient-to-b from-[#585858] to-[#BDBDBD] shadow-[0_0_0_1px_rgba(69,69,69,1),0_2px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                        ? "z-40 text-neutral-900 bg-[#FCF7F2]"
+                        : "z-20 text-neutral-200 bg-[#252525]"
                     } ${index > 0 ? "-ml-6" : ""} ${
                       draggingTabId === tab.id ? "opacity-70" : ""
                     }`}
@@ -452,7 +458,7 @@ const Landing: React.FC<{
                     <span
                       className="truncate pr-4 relative z-10 font-poppinsReg"
                       style={{
-                        color: isActive ? "#454545" : "#ffffff",
+                        color: isActive ? "#252525" : "#ffffff",
                       }}
                     >
                       {tab.title}
@@ -484,10 +490,10 @@ const Landing: React.FC<{
               type="button"
               onClick={addTab}
               disabled={tabs.length >= 6}
-              className={`relative -left-3 flex h-7 w-16 border-[#454545] bg-gradient-to-b from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
+              className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
                 tabs.length >= 6
                   ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
-                  : "cursor-pointer text-neutral-200 bg-gradient-to-b from-[#585858] to-[#bdbdbd] hover:from-neutral-500/90 hover:to-neutral-600/90"
+                  : "cursor-pointer text-neutral-200 bg-[#252525] from-[#585858] to-[#bdbdbd] hover:from-neutral-600/90 hover:to-neutral-600/90"
               } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
               style={{
                 WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,
@@ -500,6 +506,9 @@ const Landing: React.FC<{
             >
               <span className="relative z-10 text-xl leading-none">+</span>
             </button>
+            <div className="ml-auto mb-[6px]">
+              <FullscreenToggle />
+            </div>
           </div>
         </div>
 

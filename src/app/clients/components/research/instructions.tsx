@@ -11,12 +11,12 @@ export default function Instructions() {
       </div>
 
       {/* Foreground Content */}
-      <div className="relative z-10 px-16 py-20 max-w-7xl">
-        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4 font-monopoly-bold">
+      <div className="relative z-10 px-[4vw] py-[5vh] max-w-7xl">
+        <h1 className="text-[clamp(1rem,1.5vw,1.25rem)] font-semibold text-[#C8B7FF] mb-[1vh] font-monopoly-bold">
           Instructions
         </h1>
 
-        <p className="text-gray-300 leading-relaxed text-justify font-monopoly">
+        <p className="text-gray-300 leading-relaxed text-justify font-monopoly text-[clamp(0.875rem,1.2vw,1rem)]">
           Welcome to the first round of ACM-VIT's Research Domain selections!{" "}
           <br></br>
           1. Go to the Explore tab on the left sidebar and join up to 3 AoIs
@@ -27,7 +27,8 @@ export default function Instructions() {
           <br />
           3. Make sure you click on Save after every answer. If you see the
           "Saved Successfully" popup on the top right, your answer has been
-          saved.
+          saved. You may change your answers after you save answer. You cannot
+          change your answers once you have submitted the form.
           <br />
           4. After answering all questions, click on ‘Submit Form’ at the bottom
           of the left sidebar.

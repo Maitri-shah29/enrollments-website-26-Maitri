@@ -35,7 +35,7 @@ const domains: Domain[] = [
     accent: "#7E9328",
     folder: "#BBD842",
     text: "#292625",
-    image: "/images/domains/cc.svg",
+    image: "/images/domains/cc-image.jpg",
     background: "url('/images/domains/cc-bg.png')",
   },
   {

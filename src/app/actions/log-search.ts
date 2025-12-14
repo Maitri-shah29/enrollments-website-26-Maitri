@@ -38,7 +38,7 @@ export async function logSearch(query: string, email?: string | null) {
       email: email || null,
       timestamp: new Date(),
     });
-    console.log("ajwwjd");
+    // console.log("ajwwjd");
   } catch (error) {
     console.error("Failed to log search:", error);
   }

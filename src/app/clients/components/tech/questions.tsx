@@ -1,8 +1,8 @@
 "use client";
+import Image from "next/image";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
-import { asciiArt } from "./ascii-art";
 import TechButton from "./button";
 
 type Props = {
@@ -132,7 +132,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
     !Array.isArray(roundUser.round.Question)
   ) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+      <div className="text-[#b65cad] text-2xl font-semibold text-center">
         <h1>Loading Round Data...</h1>
         <p className="mt-4 text-lg text-white">
           Please wait while we fetch your questions.
@@ -143,7 +143,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
 
   if (!activeRoundFolder) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+      <div className="text-[#b65cad] text-2xl font-semibold text-center">
         <h1>Round 1 Overview</h1>
         <p className="mt-4 text-lg text-white">
           Choose a folder from the sidebar to get started.
@@ -154,7 +154,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
 
   if (folderQuestions.length === 0) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+      <div className="text-[#b65cad] text-2xl font-semibold text-center">
         <h1>{activeRoundFolder}</h1>
         <p className="mt-4 text-lg text-white">
           No questions available for this area of interest.
@@ -165,7 +165,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
 
   if (!activeQuestion) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+      <div className="text-[#b65cad] text-2xl font-semibold text-center">
         <h1>{activeRoundFolder}</h1>
         <p className="mt-4 text-lg text-white">
           Select a question to get started with {activeRoundFolder}.
@@ -176,7 +176,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
 
   if (!currentQuestion) {
     return (
-      <div className="text-[#993C7A] text-2xl font-semibold text-center">
+      <div className="text-[#b65cad] text-2xl font-semibold text-center">
         <h1>Question Not Found</h1>
         <p className="mt-4 text-lg text-white">
           The selected question does not exist for {activeRoundFolder}.
@@ -200,7 +200,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
         <div
           className={`fixed top-30 right-8 px-4 py-2 font-jetbrains shadow-lg z-50 text-white border ${
             notificationType === "success"
-              ? "bg-[#08111D] border-[#993C7A]"
+              ? "bg-[#08111D] border-[#b65cad]"
               : "bg-[#08111D] border-red-500"
           }`}
         >
@@ -208,33 +208,43 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
         </div>
       )}
 
-      <pre className="text-white font-mono text-sm leading-tight mb-8">
-        {asciiArt[questionNumber] || `Question ${questionNumber}`}
-      </pre>
+      {questionNumber >= 1 && questionNumber <= 10 && (
+        <div className="mb-8">
+          <Image
+            src={`/images/tech/q${questionNumber}.svg`}
+            alt={`Question ${questionNumber}`}
+            width={200}
+            height={80}
+            className="h-16 w-auto"
+            priority
+            draggable={false}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
-        <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
+        <div className="text-[#b65cad] font-jetbrains text-sm mb-2">
           q{questionNumber}:{questionTitle}
         </div>
-        <div className="text-[#993C7A] font-jetbrains text-sm leading-relaxed mb-4">
+        <div className="text-[#b65cad] font-jetbrains text-sm leading-relaxed mb-4">
           {questionDescription.split("\n").map((line, idx) => (
             <div key={line || idx} className="flex items-start gap-2 px-18">
-              <span className="text-[#993C7A] select-none">{">"}</span>
+              <span className="text-[#b65cad] select-none">{">"}</span>
               <span className="pl-3">{line}</span>
             </div>
           ))}
         </div>
-        <div className="text-[#993C7A] font-jetbrains text-sm mb-2">
+        <div className="text-[#b65cad] font-jetbrains text-sm mb-2">
           q{questionNumber}:ans
         </div>
 
         <div className="mb-8 px-18 flex items-start gap-2">
-          <span className="text-[#993C7A] font-jetbrains text-sm select-none">
+          <span className="text-[#b65cad] font-jetbrains text-sm select-none">
             {">"}
           </span>
           <textarea
             style={{ height: "calc(7 * 1.25rem)" }}
-            className="flex-1 bg-transparent text-[#E097CE] selection:bg-[#993C7A] selection:text-white font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border-[#993C7A]"
+            className="flex-1 bg-transparent text-[#f0e6ff] selection:bg-[#b65cad] selection:text-white font-jetbrains text-sm leading-5 pl-3 resize-none focus:outline-none focus:border-white transition-colors [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border-[#b65cad]"
             placeholder="Type your answer here..."
             value={answers[questionKey] || ""}
             onChange={(e) => {
@@ -278,7 +288,7 @@ const Questions = forwardRef<QuestionsRef, Props>((props, ref) => {
         <div className="flex justify-end">
           <TechButton
             type="button"
-            className="bg-transparent border text-white border-[#993C7A] hover:bg-[#993C7A] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-transparent border text-white border-[#b65cad] hover:bg-[#b65cad] px-10 py-2 mt-6 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSubmit}
             disabled={!(answers[questionKey] || "").trim() || submitting}
           >

@@ -15,9 +15,10 @@ const blockchainPage: React.FC = () => {
         </h1>
         <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-2 sm:pr-4">
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed mb-4 font-monopoly">
-            Blockchain dives into decentralized tech that enables trust without
-            intermediaries. Members learn how blockchains work, write smart
-            contracts, and build transparent, secure applications.
+            Blockchain explores how trust can exist without a central authority.
+            Members break down how decentralized systems work, experiment with
+            smart contracts, and build applications that are transparent,
+            secure, and resistant to tampering.
           </p>
           <p className="text-white text-sm sm:text-base md:text-lg leading-relaxed font-semibold mb-2">
             Focus Areas:
