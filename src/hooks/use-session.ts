@@ -5,7 +5,11 @@ import { authClient } from "@/lib/auth-client";
 type SessionType = Awaited<ReturnType<typeof authClient.getSession>>;
 
 export function useSession(initialSession?: SessionType) {
-  const [session, setSession] = useState<SessionType>(initialSession ?? null);
+  const [session, setSession] = useState<SessionType>(() => {
+    if (!initialSession) return null;
+    if ("data" in initialSession) return initialSession;
+    return { data: initialSession, error: null } as unknown as SessionType;
+  });
   const [isPending, setIsPending] = useState(initialSession === undefined);
 
   useEffect(() => {
@@ -46,7 +50,7 @@ export function useSession(initialSession?: SessionType) {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(
         "better-auth-session-change",
-        handleLocalAuthEvent,
+        handleLocalAuthEvent
       );
     };
   }, []);
