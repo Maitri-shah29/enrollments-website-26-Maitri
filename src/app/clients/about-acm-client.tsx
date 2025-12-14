@@ -198,7 +198,7 @@ const About = () => {
         className="relative z-10 flex h-full items-center justify-center"
         style={{ paddingTop: "calc(25vh - 2vw)" }}
       >
-        <div className="relative h-[60vh] w-[43vw] min-h-[200px] min-w-[200px] max-h-[900px] max-w-[1100px]">
+        <div className="relative w-[43vw] aspect-[760/447] min-w-[250px] max-w-[1100px]">
           {cards.map((card, index) => (
             <motion.div
               key={card.slug}
@@ -228,7 +228,7 @@ const About = () => {
                   <div
                     className="relative text-left"
                     style={{
-                      top: "max(12%, min(3vh, 18%))",
+                      top: "8%",
                       left: "max(3%, min(1.5vw, 5%))",
                       right: "max(3%, min(1.5vw, 5%))",
                     }}
@@ -236,8 +236,8 @@ const About = () => {
                     <div
                       className="flex items-center"
                       style={{
-                        gap: "max(0.5rem, min(1.5vw, 1.25rem))",
-                        marginBottom: "max(0.5%, min(0.5vh, 1%))",
+                        gap: "max(0.3rem, min(1vw, 0.8rem))",
+                        marginBottom: "0.5%",
                       }}
                     >
                       <Image
@@ -245,13 +245,13 @@ const About = () => {
                         alt="ACM Logo"
                         width={80}
                         height={80}
-                        className="w-[8vw] h-[8vw] min-w-[60px] min-h-[60px] max-w-[80px] max-h-[80px]"
+                        className="w-[8vw] h-[8vw] min-w-[50px] min-h-[50px] max-w-[70px] max-h-[70px]"
                       />
                       <h3
                         className="font-bold tracking-wide font-monopoly-bold whitespace-pre-line"
                         style={{
                           color: card.text,
-                          fontSize: "calc(0.8rem + 1.25vw)",
+                          fontSize: "calc(0.6rem + 1vw)",
                         }}
                       >
                         {card.title}
@@ -263,7 +263,7 @@ const About = () => {
                       style={{
                         backgroundColor: card.text,
                         height: "max(2px, min(0.2vw, 3px))",
-                        marginBottom: "max(2%, min(1vh, 3%))",
+                        marginBottom: "2%",
                       }}
                     />
 
@@ -271,8 +271,8 @@ const About = () => {
                       className="max-w-[90%] font-monopoly-bold whitespace-pre-line"
                       style={{
                         color: card.text,
-                        fontSize: "max(0.65rem, min(2vw, 1.5rem))",
-                        lineHeight: "max(1rem, min(2.8vw, 2.5rem))",
+                        fontSize: "max(0.5rem, min(1.2vw, 1.25rem))",
+                        lineHeight: "max(0.7rem, min(1.5vw, 1.5rem))",
                       }}
                     >
                       {card.description}

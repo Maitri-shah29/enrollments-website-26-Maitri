@@ -3,8 +3,6 @@ import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import MobileBlocker from "./components/mobile-blocker";
 
-// Loader removed from global layout; rendered only in landing page
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -22,7 +20,7 @@ const poppins = Poppins({
 });
 
 const metadataBaseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ?? "http://explore.acmvit.in"  ;
+  process.env.NEXT_PUBLIC_BASE_URL ?? "http://explore.acmvit.in";
 const metadataBase = new URL(metadataBaseUrl);
 
 export const metadata: Metadata = {
@@ -38,17 +36,17 @@ export const metadata: Metadata = {
     "Vellore Institute of Technology",
     "Organising Committee Selections",
     "OCS",
-    "Enrolments",
-    "ACM Enrollments",
-    "Enrollments",
-    "Enrollment Portal",
+    "Selections",
+    "ACM Selections",
+    "Selections",
+    "Selection Portal",
     "Association for Computing Machinery-VIT",
-    "ACM VIT Enrollments",
-    "College Enrollment Portal",
+    "ACM VIT Selections",
+    "College Selection Portal",
     "Clubs and Chapters",
     "VIT Clubs and Chapters",
     "ACM India",
-    "Academic Committee Enrollment",
+    "Academic Committee Selections",
     "Best Chapter in VIT",
     "Top clubs and chapters at VIT",
     "ACM-VIT",

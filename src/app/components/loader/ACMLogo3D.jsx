@@ -385,7 +385,7 @@ function ACMLogo3D({ startTime }) {
               curveSegments={20}
               bevelEnabled={false}
             >
-              Because Technology matters
+              Because Technology Matters
               <meshStandardMaterial
                 ref={taglineMaterialRef}
                 color="#ffffff"

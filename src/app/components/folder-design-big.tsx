@@ -72,7 +72,7 @@ const FolderDesignBig = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Title */}
-            <h2 className="text-white font-bold text-4xl md:text-5xl mb-4 md:mb-6 drop-shadow-lg">
+            <h2 className="text-white font-bold text-4xl md:text-5xl mb-4 md:mb-6 drop-shadow-lg text-left">
               {title}
             </h2>
 
