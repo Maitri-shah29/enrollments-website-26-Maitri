@@ -117,18 +117,25 @@ const About = () => {
 
   return (
     <div className="relative h-full w-full bg-black text-white font-doppio overflow-hidden">
-      <div className="absolute top-6 left-8 z-20 text-5xl font-bold tracking-wide">
+      <div
+        className="absolute top-[3%] left-[3%] z-20 font-bold tracking-wide"
+        style={{ fontSize: "max(2rem, min(3.5vw, 3rem))" }}
+      >
         ACM – VIT
       </div>
 
-      <div className="absolute top-16 w-full text-center z-10">
+      <div
+        className="absolute w-full text-center z-10"
+        style={{ top: "max(5%, min(1.5vh, 9%))" }}
+      >
         <h2
-          className="text-6xl font-poppins"
+          className="font-poppins"
           style={{
             color: "transparent",
             WebkitTextStroke: "2px white",
             filter:
               "drop-shadow(0 4px 20px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.2))",
+            fontSize: "max(2.5rem, min(4.5vw, 3.75rem))",
           }}
         >
           About ACM
@@ -137,20 +144,25 @@ const About = () => {
 
       {showScrollHint && (
         <motion.div
-          className="absolute right-32 top-[60%] -translate-y-1/2 z-30 flex flex-col items-center gap-6"
+          className="absolute right-[8%] top-[60%] -translate-y-1/2 z-30 flex flex-col items-center"
+          style={{ gap: "max(1rem, min(1.5vw, 1.5rem))" }}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <motion.div
-            className="text-white text-3xl font-monopoly-bold tracking-wide"
+            className="text-white font-monopoly-bold tracking-wide"
+            style={{ fontSize: "max(1.5rem, min(2.2vw, 1.875rem))" }}
             animate={{ y: [0, 15, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="flex flex-col items-center">
-              <span className="mb-3">Scroll</span>
-              <span className="mb-3">to view</span>
+            <div
+              className="flex flex-col items-center"
+              style={{ gap: "max(0.5rem, min(1vw, 0.75rem))" }}
+            >
+              <span>Scroll</span>
+              <span>to view</span>
               <span>more</span>
             </div>
           </motion.div>
@@ -164,8 +176,7 @@ const About = () => {
             }}
           >
             <svg
-              width="40"
-              height="60"
+              className="w-[2.5vw] h-[3.75vw] min-w-[30px] min-h-[45px] max-w-[40px] max-h-[60px]"
               viewBox="0 0 40 60"
               fill="none"
               aria-label="Scroll down arrow"
@@ -183,8 +194,11 @@ const About = () => {
         </motion.div>
       )}
 
-      <div className="relative z-10 flex h-full items-center justify-center pt-48">
-        <div className="relative h-[800px] w-[920px]">
+      <div
+        className="relative z-10 flex h-full items-center justify-center"
+        style={{ paddingTop: "calc(25vh - 2vw)" }}
+      >
+        <div className="relative h-[60vh] w-[43vw] min-h-[200px] min-w-[200px] max-h-[900px] max-w-[1100px]">
           {cards.map((card, index) => (
             <motion.div
               key={card.slug}
@@ -210,35 +224,61 @@ const About = () => {
                   className="object-contain pointer-events-none"
                   draggable={false}
                 />
-                <div className="absolute top-[22%] left-10 right-10 text-left">
-                  <div className="flex items-center gap-5 mb-2">
-                    <Image
-                      src={card.logo}
-                      alt="ACM Logo"
-                      width={80}
-                      height={80}
-                      className="h-20 w-20"
-                    />
-                    <h3
-                      className="text-5xl font-bold tracking-wide font-monopoly-bold whitespace-pre-line"
-                      style={{ color: card.text }}
-                    >
-                      {card.title}
-                    </h3>
-                  </div>
-
+                {index === 0 && (
                   <div
-                    className="h-[3px] w-2/3 mb-6"
-                    style={{ backgroundColor: card.text }}
-                  />
-
-                  <p
-                    className="text-lg leading-8 max-w-xl font-monopoly-bold whitespace-pre-line"
-                    style={{ color: card.text }}
+                    className="relative text-left"
+                    style={{
+                      top: "max(12%, min(3vh, 18%))",
+                      left: "max(3%, min(1.5vw, 5%))",
+                      right: "max(3%, min(1.5vw, 5%))",
+                    }}
                   >
-                    {card.description}
-                  </p>
-                </div>
+                    <div
+                      className="flex items-center"
+                      style={{
+                        gap: "max(0.5rem, min(1.5vw, 1.25rem))",
+                        marginBottom: "max(0.5%, min(0.5vh, 1%))",
+                      }}
+                    >
+                      <Image
+                        src={card.logo}
+                        alt="ACM Logo"
+                        width={80}
+                        height={80}
+                        className="w-[8vw] h-[8vw] min-w-[60px] min-h-[60px] max-w-[80px] max-h-[80px]"
+                      />
+                      <h3
+                        className="font-bold tracking-wide font-monopoly-bold whitespace-pre-line"
+                        style={{
+                          color: card.text,
+                          fontSize: "calc(0.8rem + 1.25vw)",
+                        }}
+                      >
+                        {card.title}
+                      </h3>
+                    </div>
+
+                    <div
+                      className="w-2/3"
+                      style={{
+                        backgroundColor: card.text,
+                        height: "max(2px, min(0.2vw, 3px))",
+                        marginBottom: "max(2%, min(1vh, 3%))",
+                      }}
+                    />
+
+                    <p
+                      className="max-w-[90%] font-monopoly-bold whitespace-pre-line"
+                      style={{
+                        color: card.text,
+                        fontSize: "max(0.65rem, min(2vw, 1.5rem))",
+                        lineHeight: "max(1rem, min(2.8vw, 2.5rem))",
+                      }}
+                    >
+                      {card.description}
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
