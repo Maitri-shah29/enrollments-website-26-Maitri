@@ -225,7 +225,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
               </h1>
 
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
-                <Image
+                {/* <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"
                   alt="Pintoo Run"
@@ -233,7 +233,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   height={100}
                   draggable={false}
                   className="object-contain w-10 aspect-square rounded-md hover:cursor-pointer hover:scale-105 transition-all select-none"
-                />
+                /> */}
                 <Image
                   onClick={handleKeyword("snake")}
                   src="/images/addons/snake-icon.svg"
