@@ -1,6 +1,7 @@
 import { IFRAME_WHITELIST } from "./tab-constants";
 
 export type TabInternalFlags = {
+  showInstructions: boolean;
   showCc: boolean;
   showManagement: boolean;
   showTech: boolean;
@@ -62,6 +63,7 @@ export const titleForKeyword = (keyword: string) =>
   keyword === "cc" ? "CC" : capitalize(keyword);
 
 export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
+  showInstructions: keyword === "instructions",
   showCc: keyword === "cc",
   showManagement: keyword === "management",
   showTech: keyword === "tech",
@@ -75,6 +77,7 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
 });
 
 export const resetTabFlags = (): TabInternalFlags => ({
+  showInstructions: false,
   showCc: false,
   showManagement: false,
   showTech: false,
