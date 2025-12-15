@@ -411,7 +411,7 @@ const Questions = ({
   }
   const isAnnounced = !!roundUser?.round?.announced;
   // Status-based rendering
-  if (roundUserStatus === "evaluate" && !isAnnounced) {
+  if (roundUserStatus !== "pending" && !isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -420,6 +420,21 @@ const Questions = ({
           </h2>
           <p className="text-white text-lg">
             Please wait while we review your submission.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "pending" && isAnnounced) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center">
+          <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
+            This round's results have been announced
+          </h2>
+          <p className="text-white text-lg">
+            You did not submit any answer for this domain
           </p>
         </div>
       </div>
