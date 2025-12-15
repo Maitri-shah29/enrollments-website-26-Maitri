@@ -145,7 +145,7 @@ export const INTERNAL_KEYWORDS = new Set([
   "research",
   "events",
   "domains",
-  "pintoorun",
+  // "pintoorun",
   "snake",
   "about",
 ]);
@@ -158,7 +158,7 @@ export const BOOKMARK_LABELS: Record<string, string> = {
   research: "Research",
   events: "Events",
   domains: "Domains",
-  pintoorun: "PintooRun",
+  // pintoorun: "PintooRun",
   snake: "Snake",
   about: "About",
 };
