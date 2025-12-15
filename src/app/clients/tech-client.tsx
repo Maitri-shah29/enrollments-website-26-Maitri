@@ -276,7 +276,12 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
-      if (joinedAOIs.size === 0) {
+      const hasTechQuestions = (roundUser?.round?.Question || []).some(
+        (q) => q.varName === "tech",
+      );
+
+      // Always allow viewing if there are `tech` questions available
+      if (joinedAOIs.size === 0 && !hasTechQuestions) {
         return (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
@@ -309,10 +314,13 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           </div>
         );
       }
+      const folderForQuestions =
+        activeRoundFolder ?? (hasTechQuestions ? ("tech" as AOI) : undefined);
+
       return (
         <Questions
           ref={childRef}
-          activeRoundFolder={activeRoundFolder}
+          activeRoundFolder={folderForQuestions}
           activeQuestion={activeQuestion}
           roundUser={roundUser ?? undefined}
           answers={answers}
