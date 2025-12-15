@@ -47,7 +47,7 @@ export interface TabData {
   history: PageHistory[];
   pointer: number;
   pendingUrl?: string;
-  showPintooRun: boolean;
+  // showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
 }
@@ -371,7 +371,7 @@ const Tab: React.FC<TabProps> = ({
         (tabData.showManagement ||
           tabData.showCc ||
           tabData.showDesign ||
-          tabData.showPintooRun ||
+          // tabData.showPintooRun ||
           tabData.showResearch ||
           tabData.showTech) ? (
           <SignupPage onSignIn={() => {}} />
@@ -434,10 +434,10 @@ const Tab: React.FC<TabProps> = ({
           >
             {researchChildren}
           </div>
-        ) : tabData.showPintooRun ? (
-          <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
-            <PintooRun key={refreshKey} />
-          </div>
+          // ) : tabData.showPintooRun ? (
+          //   <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
+          //     <PintooRun key={refreshKey} />
+          //   </div>
         ) : tabData.showSnake ? (
           <div className="w-full h-full bg-[#1A1A1A] overflow-auto relative">
             <SnakeClient key={refreshKey} />

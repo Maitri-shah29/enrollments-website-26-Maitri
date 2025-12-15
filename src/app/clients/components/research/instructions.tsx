@@ -34,6 +34,12 @@ export default function Instructions() {
           of the left sidebar.
           <br />
           All the best!
+          <br />
+          <br />
+          PS - You’ll probably use AI for these questions, which is totally
+          fine. Just keep in mind that we’ll be evaluating your originality and
+          your ability to learn so feel free to use AI for support, but make
+          sure your answers reflect your own thinking.
         </p>
       </div>
     </div>

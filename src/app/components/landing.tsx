@@ -52,7 +52,7 @@ const Landing: React.FC<{
           showResearch: false,
           showEvents: false,
           showDomains: false,
-          showPintooRun: false,
+          // showPintooRun: false,
           showSnake: false,
           showAbout: false,
           history: [],
@@ -78,7 +78,7 @@ const Landing: React.FC<{
                 showResearch: false,
                 showEvents: false,
                 showDomains: false,
-                showPintooRun: false,
+                // showPintooRun: false,
                 showSnake: false,
                 showAbout: false,
                 history: [],
@@ -101,7 +101,7 @@ const Landing: React.FC<{
         showResearch: false,
         showEvents: false,
         showDomains: false,
-        showPintooRun: false,
+        // showPintooRun: false,
         showSnake: false,
         showAbout: false,
         history: [],
@@ -283,7 +283,7 @@ const Landing: React.FC<{
       showResearch: false,
       showEvents: false,
       showDomains: false,
-      showPintooRun: false,
+      // showPintooRun: false,
       showSnake: false,
       showAbout: false,
       history: [],
@@ -323,7 +323,7 @@ const Landing: React.FC<{
       showResearch: url === "research",
       showEvents: url === "events",
       showDomains: url === "domains",
-      showPintooRun: url === "pintoorun",
+      // showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
       showAbout: url === "about",
       history: [
@@ -354,7 +354,7 @@ const Landing: React.FC<{
           showResearch: false,
           showEvents: false,
           showDomains: false,
-          showPintooRun: false,
+          // showPintooRun: false,
           showSnake: false,
           showAbout: false,
           history: [],
@@ -466,7 +466,8 @@ const Landing: React.FC<{
                         color: isActive ? "#252525" : "#ffffff",
                       }}
                     >
-                      {tab.title}
+                      {tab.title.charAt(0).toUpperCase() +
+                        tab.title.slice(1).toLowerCase()}
                     </span>
                     <div
                       onClick={(e) => {
