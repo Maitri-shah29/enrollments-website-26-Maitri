@@ -131,7 +131,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   const continueCheck = () => {
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -314,9 +314,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         );
       }
       const folderForQuestions =
-        activeRoundFolder ?? (() => {
+        activeRoundFolder ??
+        (() => {
           const questions = roundUser?.round?.Question || [];
-          if (questions.some((q) => q.varName === "common")) return "common" as AOI;
+          if (questions.some((q) => q.varName === "common"))
+            return "common" as AOI;
           if (questions.some((q) => q.varName === "tech")) return "tech" as AOI;
           return undefined;
         })();

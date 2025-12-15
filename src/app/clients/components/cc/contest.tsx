@@ -9,7 +9,7 @@ const Contest: React.FC = () => {
         Join our weekly coding competition and test your skills against other
         developers.
       </p>
-      <Button label="Register Now"></Button>
+      <Button label="Coming Soon!"></Button>
     </NeonSection>
   );
 };

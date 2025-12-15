@@ -34,7 +34,7 @@ const Instructions: React.FC = () => {
                 support, but make sure your answers reflect your own thinking.
               </li>
               <li>
-                You can select a maximum of 3 Areas of Interest (AoIs) that
+                You can select a maximum of 2 Areas of Interest (AoIs) that
                 align with your passion and skills. These AOIs will help us
                 understand your interests better and may influence the type of
                 projects you'll work on if you’re selected.{" "}

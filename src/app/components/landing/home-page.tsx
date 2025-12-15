@@ -201,12 +201,12 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
             className="grid w-full h-full relative row-span-1 lg:col-span-3 lg:col-start-1 lg:row-start-2 overflow-hidden rounded-xl"
             style={{ gridTemplateRows: "1fr 1fr" }}
           >
-            <div className="max-h-[100px] w-full overflow-hidden rounded-t-xl relative">
+            <div className="max-h-25 w-full overflow-hidden rounded-xl relative bg-[#252525]">
               <a
                 href="https://open.spotify.com/playlist/0BhXhc13wRrxN8cMEUtUBr?si=eABr9RD8SuaeoAluxuWxQQ"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full h-full flex items-center justify-center"
+                className="rounded-xl w-full h-full flex items-center justify-center"
                 aria-label="Open ACM playlist on Spotify (opens in new tab)"
               >
                 <Image
@@ -215,16 +215,16 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                   fill
                   draggable={false}
                   sizes="(min-width: 1024px) 25vw, 100vw"
-                  className="object-contain"
+                  className="object-fit rounded-xl"
                 />
               </a>
             </div>
-            <div className="row-start-2 absolute row-end-3 h-full w-full gap-4 flex flex-col items-center justify-center rounded-2xl bg-[#292625] px-4 py-2">
+            <div className="row-start-2 absolute row-end-3 min-h-full w-full gap-4 flex flex-col items-center justify-center rounded-2xl bg-[#292625] px-4 py-2">
               <h1 className="font-poppins lg:text-md xl:text-2xl 2xl:text-2xl text-center tracking-wider select-none">
                 Games
               </h1>
 
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 select-none">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-2 select-none">
                 {/* <Image
                   onClick={handleKeyword("pintoorun")}
                   src="/images/addons/pintoorun-icon.svg"

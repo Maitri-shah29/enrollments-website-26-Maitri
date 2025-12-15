@@ -32,14 +32,17 @@ interface AOIData {
 }
 
 const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
-  const grouped = questions.reduce((acc, question) => {
-    const varName = question.varName;
-    if (!acc[varName]) {
-      acc[varName] = [];
-    }
-    acc[varName].push(question);
-    return acc;
-  }, {} as Record<string, Question[]>);
+  const grouped = questions.reduce(
+    (acc, question) => {
+      const varName = question.varName;
+      if (!acc[varName]) {
+        acc[varName] = [];
+      }
+      acc[varName].push(question);
+      return acc;
+    },
+    {} as Record<string, Question[]>,
+  );
 
   return Object.entries(grouped).map(([varName, questions]) => ({
     name: varName,
@@ -59,7 +62,7 @@ const DesignClient = ({
 }: DesignClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null
+    initialRoundUser ?? null,
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,14 +102,14 @@ const DesignClient = ({
 
     return formQuestions.filter((q) =>
       Array.from(allowedVarNames).some((varName) =>
-        q.varName?.toLowerCase().includes(varName.toLowerCase())
-      )
+        q.varName?.toLowerCase().includes(varName.toLowerCase()),
+      ),
     );
   }, [formQuestions, joinedAOIs]);
 
   const aoiData = useMemo(
     () => groupQuestionsByVarName(filteredQuestions),
-    [filteredQuestions]
+    [filteredQuestions],
   );
 
   useEffect(() => {
@@ -152,7 +155,7 @@ const DesignClient = ({
   const continueCheck = () => {
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -165,7 +168,7 @@ const DesignClient = ({
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -193,7 +196,7 @@ const DesignClient = ({
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user"
+        err instanceof Error ? err.message : "Failed to initialize round user",
       );
     } finally {
       setLoading(false);
@@ -202,7 +205,7 @@ const DesignClient = ({
   // get questions from the round
 
   const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
-    aoiData[0] || null
+    aoiData[0] || null,
   );
   const [isSaving, setIsSaving] = useState(false);
   const [submittingForm, setSubmittingForm] = useState(false);
@@ -214,7 +217,7 @@ const DesignClient = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
   const [savedResponses, setSavedResponses] = useState<Response[]>(
-    (roundUser?.formSubmission?.responses as Response[]) || []
+    (roundUser?.formSubmission?.responses as Response[]) || [],
   );
 
   useEffect(() => {
