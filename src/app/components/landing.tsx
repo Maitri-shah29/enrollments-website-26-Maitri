@@ -466,7 +466,8 @@ const Landing: React.FC<{
                         color: isActive ? "#252525" : "#ffffff",
                       }}
                     >
-                      {tab.title}
+                      {tab.title.charAt(0).toUpperCase() +
+                        tab.title.slice(1).toLowerCase()}
                     </span>
                     <div
                       onClick={(e) => {
