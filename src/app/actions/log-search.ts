@@ -8,8 +8,11 @@ const filters = [
   "tech",
   "management",
   "cc",
-  "domain",
-  "events",
+  "domains",
+  // "events",
+  // "pintoorun",
+  // "snake",
+  // "about",
 ];
 export async function logSearch(query: string, email?: string | null) {
   // console.log("hii");
