@@ -138,6 +138,7 @@ export const IFRAME_WHITELIST = new Set([
 ]);
 
 export const INTERNAL_KEYWORDS = new Set([
+  "instructions",
   "cc",
   "management",
   "tech",
@@ -151,6 +152,7 @@ export const INTERNAL_KEYWORDS = new Set([
 ]);
 
 export const BOOKMARK_LABELS: Record<string, string> = {
+  instructions: "Instructions",
   cc: "CC",
   management: "Management",
   tech: "Tech",
