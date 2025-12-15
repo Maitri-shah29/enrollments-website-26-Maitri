@@ -7,6 +7,10 @@ import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import {
+  enforceSaveResponseRateLimit,
+  formatRetryAfterSeconds,
+} from "@/lib/ratelimit";
+import {
   type RuleType,
   type ValidationRuleInput,
   validateAnswer,
@@ -45,6 +49,12 @@ export default async function saveFormResponse(
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.session?.userId;
   if (!userId) throw new Error("Not logged in");
+
+  const rate = await enforceSaveResponseRateLimit(`user:${userId}`);
+  if (!rate.success) {
+    const retryAfter = formatRetryAfterSeconds(rate.reset);
+    throw new Error(`Too many save attempts. Try again in ${retryAfter}s.`);
+  }
 
   if (response != null && response.length > 1500) {
     return { error: "Character overlimit" };

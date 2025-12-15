@@ -135,7 +135,7 @@ const PhoneNumberModal = () => {
           Add your mobile number
         </h2>
         <p className="text-sm text-neutral-400 mb-1 font-poppinsReg">
-          We&apos;ll use this to contact you about your enrollment status.
+          We&apos;ll use this to contact you about updates
         </p>
         <p className="text-xs text-yellow-500 mb-6 font-poppinsReg">
           This is required to continue.

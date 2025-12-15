@@ -6,6 +6,10 @@ import { auth } from "@/lib/auth";
 import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import {
+  enforceSaveResponseRateLimit,
+  formatRetryAfterSeconds,
+} from "@/lib/ratelimit";
 
 export default async function createResponse(
   questionId: string,
@@ -21,6 +25,12 @@ export default async function createResponse(
     const userId = session?.session?.userId;
     if (!userId) {
       return { error: "Not authenticated" };
+    }
+
+    const rate = await enforceSaveResponseRateLimit(`user:${userId}`);
+    if (!rate.success) {
+      const retryAfter = formatRetryAfterSeconds(rate.reset);
+      return { error: `Too many save attempts. Try again in ${retryAfter}s.` };
     }
 
     if (text.length > 1500) {

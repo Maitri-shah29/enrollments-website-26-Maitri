@@ -288,7 +288,7 @@ const Questions: React.FC<QuestionsProps> = ({
   const isAnnounced = !!roundUser?.round?.announced;
   const isHidden = !!roundUser?.round?.hidden;
   // Status-based rendering
-  if (roundUserStatus === "evaluate" || !isAnnounced) {
+  if (roundUserStatus === "evaluate" && !isAnnounced) {
     return (
       <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <div className="text-center">

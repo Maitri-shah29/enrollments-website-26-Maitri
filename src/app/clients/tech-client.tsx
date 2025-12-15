@@ -37,12 +37,12 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   } = useTechNavigation();
 
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [savedAnswers, setSavedAnswers] = useState<Record<string, string>>({});
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null
+    initialRoundUser ?? null,
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -96,7 +96,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
               .filter((q) => q.varName === question.varName)
               .sort((a, b) => a.serial - b.serial);
             const questionIndex = folderQuestions.findIndex(
-              (q) => q.id === question.id
+              (q) => q.id === question.id,
             );
             if (questionIndex !== -1) {
               const questionKey = `${question.varName}-question${
@@ -128,12 +128,22 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     });
   };
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+      );
+      setLoading(false);
+      return;
+    }
+    setSection("about");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -144,9 +154,9 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
 
       if ("error" in result) {
         if (result.error === "Round is not active") {
-          setError("Enrollments for this domain haven't started yet");
+          setError("Selections for this domain haven't started yet");
         } else if (result.error === "No form round found for this domain") {
-          setError("This domain is not available for enrollment at the moment");
+          setError("This domain is not available for selection at the moment");
         } else if (result.error === "Internal server error") {
           setError("Something went wrong. Please try again later");
         } else {
@@ -160,7 +170,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     } catch (err) {
       console.error("Error initializing round user:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user"
+        err instanceof Error ? err.message : "Failed to initialize round user",
       );
     } finally {
       setLoading(false);
@@ -186,8 +196,9 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     }
     // Status-based rendering for evaluate, promoted, rejected
     if (
-      roundUserStatus === "evaluate" ||
-      (!isAnnounced && activeSection === "round1")
+      roundUserStatus === "evaluate" &&
+      !isAnnounced &&
+      activeSection === "round1"
     ) {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -265,7 +276,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
-      if (joinedAOIs.size === 0) {
+      const hasCommonOrTechQuestions = (roundUser?.round?.Question || []).some(
+        (q) => q.varName === "tech" || q.varName === "common",
+      );
+
+      if (joinedAOIs.size === 0 && !hasCommonOrTechQuestions) {
         return (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
@@ -298,10 +313,18 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           </div>
         );
       }
+      const folderForQuestions =
+        activeRoundFolder ?? (() => {
+          const questions = roundUser?.round?.Question || [];
+          if (questions.some((q) => q.varName === "common")) return "common" as AOI;
+          if (questions.some((q) => q.varName === "tech")) return "tech" as AOI;
+          return undefined;
+        })();
+
       return (
         <Questions
           ref={childRef}
-          activeRoundFolder={activeRoundFolder}
+          activeRoundFolder={folderForQuestions}
           activeQuestion={activeQuestion}
           roundUser={roundUser ?? undefined}
           answers={answers}
@@ -332,7 +355,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           onGetStarted={initializeRoundUser}
           loading={loading}
           hasRoundUser={!!roundUser}
-          onContinue={() => setSection("about")}
+          onContinue={continueCheck}
         />
       );
     }

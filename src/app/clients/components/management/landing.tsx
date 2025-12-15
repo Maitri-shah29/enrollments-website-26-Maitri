@@ -58,7 +58,7 @@ const ManagementLanding = ({
           <div className="w-full flex justify-center">
             <div className="w-full max-w-4xl">
               <Image
-                src="/images/management/banner.svg"
+                src="/images/management/update-banner.svg"
                 alt="Management Banner"
                 width={1200}
                 height={400}

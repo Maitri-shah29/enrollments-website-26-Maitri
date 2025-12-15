@@ -14,6 +14,7 @@ interface Props {
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
   goBack?: () => void;
   wallpaper: string;
+  savedAnswer?: string;
 }
 
 const themeButtonClasses: Record<string, string> = {
@@ -31,8 +32,10 @@ export default function Question({
   onSubmitAnswer,
   goBack,
   wallpaper,
+  savedAnswer,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
+  const isSavedDraft = savedAnswer !== undefined && savedAnswer === answer;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -75,8 +78,13 @@ export default function Question({
           <div className="flex items-center text-sm text-gray-700 space-x-2 mb-3">
             <Reply size={16} />
             <p>
-              mgmt(management@acmvit.in) -{" "}
-              <span className="text-gray-500 italic">Saved draft</span>
+              mgmt(management@acmvit.in)
+              {isSavedDraft && (
+                <>
+                  {" "}
+                  - <span className="text-gray-500 italic">Saved draft</span>
+                </>
+              )}
             </p>
           </div>
           <div className="flex-1 overflow-y-auto">

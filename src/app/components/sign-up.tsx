@@ -36,7 +36,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
         />
 
         <p className="text-white text-lg mb-6">
-          Sign in with your VIT student mail
+          Sign in with your VIT Student email to continue
         </p>
 
         {/* Google Button */}

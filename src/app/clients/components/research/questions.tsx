@@ -536,7 +536,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     );
   }
   // Status-based rendering
-  if (roundUserStatus === "evaluate" || !isAnnounced) {
+  if (roundUserStatus === "evaluate" && !isAnnounced) {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">

@@ -411,7 +411,7 @@ const Questions = ({
   }
   const isAnnounced = !!roundUser?.round?.announced;
   // Status-based rendering
-  if (roundUserStatus === "evaluate" || !isAnnounced) {
+  if (roundUserStatus === "evaluate" && !isAnnounced) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">

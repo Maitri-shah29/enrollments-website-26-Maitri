@@ -49,7 +49,7 @@ const labelToKey: Record<string, AoiKey> = Object.fromEntries(
   (Object.keys(keyToLabel) as AoiKey[]).map((k) => [
     keyToLabel[k].toLowerCase(),
     k,
-  ]),
+  ])
 ) as Record<string, AoiKey>;
 
 function toAoiKey(input: string): AoiKey | null {
@@ -57,7 +57,7 @@ function toAoiKey(input: string): AoiKey | null {
   const trimmed = input.trim();
   const upper = trimmed.toUpperCase().replace(/\s+/g, "");
   const keyMatch = (AOI_KEYS as readonly string[]).find(
-    (k) => k === upper || k === trimmed.toUpperCase(),
+    (k) => k === upper || k === trimmed.toUpperCase()
   ) as AoiKey | undefined;
   if (keyMatch) return keyMatch;
 
@@ -78,13 +78,13 @@ const ResearchClient = ({
   const [selectedAOI, setSelectedAOI] = useState<string>("Common");
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null,
+    initialRoundUser ?? null
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
-    {},
+    {}
   );
   const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
     Set<string>
@@ -112,7 +112,7 @@ const ResearchClient = ({
   } = useResearchNavigation();
 
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const childRef = useRef<QuestionsRef>(null);
   const [isProceeding, setIsProceeding] = useState<boolean>(false);
@@ -160,13 +160,23 @@ const ResearchClient = ({
     });
   };
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+      );
+      setLoading(false);
+      return;
+    }
+    setSelectedPanel("About");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
       );
       setLoading(false);
       return;
@@ -177,9 +187,9 @@ const ResearchClient = ({
 
       if ("error" in result) {
         if (result.error === "Round is not active") {
-          setError("Enrollments for this domain haven't started yet");
+          setError("Selections for this domain haven't started yet");
         } else if (result.error === "No form round found for this domain") {
-          setError("This domain is not available for enrollment at the moment");
+          setError("This domain is not available for selection at the moment");
         } else if (result.error === "Internal server error") {
           setError("Something went wrong. Please try again later");
         } else {
@@ -194,7 +204,7 @@ const ResearchClient = ({
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user",
+        err instanceof Error ? err.message : "Failed to initialize round user"
       );
     } finally {
       setLoading(false);
@@ -218,7 +228,7 @@ const ResearchClient = ({
             .filter((q) => q.varName === question.varName)
             .sort((a, b) => a.serial - b.serial);
           const questionIndex = AOIQuestions.findIndex(
-            (q) => q.id === question.id,
+            (q) => q.id === question.id
           );
           if (questionIndex !== -1) {
             const questionKey = `${question.varName}-question${
@@ -256,7 +266,7 @@ const ResearchClient = ({
         setSelectedPanel("AOIs");
       }
     },
-    [hasUnsavedChanges, selectedPanel],
+    [hasUnsavedChanges, selectedPanel]
   );
 
   // ✅ Memoized to keep `onSelect` stable for AOIs
@@ -281,7 +291,7 @@ const ResearchClient = ({
 
       setSelectedPanel(panelName);
     },
-    [hasUnsavedChanges, selectedPanel],
+    [hasUnsavedChanges, selectedPanel]
   );
 
   const handleQuestionSelect = useCallback(
@@ -298,7 +308,7 @@ const ResearchClient = ({
       setSelectedQuestionIdx(idx);
       setSelectedPanel("Round 1");
     },
-    [hasUnsavedChanges, selectedPanel, selectedQuestionIdx],
+    [hasUnsavedChanges, selectedPanel, selectedQuestionIdx]
   );
 
   const handleConfirmNavigation = useCallback(() => {
@@ -431,7 +441,7 @@ const ResearchClient = ({
             onGetStarted={initializeRoundUser}
             loading={loading}
             hasRoundUser={!!roundUser}
-            onContinue={() => setSelectedPanel("About")}
+            onContinue={continueCheck}
           />
         )}
         {selectedPanel === "About" && <About />}

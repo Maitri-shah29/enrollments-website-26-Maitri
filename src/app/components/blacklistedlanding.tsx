@@ -18,8 +18,16 @@ const BlacklistedLanding: React.FC<BlacklistedLandingProps> = ({ url }) => {
       </p>
 
       <p className="text-sm text-gray-400 mb-6">
-        If you think this is a mistake, please contact an administrator or try a
-        different website.
+        If you want this to be accessible, please contact us at&nbsp;
+        <a
+          href="https://discord.gg/5q6TGqMsVn"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-white"
+        >
+          our Discord server
+        </a>
+        .
       </p>
 
       <button
