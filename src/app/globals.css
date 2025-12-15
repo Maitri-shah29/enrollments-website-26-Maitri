@@ -45,7 +45,8 @@
 
 @font-face {
   font-family: "JetBrainsMono";
-  src: url("/fonts/JetBrainsMono-Regular.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/JetBrainsMono-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -53,7 +54,8 @@
 
 @font-face {
   font-family: "ShareTechMono";
-  src: url("/fonts/ShareTechMono-Regular.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/ShareTechMono-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -61,7 +63,8 @@
 
 @font-face {
   font-family: "PolysansTrial";
-  src: url("/fonts/PolysansTrial-Regular.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/PolysansTrial-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -69,7 +72,8 @@
 
 @font-face {
   font-family: "Brushwell";
-  src: url("/fonts/Brushwell.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/Brushwell.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -77,7 +81,8 @@
 
 @font-face {
   font-family: "Coolvetica";
-  src: url("/fonts/coolvetica-rg.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/coolvetica-rg.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -85,7 +90,8 @@
 
 @font-face {
   font-family: "PoppinsReg";
-  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/Poppins-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -93,7 +99,8 @@
 
 @font-face {
   font-family: "PoppinsBlack";
-  src: url("/fonts/Poppins-Black.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/Poppins-Black.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -101,7 +108,8 @@
 
 @font-face {
   font-family: "Helvetica";
-  src: url("/fonts/Helvetica.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/Helvetica.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -113,7 +121,8 @@
 
 @font-face {
   font-family: "DoppioOne";
-  src: url("/fonts/DoppioOne-Regular.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/DoppioOne-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -121,7 +130,8 @@
 
 @font-face {
   font-family: "MonopolyBold";
-  src: url("/fonts/Monopoly Bold.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/Monopoly%20Bold.ttf")
+    format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -129,7 +139,8 @@
 
 @font-face {
   font-family: "MonopolyRegular";
-  src: url("/fonts/Monopoly Regular.ttf") format("truetype");
+  src: url("https://assets.acmvit.in/ocs/fonts/Monopoly%20Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -252,7 +263,7 @@
 
 * {
   cursor:
-    url("/images/design/figma_cursor.png") 10 10,
+    url("https://assets.acmvit.in/ocs/images/design/figma_cursor.png") 10 10,
     auto;
 }
 
@@ -403,4 +414,40 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes slide-left {
+  0% {
+    opacity: 0;
+    transform: translateX(60px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slide-right {
+  0% {
+    opacity: 0;
+    transform: translateX(-60px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-slide-left {
+  animation: slide-left 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-slide-right {
+  animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }

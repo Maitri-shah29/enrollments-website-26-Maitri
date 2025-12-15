@@ -1,5 +1,5 @@
 "use client";
-import type { Question } from "@prisma/client";
+import type { Question, Response } from "@prisma/client";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
@@ -7,25 +7,10 @@ import submitForm from "@/app/actions/submit-form";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import type { DesignAOI } from "@/lib/types";
 
-//this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
-interface QuestionsProps {
-  questions: Question[];
-  roundUser: RoundUserExtended;
-  joinedAOIs: Set<DesignAOI>;
-  savedAnswers?: Record<string, string>; // lifted state from parent
-  setSavedAnswers?: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >; // setter from parent
-  questionsWithUnsavedEdits?: Set<string>; // lifted state from parent
-  setQuestionsWithUnsavedEdits?: React.Dispatch<
-    React.SetStateAction<Set<string>>
-  >; // setter from parent
-}
-
 interface TransformedQuestion {
   header: string;
   content: string;
-  questionId: string; // Added to track question ID for responses
+  questionId: string;
 }
 
 interface AOIData {
@@ -33,118 +18,75 @@ interface AOIData {
   questions: TransformedQuestion[];
 }
 
+//this page has a bit of ai code to accommodate the fe, dont have enough time to actually think abt ts claude is pretty goog tho ngl
+interface QuestionsProps {
+  questions: Question[];
+  roundUser: RoundUserExtended;
+  joinedAOIs: Set<DesignAOI>;
+  savedAnswers: Record<string, string>; // lifted state from parent
+  setSavedAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>; // setter from parent
+  questionsWithUnsavedEdits: Set<string>; // lifted state from parent
+  setQuestionsWithUnsavedEdits: React.Dispatch<
+    React.SetStateAction<Set<string>>
+  >; // setter from parent
+  filteredQuestions: Question[];
+  aoiData: AOIData[];
+  selectedAoi: AOIData | null;
+  setSelectedAoi: React.Dispatch<React.SetStateAction<AOIData | null>>;
+  selectedQuestion: TransformedQuestion | null;
+  setSelectedQuestion: React.Dispatch<
+    React.SetStateAction<TransformedQuestion | null>
+  >;
+  isSaving: boolean;
+  setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
+  submittingForm: boolean;
+  setSubmittingForm: React.Dispatch<React.SetStateAction<boolean>>;
+  showConfirmDialog: boolean;
+  setShowConfirmDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  isProceeding: boolean;
+  setIsProceeding: React.Dispatch<React.SetStateAction<boolean>>;
+  answers: Record<string, string>;
+  setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: React.Dispatch<React.SetStateAction<boolean>>;
+  savedResponses: Response[];
+  setSavedResponses: React.Dispatch<React.SetStateAction<Response[]>>;
+}
+
 interface Toast {
   message: string;
   type: "success" | "error";
 }
 
-const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
-  const grouped = questions.reduce(
-    (acc, question) => {
-      const varName = question.varName;
-      if (!acc[varName]) {
-        acc[varName] = [];
-      }
-      acc[varName].push(question);
-      return acc;
-    },
-    {} as Record<string, Question[]>,
-  );
-
-  return Object.entries(grouped).map(([varName, questions]) => ({
-    name: varName,
-    questions: questions
-      .sort((a, b) => a.serial - b.serial)
-      .map((q) => ({
-        header: `Question ${q.serial}`,
-        content: q.question,
-        questionId: q.id, // Include question ID
-      })),
-  }));
-};
-
 const Questions: React.FC<QuestionsProps> = ({
   questions,
   roundUser,
   joinedAOIs,
-  savedAnswers: externalSavedAnswers,
-  setSavedAnswers: externalSetSavedAnswers,
-  questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
-  setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
+  savedAnswers,
+  setSavedAnswers,
+  questionsWithUnsavedEdits,
+  setQuestionsWithUnsavedEdits,
+  filteredQuestions,
+  aoiData,
+  selectedAoi,
+  setSelectedAoi,
+  selectedQuestion,
+  setSelectedQuestion,
+  isSaving,
+  setIsSaving,
+  submittingForm,
+  setSubmittingForm,
+  showConfirmDialog,
+  setShowConfirmDialog,
+  isProceeding,
+  setIsProceeding,
+  answers,
+  setAnswers,
+  hasUnsavedChanges,
+  setHasUnsavedChanges,
+  savedResponses,
+  setSavedResponses,
 }) => {
-  // Map DesignAOI to varName prefixes (these should match the question varNames in your database)
-  const designAOIToVarName: Record<DesignAOI, string> = {
-    uiux: "uiux",
-    videoediting: "videoediting",
-    illustrations: "illustrations",
-    motiongraphics: "motiongraphics",
-    "3d": "3d",
-  };
-
-  // Filter questions based on joined AOIs
-  const filteredQuestions = useMemo(() => {
-    if (joinedAOIs.size === 0) {
-      return [];
-    }
-
-    const allowedVarNames = new Set<string>();
-    // Always include common questions if any AOI is joined
-    allowedVarNames.add("common");
-
-    for (const aoi of joinedAOIs) {
-      allowedVarNames.add(designAOIToVarName[aoi]);
-    }
-
-    return questions.filter((q) =>
-      Array.from(allowedVarNames).some((varName) =>
-        q.varName?.toLowerCase().includes(varName.toLowerCase()),
-      ),
-    );
-  }, [questions, joinedAOIs]);
-
-  const aoiData = useMemo(
-    () => groupQuestionsByVarName(filteredQuestions),
-    [filteredQuestions],
-  );
-
-  const [selectedAoi, setSelectedAoi] = useState<AOIData | null>(
-    aoiData[0] || null,
-  );
-  const [selectedQuestion, setSelectedQuestion] =
-    useState<TransformedQuestion | null>(aoiData[0]?.questions[0] || null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [submittingForm, setSubmittingForm] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-
-  const [answers, setAnswers] = useState<Record<string, string>>({}); //im starting to like this syntax ngl
-
-  // Use external state if provided, otherwise use internal
-  const [internalSavedAnswers, setInternalSavedAnswers] = useState<
-    Record<string, string>
-  >({});
-  const [
-    internalQuestionsWithUnsavedEdits,
-    setInternalQuestionsWithUnsavedEdits,
-  ] = useState<Set<string>>(new Set());
-
-  const useExternalSavedState =
-    !!externalSavedAnswers &&
-    !!externalSetSavedAnswers &&
-    !!externalSetQuestionsWithUnsavedEdits;
-  const savedAnswers = useExternalSavedState
-    ? externalSavedAnswers
-    : internalSavedAnswers;
-  const setSavedAnswers = useExternalSavedState
-    ? externalSetSavedAnswers
-    : setInternalSavedAnswers;
-  const questionsWithUnsavedEdits = useExternalSavedState
-    ? externalQuestionsWithUnsavedEdits || new Set()
-    : internalQuestionsWithUnsavedEdits;
-  const setQuestionsWithUnsavedEdits = useExternalSavedState
-    ? externalSetQuestionsWithUnsavedEdits
-    : setInternalQuestionsWithUnsavedEdits;
-
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
   const [pendingNavigation, setPendingNavigation] = useState<{
     type: "aoi" | "question";
@@ -163,26 +105,6 @@ const Questions: React.FC<QuestionsProps> = ({
   );
 
   const formSubmissionId = roundUser?.formSubmission?.id || null;
-  const savedResponses = roundUser?.formSubmission?.responses || [];
-
-  // Load saved responses into answers state
-  useEffect(() => {
-    if (savedResponses.length > 0) {
-      const loadedAnswers: Record<string, string> = {};
-      for (const response of savedResponses) {
-        if (response.response) {
-          loadedAnswers[response.questionId] = response.response;
-        }
-      }
-      setAnswers(loadedAnswers);
-      if (!useExternalSavedState) {
-        setInternalSavedAnswers(loadedAnswers);
-      } else if (externalSetSavedAnswers) {
-        externalSetSavedAnswers(loadedAnswers);
-      }
-      console.log("Loaded answers from saved responses:", loadedAnswers);
-    }
-  }, [savedResponses, useExternalSavedState, externalSetSavedAnswers]);
 
   const handleAoiClick = (aoi: AOIData) => {
     if (hasUnsavedChanges) {
@@ -263,7 +185,17 @@ const Questions: React.FC<QuestionsProps> = ({
     setSavedAnswers,
     setQuestionsWithUnsavedEdits,
     roundUser.id,
+    setHasUnsavedChanges,
+    setIsSaving,
   ]);
+
+  const designAOIToVarName: Record<DesignAOI, string> = {
+    uiux: "uiux",
+    videoediting: "videoediting",
+    illustrations: "illustrations",
+    motiongraphics: "motiongraphics",
+    "3d": "3d",
+  };
 
   const handleSubmitForm = () => {
     // Frontend validation before showing confirm dialog
@@ -356,9 +288,9 @@ const Questions: React.FC<QuestionsProps> = ({
   const isAnnounced = !!roundUser?.round?.announced;
   const isHidden = !!roundUser?.round?.hidden;
   // Status-based rendering
-  if (roundUserStatus === "evaluate" || !isAnnounced) {
+  if (roundUserStatus === "evaluate" && !isAnnounced) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <div className="text-center">
           <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
             Your responses are being evaluated
@@ -386,7 +318,7 @@ const Questions: React.FC<QuestionsProps> = ({
 
   if (roundUserStatus === "rejected" && isAnnounced) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <div className="text-center">
           <h2 className="text-red-500 text-9xl font-brushwell mb-4">
             Sorry 😞
@@ -403,7 +335,7 @@ const Questions: React.FC<QuestionsProps> = ({
   // If no AOIs are joined, show a message
   if (joinedAOIs.size === 0) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
           Questions
         </h1>
@@ -421,7 +353,7 @@ const Questions: React.FC<QuestionsProps> = ({
   // If no questions available for joined AOIs
   if (aoiData.length === 0) {
     return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
           Questions
         </h1>
@@ -438,19 +370,23 @@ const Questions: React.FC<QuestionsProps> = ({
   }
 
   const handleConfirmNavigation = () => {
-    if (pendingNavigation) {
-      if (pendingNavigation.type === "aoi") {
-        const aoi = pendingNavigation.target as AOIData;
-        setSelectedAoi(aoi);
-        setSelectedQuestion(aoi.questions[0]);
-      } else {
-        const question = pendingNavigation.target as TransformedQuestion;
-        setSelectedQuestion(question);
+    setIsProceeding(true);
+    handleSaveResponse().then(() => {
+      setIsProceeding(false);
+      if (pendingNavigation) {
+        if (pendingNavigation.type === "aoi") {
+          const aoi = pendingNavigation.target as AOIData;
+          setSelectedAoi(aoi);
+          setSelectedQuestion(aoi.questions[0]);
+        } else {
+          const question = pendingNavigation.target as TransformedQuestion;
+          setSelectedQuestion(question);
+        }
       }
-    }
-    setHasUnsavedChanges(false);
-    setShowUnsavedDialog(false);
-    setPendingNavigation(null);
+      setHasUnsavedChanges(false);
+      setShowUnsavedDialog(false);
+      setPendingNavigation(null);
+    });
   };
 
   const handleCancelNavigation = () => {
@@ -459,7 +395,7 @@ const Questions: React.FC<QuestionsProps> = ({
   };
 
   return (
-    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%]">
+    <div className="h-full w-full flex items-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] [--scrollbar-thumb:#F55F4B] pb-[3%]">
       {showUnsavedDialog && (
         <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-2000">
           <div className="bg-[#302E2E] border-2 border-[#F55F4B] p-8 rounded-lg max-w-md w-full mx-4">
@@ -467,7 +403,7 @@ const Questions: React.FC<QuestionsProps> = ({
               Unsaved Changes
             </h3>
             <p className="text-white text-lg mb-6 font-coolvetica">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -481,8 +417,9 @@ const Questions: React.FC<QuestionsProps> = ({
                 onClick={handleConfirmNavigation}
                 className="px-6 py-2 bg-[#F55F4B] text-white font-coolvetica hover:bg-[#d64f3a] transition-colors"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
@@ -543,6 +480,14 @@ const Questions: React.FC<QuestionsProps> = ({
                   );
                   return hasSavedAnswer && !hasUnsavedEdit;
                 });
+                const anyAnswered = aoi.questions.some((q) => {
+                  const hasSavedAnswer =
+                    savedAnswers[q.questionId]?.trim().length > 0;
+                  const hasUnsavedEdit = questionsWithUnsavedEdits.has(
+                    q.questionId,
+                  );
+                  return hasSavedAnswer && !hasUnsavedEdit;
+                });
                 return (
                   <button
                     type="button"
@@ -552,7 +497,11 @@ const Questions: React.FC<QuestionsProps> = ({
                   >
                     <div
                       className={`w-6 aspect-square rounded-sm ${
-                        allAnswered ? "bg-green-500" : "bg-white"
+                        allAnswered
+                          ? "bg-green-500"
+                          : anyAnswered
+                            ? "bg-amber-500"
+                            : "bg-white"
                       }`}
                     ></div>
                     <p
@@ -629,6 +578,8 @@ const Questions: React.FC<QuestionsProps> = ({
 
                     const questionId = selectedQuestion.questionId;
                     const newAnswer = e.target.value;
+
+                    console.log(newAnswer);
                     setAnswers((prev) => ({
                       ...prev,
                       [questionId]: newAnswer,

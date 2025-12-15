@@ -204,7 +204,7 @@ export default function Sidebar({
     <div className="min-w-45 w-[16%] overflow-hidden border-r-2 border-[#993C7A] h-full p-2 overflow-y-auto font-jetbrains [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#08111D] [&::-webkit-scrollbar-thumb]:bg-[#993C7A] [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-[#08111D] [&::-webkit-scrollbar-thumb:hover]:bg-[#b84a92]">
       {notification && (
         <div
-          className={`fixed top-8 right-8 px-4 py-2 font-jetbrains shadow-lg z-50 text-white border ${
+          className={`fixed top-30 right-8 px-4 py-2 font-jetbrains shadow-lg z-50 text-white border ${
             notificationType === "success"
               ? "bg-[#08111D] border-[#993C7A]"
               : "bg-[#08111D] border-red-500"
@@ -256,9 +256,9 @@ export default function Sidebar({
         {(
           [
             { name: "About", key: "about" },
+            { name: "Instructions", key: "instructions" },
             { name: "AOI", key: "aoi" },
             { name: "Explore", key: "explore" },
-            { name: "Instructions", key: "instructions" },
             { name: "Round 1", key: "round1" },
           ] as const
         )
@@ -324,7 +324,7 @@ export default function Sidebar({
         <div className="mt-6 px-2">
           <button
             onClick={handleSubmitForm}
-            disabled={submittingForm}
+            disabled={submittingForm || joinedAOIs.size === 0}
             className="w-full bg-transparent border-2 border-[#993C7A] text-[#993C7A] hover:bg-[#993C7A] hover:text-white px-4 py-2 font-jetbrains text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
           >

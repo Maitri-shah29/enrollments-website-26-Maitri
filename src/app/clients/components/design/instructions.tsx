@@ -21,19 +21,39 @@ const Instructions: React.FC = () => {
             draggable={false}
           />
           <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl">
-            Welcome to the first round of ACM-VIT's Design Domain recruitment!
-            In this round, you'll have the opportunity to showcase your creative
-            skills and design thinking. You'll be presented with a series of
-            questions that test your understanding of design principles.
+            Welcome to the first round of ACM-VIT's Design Domain selections! In
+            this round, you'll have the opportunity to showcase your creative
+            skills and design thinking by answering a series of questions.
             <br />
             <br />
-            You can select a maximum of 2 Areas of Interest (AOIs) that align
-            with your passion and skills. These AOIs will help us understand
-            your interests better and may influence the type of projects you'll
-            work on if you’re selected. Once you've answered all the questions
-            to the best of your ability, review your responses and click submit.
+            <ul className="list-disc pl-6 space-y-2 text-white">
+              <li>
+                PS - You’ll probably use AI for these questions, which is
+                totally fine. Just keep in mind that we’ll be evaluating your
+                originality and your ability to learn so feel free to use AI for
+                support, but make sure your answers reflect your own thinking.
+              </li>
+              <li>
+                You can select a maximum of 2 Areas of Interest (AoIs) that
+                align with your passion and skills. These AOIs will help us
+                understand your interests better and may influence the type of
+                projects you'll work on if you’re selected.{" "}
+              </li>
+              <li>
+                Click on “Save Answer” after every question you answer. You may
+                change your answers after you save answer. You cannot change
+                your answers once you have submitted the form.
+              </li>
+              <li>
+                Once you've answered all the questions, review your responses
+                and click “Submit Form”.{" "}
+              </li>
+            </ul>
+            <br></br>
             We're looking for creativity, originality, and your personal
-            approach to solving design challenges. Good luck!
+            approach to solving design challenges together.
+            <br></br>
+            Good Luck!
           </p>
         </div>
         <Image

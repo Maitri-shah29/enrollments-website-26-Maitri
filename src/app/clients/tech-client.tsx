@@ -1,5 +1,4 @@
 "use client";
-import { active } from "d3";
 import { useEffect, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { DOMAIN_CAP } from "@/lib/constants";
@@ -11,10 +10,10 @@ import AOIContent from "./components/tech/aoi";
 import ExploreAOIs from "./components/tech/explore";
 import Instructions from "./components/tech/instructions";
 import TechLanding from "./components/tech/landing";
-import Questions from "./components/tech/questions";
+import Questions, { type QuestionsRef } from "./components/tech/questions";
 import Sidebar from "./components/tech/sidebar";
 
-const AOI_JOIN_LIMIT = 3;
+const AOI_JOIN_LIMIT = 2;
 
 type TechClientProps = {
   initialRoundUser?: RoundUserExtended | null;
@@ -55,6 +54,8 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     value: string;
   } | null>(null);
   const hasUnsavedChangesRef = useRef<boolean>(false);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
+  const childRef = useRef<QuestionsRef>(null);
   const roundActive = !!roundUser?.round?.active;
   const isAnnounced = !!roundUser?.round?.announced;
   const roundHidden = !!roundUser?.round?.hidden;
@@ -127,6 +128,16 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     });
   };
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
+    setSection("about");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
@@ -143,9 +154,9 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
 
       if ("error" in result) {
         if (result.error === "Round is not active") {
-          setError("Enrollments for this domain haven't started yet");
+          setError("Selections for this domain haven't started yet");
         } else if (result.error === "No form round found for this domain") {
-          setError("This domain is not available for enrollment at the moment");
+          setError("This domain is not available for selection at the moment");
         } else if (result.error === "Internal server error") {
           setError("Something went wrong. Please try again later");
         } else {
@@ -185,8 +196,9 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     }
     // Status-based rendering for evaluate, promoted, rejected
     if (
-      roundUserStatus === "evaluate" ||
-      (!isAnnounced && activeSection === "round1")
+      roundUserStatus === "evaluate" &&
+      !isAnnounced &&
+      activeSection === "round1"
     ) {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -264,7 +276,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
-      if (joinedAOIs.size === 0) {
+      const hasCommonOrTechQuestions = (roundUser?.round?.Question || []).some(
+        (q) => q.varName === "tech" || q.varName === "common",
+      );
+
+      if (joinedAOIs.size === 0 && !hasCommonOrTechQuestions) {
         return (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
@@ -297,9 +313,20 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           </div>
         );
       }
+      const folderForQuestions =
+        activeRoundFolder ??
+        (() => {
+          const questions = roundUser?.round?.Question || [];
+          if (questions.some((q) => q.varName === "common"))
+            return "common" as AOI;
+          if (questions.some((q) => q.varName === "tech")) return "tech" as AOI;
+          return undefined;
+        })();
+
       return (
         <Questions
-          activeRoundFolder={activeRoundFolder}
+          ref={childRef}
+          activeRoundFolder={folderForQuestions}
           activeQuestion={activeQuestion}
           roundUser={roundUser ?? undefined}
           answers={answers}
@@ -330,7 +357,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           onGetStarted={initializeRoundUser}
           loading={loading}
           hasRoundUser={!!roundUser}
-          onContinue={() => setSection("about")}
+          onContinue={continueCheck}
         />
       );
     }
@@ -356,16 +383,33 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   };
 
   const handleConfirmNavigation = () => {
-    if (pendingNavigation) {
-      if (pendingNavigation.type === "folder") {
-        selectFolder(pendingNavigation.value as AOI);
-      } else {
-        selectQuestion(pendingNavigation.value as QuestionId);
+    if (childRef.current?.trigger) {
+      setIsProceeding(true);
+      childRef.current.trigger().then(() => {
+        if (pendingNavigation) {
+          if (pendingNavigation.type === "folder") {
+            selectFolder(pendingNavigation.value as AOI);
+          } else {
+            selectQuestion(pendingNavigation.value as QuestionId);
+          }
+        }
+        hasUnsavedChangesRef.current = false;
+        setShowUnsavedDialog(false);
+        setPendingNavigation(null);
+        setIsProceeding(false);
+      });
+    } else {
+      if (pendingNavigation) {
+        if (pendingNavigation.type === "folder") {
+          selectFolder(pendingNavigation.value as AOI);
+        } else {
+          selectQuestion(pendingNavigation.value as QuestionId);
+        }
       }
+      hasUnsavedChangesRef.current = false;
+      setShowUnsavedDialog(false);
+      setPendingNavigation(null);
     }
-    hasUnsavedChangesRef.current = false;
-    setShowUnsavedDialog(false);
-    setPendingNavigation(null);
   };
 
   const handleCancelNavigation = () => {
@@ -382,22 +426,24 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
               Unsaved Changes
             </h3>
             <p className="text-white text-lg mb-6">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCancelNavigation}
                 className="px-6 py-2 bg-transparent border-2 border-white text-white font-jetbrains hover:bg-white hover:text-black transition-colors"
                 type="button"
+                disabled={isProceeding}
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmNavigation}
-                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors"
+                className="px-6 py-2 bg-[#993C7A] text-white font-jetbrains hover:bg-[#b84a92] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>

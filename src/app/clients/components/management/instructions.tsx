@@ -30,21 +30,28 @@ export default function Instructions({ onBack }: InstructionsProps) {
         <div className="text-black leading-relaxed space-y-4 text-base mt-5">
           <p>
             Welcome to the first round of ACM-VIT's Management Domain
-            recruitment! In this round, you'll have the opportunity to
-            demonstrate your leadership abilities, organizational skills, and
-            vision for creating impactful events and initiatives. You'll be
-            presented with a series of questions that assess your strategic
-            thinking, team coordination capabilities, and understanding of what
-            it takes to manage successful technical communities.
+            selections. First let’s get the instructions out of the way.
+            <br />
+            &nbsp;1. Answer all the questions of Round 1.
+            <br />
+            &nbsp;PS - You’ll probably use AI for these questions, which is
+            totally fine. Just keep in mind that we’ll be evaluating your
+            originality and your ability to learn so feel free to use AI for
+            support, but make sure your answers reflect your own thinking.
+            <br />
+            &nbsp;2. Click on "Save Answer" after answering every question, to
+            save your response. You may change your answers after you save
+            answer. You cannot change your answers once you have submitted the
+            form.
+            <br />
+            &nbsp;3. Click on “Submit Form” after answering and reviewing all
+            questions.
+            <br />
+            In this round, you'll be presented with a series of situational
+            questions that assess your management skills and certain quirky
+            questions just for our fun!
           </p>
-          <p>
-            Once you've completed all the questions, review your answers
-            thoroughly and click submit. We're looking for individuals who
-            demonstrate strong communication skills, proactive leadership, and
-            the drive to bring people together while executing events and
-            projects that make a lasting impact on the ACM-VIT community. Good
-            luck!
-          </p>
+          <p>Good luck!</p>
         </div>
       </div>
     </div>

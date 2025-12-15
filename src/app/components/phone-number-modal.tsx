@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import fetchUser from "@/app/actions/fetch-user";
 import savePhoneNumber from "@/app/actions/save-phone-number";
 import { useSessionContext } from "./session-provider";
@@ -19,9 +19,13 @@ const COUNTRY_CODES = [
   { code: "+966", country: "Saudi Arabia", minLength: 9, maxLength: 9 },
 ];
 
+// Context to expose whether phone is required (blocks UI)
+const PhoneRequiredContext = createContext<boolean>(false);
+export const usePhoneRequired = () => useContext(PhoneRequiredContext);
+
 const PhoneNumberModal = () => {
   const { session, isPending } = useSessionContext();
-  const [open, setOpen] = useState(false);
+  const [phoneRequired, setPhoneRequired] = useState(false);
   const [countryCode, setCountryCode] = useState("+91");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
@@ -29,16 +33,20 @@ const PhoneNumberModal = () => {
   const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
+    // Wait for session to load
     if (isPending) return;
 
+    // User not logged in - don't show modal, reset check state for next login
     if (!session?.data?.user) {
-      setOpen(false);
+      setPhoneRequired(false);
       setHasChecked(false);
       return;
     }
 
+    // Already checked for this session
     if (hasChecked) return;
 
+    // User is logged in - check if they need to add phone number
     const checkPhone = async () => {
       try {
         const user = await fetchUser();
@@ -48,16 +56,21 @@ const PhoneNumberModal = () => {
           "phone" in user &&
           !user.phone
         ) {
-          setOpen(true);
+          // User has no phone number - MANDATORY modal
+          setPhoneRequired(true);
+        } else {
+          setPhoneRequired(false);
         }
       } catch (err) {
         console.error("Failed to check user phone", err);
+        // On error, don't block - let them through
+        setPhoneRequired(false);
       } finally {
         setHasChecked(true);
       }
     };
 
-    checkPhone().catch((err) => console.error(err));
+    checkPhone();
   }, [session, isPending, hasChecked]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,7 +116,8 @@ const PhoneNumberModal = () => {
     if (result && typeof result === "object" && "error" in result) {
       setError(result.error ?? "Unable to save phone number");
     } else {
-      setOpen(false);
+      // Phone saved successfully - unlock the UI
+      setPhoneRequired(false);
     }
 
     setSaving(false);
@@ -112,16 +126,19 @@ const PhoneNumberModal = () => {
   const selectedCountry = COUNTRY_CODES.find((c) => c.code === countryCode);
   const maxLength = selectedCountry?.maxLength || 15;
 
-  if (!open) return null;
+  if (!phoneRequired) return null;
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/70 px-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 px-4">
       <div className="w-full max-w-md rounded-2xl bg-[#252525] p-6 shadow-2xl border border-white/10">
         <h2 className="text-2xl font-semibold text-white mb-2">
           Add your mobile number
         </h2>
-        <p className="text-sm text-neutral-400 mb-6 font-poppinsReg">
-          We&apos;ll use this to contact you about your enrollment status.
+        <p className="text-sm text-neutral-400 mb-1 font-poppinsReg">
+          We&apos;ll use this to contact you about updates
+        </p>
+        <p className="text-xs text-yellow-500 mb-6 font-poppinsReg">
+          This is required to continue.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

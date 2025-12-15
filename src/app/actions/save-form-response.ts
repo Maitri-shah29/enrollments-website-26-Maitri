@@ -1,9 +1,15 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import {
+  enforceSaveResponseRateLimit,
+  formatRetryAfterSeconds,
+} from "@/lib/ratelimit";
 import {
   type RuleType,
   type ValidationRuleInput,
@@ -44,6 +50,12 @@ export default async function saveFormResponse(
   const userId = session?.session?.userId;
   if (!userId) throw new Error("Not logged in");
 
+  const rate = await enforceSaveResponseRateLimit(`user:${userId}`);
+  if (!rate.success) {
+    const retryAfter = formatRetryAfterSeconds(rate.reset);
+    throw new Error(`Too many save attempts. Try again in ${retryAfter}s.`);
+  }
+
   if (response != null && response.length > 1500) {
     return { error: "Character overlimit" };
   }
@@ -75,7 +87,7 @@ export default async function saveFormResponse(
           userId: true,
           roundId: true,
           status: true,
-          round: { select: { active: true, hidden: true } },
+          round: { select: { active: true, hidden: true, domain: true } },
         },
       },
     },
@@ -141,6 +153,13 @@ export default async function saveFormResponse(
     create: { questionId, formId, response: response ?? null, error: null },
     select: { id: true, questionId: true, formId: true, response: true },
   });
+
+  updateTag(cacheTags.homeRoundUserCount(userId));
+  updateTag(cacheTags.responses(formId));
+  updateTag(cacheTags.formSubmission(form.roundUser.id));
+  if (form.roundUser.round.domain) {
+    updateTag(cacheTags.roundUser(userId, form.roundUser.round.domain));
+  }
 
   return saved;
 }

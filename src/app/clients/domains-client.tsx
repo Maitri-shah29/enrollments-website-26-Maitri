@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Domain = {
   slug: string;
@@ -20,7 +20,7 @@ const domains: Domain[] = [
     slug: "design",
     title: "Design",
     summary:
-      "Craft beautiful digital experiences through design. From UI/UX to motion graphics, illustrations to 3D design, our designers bring creative visions to life with stunning visual storytelling.",
+      "Every ACM-VIT initiative gets its glow-up because of the Design Domain. We’re the creative ones who make everything presentable. Through UI/UX, motion graphics, video edits and 3D modelling, we craft the visuals that give the chapter its entire vibe.",
     accent: "#8C3428",
     folder: "#F55F4B",
     text: "#ffffff",
@@ -31,18 +31,18 @@ const domains: Domain[] = [
     slug: "cc",
     title: "Competitive Coding",
     summary:
-      "Master algorithmic thinking and problem-solving through rigorous competitive coding. Our members tackle complex data structures and algorithms while building speed and precision in high-stakes programming contests.",
+      "The Competitive Coding Domain is our way of solving challenges through contests, hacks and of course, leetcode. We might not agree on the language but we surely agree that passing a test case is pure happiness.",
     accent: "#7E9328",
     folder: "#BBD842",
     text: "#292625",
-    image: "/images/domains/cc.svg",
+    image: "/images/domains/cc-image.jpg",
     background: "url('/images/domains/cc-bg.png')",
   },
   {
     slug: "management",
     title: "Management",
     summary:
-      "Transform big ideas into unforgettable events. We handle everything from brainstorming and sponsorships to logistics and content creation. We're the extroverts ensuring every event is smooth, well-organized, and unforgettable.",
+      "ACM-VIT’s Management Domain is basically the squad that makes sure everything actually happens. We make proper plans and make sure things don’t fall apart five minutes before the event. Organisation, communication, strategy and execution - that’s what defines us.",
     accent: "#0E3A60",
     folder: "#46A8FF",
     text: "#ffffff",
@@ -53,7 +53,7 @@ const domains: Domain[] = [
     slug: "research",
     title: "Research",
     summary:
-      "Foster curiosity and innovation across cutting-edge fields. From AI and Blockchain to Quantum Computing and Bioinformatics, we bridge theory and real-world application through collaboration and continuous learning.",
+      "The Research Domain is the place to bring out your inner scientist. From diving deep into our interests to exploring new fields, we work on projects that turn research into real, practical stuff. Be it fields like AI/ML, IoT, cybersecurity and quantum computing - we got it all!",
     accent: "#3C2C73",
     folder: "#A98FFF",
     text: "#ffffff",
@@ -64,7 +64,7 @@ const domains: Domain[] = [
     slug: "tech",
     title: "Tech",
     summary:
-      "Build the future with cutting-edge technology. From web and app development to DevOps and open-source contribution, our members master full-stack solutions and modern development practices.",
+      "ACM-VIT’s Tech Domain is where we work on real projects related to web, app, gamedev, FOSS and DevOps. We learn, build, break things, fix them again, and somehow grow together through it all.",
     accent: "#7B336E",
     folder: "#FF6CD9",
     text: "#ffffff",
@@ -76,6 +76,14 @@ const domains: Domain[] = [
 const Domains = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null,
+  );
+  const [autoHover, setAutoHover] = useState(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const active = useMemo(() => domains[activeIndex], [activeIndex]);
   const backgroundImage = active.background;
@@ -88,16 +96,26 @@ const Domains = () => {
   }, []);
 
   const goNext = useCallback(() => {
+    if (isAnimating) return;
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
+    setSlideDirection("left");
+    setTimeout(() => {
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 800);
     setActiveIndex((prev) => (prev + 1) % domains.length);
-  }, []);
+  }, [isAnimating]);
 
   const goPrev = useCallback(() => {
+    if (isAnimating) return;
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
+    setSlideDirection("right");
+    setTimeout(() => {
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 800);
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
-  }, []);
+  }, [isAnimating]);
 
   const handleNavigateKey = useCallback(
     (event: React.KeyboardEvent<HTMLElement>, slug: string) => {
@@ -119,8 +137,78 @@ const Domains = () => {
     return () => window.removeEventListener("keydown", listener);
   }, [goNext, goPrev]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeIndex is intentionally used as a trigger to re-run the animation effect
+  useEffect(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    if (hoverStartTimeoutRef.current) {
+      clearTimeout(hoverStartTimeoutRef.current);
+    }
+    setAutoHover(false);
+    hoverStartTimeoutRef.current = setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setAutoHover(true);
+          hoverTimeoutRef.current = setTimeout(() => setAutoHover(false), 1100);
+        });
+      });
+    }, 180);
+  }, [activeIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      if (hoverStartTimeoutRef.current) {
+        clearTimeout(hoverStartTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-black text-white font-doppio">
+      <style jsx>{`
+        @keyframes slide-left {
+          0% {
+            opacity: 0;
+            transform: translateX(60px) scale(0.95);
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        @keyframes slide-right {
+          0% {
+            opacity: 0;
+            transform: translateX(-60px) scale(0.95);
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        .animate-slide-left {
+          animation: slide-left 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .animate-slide-right {
+          animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        :global([data-auto-hover="true"] .auto-hover-image) {
+          transform: translate(-35%, -60%) rotate(-6deg) scale(1.05) !important;
+        }
+        :global([data-auto-hover="true"] .auto-hover-flap) {
+          transform: translateY(-2px) rotateX(-16deg) translateZ(14px) !important;
+        }
+      `}</style>
       <div
         className="pointer-events-none absolute inset-0 opacity-90 transition-all duration-500 h-full"
         style={{
@@ -199,10 +287,17 @@ const Domains = () => {
             className="group relative mx-auto flex max-w-5xl cursor-pointer flex-col items-center gap-6 overflow-visible px-4 pb-6 pt-4 sm:px-8 md:px-12"
             onClick={() => handleNavigate(active.slug)}
             onKeyDown={(event) => handleNavigateKey(event, active.slug)}
+            data-auto-hover={autoHover ? "true" : "false"}
           >
             <div className="relative w-full max-w-4xl flex justify-center">
               <div
-                className="relative h-[460px] w-[420px] sm:w-[520px]"
+                className={`relative h-[460px] w-[420px] sm:w-[520px] transition-all duration-500 ease-out ${
+                  slideDirection === "left"
+                    ? "animate-slide-left"
+                    : slideDirection === "right"
+                      ? "animate-slide-right"
+                      : ""
+                }`}
                 style={{ perspective: "1400px" }}
               >
                 <div
@@ -227,7 +322,7 @@ const Domains = () => {
                 </div>
 
                 <div
-                  className="absolute left-1/2 top-24 z-10 h-52 w-72 -translate-x-1/2 overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.55)] transform-gpu transition-transform duration-500 ease-out [transform:translate(-50%,-50%)_rotate(-2deg)_scale(1)] group-hover:[transform:translate(-35%,-60%)_rotate(-6deg)_scale(1.05)]"
+                  className="absolute left-1/2 top-24 z-10 h-52 w-72 -translate-x-1/2 overflow-hidden bg-white shadow-[0_18px_45px_rgba(0,0,0,0.55)] transform-gpu transition-transform duration-500 ease-out [transform:translate(-50%,-50%)_rotate(-2deg)_scale(1)] group-hover:[transform:translate(-35%,-60%)_rotate(-6deg)_scale(1.05)] auto-hover-image"
                   style={{ border: "6px solid white" }}
                 >
                   <Image
@@ -241,7 +336,7 @@ const Domains = () => {
                 </div>
 
                 <div
-                  className="absolute left-0 right-0 top-28 z-20 origin-bottom transform-gpu transition-transform duration-500 ease-out [transform:translateY(0)_rotateX(0deg)_translateZ(0)] group-hover:[transform:translateY(-2px)_rotateX(-16deg)_translateZ(14px)]"
+                  className="absolute left-0 right-0 top-28 z-20 origin-bottom transform-gpu transition-transform duration-500 ease-out [transform:translateY(0)_rotateX(0deg)_translateZ(0)] group-hover:[transform:translateY(-2px)_rotateX(-16deg)_translateZ(14px)] auto-hover-flap"
                   style={{
                     transformStyle: "preserve-3d",
                     transformOrigin: "50% 100%",
@@ -269,7 +364,7 @@ const Domains = () => {
                       {active.title}
                     </h3>
                     <div
-                      className="my-3 h-[2px] w-2/3 items-start"
+                      className="my-3 h-0.5 w-2/3 items-start"
                       style={{ backgroundColor: active.text }}
                     />
                     <p

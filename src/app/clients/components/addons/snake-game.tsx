@@ -22,6 +22,7 @@ export function NokiaSnakeGame() {
   const [isPaused, setIsPaused] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
   const directionRef = useRef(direction);
+  const directionQueueRef = useRef<Position[]>([]);
   const ignoreEnterUntilRef = useRef<number>(0);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function NokiaSnakeGame() {
     setSnake(INITIAL_SNAKE);
     setDirection(INITIAL_DIRECTION);
     directionRef.current = INITIAL_DIRECTION;
+    directionQueueRef.current = [];
     setFood(generateFood(INITIAL_SNAKE));
     setIsGameOver(false);
     setScore(0);
@@ -82,16 +84,27 @@ export function NokiaSnakeGame() {
   }, [showStartScreen]);
 
   const changeDirection = useCallback((newDirection: Position) => {
-    const currentDir = directionRef.current;
+    const lastDirection =
+      directionQueueRef.current.length > 0
+        ? directionQueueRef.current[directionQueueRef.current.length - 1]
+        : directionRef.current;
 
     if (
-      (newDirection.x === -currentDir.x && currentDir.x !== 0) ||
-      (newDirection.y === -currentDir.y && currentDir.y !== 0)
+      (newDirection.x === -lastDirection.x && lastDirection.x !== 0) ||
+      (newDirection.y === -lastDirection.y && lastDirection.y !== 0)
+    ) {
+      return;
+    }
+    if (
+      newDirection.x === lastDirection.x &&
+      newDirection.y === lastDirection.y
     ) {
       return;
     }
 
-    setDirection(newDirection);
+    if (directionQueueRef.current.length < 2) {
+      directionQueueRef.current.push(newDirection);
+    }
   }, []);
 
   useEffect(() => {
@@ -156,6 +169,12 @@ export function NokiaSnakeGame() {
     if (isGameOver || isPaused || !isStarted) return;
 
     const gameLoop = setInterval(() => {
+      const nextDirection = directionQueueRef.current.shift();
+      if (nextDirection) {
+        directionRef.current = nextDirection;
+        setDirection(nextDirection);
+      }
+
       setSnake((prevSnake) => {
         const head = prevSnake[0];
         const newHead = {

@@ -1,7 +1,9 @@
 "use server";
 import { type Domain, RoundStatus, RoundType } from "@prisma/client";
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cacheTags } from "@/lib/cache-tags";
 import { DOMAIN_CAP } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
@@ -88,10 +90,16 @@ export default async function createRoundUser(domain: Domain) {
             },
           });
 
+          updateTag(cacheTags.roundUser(userId, domain));
+          updateTag(cacheTags.formSubmission(existingRoundUser.id));
+
           return {
             roundUser: roundUserWithDetails,
           } as const;
         }
+
+        updateTag(cacheTags.roundUser(userId, domain));
+        updateTag(cacheTags.formSubmission(existingRoundUser.id));
 
         return {
           roundUser: { ...existingRoundUser, formSubmission: null },
@@ -142,6 +150,9 @@ export default async function createRoundUser(domain: Domain) {
           formSubmission,
         };
       });
+
+      updateTag(cacheTags.roundUser(userId, domain));
+      updateTag(cacheTags.formSubmission(newRoundUser.id));
 
       return {
         roundUser: newRoundUser,

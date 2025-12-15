@@ -4,9 +4,13 @@ import { authClient } from "@/lib/auth-client";
 
 type SessionType = Awaited<ReturnType<typeof authClient.getSession>>;
 
-export function useSession() {
-  const [session, setSession] = useState<SessionType>(null);
-  const [isPending, setIsPending] = useState(true);
+export function useSession(initialSession?: SessionType) {
+  const [session, setSession] = useState<SessionType>(() => {
+    if (!initialSession) return null;
+    if ("data" in initialSession) return initialSession;
+    return { data: initialSession, error: null } as unknown as SessionType;
+  });
+  const [isPending, setIsPending] = useState(initialSession === undefined);
 
   useEffect(() => {
     let isMounted = true;

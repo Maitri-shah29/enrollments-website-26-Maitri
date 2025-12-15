@@ -54,6 +54,7 @@ export default function Management({
   const timeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const roundActive = !!roundUser?.round?.active;
   const _roundHidden = !!roundUser?.round?.hidden;
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   const questions = useMemo(() => {
     const qs = (roundUser?.round?.Question ||
@@ -95,6 +96,16 @@ export default function Management({
     setSavedAnswers(loadedSavedAnswers);
   }, [roundUser]);
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
+    setActiveSection("About");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
@@ -112,9 +123,9 @@ export default function Management({
 
       if ("error" in result) {
         if (result.error === "Round is not active") {
-          setError("Enrollments for this domain haven't started yet");
+          setError("Selections for this domain haven't started yet");
         } else if (result.error === "No form round found for this domain") {
-          setError("This domain is not available for enrollment at the moment");
+          setError("This domain is not available for selection at the moment");
         } else if (result.error === "Internal server error") {
           setError("Something went wrong. Please try again later");
         } else {
@@ -340,7 +351,7 @@ export default function Management({
             wallpaper={wallpaper}
             loading={loading}
             hasRoundUser={!!roundUser}
-            onContinue={() => setActiveSection("About")}
+            onContinue={continueCheck}
           />
         );
       case "About":
@@ -366,7 +377,7 @@ export default function Management({
         }
 
         // Status-based rendering
-        if (roundUser?.status === "evaluate" || !isAnnounced) {
+        if (roundUser?.status === "evaluate" && !isAnnounced) {
           return (
             <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
               <h2 className="text-3xl font-bold text-gray-800 mb-4">
@@ -491,7 +502,7 @@ export default function Management({
       )}
       {notification && (
         <div
-          className={`fixed top-8 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
+          className={`fixed top-35 right-8 px-6 py-3 font-medium shadow-lg z-50 text-white border rounded-lg ${
             notificationType === "success"
               ? "bg-green-600 border-green-500"
               : "bg-red-600 border-red-500"
@@ -537,7 +548,7 @@ export default function Management({
               Unsaved Changes
             </h3>
             <p className="text-gray-700 text-lg mb-6">
-              You have unsaved changes. Do you want to proceed without saving?
+              You have unsaved changes. Save to proceed ahead.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -553,30 +564,37 @@ export default function Management({
               </button>
               <button
                 onClick={() => {
-                  setShowUnsavedDialog(false);
-                  if (pendingBackNavigation) {
-                    setActiveIndex(null);
-                    setPendingBackNavigation(false);
-                  } else if (pendingQuestionIndex !== null) {
-                    // Proceed with navigation - this will be handled in QuestionsList
-                    const event = new CustomEvent("proceedWithNavigation", {
-                      detail: { index: pendingQuestionIndex },
+                  if (activeIndex != null) {
+                    setIsProceeding(true);
+                    onSubmitAnswer(questions[activeIndex]).then(() => {
+                      setIsProceeding(false);
+                      setShowUnsavedDialog(false);
+                      if (pendingBackNavigation) {
+                        setActiveIndex(null);
+                        setPendingBackNavigation(false);
+                      } else if (pendingQuestionIndex !== null) {
+                        // Proceed with navigation - this will be handled in QuestionsList
+                        const event = new CustomEvent("proceedWithNavigation", {
+                          detail: { index: pendingQuestionIndex },
+                        });
+                        window.dispatchEvent(event);
+                        setPendingQuestionIndex(null);
+                      }
                     });
-                    window.dispatchEvent(event);
-                    setPendingQuestionIndex(null);
                   }
                 }}
                 className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg font-medium"
                 type="button"
+                disabled={isProceeding}
               >
-                Proceed
+                {isProceeding ? "Saving..." : "Proceed & Save"}
               </button>
             </div>
           </div>
         </div>
       )}
       <Image
-        src={`/images/management/wallpapers/${wallpaper}.svg`}
+        src={`/images/management/wallpapers/${wallpaper}.avif`}
         width={1920}
         height={1080}
         alt="bg"
@@ -593,17 +611,29 @@ export default function Management({
       />
 
       <aside className="flex flex-col h-full w-[20vw] py-8 px-4 text-white z-10 font-helvetica">
-        <Image
-          src="/acmviticon.svg"
-          alt="ACM VIT icon"
-          width={180}
-          height={180}
-          draggable={false}
-          className="mb-8 select-none"
-        />
-        <div className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20">
+        <button
+          type="button"
+          aria-label="Go to Home"
+          onClick={() => setActiveSection("Landing")}
+          className="cursor-pointer"
+        >
+          <Image
+            src="/acmviticon.svg"
+            alt="ACM VIT icon"
+            width={180}
+            height={180}
+            draggable={false}
+            className="mb-8 select-none"
+          />
+        </button>
+        <a
+          href="mailto:outreach@acmvit.in"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex mb-5 items-center w-[80%] h-12 gap-2 bg-[#ececec] text-[#6b5f5f] px-4 py-2 rounded-xl drop-shadow-md/20 hover: transition-transform cursor-pointer"
+        >
           <Pencil /> <span className="font-medium">Compose</span>
-        </div>
+        </a>
         <nav className="flex flex-col space-y-2 text-lg">
           {(() => {
             const allSections = [

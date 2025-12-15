@@ -1,5 +1,7 @@
 "use server";
+import { updateTag } from "next/cache";
 import { headers } from "next/headers";
+import { cacheTags } from "@/lib/cache-tags";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 
@@ -26,7 +28,7 @@ export default async function createMeetUser(
       select: {
         id: true,
         status: true,
-        round: { select: { active: true, hidden: true } },
+        round: { select: { active: true, hidden: true, domain: true } },
       },
     });
 
@@ -47,6 +49,12 @@ export default async function createMeetUser(
         slotId: slotId,
       },
     });
+
+    if (owningRoundUser.round.domain) {
+      updateTag(
+        cacheTags.roundUser(currentUserId, owningRoundUser.round.domain),
+      );
+    }
 
     return createMeet;
   } catch (e) {

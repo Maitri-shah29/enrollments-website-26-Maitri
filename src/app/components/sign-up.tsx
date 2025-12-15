@@ -2,6 +2,7 @@
 import Image from "next/image";
 import type React from "react";
 import { signIn } from "@/lib/auth-client";
+import PhoneNumberModal from "./phone-number-modal";
 
 interface SignupPageProps {
   onSignIn: () => void;
@@ -11,7 +12,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
   const handleGoogleSignIn = async () => {
     await signIn();
     window.dispatchEvent(new Event("better-auth-session-change"));
-
+    localStorage.setItem("showModel", "true");
     // onSignIn();
   };
   return (
@@ -35,7 +36,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignIn: _onSignIn }) => {
         />
 
         <p className="text-white text-lg mb-6">
-          Sign in with your VIT student mail
+          Sign in with your VIT Student email to continue
         </p>
 
         {/* Google Button */}

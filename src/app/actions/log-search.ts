@@ -2,9 +2,20 @@
 
 import clientPromise from "@/lib/mongo";
 
-const filters = ["research", "design", "tech", "management", "cc"];
+const filters = [
+  "research",
+  "design",
+  "tech",
+  "management",
+  "cc",
+  "domains",
+  // "events",
+  // "pintoorun",
+  // "snake",
+  // "about",
+];
 export async function logSearch(query: string, email?: string | null) {
-  console.log("hii");
+  // console.log("hii");
   if (!query || query.length > 25 || !email || filters.includes(query)) return;
 
   // if (!query || query.length > 25 || !email) return;
@@ -30,7 +41,7 @@ export async function logSearch(query: string, email?: string | null) {
       email: email || null,
       timestamp: new Date(),
     });
-    console.log("ajwwjd");
+    // console.log("ajwwjd");
   } catch (error) {
     console.error("Failed to log search:", error);
   }

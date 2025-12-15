@@ -44,7 +44,7 @@ const ALL_RESEARCH_AOIS: {
   },
 ];
 
-const AOI_JOIN_LIMIT = 3;
+const AOI_JOIN_LIMIT = 2;
 
 type ExploreResearchAOIsProps = {
   joinedAOIs: Set<ResearchAOI>;

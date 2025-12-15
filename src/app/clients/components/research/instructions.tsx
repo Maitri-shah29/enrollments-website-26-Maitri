@@ -11,28 +11,35 @@ export default function Instructions() {
       </div>
 
       {/* Foreground Content */}
-      <div className="relative z-10 px-16 py-20 max-w-7xl">
-        <h1 className="text-[20px] font-semibold text-[#C8B7FF] mb-4 font-monopoly-bold">
+      <div className="relative z-10 px-[4vw] py-[5vh] max-w-7xl">
+        <h1 className="text-[clamp(1rem,1.5vw,1.25rem)] font-semibold text-[#C8B7FF] mb-[1vh] font-monopoly-bold">
           Instructions
         </h1>
 
-        <p className="text-gray-300 leading-relaxed text-justify font-monopoly">
-          Welcome to the first round of ACM-VIT's Research Domain recruitment!
-          In this round, you'll have the opportunity to demonstrate your
-          analytical thinking, curiosity, and passion for exploring cutting-edge
-          topics in computer science. You'll be presented with a series of
-          questions that assess your research aptitude, critical thinking
-          skills, and ability to engage with complex technical concepts.
+        <p className="text-gray-300 leading-relaxed text-justify font-monopoly text-[clamp(0.875rem,1.2vw,1rem)]">
+          Welcome to the first round of ACM-VIT's Research Domain selections!{" "}
+          <br></br>
+          1. Go to the Explore tab on the left sidebar and join up to 3 AoIs
+          based on your preferences.
+          <br />
+          2. Proceed to Round 1. Answer the common questions first, and then the
+          domain-wise questions.
+          <br />
+          3. Make sure you click on Save after every answer. If you see the
+          "Saved Successfully" popup on the top right, your answer has been
+          saved. You may change your answers after you save answer. You cannot
+          change your answers once you have submitted the form.
+          <br />
+          4. After answering all questions, click on ‘Submit Form’ at the bottom
+          of the left sidebar.
+          <br />
+          All the best!
           <br />
           <br />
-          You can select a maximum of 2 Areas of Interest (AOIs) that resonate
-          with your research aspirations and academic goals. These AOIs will
-          help us understand your focus areas and may guide the research
-          projects you'll contribute to if selected. Once you've completed all
-          the questions, review your answers thoroughly and click submit. We're
-          looking for individuals who demonstrate genuine curiosity, strong
-          analytical skills, and the dedication to contribute meaningfully to
-          the advancement of knowledge in their chosen fields. Good luck!
+          PS - You’ll probably use AI for these questions, which is totally
+          fine. Just keep in mind that we’ll be evaluating your originality and
+          your ability to learn so feel free to use AI for support, but make
+          sure your answers reflect your own thinking.
         </p>
       </div>
     </div>

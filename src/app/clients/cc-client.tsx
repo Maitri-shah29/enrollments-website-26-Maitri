@@ -34,6 +34,16 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
   const roundHidden = !!roundUser?.round?.hidden;
 
   // Create/fetch round user on demand (Get Started)
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
+    setSelectedPanel("About");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
@@ -51,9 +61,9 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
 
       if ("error" in result) {
         if (result.error === "Round is not active") {
-          setError("Enrollments for this domain haven't started yet");
+          setError("Selections for this domain haven't started yet");
         } else if (result.error === "No form round found for this domain") {
-          setError("This domain is not available for enrollment at the moment");
+          setError("This domain is not available for selection at the moment");
         } else if (result.error === "Internal server error") {
           setError("Something went wrong. Please try again later");
         } else {
@@ -133,7 +143,7 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
           onGetStarted={initializeRoundUser}
           loading={loading}
           hasRoundUser={!!roundUser}
-          onContinue={() => setSelectedPanel("About")}
+          onContinue={continueCheck}
         />
       )}
       {selectedPanel !== "Home" && (

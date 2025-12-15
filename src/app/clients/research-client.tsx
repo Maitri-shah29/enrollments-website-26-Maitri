@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import About from "@/app/clients/components/research/about";
 import AOIs from "@/app/clients/components/research/aoi";
 import AIML from "@/app/clients/components/research/aoi-pages/aiml";
@@ -13,6 +13,7 @@ import ResearchHome from "@/app/clients/components/research/home";
 import Instructions from "@/app/clients/components/research/instructions";
 import Interview from "@/app/clients/components/research/interview";
 import Questions, {
+  type QuestionsRef,
   type RoundUserExtended,
 } from "@/app/clients/components/research/questions";
 import ResearchNavbar from "@/app/clients/components/research/research-navbar";
@@ -32,7 +33,7 @@ const AOI_KEYS = [
 ] as const;
 type AoiKey = (typeof AOI_KEYS)[number];
 
-const AOI_JOIN_LIMIT = 3;
+const AOI_JOIN_LIMIT = 2;
 
 const keyToLabel: Record<AoiKey, string> = {
   COMMON: "Common",
@@ -113,6 +114,8 @@ const ResearchClient = ({
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
     new Set(),
   );
+  const childRef = useRef<QuestionsRef>(null);
+  const [isProceeding, setIsProceeding] = useState<boolean>(false);
 
   // Load joined AOIs from localStorage on mount
   useEffect(() => {
@@ -157,6 +160,16 @@ const ResearchClient = ({
     });
   };
 
+  const continueCheck = () => {
+    if (roundUserCount >= DOMAIN_CAP) {
+      setError(
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
+      );
+      setLoading(false);
+      return;
+    }
+    setSelectedPanel("About");
+  };
   const initializeRoundUser = async () => {
     setLoading(true);
     setError(null);
@@ -174,9 +187,9 @@ const ResearchClient = ({
 
       if ("error" in result) {
         if (result.error === "Round is not active") {
-          setError("Enrollments for this domain haven't started yet");
+          setError("Selections for this domain haven't started yet");
         } else if (result.error === "No form round found for this domain") {
-          setError("This domain is not available for enrollment at the moment");
+          setError("This domain is not available for selection at the moment");
         } else if (result.error === "Internal server error") {
           setError("Something went wrong. Please try again later");
         } else {
@@ -299,24 +312,49 @@ const ResearchClient = ({
   );
 
   const handleConfirmNavigation = useCallback(() => {
-    setShowUnsavedDialog(false);
-    if (!pendingNavigation) return;
+    if (childRef.current?.trigger) {
+      setIsProceeding(true);
+      childRef.current.trigger().then(() => {
+        setIsProceeding(false);
+        setShowUnsavedDialog(false);
+        if (!pendingNavigation) return;
 
-    if (pendingNavigation.type === "aoi") {
-      const aoi = pendingNavigation.value as string;
-      const key = toAoiKey(aoi);
-      if (key) {
-        setSelectedAOI(keyToLabel[key]);
-        setSelectedPanel(key);
-        setSelectedQuestionIdx(0);
-      } else {
-        setSelectedPanel(aoi);
+        if (pendingNavigation.type === "aoi") {
+          const aoi = pendingNavigation.value as string;
+          const key = toAoiKey(aoi);
+          if (key) {
+            setSelectedAOI(keyToLabel[key]);
+            setSelectedPanel(key);
+            setSelectedQuestionIdx(0);
+          } else {
+            setSelectedPanel(aoi);
+          }
+        } else if (pendingNavigation.type === "question") {
+          setSelectedQuestionIdx(pendingNavigation.value as number);
+          setSelectedPanel("Round 1");
+        }
+        setPendingNavigation(null);
+      });
+    } else {
+      setShowUnsavedDialog(false);
+      if (!pendingNavigation) return;
+
+      if (pendingNavigation.type === "aoi") {
+        const aoi = pendingNavigation.value as string;
+        const key = toAoiKey(aoi);
+        if (key) {
+          setSelectedAOI(keyToLabel[key]);
+          setSelectedPanel(key);
+          setSelectedQuestionIdx(0);
+        } else {
+          setSelectedPanel(aoi);
+        }
+      } else if (pendingNavigation.type === "question") {
+        setSelectedQuestionIdx(pendingNavigation.value as number);
+        setSelectedPanel("Round 1");
       }
-    } else if (pendingNavigation.type === "question") {
-      setSelectedQuestionIdx(pendingNavigation.value as number);
-      setSelectedPanel("Round 1");
+      setPendingNavigation(null);
     }
-    setPendingNavigation(null);
   }, [pendingNavigation]);
 
   const handleCancelNavigation = useCallback(() => {
@@ -361,14 +399,14 @@ const ResearchClient = ({
                 onClick={handleCancelNavigation}
                 className="px-6 py-2 bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-colors rounded-lg"
               >
-                Stay
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmNavigation}
                 className="px-6 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors rounded-lg"
               >
-                Leave
+                {isProceeding ? "Saving..." : "Proceed and Save"}
               </button>
             </div>
           </div>
@@ -403,7 +441,7 @@ const ResearchClient = ({
             onGetStarted={initializeRoundUser}
             loading={loading}
             hasRoundUser={!!roundUser}
-            onContinue={() => setSelectedPanel("About")}
+            onContinue={continueCheck}
           />
         )}
         {selectedPanel === "About" && <About />}
@@ -425,6 +463,7 @@ const ResearchClient = ({
           </div>
         ) : selectedPanel === "Round 1" ? (
           <Questions
+            ref={childRef}
             roundUser={roundUser ?? undefined}
             loading={loading}
             error={error}
@@ -439,9 +478,14 @@ const ResearchClient = ({
             onAOIChange={setSelectedAOI}
             onQuestionChange={setSelectedQuestionIdx}
             joinedAOIs={joinedAOIs}
-            onSubmit={(key) =>
-              setSubmittedQuestions((prev) => new Set([...prev, key]))
-            }
+            onSubmit={(key) => {
+              setSubmittedQuestions((prev) => new Set([...prev, key]));
+              setQuestionsWithUnsavedEdits((prev) => {
+                const updated = new Set(prev);
+                updated.delete(key);
+                return updated;
+              });
+            }}
           />
         ) : null}
         {selectedPanel === "Interview" && <Interview />}

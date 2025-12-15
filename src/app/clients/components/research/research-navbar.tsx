@@ -81,16 +81,16 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
       key: "About",
       icon: <Image src={About} alt="About" width={40} height={40} />,
     },
-    { key: "AOIs", icon: <Image src={Aoi} alt="Aoi" width={20} height={20} /> },
-    {
-      key: "Explore",
-      icon: <Image src={Vault} alt="Explore" width={20} height={20} />,
-    },
     {
       key: "Instructions",
       icon: (
         <Image src={Instructions} alt="Instructions" width={20} height={20} />
       ),
+    },
+    { key: "AOIs", icon: <Image src={Aoi} alt="Aoi" width={20} height={20} /> },
+    {
+      key: "Explore",
+      icon: <Image src={Vault} alt="Explore" width={20} height={20} />,
     },
   ];
 
@@ -176,7 +176,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                 }
               }}
               disabled={isDisabled || isLimitReached}
-              className={`w-full my-1 flex items-center gap-3 pl-3 py-1.5 text-left transition-colors rounded font-monopoly ${
+              className={`w-full my-1 flex items-center gap-3 pl-3 py-1.5 text-left transition-colors rounded ${
                 isDisabled || isLimitReached
                   ? "cursor-not-allowed opacity-40"
                   : selected === it.key
@@ -185,7 +185,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
               }`}
             >
               <span className="w-5 h-full text-white/90">{it.icon}</span>
-              <span className="text-sm font-monopoly">{it.key}</span>
+              <span className="text-sm">{it.key}</span>
             </button>
           ))}
 
@@ -213,9 +213,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                 <div className="w-5 h-full relative">
                   <Image src={Round} alt="Round" width={20} height={20} />
                 </div>
-                <span className={`text-sm text-left font-monopoly`}>
-                  Round 1
-                </span>
+                <span className={`text-sm text-left`}>Round 1</span>
               </div>
             </button>
           )}
@@ -223,7 +221,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
           {!roundHidden && expandedRound && (
             <div className="space-y-1 pl-6">
               {visibleAOIs.length === 0 ? (
-                <div className="text-white/60 text-sm px-2 py-2 font-monopoly">
+                <div className="text-white/60 text-sm px-2 py-2">
                   No AOIs joined. Visit Explore to join AOIs.
                 </div>
               ) : (
@@ -246,7 +244,7 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                             className={`w-4 h-3.5 transform transition-transform`}
                           />
                         </span>
-                        <span className="text-sm font-monopoly">{aoi}</span>
+                        <span className="text-sm">{aoi}</span>
                       </button>
 
                       <div className="inline-flex items-center">
@@ -288,7 +286,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                                   aoiname = "iot";
                                   break;
                               }
-                              const questionKey = `${aoiname}-question${qIdx + 1}`;
+                              const questionKey = `${aoiname}-question${
+                                qIdx + 1
+                              }`;
                               const isSaved =
                                 submittedQuestions.has(questionKey);
                               const hasUnsaved =
@@ -311,9 +311,9 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                                     onQuestionSelect?.(qIdx);
                                     onSelect("Round 1");
                                   }}
-                                  className={`w-full text-left px-3 py-0.5 ${borderClass} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3 font-monopoly`}
+                                  className={`w-full text-left px-3 py-0.5 ${borderClass} flex items-center justify-between text-sm transition-colors cursor-pointer rounded hover:bg-white/3`}
                                 >
-                                  <span className="text-left font-monopoly">
+                                  <span className="text-left">
                                     Question {qIdx + 1}
                                   </span>
                                   {effectiveQuestionIdx === qIdx && (

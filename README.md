@@ -1,11 +1,11 @@
-<div align="center">
-
+<div align="center">  
+    
 ![Forktober GIF](https://raw.githubusercontent.com/ACM-VIT/.github/master/profile/acm_gif_banner.gif)
-   
-<!-- Project Title -->
+      
+<!-- Project Title -->     
 <h2>ACM OCS Website 2025-26</h2>
-
-<p>The enrollments website for ACM OCS 2025-26</p>
+ 
+<p>The selections website for ACM OCS 2025-26</p>
 
 <p>
   <a href="https://acmvit.in/" target="_blank">
@@ -52,6 +52,17 @@ npm install
 # 4) Run the project
 npm run dev
 ```
+
+### Environment Variables
+
+To enable Upstash-backed rate limiting for saving form responses, set:
+
+```bash
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
+
+If these are not set, rate limiting is disabled (useful for local dev).
 
 ---
 
