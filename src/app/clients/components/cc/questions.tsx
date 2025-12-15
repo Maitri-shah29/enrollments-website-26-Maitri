@@ -173,7 +173,7 @@ const Questions = ({
   }, [firstSubjectiveQuestionId, activeQuestionId, questions]);
 
   const handleQuestionSelect = (questionId: string) => {
-    if (hasUnsavedChanges && currentResponse.trim().length !== 0) {
+    if (hasUnsavedChanges) {
       setPendingQuestionId(questionId);
       setShowUnsavedDialog(true);
       return;
