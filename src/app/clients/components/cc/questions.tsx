@@ -173,7 +173,7 @@ const Questions = ({
   }, [firstSubjectiveQuestionId, activeQuestionId, questions]);
 
   const handleQuestionSelect = (questionId: string) => {
-    if (hasUnsavedChanges) {
+    if (hasUnsavedChanges && currentResponse.trim().length !== 0) {
       setPendingQuestionId(questionId);
       setShowUnsavedDialog(true);
       return;
@@ -256,6 +256,14 @@ const Questions = ({
     if (!activeQuestion || !roundUser?.formSubmission?.id) {
       setNotificationType("error");
       setNotification("No active question or form submission found");
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    if (currentResponse.trim().length === 0) {
+      setNotificationType("error");
+      setNotification("Cannot submit empty answer");
+      setTimeout(() => setNotification(null), 3000);
       return;
     }
 
@@ -288,6 +296,7 @@ const Questions = ({
       const errorMsg =
         err instanceof Error ? err.message : "Failed to save response";
       setNotification(errorMsg);
+      setTimeout(() => setNotification(null), 3000);
     } finally {
       setSubmitting(false);
     }
@@ -582,6 +591,7 @@ const Questions = ({
                 <div className="flex justify-end space-x-4">
                   <Button
                     label={submitting ? "Saving..." : "Save Answer"}
+                    disabled={currentResponse.trim().length === 0}
                     onClick={handleSubmit}
                   />
                   <Button
