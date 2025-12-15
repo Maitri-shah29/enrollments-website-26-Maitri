@@ -276,12 +276,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
-      const hasTechQuestions = (roundUser?.round?.Question || []).some(
-        (q) => q.varName === "tech",
+      const hasCommonOrTechQuestions = (roundUser?.round?.Question || []).some(
+        (q) => q.varName === "tech" || q.varName === "common",
       );
 
-      // Always allow viewing if there are `tech` questions available
-      if (joinedAOIs.size === 0 && !hasTechQuestions) {
+      if (joinedAOIs.size === 0 && !hasCommonOrTechQuestions) {
         return (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
@@ -315,7 +314,12 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         );
       }
       const folderForQuestions =
-        activeRoundFolder ?? (hasTechQuestions ? ("tech" as AOI) : undefined);
+        activeRoundFolder ?? (() => {
+          const questions = roundUser?.round?.Question || [];
+          if (questions.some((q) => q.varName === "common")) return "common" as AOI;
+          if (questions.some((q) => q.varName === "tech")) return "tech" as AOI;
+          return undefined;
+        })();
 
       return (
         <Questions
