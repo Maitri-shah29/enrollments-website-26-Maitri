@@ -94,6 +94,7 @@ export default function QuestionsList({
         onSubmitAnswer={onSubmitAnswer}
         goBack={onQuestionBackClick}
         wallpaper={wallpaper}
+        savedAnswer={savedAnswers[questionData.id]}
       />
     );
   }
