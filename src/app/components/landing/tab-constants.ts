@@ -176,7 +176,7 @@ export const titleFromDomain = (value: string) => {
 
 export const BOOKMARK_LABELS: Record<string, string> = {
   instructions: "Instructions",
-  cc: "Competitive Coding",
+  cc: "CC",
   management: "Management",
   tech: "Tech",
   design: "Design",
