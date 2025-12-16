@@ -10,14 +10,14 @@ const publicAssetPrefix =
 const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
-  assetPrefix: cdnAssetPrefix,
+  // assetPrefix: cdnAssetPrefix,
   env: {
     NEXT_PUBLIC_PUBLIC_ASSET_PREFIX: publicAssetPrefix,
   },
-  images: {
-    loader: "custom",
-    loaderFile: "./src/lib/next-image-loader.ts",
-  },
+  // images: {
+  //   loader: "custom",
+  //   loaderFile: "./src/lib/next-image-loader.ts",
+  // },
 };
 
 export default nextConfig;
