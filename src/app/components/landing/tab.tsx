@@ -14,7 +14,12 @@ import { useSessionContext } from "../session-provider"; // Adjust path as neede
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 import HomePageNavbar from "./home-page-navbar";
-import { INTERNAL_KEYWORDS, ROTATING_WEBSITES } from "./tab-constants";
+import {
+  INTERNAL_KEYWORDS,
+  normalizeInternalKeyword,
+  ROTATING_WEBSITES,
+  titleFromDomain,
+} from "./tab-constants";
 import TabHeader from "./tab-header";
 import {
   currentHostFromPointer,
@@ -172,12 +177,14 @@ const Tab: React.FC<TabProps> = ({
     requestFullscreen();
 
     if (INTERNAL_KEYWORDS.has(trimmed)) {
-      if (currentUrl === trimmed) return;
+      const normalized = normalizeInternalKeyword(trimmed);
+
+      if (currentUrl === normalized) return;
 
       const newPage: PageHistory = {
         id: Date.now(),
-        title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
-        url: trimmed,
+        title: normalized.charAt(0).toUpperCase() + normalized.slice(0, -4),
+        url: normalized,
       };
 
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
@@ -188,13 +195,13 @@ const Tab: React.FC<TabProps> = ({
 
       onUpdateTab({
         ...tabData,
-        ...tabFlagsForKeyword(trimmed),
+        ...tabFlagsForKeyword(normalized),
         history: newHistory,
         pointer: newHistory.length - 1,
-        title: titleForKeyword(trimmed),
-        pendingUrl: trimmed,
+        title: titleFromDomain(normalized),
+        pendingUrl: normalized,
       });
-
+      setNavInput(normalized);
       return;
     }
 
@@ -457,11 +464,11 @@ const Tab: React.FC<TabProps> = ({
           >
             {researchChildren}
           </div>
-          // ) : tabData.showPintooRun ? (
-          //   <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
-          //     <PintooRun key={refreshKey} />
-          //   </div>
-        ) : tabData.showSnake ? (
+        ) : // ) : tabData.showPintooRun ? (
+        //   <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
+        //     <PintooRun key={refreshKey} />
+        //   </div>
+        tabData.showSnake ? (
           <div className="w-full h-full bg-[#1A1A1A] overflow-auto relative">
             <SnakeClient key={refreshKey} />
           </div>

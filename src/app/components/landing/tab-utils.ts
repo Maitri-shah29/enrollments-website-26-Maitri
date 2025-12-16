@@ -64,11 +64,11 @@ export const titleForKeyword = (keyword: string) =>
 
 export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
   showInstructions: keyword === "instructions",
-  showCc: keyword === "cc",
-  showManagement: keyword === "management",
-  showTech: keyword === "tech",
-  showDesign: keyword === "design",
-  showResearch: keyword === "research",
+  showCc: keyword === "cc.com" || keyword === "cc",
+  showManagement: keyword === "management.com" || keyword === "management",
+  showTech: keyword === "tech.com" || keyword === "tech",
+  showDesign: keyword === "design.com" || keyword === "design",
+  showResearch: keyword === "research.com" || keyword === "research",
   showEvents: keyword === "events",
   showDomains: keyword === "domains",
   showPintooRun: keyword === "pintoorun",

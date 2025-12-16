@@ -6,6 +6,7 @@ export const ROTATING_WEBSITES = [
 ];
 
 export const IFRAME_WHITELIST = new Set([
+  "events",
   "os.acmvit.in",
   "localhost.acmvit.in",
   "rcpc.acmvit.in",
@@ -140,9 +141,14 @@ export const IFRAME_WHITELIST = new Set([
 export const INTERNAL_KEYWORDS = new Set([
   "instructions",
   "cc",
+  "cc.com",
   "management",
+  "management.com",
+  "tech.com",
   "tech",
+  "design.com",
   "design",
+  "research.com",
   "research",
   "events",
   "domains",
@@ -151,16 +157,33 @@ export const INTERNAL_KEYWORDS = new Set([
   "about",
 ]);
 
+export const normalizeInternalKeyword = (keyword: string) => {
+  if (keyword === "tech") return "tech.com";
+  if (keyword === "cc") return "cc.com";
+  if (keyword === "management") return "management.com";
+  if (keyword === "design") return "design.com";
+  if (keyword === "research") return "research.com";
+  return keyword;
+};
+
+export const titleFromDomain = (value: string) => {
+  // const clean = value.replace(/^https?:\/\//, "");
+  // const domain = clean.split("/")[0];
+  // const base = domain.split(".")[0];
+  const base = value.split(".")[0];
+  return base.charAt(0).toUpperCase() + base.slice(1);
+};
+
 export const BOOKMARK_LABELS: Record<string, string> = {
   instructions: "Instructions",
-  cc: "CC",
+  cc: "Competitive Coding",
   management: "Management",
   tech: "Tech",
   design: "Design",
   research: "Research",
-  events: "Events",
-  domains: "Domains",
+  // events: "Events",
+  // domains: "Domains",
   // pintoorun: "PintooRun",
-  snake: "Snake",
-  about: "About",
+  // snake: "Snake",
+  // about: "About",
 };

@@ -9,7 +9,7 @@ export interface HomePageNavbarProps {
 }
 
 const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
-  const items = Array.from(INTERNAL_KEYWORDS);
+  const items = Object.values(BOOKMARK_LABELS);
 
   return (
     <nav className="w-full bg-[#555] text-white py-2">
