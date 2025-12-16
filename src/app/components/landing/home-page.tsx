@@ -134,11 +134,11 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
       </div>
 
       <div className="relative mx-auto flex h-full w-full max-w-[90vw] md:max-w-[92vw] xl:max-w-[94vw] 2xl:max-w-[96vw] flex-col gap-8 px-4 pt-8 sm:px-6 lg:px-10 2xl:px-12">
-        <div
-          className="grid w-full gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5"
-          onClick={handleKeyword("acmvit.in")}
-        >
-          <div className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56">
+        <div className="grid w-full gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+          <div
+            onClick={handleKeyword("acmvit.in")}
+            className="relative h-26 w-44 justify-self-start sm:h-20 sm:w-56"
+          >
             <Image
               src="/images/acmlogo.svg"
               alt="ACM-VIT logo"
@@ -297,7 +297,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
                 // onClick={handleKeyword("tech")}
               >
                 <div
-                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#ff9cd9]"
+                  className="select-none text-[34px] font-black leading-[0.95] tracking-tight text-[#ff9cd9] hover:shadow-[0_6px_12px_#FFFFFF]"
                   style={stickerTextBase}
                 >
                   Tech
