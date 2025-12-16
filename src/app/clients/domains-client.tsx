@@ -364,7 +364,7 @@ const Domains = () => {
                       {active.title}
                     </h3>
                     <div
-                      className="my-3 h-[2px] w-2/3 items-start"
+                      className="my-3 h-0.5 w-2/3 items-start"
                       style={{ backgroundColor: active.text }}
                     />
                     <p

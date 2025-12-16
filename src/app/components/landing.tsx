@@ -1,6 +1,7 @@
 "use client";
 import { type DragEvent, useEffect, useState } from "react";
 import FullscreenToggle from "./fullscreen-toggle";
+import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
 import App from "./loader/App";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
@@ -192,33 +193,45 @@ const Landing: React.FC<{
   // null = loading (checking localStorage), true = show animation, false = skip animation
   const [showAnimation, setShowAnimation] = useState<boolean | null>(null);
   const [startAnimation, setStartAnimation] = useState(false);
+  // Show instructions after animation completes
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hasSeenAnimation = localStorage.getItem("hasSeenAnimation");
+    const hasSeenInstructions = localStorage.getItem("hasSeenInstructions");
 
-    if (hasSeenAnimation === "true") {
+    if (hasSeenAnimation === "true" && hasSeenInstructions === "true") {
+      // User has seen both animation and instructions - go to main page
       setShowAnimation(false);
+      setShowInstructions(false);
+      return;
+    }
+
+    if (hasSeenAnimation === "true" && hasSeenInstructions !== "true") {
+      // User has seen animation but not instructions - show instructions
+      setShowAnimation(false);
+      setShowInstructions(true);
       return;
     }
 
     // First visit - show animation
     setShowAnimation(true);
 
-    // Add keydown listener to start animation on any key press
-    const handleKeyDown = () => {
+    // Add keydown/click listener to start animation on any key press or click
+    const handleInteraction = () => {
       localStorage.setItem("hasSeenAnimation", "true");
       setStartAnimation(true);
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleKeyDown);
+      document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("click", handleInteraction);
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("click", handleKeyDown);
+    document.addEventListener("keydown", handleInteraction);
+    document.addEventListener("click", handleInteraction);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleKeyDown);
+      document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("click", handleInteraction);
     };
   }, []);
 
@@ -229,9 +242,10 @@ const Landing: React.FC<{
     const audio = new Audio("/ambient-piano.mp3");
     audio.play().catch(() => {});
 
-    // Hide animation after 15 seconds
+    // Hide animation after 15 seconds and show instructions
     const timer = setTimeout(() => {
       setShowAnimation(false);
+      setShowInstructions(true);
       audio.pause();
     }, 15000);
 
@@ -240,6 +254,12 @@ const Landing: React.FC<{
       audio.pause();
     };
   }, [startAnimation]);
+
+  // Handler for when user clicks "Start Exploring" in instructions
+  const handleGetStarted = () => {
+    localStorage.setItem("hasSeenInstructions", "true");
+    setShowInstructions(false);
+  };
 
   // Show black screen while checking localStorage (prevents white flash)
   if (showAnimation === null) {
@@ -264,6 +284,14 @@ const Landing: React.FC<{
       </div>
     );
 
+  // Show instructions after animation
+  if (showInstructions)
+    return (
+      <div className="fixed inset-0 z-[1]">
+        <Instructions onGetStarted={handleGetStarted} />
+      </div>
+    );
+
   if (isPending) return null;
 
   const addTab = () => {
@@ -276,6 +304,7 @@ const Landing: React.FC<{
     const newTab: TabData = {
       id: newId,
       title: "New Tab",
+      showInstructions: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -316,6 +345,7 @@ const Landing: React.FC<{
     const newTab: TabData = {
       id: newId,
       title: url.replace(/^https?:\/\//, "").split("/")[0],
+      showInstructions: url === "instructions",
       showCc: url === "cc",
       showManagement: url === "management",
       showTech: url === "tech",
@@ -347,6 +377,7 @@ const Landing: React.FC<{
         {
           id: tabs[0].id,
           title: "Home",
+          showInstructions: false,
           showCc: false,
           showManagement: false,
           showTech: false,

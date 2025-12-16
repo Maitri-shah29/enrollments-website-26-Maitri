@@ -231,11 +231,16 @@ const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          const next = aoi;
-                          setAoiState(next);
-                          setQuestionState(null);
-                          onAOISelect?.(next);
-                          onSelect("Round 1");
+                          if (effectiveAOI === aoi) {
+                            setAoiState("");
+                            setQuestionState(null);
+                            onAOISelect?.("");
+                          } else {
+                            setAoiState(aoi);
+                            setQuestionState(null);
+                            onAOISelect?.(aoi);
+                            onSelect("Round 1");
+                          }
                         }}
                         className="flex items-center gap-3 text-left w-full cursor-pointer"
                       >
