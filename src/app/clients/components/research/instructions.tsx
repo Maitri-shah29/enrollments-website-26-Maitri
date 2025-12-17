@@ -12,11 +12,11 @@ export default function Instructions() {
 
       {/* Foreground Content */}
       <div className="relative z-10 px-[4vw] py-[5vh] max-w-7xl">
-        <h1 className="text-[clamp(1rem,1.5vw,1.25rem)] font-semibold text-[#C8B7FF] mb-[1vh] font-monopoly-bold">
+        <h1 className="text-[clamp(2rem,1.5vw,1.25rem)] font-semibold text-[#C8B7FF] mb-[1vh] font-monopoly-bold">
           Instructions
         </h1>
 
-        <p className="text-gray-300 leading-relaxed text-justify font-monopoly text-[clamp(0.875rem,1.2vw,1rem)]">
+        <p className="text-gray-300 leading-relaxed text-justify font-monopoly text-[clamp(1.2rem,1.2vw,1rem)]">
           Welcome to the first round of ACM-VIT's Research Domain selections!{" "}
           <br></br>
           1. Go to the Explore tab on the left sidebar and join up to 3 AoIs

@@ -73,7 +73,11 @@ const domains: Domain[] = [
   },
 ];
 
-const Domains = () => {
+interface HomePageProps {
+  onNavigateKeyword?: (keyword: string) => void;
+}
+
+const Domains: React.FC<HomePageProps> = ({ onNavigateKeyword }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
@@ -91,9 +95,12 @@ const Domains = () => {
   const backFlapColor = active.accent;
   const frontFlapColor = active.folder;
 
-  const handleNavigate = useCallback((url: string) => {
-    window.parent.postMessage({ type: "NAVIGATE_TO", url }, "*");
-  }, []);
+  // const handleNavigate = useCallback((url: string) => {
+  //   window.parent.postMessage({ type: "NAVIGATE_TO", url }, "*");
+  // }, []);
+  const handleKeyword = (keyword: string) => {
+    onNavigateKeyword?.(keyword);
+  };
 
   const goNext = useCallback(() => {
     if (isAnimating) return;
@@ -117,15 +124,15 @@ const Domains = () => {
     setActiveIndex((prev) => (prev - 1 + domains.length) % domains.length);
   }, [isAnimating]);
 
-  const handleNavigateKey = useCallback(
-    (event: React.KeyboardEvent<HTMLElement>, slug: string) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        handleNavigate(slug);
-      }
-    },
-    [handleNavigate],
-  );
+  // const handleNavigateKey = useCallback(
+  //   (event: React.KeyboardEvent<HTMLElement>, slug: string) => {
+  //     if (event.key === "Enter" || event.key === " ") {
+  //       event.preventDefault();
+  //       handleNavigate(slug);
+  //     }
+  //   },
+  //   [handleNavigate]
+  // );
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
@@ -285,13 +292,13 @@ const Domains = () => {
           <button
             type="button"
             className="group relative mx-auto flex max-w-5xl cursor-pointer flex-col items-center gap-6 overflow-visible px-4 pb-6 pt-4 sm:px-8 md:px-12"
-            onClick={() => handleNavigate(active.slug)}
-            onKeyDown={(event) => handleNavigateKey(event, active.slug)}
+            onClick={() => handleKeyword(active.slug + ".com")}
+            onKeyDown={(event) => handleKeyword(active.slug + ".com")}
             data-auto-hover={autoHover ? "true" : "false"}
           >
             <div className="relative w-full max-w-4xl flex justify-center">
               <div
-                className={`relative h-[460px] w-[420px] sm:w-[520px] transition-all duration-500 ease-out ${
+                className={`relative h-115 w-105 sm:w-130 transition-all duration-500 ease-out ${
                   slideDirection === "left"
                     ? "animate-slide-left"
                     : slideDirection === "right"
