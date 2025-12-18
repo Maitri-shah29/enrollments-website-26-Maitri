@@ -167,9 +167,6 @@ export const normalizeInternalKeyword = (keyword: string) => {
 };
 
 export const titleFromDomain = (value: string) => {
-  // const clean = value.replace(/^https?:\/\//, "");
-  // const domain = clean.split("/")[0];
-  // const base = domain.split(".")[0];
   const base = value.split(".")[0];
   return base.charAt(0).toUpperCase() + base.slice(1);
 };

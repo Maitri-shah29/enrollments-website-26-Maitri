@@ -62,10 +62,10 @@ export default function ExploreResearchAOIs({
 
   return (
     <div className="w-full h-full overflow-y-auto px-8 py-6">
-      <h1 className="text-[#9b7fff] text-3xl font-bold mb-4 font-monopoly-bold">
+      <h1 className="text-[#9b7fff] text-[clamp(2rem,1.5vw,1.25rem)] font-bold mb-4 font-monopoly-bold">
         Explore Research Areas of Interest
       </h1>
-      <p className="text-white/80 text-base mb-6 font-monopoly">
+      <p className="text-white/80 text-base mb-6 font-monopoly text-[clamp(1.2rem,1.2vw,1rem)]">
         Select up to{" "}
         <span className="text-[#9b7fff] font-semibold">{AOI_JOIN_LIMIT}</span>{" "}
         areas of interest you'd like to participate in. Joining an AOI unlocks

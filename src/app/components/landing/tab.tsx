@@ -429,7 +429,7 @@ const Tab: React.FC<TabProps> = ({
             className="w-full h-full overflow-auto hide-scrollbar relative"
           >
             <div className=" flex h-full items-center justify-center">
-              <Domains />
+              <Domains onNavigateKeyword={(keyword) => commitFrom(keyword)} />
             </div>
           </div>
         ) : tabData.showCc ? (

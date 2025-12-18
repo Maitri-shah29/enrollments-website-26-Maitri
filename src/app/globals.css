@@ -262,8 +262,8 @@
 }
 
 * {
-  cursor:
-    url("https://assets.acmvit.in/ocs/images/design/figma_cursor.png") 10 10,
+  cursor: url("https://assets.acmvit.in/ocs/images/design/figma_cursor.png") 10
+      10,
     auto;
 }
 
@@ -450,4 +450,15 @@
 
 .animate-slide-right {
   animation: slide-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes tab-close {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
 }

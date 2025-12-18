@@ -67,13 +67,13 @@ const Instructions: React.FC<InstructionsProps> = ({ onGetStarted }) => {
               className="
         object-cover
         scale-110
-        blur-2xl
-        opacity-60
+        blur-xl
+        opacity-100
       "
             />
 
             {/* Dark overlay for contrast */}
-            <div className="absolute inset-0 bg-black/40" />
+            {/* <div className="absolute inset-0 bg-black/40" /> */}
 
             {/* Foreground image */}
             <div className="relative z-10 w-full h-full flex items-center justify-center">
