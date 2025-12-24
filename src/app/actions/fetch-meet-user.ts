@@ -84,7 +84,7 @@ export default async function fetchMeetUser() {
       }
     }
     return { success: true, meetLinks } as const;
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("Error in fetching the data", e);
     return { error: "Failed to fetch meet links" } as const;
   }

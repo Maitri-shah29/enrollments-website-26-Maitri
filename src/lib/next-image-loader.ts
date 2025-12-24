@@ -37,7 +37,7 @@ export default function publicAssetImageLoader({
 
   if (isSpecialScheme(src)) return src;
 
-    const resolved = isAbsoluteUrl(src) ? src : src;
+  const resolved = isAbsoluteUrl(src) ? src : src;
 
   return appendQuery(resolved, {
     w: width,
