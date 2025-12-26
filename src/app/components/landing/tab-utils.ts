@@ -63,12 +63,49 @@ export const titleForKeyword = (keyword: string) =>
   keyword === "cc" ? "CC" : capitalize(keyword);
 
 export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
+  showCc: keyword === "cc",
+  showManagement: keyword === "management",
+  showTech:
+    keyword === "tech" || keyword === "tech.com" ||
+    [
+      "web",
+      "ios",
+      "android",
+      "app",
+      "webdev",
+      "webdevelopment",
+      "appdev",
+      "appdevelopment",
+      "game",
+      "gamedev",
+      "gamedevelopment",
+      "foss",
+      "opensource",
+      "git",
+      "github",
+      "devops",
+      "cloud",
+    ].includes(keyword),
+  showDesign:
+    keyword === "design" || keyword === "design.com" ||
+    ["3d", "ui/ux", "ui", "ux", "uiux", "illustration"].includes(keyword),
+  showResearch:
+    keyword === "research" || keyword === "research.com" ||
+    [
+      "aiml",
+      "ai/ml",
+      "quantum",
+      "blockchain",
+      "bioinformatics",
+      "iot",
+      "quantumcomputing",
+      "ai",
+      "ml",
+      "cybersecurity",
+    ].includes(keyword),
   showInstructions: keyword === "instructions",
   showCc: keyword === "cc.com" || keyword === "cc",
   showManagement: keyword === "management.com" || keyword === "management",
-  showTech: keyword === "tech.com" || keyword === "tech",
-  showDesign: keyword === "design.com" || keyword === "design",
-  showResearch: keyword === "research.com" || keyword === "research",
   showEvents: keyword === "events",
   showDomains: keyword === "domains",
   showPintooRun: keyword === "pintoorun",
