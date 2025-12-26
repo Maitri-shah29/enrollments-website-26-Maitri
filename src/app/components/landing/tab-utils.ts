@@ -64,9 +64,43 @@ export const titleForKeyword = (keyword: string) =>
 export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
   showCc: keyword === "cc",
   showManagement: keyword === "management",
-  showTech: keyword === "tech",
-  showDesign: keyword === "design",
-  showResearch: keyword === "research",
+  showTech:
+    keyword === "tech" ||
+    [
+      "web",
+      "ios",
+      "android",
+      "app",
+      "webdev",
+      "webdevelopment",
+      "appdev",
+      "appdevelopment",
+      "game",
+      "gamedev",
+      "gamedevelopment",
+      "foss",
+      "opensource",
+      "git",
+      "github",
+      "devops",
+      "cloud",
+    ].includes(keyword),
+  showDesign:
+    keyword === "design" ||
+    ["3d", "ui", "ux", "uiux", "illustration"].includes(keyword),
+  showResearch:
+    keyword === "research" ||
+    [
+      "aiml",
+      "quantum",
+      "blockchain",
+      "bioinformatics",
+      "iot",
+      "quantumcomputing",
+      "ai",
+      "ml",
+      "cybersecurity",
+    ].includes(keyword),
   showEvents: keyword === "events",
   showDomains: keyword === "domains",
   showPintooRun: keyword === "pintoorun",
