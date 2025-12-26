@@ -1,6 +1,7 @@
 "use client";
 import { type DragEvent, useEffect, useState } from "react";
 import FullscreenToggle from "./fullscreen-toggle";
+import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
 import App from "./loader/App";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
@@ -52,7 +53,7 @@ const Landing: React.FC<{
           showResearch: false,
           showEvents: false,
           showDomains: false,
-          showPintooRun: false,
+          // showPintooRun: false,
           showSnake: false,
           showAbout: false,
           history: [],
@@ -78,7 +79,7 @@ const Landing: React.FC<{
                 showResearch: false,
                 showEvents: false,
                 showDomains: false,
-                showPintooRun: false,
+                // showPintooRun: false,
                 showSnake: false,
                 showAbout: false,
                 history: [],
@@ -101,7 +102,7 @@ const Landing: React.FC<{
         showResearch: false,
         showEvents: false,
         showDomains: false,
-        showPintooRun: false,
+        // showPintooRun: false,
         showSnake: false,
         showAbout: false,
         history: [],
@@ -135,6 +136,10 @@ const Landing: React.FC<{
 
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
   const [showMaxTabsNotification, setShowMaxTabsNotification] = useState(false);
+  const [closingGhost, setClosingGhost] = useState<{
+    tab: TabData;
+    rect: DOMRect;
+  } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -192,33 +197,45 @@ const Landing: React.FC<{
   // null = loading (checking localStorage), true = show animation, false = skip animation
   const [showAnimation, setShowAnimation] = useState<boolean | null>(null);
   const [startAnimation, setStartAnimation] = useState(false);
+  // Show instructions after animation completes
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hasSeenAnimation = localStorage.getItem("hasSeenAnimation");
+    const hasSeenInstructions = localStorage.getItem("hasSeenInstructions");
 
-    if (hasSeenAnimation === "true") {
+    if (hasSeenAnimation === "true" && hasSeenInstructions === "true") {
+      // User has seen both animation and instructions - go to main page
       setShowAnimation(false);
+      setShowInstructions(false);
+      return;
+    }
+
+    if (hasSeenAnimation === "true" && hasSeenInstructions !== "true") {
+      // User has seen animation but not instructions - show instructions
+      setShowAnimation(false);
+      setShowInstructions(true);
       return;
     }
 
     // First visit - show animation
     setShowAnimation(true);
 
-    // Add keydown listener to start animation on any key press
-    const handleKeyDown = () => {
+    // Add keydown/click listener to start animation on any key press or click
+    const handleInteraction = () => {
       localStorage.setItem("hasSeenAnimation", "true");
       setStartAnimation(true);
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleKeyDown);
+      document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("click", handleInteraction);
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("click", handleKeyDown);
+    document.addEventListener("keydown", handleInteraction);
+    document.addEventListener("click", handleInteraction);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleKeyDown);
+      document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("click", handleInteraction);
     };
   }, []);
 
@@ -229,9 +246,10 @@ const Landing: React.FC<{
     const audio = new Audio("/ambient-piano.mp3");
     audio.play().catch(() => {});
 
-    // Hide animation after 15 seconds
+    // Hide animation after 15 seconds and show instructions
     const timer = setTimeout(() => {
       setShowAnimation(false);
+      setShowInstructions(true);
       audio.pause();
     }, 15000);
 
@@ -240,6 +258,12 @@ const Landing: React.FC<{
       audio.pause();
     };
   }, [startAnimation]);
+
+  // Handler for when user clicks "Start Exploring" in instructions
+  const handleGetStarted = () => {
+    localStorage.setItem("hasSeenInstructions", "true");
+    setShowInstructions(false);
+  };
 
   // Show black screen while checking localStorage (prevents white flash)
   if (showAnimation === null) {
@@ -264,6 +288,14 @@ const Landing: React.FC<{
       </div>
     );
 
+  // Show instructions after animation
+  if (showInstructions)
+    return (
+      <div className="fixed inset-0 z-[1]">
+        <Instructions onGetStarted={handleGetStarted} />
+      </div>
+    );
+
   if (isPending) return null;
 
   const addTab = () => {
@@ -276,6 +308,7 @@ const Landing: React.FC<{
     const newTab: TabData = {
       id: newId,
       title: "New Tab",
+      showInstructions: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -283,7 +316,7 @@ const Landing: React.FC<{
       showResearch: false,
       showEvents: false,
       showDomains: false,
-      showPintooRun: false,
+      // showPintooRun: false,
       showSnake: false,
       showAbout: false,
       history: [],
@@ -316,6 +349,7 @@ const Landing: React.FC<{
     const newTab: TabData = {
       id: newId,
       title: url.replace(/^https?:\/\//, "").split("/")[0],
+      showInstructions: url === "instructions",
       showCc: url === "cc",
       showManagement: url === "management",
       showTech: url === "tech",
@@ -323,7 +357,7 @@ const Landing: React.FC<{
       showResearch: url === "research",
       showEvents: url === "events",
       showDomains: url === "domains",
-      showPintooRun: url === "pintoorun",
+      // showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
       showAbout: url === "about",
       history: [
@@ -340,36 +374,31 @@ const Landing: React.FC<{
     setTabs([...tabs, newTab]);
     setActiveTabId(newId);
   };
-
   const closeTab = (id: number) => {
-    if (tabs.length === 1) {
-      setTabs([
-        {
-          id: tabs[0].id,
-          title: "Home",
-          showCc: false,
-          showManagement: false,
-          showTech: false,
-          showDesign: false,
-          showResearch: false,
-          showEvents: false,
-          showDomains: false,
-          showPintooRun: false,
-          showSnake: false,
-          showAbout: false,
-          history: [],
-          pointer: -1,
-        },
-      ]);
-      return;
-    }
+    if (tabs.length === 1) return;
 
-    const remaining = tabs.filter((tab) => tab.id !== id);
-    setTabs(remaining);
+    const el = document.getElementById(`tab-${id}`);
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const tab = tabs.find((t) => t.id === id);
+    if (!tab) return;
+
+    // Create ghost
+    setClosingGhost({ tab, rect });
+
+    // Remove real tab immediately (siblings snap invisibly)
+    setTabs((prev) => prev.filter((t) => t.id !== id));
 
     if (activeTabId === id) {
-      setActiveTabId(remaining[remaining.length - 1].id);
+      const remaining = tabs.filter((t) => t.id !== id);
+      if (remaining.length) {
+        setActiveTabId(remaining[remaining.length - 1].id);
+      }
     }
+
+    // Remove ghost after animation
+    setTimeout(() => setClosingGhost(null), 320);
   };
 
   const updateTab = (updatedTab: TabData) => {
@@ -428,66 +457,95 @@ const Landing: React.FC<{
               {tabs.map((tab, index) => {
                 const isActive = activeTabId === tab.id;
                 return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTabId(tab.id)}
-                    onAuxClick={(e) => {
-                      // Middle-click (button 1) closes tab
-                      if (e.button === 1) {
-                        e.preventDefault();
-                        closeTab(tab.id);
-                      }
-                    }}
-                    draggable
-                    onDragStart={(event) => handleDragStart(event, tab.id)}
-                    onDragOver={(event) => handleDragOver(event, tab.id)}
-                    onDrop={(event) => handleDrop(event, tab.id)}
-                    onDragEnd={handleDragEnd}
-                    className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
-                      isActive
-                        ? "z-40 text-neutral-900 bg-[#FCF7F2]"
-                        : "z-20 text-neutral-200 bg-[#252525]"
-                    } ${index > 0 ? "-ml-6" : ""} ${
-                      draggingTabId === tab.id ? "opacity-70" : ""
-                    }`}
-                    style={{
-                      WebkitMaskImage: TAB_MASK_IMAGE,
-                      maskImage: TAB_MASK_IMAGE,
-                      WebkitMaskSize: "100% 100%",
-                      maskSize: "100% 100%",
-                      WebkitMaskRepeat: "no-repeat",
-                      maskRepeat: "no-repeat",
-                    }}
-                  >
-                    <span
-                      className="truncate pr-4 relative z-10 font-poppinsReg"
-                      style={{
-                        color: isActive ? "#252525" : "#ffffff",
-                      }}
-                    >
-                      {tab.title}
-                    </span>
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeTab(tab.id);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.stopPropagation();
+                  <>
+                    {closingGhost && (
+                      <div
+                        className="fixed z-50 pointer-events-none"
+                        style={{
+                          left: closingGhost.rect.left,
+                          top: closingGhost.rect.top,
+                          width: closingGhost.rect.width,
+                          height: closingGhost.rect.height,
+                          WebkitMaskImage: TAB_MASK_IMAGE,
+                          maskImage: TAB_MASK_IMAGE,
+                          WebkitMaskSize: "100% 100%",
+                          maskSize: "100% 100%",
+                          WebkitMaskRepeat: "no-repeat",
+                          maskRepeat: "no-repeat",
+                          background: "#252525",
+                          animation:
+                            "tab-close 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                        }}
+                      >
+                        <div className="flex items-center h-full px-6 text-sm text-white font-medium">
+                          {closingGhost.tab.title}
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      id={`tab-${tab.id}`}
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTabId(tab.id)}
+                      onAuxClick={(e) => {
+                        // Middle-click (button 1) closes tab
+                        if (e.button === 1) {
+                          e.preventDefault();
                           closeTab(tab.id);
                         }
                       }}
-                      className={`ml-auto flex h-4 w-4 items-center justify-center rounded-full transition-colors relative z-10 text-base ${
+                      draggable
+                      onDragStart={(event) => handleDragStart(event, tab.id)}
+                      onDragOver={(event) => handleDragOver(event, tab.id)}
+                      onDrop={(event) => handleDrop(event, tab.id)}
+                      onDragEnd={handleDragEnd}
+                      className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-0 ease-out overflow-visible ${
                         isActive
-                          ? "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200"
-                          : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
+                          ? "z-40 text-neutral-900 bg-[#FCF7F2]"
+                          : "z-20 text-neutral-200 bg-[#252525]"
+                      } ${index > 0 ? "-ml-6" : ""} ${
+                        draggingTabId === tab.id ? "opacity-70" : ""
                       }`}
+                      style={{
+                        WebkitMaskImage: TAB_MASK_IMAGE,
+                        maskImage: TAB_MASK_IMAGE,
+                        WebkitMaskSize: "100% 100%",
+                        maskSize: "100% 100%",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                      }}
                     >
-                      ×
-                    </div>
-                  </button>
+                      <span
+                        className="truncate pr-4 relative z-10 font-poppinsReg"
+                        style={{
+                          color: isActive ? "#252525" : "#ffffff",
+                        }}
+                      >
+                        {tab.title.charAt(0).toUpperCase() +
+                          tab.title.slice(1).toLowerCase()}
+                      </span>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeTab(tab.id);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.stopPropagation();
+                            closeTab(tab.id);
+                          }
+                        }}
+                        className={`ml-auto flex h-4 w-4 items-center justify-center rounded-full transition-colors relative z-10 text-base ${
+                          isActive
+                            ? "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200"
+                            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
+                        }`}
+                      >
+                        ×
+                      </div>
+                    </button>
+                  </>
                 );
               })}
             </div>
@@ -495,7 +553,7 @@ const Landing: React.FC<{
               type="button"
               onClick={addTab}
               disabled={tabs.length >= 6}
-              className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
+              className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-0 ease-out overflow-visible mb-[6px] ${
                 tabs.length >= 6
                   ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
                   : "cursor-pointer text-neutral-200 bg-[#252525] from-[#585858] to-[#bdbdbd] hover:from-neutral-600/90 hover:to-neutral-600/90"

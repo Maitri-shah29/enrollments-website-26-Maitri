@@ -1,6 +1,7 @@
 import { IFRAME_WHITELIST } from "./tab-constants";
 
 export type TabInternalFlags = {
+  showInstructions: boolean;
   showCc: boolean;
   showManagement: boolean;
   showTech: boolean;
@@ -65,7 +66,7 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
   showCc: keyword === "cc",
   showManagement: keyword === "management",
   showTech:
-    keyword === "tech" ||
+    keyword === "tech" || keyword === "tech.com" ||
     [
       "web",
       "ios",
@@ -86,10 +87,10 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
       "cloud",
     ].includes(keyword),
   showDesign:
-    keyword === "design" ||
+    keyword === "design" || keyword === "design.com" ||
     ["3d", "ui/ux", "ui", "ux", "uiux", "illustration"].includes(keyword),
   showResearch:
-    keyword === "research" ||
+    keyword === "research" || keyword === "research.com" ||
     [
       "aiml",
       "ai/ml",
@@ -102,6 +103,9 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
       "ml",
       "cybersecurity",
     ].includes(keyword),
+  showInstructions: keyword === "instructions",
+  showCc: keyword === "cc.com" || keyword === "cc",
+  showManagement: keyword === "management.com" || keyword === "management",
   showEvents: keyword === "events",
   showDomains: keyword === "domains",
   showPintooRun: keyword === "pintoorun",
@@ -110,6 +114,7 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
 });
 
 export const resetTabFlags = (): TabInternalFlags => ({
+  showInstructions: false,
   showCc: false,
   showManagement: false,
   showTech: false,

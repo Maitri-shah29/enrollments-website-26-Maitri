@@ -131,7 +131,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   const continueCheck = () => {
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -276,7 +276,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
-      if (joinedAOIs.size === 0) {
+      const hasCommonOrTechQuestions = (roundUser?.round?.Question || []).some(
+        (q) => q.varName === "tech" || q.varName === "common",
+      );
+
+      if (joinedAOIs.size === 0 && !hasCommonOrTechQuestions) {
         return (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-center">
@@ -309,10 +313,20 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           </div>
         );
       }
+      const folderForQuestions =
+        activeRoundFolder ??
+        (() => {
+          const questions = roundUser?.round?.Question || [];
+          if (questions.some((q) => q.varName === "common"))
+            return "common" as AOI;
+          if (questions.some((q) => q.varName === "tech")) return "tech" as AOI;
+          return undefined;
+        })();
+
       return (
         <Questions
           ref={childRef}
-          activeRoundFolder={activeRoundFolder}
+          activeRoundFolder={folderForQuestions}
           activeQuestion={activeQuestion}
           roundUser={roundUser ?? undefined}
           answers={answers}

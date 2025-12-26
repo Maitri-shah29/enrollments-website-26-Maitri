@@ -10,6 +10,12 @@ const Instructions: React.FC = () => {
         <ul className="list-disc pl-6 space-y-2 text-white">
           <li>Answer all the questions of Round 1.</li>
           <li>
+            PS - You’ll probably use AI for these questions, which is totally
+            fine. Just keep in mind that we’ll be evaluating your originality
+            and your ability to learn so feel free to use AI for support, but
+            make sure your answers reflect your own thinking.
+          </li>
+          <li>
             After answering every question, click on "Save Answer" to save your
             response.
           </li>

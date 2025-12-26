@@ -34,6 +34,11 @@ export default function Instructions({ onBack }: InstructionsProps) {
             <br />
             &nbsp;1. Answer all the questions of Round 1.
             <br />
+            &nbsp;PS - You’ll probably use AI for these questions, which is
+            totally fine. Just keep in mind that we’ll be evaluating your
+            originality and your ability to learn so feel free to use AI for
+            support, but make sure your answers reflect your own thinking.
+            <br />
             &nbsp;2. Click on "Save Answer" after answering every question, to
             save your response. You may change your answers after you save
             answer. You cannot change your answers once you have submitted the

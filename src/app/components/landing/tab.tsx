@@ -4,17 +4,22 @@ import { logSearch } from "@/app/actions/log-search";
 import About from "@/app/clients/about-acm-client";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
-import PintooRun from "@/app/clients/PintooRun-client";
 import SnakeClient from "@/app/clients/snake-client";
 import { Loader } from "@/components/loader";
 import { useSearchHistory } from "@/hooks/use-search-history";
 import BrickGame404 from "../brick-game-404";
+import Instructions from "../instructions";
 import PhoneNumberModal from "../phone-number-modal";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
 import HomePageNavbar from "./home-page-navbar";
-import { INTERNAL_KEYWORDS, ROTATING_WEBSITES } from "./tab-constants";
+import {
+  INTERNAL_KEYWORDS,
+  normalizeInternalKeyword,
+  ROTATING_WEBSITES,
+  titleFromDomain,
+} from "./tab-constants";
 import TabHeader from "./tab-header";
 import {
   currentHostFromPointer,
@@ -37,6 +42,7 @@ interface PageHistory {
 export interface TabData {
   id: number;
   title: string;
+  showInstructions: boolean;
   showCc: boolean;
   showManagement: boolean;
   showTech: boolean;
@@ -47,7 +53,7 @@ export interface TabData {
   history: PageHistory[];
   pointer: number;
   pendingUrl?: string;
-  showPintooRun: boolean;
+  // showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
 }
@@ -86,6 +92,26 @@ const Tab: React.FC<TabProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const navInputRef = useRef<HTMLInputElement>(null);
   const { history, addToHistory, removeFromHistory } = useSearchHistory();
+
+  const handleGetStarted = () => {
+    localStorage.setItem("hasSeenInstructions", "true");
+    // Navigate to home page
+    const newHistory = tabData.history.slice(0, tabData.pointer + 1);
+    newHistory.push({
+      id: Date.now(),
+      title: "Home",
+      url: "",
+    });
+    onUpdateTab({
+      ...tabData,
+      history: newHistory,
+      pointer: newHistory.length - 1,
+      pendingUrl: undefined,
+      title: "Home",
+      ...resetTabFlags(),
+    });
+    setNavInput("");
+  };
 
   const rotatingPlaceholder = useRotatingPlaceholder(ROTATING_WEBSITES, 5000);
 
@@ -151,12 +177,14 @@ const Tab: React.FC<TabProps> = ({
     requestFullscreen();
 
     if (INTERNAL_KEYWORDS.has(trimmed)) {
-      if (currentUrl === trimmed) return;
+      const normalized = normalizeInternalKeyword(trimmed);
+
+      if (currentUrl === normalized) return;
 
       const newPage: PageHistory = {
         id: Date.now(),
-        title: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
-        url: trimmed,
+        title: normalized.charAt(0).toUpperCase() + normalized.slice(0, -4),
+        url: normalized,
       };
 
       const newHistory = tabData.history.slice(0, tabData.pointer + 1);
@@ -167,13 +195,13 @@ const Tab: React.FC<TabProps> = ({
 
       onUpdateTab({
         ...tabData,
-        ...tabFlagsForKeyword(trimmed),
+        ...tabFlagsForKeyword(normalized),
         history: newHistory,
         pointer: newHistory.length - 1,
-        title: titleForKeyword(trimmed),
-        pendingUrl: trimmed,
+        title: titleFromDomain(normalized),
+        pendingUrl: normalized,
       });
-
+      setNavInput(normalized);
       return;
     }
 
@@ -367,13 +395,15 @@ const Tab: React.FC<TabProps> = ({
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           />
         )}
-        {!session?.data &&
-        (tabData.showManagement ||
-          tabData.showCc ||
-          tabData.showDesign ||
-          tabData.showPintooRun ||
-          tabData.showResearch ||
-          tabData.showTech) ? (
+        {tabData.showInstructions ? (
+          <Instructions onGetStarted={handleGetStarted} />
+        ) : !session?.data &&
+          (tabData.showManagement ||
+            tabData.showCc ||
+            tabData.showDesign ||
+            // tabData.showPintooRun ||
+            tabData.showResearch ||
+            tabData.showTech) ? (
           <SignupPage onSignIn={() => {}} />
         ) : tabData.showManagement ? (
           <div
@@ -399,7 +429,7 @@ const Tab: React.FC<TabProps> = ({
             className="w-full h-full overflow-auto hide-scrollbar relative"
           >
             <div className=" flex h-full items-center justify-center">
-              <Domains />
+              <Domains onNavigateKeyword={(keyword) => commitFrom(keyword)} />
             </div>
           </div>
         ) : tabData.showCc ? (
@@ -434,11 +464,11 @@ const Tab: React.FC<TabProps> = ({
           >
             {researchChildren}
           </div>
-        ) : tabData.showPintooRun ? (
-          <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
-            <PintooRun key={refreshKey} />
-          </div>
-        ) : tabData.showSnake ? (
+        ) : // ) : tabData.showPintooRun ? (
+        //   <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
+        //     <PintooRun key={refreshKey} />
+        //   </div>
+        tabData.showSnake ? (
           <div className="w-full h-full bg-[#1A1A1A] overflow-auto relative">
             <SnakeClient key={refreshKey} />
           </div>

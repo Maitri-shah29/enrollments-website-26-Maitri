@@ -33,7 +33,7 @@ export default function Home({
         draggable={false}
         className="object-cover absolute bottom-20 -left-15 animate-spin-slow select-none"
       />
-      <div className="flex flex-col h-screen w-full justify-center items-center figma-cursor">
+      <div className="flex flex-col h-full w-full justify-center items-center figma-cursor">
         <Image
           src="/images/design/welcome.svg"
           alt="Home Design Foreground"

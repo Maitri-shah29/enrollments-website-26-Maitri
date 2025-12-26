@@ -1,6 +1,6 @@
 import type { ImageLoaderProps } from "next/image";
 
-import { publicAssetUrl } from "./public-asset-url";
+// import { publicAssetUrl } from "./public-asset-url";
 
 function isAbsoluteUrl(src: string) {
   return /^([a-z][a-z0-9+.-]*:)?\/\//i.test(src);
@@ -37,7 +37,7 @@ export default function publicAssetImageLoader({
 
   if (isSpecialScheme(src)) return src;
 
-  const resolved = isAbsoluteUrl(src) ? src : publicAssetUrl(src);
+    const resolved = isAbsoluteUrl(src) ? src : src;
 
   return appendQuery(resolved, {
     w: width,
