@@ -87,11 +87,12 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
     ].includes(keyword),
   showDesign:
     keyword === "design" ||
-    ["3d", "ui", "ux", "uiux", "illustration"].includes(keyword),
+    ["3d", "ui/ux", "ui", "ux", "uiux", "illustration"].includes(keyword),
   showResearch:
     keyword === "research" ||
     [
       "aiml",
+      "ai/ml",
       "quantum",
       "blockchain",
       "bioinformatics",
