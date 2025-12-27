@@ -1165,14 +1165,14 @@ export default function MeetsClient() {
     connectionState === "reconnecting";
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-900 text-white">
+    <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
-        <h1 className="text-xl font-semibold">ACM c0nclav3</h1>
+      <div className="flex items-center justify-between p-4 bg-black border-b border-white/10">
+        <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
         <div className="flex items-center gap-3">
           {isScreenSharing && (
-            <span className="bg-red-500 text-xs px-2 py-1 rounded animate-pulse">
-              Sharing Screen
+            <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse">
+              REC
             </span>
           )}
           {connectionState === "reconnecting" && (
@@ -1275,7 +1275,7 @@ export default function MeetsClient() {
 
 function ConnectionIndicator({ state }: { state: ConnectionState }) {
   const colors: Record<ConnectionState, string> = {
-    disconnected: "bg-gray-500",
+    disconnected: "bg-neutral-600",
     connecting: "bg-yellow-500 animate-pulse",
     connected: "bg-green-500",
     joining: "bg-yellow-500 animate-pulse",
@@ -1296,8 +1296,10 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-2 h-2 rounded-full ${colors[state]}`} />
-      <span className="text-sm text-gray-400">{labels[state]}</span>
+      <span className={`w-1.5 h-1.5 rounded-full ${colors[state]}`} />
+      <span className="text-xs text-neutral-500 uppercase tracking-wider">
+        {labels[state]}
+      </span>
     </div>
   );
 }
@@ -1330,17 +1332,17 @@ function JoinScreen({
         type="text"
         value={roomId}
         onChange={(e) => onRoomIdChange(e.target.value)}
-        placeholder="Room ID"
+        placeholder="Enter Room ID"
         disabled={isLoading}
-        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg w-64 text-center focus:outline-none focus:border-blue-500 disabled:opacity-50"
+        className="px-4 py-2 bg-[#111] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
       />
 
       <button
         onClick={onJoin}
         disabled={isLoading || !roomId.trim()}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+        className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md font-medium transition-colors flex items-center gap-2 text-sm"
       >
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
         {connectionState === "reconnecting"
           ? "Reconnecting..."
           : isLoading
@@ -1386,7 +1388,7 @@ function PresentationLayout({
   return (
     <div className="flex flex-1 gap-4 overflow-hidden">
       {/* Main Presentation Area */}
-      <div className="flex-1 bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
+      <div className="flex-1 bg-[#111] border border-white/10 rounded-lg overflow-hidden relative flex items-center justify-center">
         <video
           ref={(el) => {
             if (el && presentationStream) el.srcObject = presentationStream;
@@ -1403,7 +1405,7 @@ function PresentationLayout({
       {/* Sidebar Participants - scrollable with fixed-height tiles */}
       <div className="w-64 flex flex-col gap-3 overflow-y-auto pr-1">
         {/* Local User */}
-        <div className="relative bg-gray-800 rounded-lg overflow-hidden h-36 shrink-0">
+        <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden h-36 shrink-0">
           <video
             ref={localVideoRef}
             autoPlay
@@ -1414,13 +1416,13 @@ function PresentationLayout({
             }`}
           />
           {isCameraOff && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
-              <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
+              <div className="w-10 h-10 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-lg">
                 {userEmail[0]?.toUpperCase() || "?"}
               </div>
             </div>
           )}
-          <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/50 rounded text-xs">
+          <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/80 border border-white/10 rounded text-xs">
             You
           </div>
         </div>
@@ -1471,7 +1473,7 @@ function GridLayout({
   return (
     <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-auto">
       {/* Local Video */}
-      <div className="relative bg-gray-800 rounded-lg overflow-hidden aspect-video">
+      <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden aspect-video">
         <video
           ref={localVideoRef}
           autoPlay
@@ -1482,14 +1484,14 @@ function GridLayout({
           }`}
         />
         {isCameraOff && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
-            <div className="w-16 h-16 rounded-full bg-gray-600 flex items-center justify-center text-2xl">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
+            <div className="w-16 h-16 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-xl">
               {userEmail[0]?.toUpperCase() || "?"}
             </div>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 rounded text-sm">
-          You {isMuted && "🔇"}
+        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/80 border border-white/10 rounded text-sm flex items-center gap-2">
+          You {isMuted && <MicOff className="w-3 h-3 text-red-500" />}
         </div>
       </div>
 
@@ -1531,40 +1533,44 @@ function ControlsBar({
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
 
   return (
-    <div className="flex justify-center gap-4 mt-4 pt-4 border-t border-gray-700 shrink-0">
+    <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-white/10 shrink-0">
       <button
         onClick={onToggleMute}
-        className={`p-4 rounded-full transition-colors ${
+        className={`p-3 rounded-full transition-all border ${
           isMuted
-            ? "bg-red-600 hover:bg-red-700"
-            : "bg-gray-700 hover:bg-gray-600"
+            ? "bg-red-500 text-white border-red-600"
+            : "bg-transparent text-white border-white/10 hover:bg-white/10"
         }`}
         title={isMuted ? "Unmute" : "Mute"}
       >
-        {isMuted ? <MicOff /> : <Mic />}
+        {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
       </button>
 
       <button
         onClick={onToggleCamera}
-        className={`p-4 rounded-full transition-colors ${
+        className={`p-3 rounded-full transition-all border ${
           isCameraOff
-            ? "bg-red-600 hover:bg-red-700"
-            : "bg-gray-700 hover:bg-gray-600"
+            ? "bg-red-500 text-white border-red-600"
+            : "bg-transparent text-white border-white/10 hover:bg-white/10"
         }`}
         title={isCameraOff ? "Turn on camera" : "Turn off camera"}
       >
-        {isCameraOff ? <VideoOff /> : <Video />}
+        {isCameraOff ? (
+          <VideoOff className="w-5 h-5" />
+        ) : (
+          <Video className="w-5 h-5" />
+        )}
       </button>
 
       <button
         onClick={onToggleScreenShare}
         disabled={!canStartScreenShare}
-        className={`p-4 rounded-full transition-colors ${
+        className={`p-3 rounded-full transition-all border ${
           isScreenSharing
-            ? "bg-blue-600 hover:bg-blue-700"
+            ? "bg-white text-black border-white"
             : !canStartScreenShare
-            ? "bg-gray-800 cursor-not-allowed opacity-50"
-            : "bg-gray-700 hover:bg-gray-600"
+            ? "bg-transparent text-neutral-600 border-white/5 cursor-not-allowed"
+            : "bg-transparent text-white border-white/10 hover:bg-white/10"
         }`}
         title={
           !canStartScreenShare
@@ -1574,21 +1580,21 @@ function ControlsBar({
             : "Share screen"
         }
       >
-        <Monitor />
+        <Monitor className="w-5 h-5" />
       </button>
 
       <button
         onClick={onToggleChat}
-        className={`p-4 rounded-full transition-colors relative ${
+        className={`p-3 rounded-full transition-all border relative ${
           isChatOpen
-            ? "bg-blue-600 hover:bg-blue-700"
-            : "bg-gray-700 hover:bg-gray-600"
+            ? "bg-white text-black border-white"
+            : "bg-transparent text-white border-white/10 hover:bg-white/10"
         }`}
         title="Chat"
       >
-        <MessageSquare />
+        <MessageSquare className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center border border-black font-bold">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -1596,7 +1602,7 @@ function ControlsBar({
 
       <button
         onClick={onLeave}
-        className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
+        className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all border border-red-500 hover:border-red-600"
         title="Leave meeting"
       >
         <Phone className="rotate-[135deg]" />
@@ -1645,13 +1651,13 @@ function ChatPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-gray-800 rounded-lg shadow-xl flex flex-col border border-gray-700 z-10">
+    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#111] rounded-lg shadow-2xl flex flex-col border border-white/10 z-10 font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-700">
-        <h3 className="font-semibold">Chat</h3>
+      <div className="flex items-center justify-between p-3 border-b border-white/10">
+        <h3 className="font-bold text-sm">Chat</h3>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-gray-700 rounded transition-colors"
+          className="p-1 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white"
         >
           <X className="w-5 h-5" />
         </button>
@@ -1672,10 +1678,10 @@ function ChatPanel({
                 }`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                  className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                     isOwn
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 text-gray-100"
+                      ? "bg-white text-black"
+                      : "bg-[#222] text-neutral-200 border border-white/10"
                   }`}
                 >
                   {!isOwn && (
@@ -1699,7 +1705,10 @@ function ChatPanel({
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-3 border-t border-gray-700">
+      <form
+        onSubmit={handleSubmit}
+        className="p-3 border-t border-white/10 bg-[#111]"
+      >
         <div className="flex gap-2">
           <input
             type="text"
@@ -1708,14 +1717,14 @@ function ChatPanel({
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             maxLength={1000}
-            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+            className="flex-1 px-3 py-2 bg-[#222] border border-white/10 rounded-md text-sm focus:outline-none focus:border-white transition-colors placeholder:text-neutral-600"
           />
           <button
             type="submit"
             disabled={!chatInput.trim()}
-            className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+            className="p-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md transition-colors"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           </button>
         </div>
       </form>
@@ -1770,7 +1779,7 @@ function ParticipantVideo({
 
   return (
     <div
-      className={`relative bg-gray-800 rounded-lg overflow-hidden shrink-0 ${
+      className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden shrink-0 ${
         compact ? "h-36" : "aspect-video"
       }`}
     >
@@ -1783,9 +1792,9 @@ function ParticipantVideo({
         }`}
       />
       {showPlaceholder && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
           <div
-            className={`rounded-full bg-gray-600 flex items-center justify-center ${
+            className={`rounded-full bg-[#222] border border-white/10 flex items-center justify-center ${
               compact ? "w-10 h-10 text-lg" : "w-16 h-16 text-2xl"
             }`}
           >
@@ -1795,12 +1804,12 @@ function ParticipantVideo({
       )}
       <audio ref={setAudioRef} autoPlay />
       <div
-        className={`absolute bottom-2 left-2 bg-black/50 rounded flex items-center gap-2 ${
-          compact ? "px-1 py-0.5 text-xs" : "px-2 py-1 text-sm"
+        className={`absolute bottom-2 left-2 bg-black/80 border border-white/10 rounded px-2 py-0.5 flex items-center gap-2 ${
+          compact ? "text-[10px]" : "text-xs"
         }`}
       >
-        <span>{displayName}</span>
-        {participant.isMuted && <span>🔇</span>}
+        <span className="font-medium">{displayName}</span>
+        {participant.isMuted && <MicOff className="w-3 h-3 text-red-500" />}
       </div>
     </div>
   );
