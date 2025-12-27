@@ -87,20 +87,18 @@ export default function Question({
               )}
             </p>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
             <textarea
               value={answer}
               onChange={(e) => {
                 const text = e.target.value;
-
                 if (text.length > 1500) return;
-
                 onChangeAnswer(question.id, e.target.value);
               }}
               style={{
                 wordBreak: "break-word",
                 overflowWrap: "anywhere",
-                overflowY: "hidden",
+                overflowY: "auto",
               }}
               placeholder="Type your answer here..."
               className="text-black w-full h-full outline-none bg-transparent resize-none selection:bg-[#AA302E] selection:text-white"
