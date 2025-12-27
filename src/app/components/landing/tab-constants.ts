@@ -155,6 +155,7 @@ export const INTERNAL_KEYWORDS = new Set([
   // "pintoorun",
   "snake",
   "about",
+  "meets",
   "aiml",
   "ai/ml",
   "quantum",

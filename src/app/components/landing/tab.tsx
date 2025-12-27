@@ -4,6 +4,7 @@ import { logSearch } from "@/app/actions/log-search";
 import About from "@/app/clients/about-acm-client";
 import Domains from "@/app/clients/domains-client";
 import Events from "@/app/clients/events-client";
+import MeetsClient from "@/app/clients/meets-client";
 import SnakeClient from "@/app/clients/snake-client";
 import { Loader } from "@/components/loader";
 import { useSearchHistory } from "@/hooks/use-search-history";
@@ -56,6 +57,7 @@ export interface TabData {
   // showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
+  showMeets: boolean;
 }
 
 interface TabProps {
@@ -84,7 +86,7 @@ const Tab: React.FC<TabProps> = ({
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData),
+    currentHostFromPointer(tabData)
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
@@ -172,7 +174,7 @@ const Tab: React.FC<TabProps> = ({
     }
 
     const currentUrl =
-      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
+      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
 
     requestFullscreen();
 
@@ -282,7 +284,7 @@ const Tab: React.FC<TabProps> = ({
 
   const goHome = () => {
     const currentUrl =
-      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
+      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
     if (currentUrl === "") return;
 
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
@@ -340,7 +342,7 @@ const Tab: React.FC<TabProps> = ({
 
     // Also reload iframe if present (for non-client components)
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]',
+      'iframe[title="Browser Tab"]'
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
@@ -475,6 +477,10 @@ const Tab: React.FC<TabProps> = ({
         ) : tabData.showAbout ? (
           <div className="w-full h-full bg-black overflow-auto relative">
             <About key={refreshKey} />
+          </div>
+        ) : tabData.showMeets ? (
+          <div className="w-full h-full bg-gray-900 overflow-auto relative">
+            <MeetsClient key={refreshKey} />
           </div>
         ) : activePageData?.url ? (
           iframeError || !isWhitelisted(activePageData.url) ? (

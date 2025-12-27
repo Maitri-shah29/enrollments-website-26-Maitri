@@ -1,0 +1,26 @@
+{
+  "name": "sfu",
+  "version": "1.0.0",
+  "description": "Mediasoup SFU for video meetings",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "npx tsx server.ts",
+    "start": "npx tsx server.ts",
+    "typecheck": "npx tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mediasoup": "^3.19.14",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
