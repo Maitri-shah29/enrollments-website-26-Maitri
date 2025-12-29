@@ -4,7 +4,8 @@ import type {
   RtpCapabilities,
   MediaKind,
 } from "mediasoup/types";
-import { Client } from "./Client.js";
+import { Client } from "./Client.js"; // Needed for types/Client class
+import { Admin } from "./Admin.js";
 import { config } from "../config.js";
 
 export interface RoomOptions {
@@ -162,6 +163,31 @@ export class Room {
    */
   isEmpty(): boolean {
     return this.clients.size === 0;
+  }
+
+  /**
+   * Get all Admin clients in the room
+   */
+  getAdmins(): Admin[] {
+    const admins: Admin[] = [];
+    for (const client of this.clients.values()) {
+      if (client instanceof Admin) {
+        admins.push(client);
+      }
+    }
+    return admins;
+  }
+
+  /**
+   * Check if there is at least one admin in the room
+   */
+  hasActiveAdmin(): boolean {
+    for (const client of this.clients.values()) {
+      if (client instanceof Admin) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

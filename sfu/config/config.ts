@@ -17,6 +17,9 @@ type WorkerLogTag =
 
 export const config = {
   port: 3031,
+  sfuSecret: process.env.SFU_SECRET || "development-secret",
+  //generate something using openssl before deploying to production
+  //openssl rand -base64 32
   workerSettings: {
     //rtcMinPort and max are just arbitray ports for our traffic
     //useful for firewall or networking rules
@@ -55,10 +58,11 @@ export const config = {
       {
         // ip: "0.0.0.0",
         ip: "0.0.0.0",
-        announcedIp: "192.168.1.10",
+        announcedIp: "192.168.1.10", //replace with your public IP
       },
     ],
     //for deployment
+    //this is not the actual deployment link dumbo
     // webRtcTransport: {
     //   listenIps: [
     //     {
@@ -70,7 +74,7 @@ export const config = {
     //   ],
     // Lower bitrate to prioritize low latency and audio stability
     // 1.5 Mbps is sufficient for decent video but prevents network congestion
-    maxIncomingBitrate: 1500000,
+    maxIncomingBitrate: 1500000, //need to think about these
     initialAvailableOutgoingBitrate: 1000000,
   },
 };

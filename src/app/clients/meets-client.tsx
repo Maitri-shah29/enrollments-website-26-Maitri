@@ -24,6 +24,7 @@ import {
   Send,
   X,
 } from "lucide-react";
+import { getSfuToken } from "../actions/sfu-token";
 
 // ============================================
 // Configuration
@@ -315,7 +316,7 @@ export default function MeetsClient() {
 
   // Generate stable session ID per component instance
   const sessionIdRef = useRef<string>(generateSessionId());
-  const userEmail = session?.data?.user?.email || "guest";
+  const userEmail = session?.data?.user?.name || "guest";
   const userId = `${userEmail}#${sessionIdRef.current}`;
 
   // ============================================
@@ -402,7 +403,7 @@ export default function MeetsClient() {
   // ============================================
 
   const connectSocket = useCallback((): Promise<Socket> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (socketRef.current?.connected) {
         resolve(socketRef.current);
         return;
@@ -410,122 +411,143 @@ export default function MeetsClient() {
 
       setConnectionState("connecting");
 
-      const socket = io(SFU_URL, {
-        transports: ["websocket", "polling"],
-        timeout: SOCKET_TIMEOUT_MS,
-        reconnection: false, // We handle reconnection manually
-      });
+      try {
+        const token = await getSfuToken();
 
-      const connectionTimeout = setTimeout(() => {
-        socket.disconnect();
-        reject(new Error("Connection timeout"));
-      }, SOCKET_TIMEOUT_MS);
-
-      socket.on("connect", () => {
-        clearTimeout(connectionTimeout);
-        console.log("[Meets] Connected to SFU");
-        setConnectionState("connected");
-        setMeetError(null);
-        reconnectAttemptsRef.current = 0;
-        resolve(socket);
-      });
-
-      socket.on("disconnect", (reason) => {
-        console.log("[Meets] Disconnected:", reason);
-        if (
-          reason === "io server disconnect" ||
-          reason === "io client disconnect"
-        ) {
-          setConnectionState("disconnected");
-        } else if (currentRoomIdRef.current) {
-          // Unexpected disconnect during active session
-          handleReconnect();
-        }
-      });
-
-      socket.on("connect_error", (err) => {
-        clearTimeout(connectionTimeout);
-        console.error("[Meets] Connection error:", err);
-        setMeetError(createMeetError(err, "CONNECTION_FAILED"));
-        setConnectionState("error");
-        reject(err);
-      });
-
-      // Producer events
-      socket.on("newProducer", async (data: ProducerInfo) => {
-        console.log("[Meets] New producer:", data);
-        await consumeProducer(data);
-      });
-
-      socket.on("producerClosed", ({ producerId }: { producerId: string }) => {
-        console.log("[Meets] Producer closed:", producerId);
-        handleProducerClosed(producerId);
-      });
-
-      // User events
-      socket.on(
-        "userJoined",
-        ({ userId: joinedUserId }: { userId: string }) => {
-          console.log("[Meets] User joined:", joinedUserId);
-          dispatchParticipants({
-            type: "ADD_PARTICIPANT",
-            userId: joinedUserId,
-          });
-        }
-      );
-
-      socket.on("userLeft", ({ userId: leftUserId }: { userId: string }) => {
-        console.log("[Meets] User left:", leftUserId);
-        dispatchParticipants({
-          type: "REMOVE_PARTICIPANT",
-          userId: leftUserId,
+        const socket = io(SFU_URL, {
+          transports: ["websocket", "polling"],
+          timeout: SOCKET_TIMEOUT_MS,
+          reconnection: false, // We handle reconnection manually
+          auth: { token },
         });
 
-        // Clear screen share if the presenter left
-        for (const [producerId, info] of producerMapRef.current) {
-          if (info.userId === leftUserId && info.type === "screen") {
-            setActiveScreenShareId(null);
-            producerMapRef.current.delete(producerId);
+        const connectionTimeout = setTimeout(() => {
+          socket.disconnect();
+          reject(new Error("Connection timeout"));
+        }, SOCKET_TIMEOUT_MS);
+
+        socket.on("connect", () => {
+          clearTimeout(connectionTimeout);
+          console.log("[Meets] Connected to SFU");
+          setConnectionState("connected");
+          setMeetError(null);
+          reconnectAttemptsRef.current = 0;
+          resolve(socket);
+        });
+
+        socket.on("disconnect", (reason) => {
+          console.log("[Meets] Disconnected:", reason);
+          if (
+            reason === "io server disconnect" ||
+            reason === "io client disconnect"
+          ) {
+            setConnectionState("disconnected");
+          } else if (currentRoomIdRef.current) {
+            // Unexpected disconnect during active session
+            handleReconnect();
           }
-        }
-      });
+        });
 
-      // Media state events
-      socket.on(
-        "participantMuted",
-        ({ oderId, muted }: { oderId: string; muted: boolean }) => {
-          dispatchParticipants({ type: "UPDATE_MUTED", userId: oderId, muted });
-        }
-      );
+        socket.on("connect_error", (err) => {
+          clearTimeout(connectionTimeout);
+          console.error("[Meets] Connection error:", err);
+          setMeetError(createMeetError(err, "CONNECTION_FAILED"));
+          setConnectionState("error");
+          reject(err);
+        });
 
-      socket.on(
-        "participantCameraOff",
-        ({
-          userId: camUserId,
-          cameraOff,
-        }: {
-          userId: string;
-          cameraOff: boolean;
-        }) => {
+        // Producer events
+        socket.on("newProducer", async (data: ProducerInfo) => {
+          console.log("[Meets] New producer:", data);
+          await consumeProducer(data);
+        });
+
+        socket.on(
+          "producerClosed",
+          ({ producerId }: { producerId: string }) => {
+            console.log("[Meets] Producer closed:", producerId);
+            handleProducerClosed(producerId);
+          }
+        );
+
+        // User events
+        socket.on(
+          "userJoined",
+          ({ userId: joinedUserId }: { userId: string }) => {
+            console.log("[Meets] User joined:", joinedUserId);
+            dispatchParticipants({
+              type: "ADD_PARTICIPANT",
+              userId: joinedUserId,
+            });
+          }
+        );
+
+        socket.on("userLeft", ({ userId: leftUserId }: { userId: string }) => {
+          console.log("[Meets] User left:", leftUserId);
           dispatchParticipants({
-            type: "UPDATE_CAMERA_OFF",
+            type: "REMOVE_PARTICIPANT",
+            userId: leftUserId,
+          });
+
+          // Clear screen share if the presenter left
+          for (const [producerId, info] of producerMapRef.current) {
+            if (info.userId === leftUserId && info.type === "screen") {
+              setActiveScreenShareId(null);
+              producerMapRef.current.delete(producerId);
+            }
+          }
+        });
+
+        // Media state events
+        socket.on(
+          "participantMuted",
+          ({ oderId, muted }: { oderId: string; muted: boolean }) => {
+            dispatchParticipants({
+              type: "UPDATE_MUTED",
+              userId: oderId,
+              muted,
+            });
+          }
+        );
+
+        socket.on(
+          "participantCameraOff",
+          ({
             userId: camUserId,
             cameraOff,
-          });
-        }
-      );
+          }: {
+            userId: string;
+            cameraOff: boolean;
+          }) => {
+            dispatchParticipants({
+              type: "UPDATE_CAMERA_OFF",
+              userId: camUserId,
+              cameraOff,
+            });
+          }
+        );
 
-      // Chat message event
-      socket.on("chatMessage", (message: ChatMessage) => {
-        console.log("[Meets] Chat message received:", message);
-        setChatMessages((prev) => [...prev, message]);
-        // Increment unread count if chat is closed
-        if (!isChatOpen) {
-          setUnreadCount((prev) => prev + 1);
-        }
-      });
+        // Chat message event
+        socket.on("chatMessage", (message: ChatMessage) => {
+          console.log("[Meets] Chat message received:", message);
+          setChatMessages((prev) => [...prev, message]);
+          // Increment unread count if chat is closed
+          if (!isChatOpen) {
+            setUnreadCount((prev) => prev + 1);
+          }
+        });
 
-      socketRef.current = socket;
+        socketRef.current = socket;
+      } catch (err) {
+        console.error("Failed to get auth token:", err);
+        setMeetError({
+          code: "CONNECTION_FAILED",
+          message: "Authentication failed",
+          recoverable: false, // Maybe true if they login?
+        });
+        setConnectionState("error");
+        reject(err);
+      }
     });
   }, []);
 
@@ -1192,14 +1214,13 @@ export default function MeetsClient() {
             <AlertCircle className="w-4 h-4" />
             <span>{meetError.message}</span>
           </div>
-          {meetError.recoverable && (
-            <button
-              onClick={() => setMeetError(null)}
-              className="text-xs px-2 py-1 bg-red-800 hover:bg-red-700 rounded"
-            >
-              Dismiss
-            </button>
-          )}
+          <button
+            onClick={() => setMeetError(null)}
+            className="p-1 hover:bg-red-800/50 rounded-full transition-colors text-red-200"
+            title="Dismiss error"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 

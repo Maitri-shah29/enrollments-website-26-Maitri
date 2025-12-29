@@ -5,12 +5,14 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import type { Worker } from "mediasoup/types";
+import jwt from "jsonwebtoken";
 
 import { config } from "./config/config.js";
 import createWorkers from "./utilities/createWorkers.js";
 import getWorker from "./utilities/getWorker.js";
 import { Room } from "./config/classes/Room.js";
 import { Client } from "./config/classes/Client.js";
+import { Admin } from "./config/classes/Admin.js";
 import type {
   JoinRoomData,
   JoinRoomResponse,
@@ -55,6 +57,22 @@ const io = new SocketIOServer(httpsServer, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+});
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error("Authentication error: No token provided"));
+  }
+
+  jwt.verify(token, config.sfuSecret, (err: Error | null, decoded: any) => {
+    if (err) {
+      return next(new Error("Authentication error: Invalid token"));
+    }
+    // Attach user info to socket if needed
+    (socket as any).user = decoded;
+    next();
+  });
 });
 
 // ============================================
@@ -121,12 +139,28 @@ io.on("connection", (socket: Socket) => {
     ) => {
       try {
         const { roomId, userId } = data;
+        const isAdmin = (socket as any).user?.isAdmin;
 
         // Get or create room
-        currentRoom = await getOrCreateRoom(roomId);
+        let room = rooms.get(roomId);
 
-        // Create client
-        currentClient = new Client({ id: userId, socket });
+        if (!room) {
+          if (!isAdmin) {
+            callback({ error: "Only admins can create rooms." });
+            return;
+          }
+          // Create room if admin
+          room = await getOrCreateRoom(roomId);
+        }
+        currentRoom = room;
+
+        // Create client based on role
+        if (isAdmin) {
+          currentClient = new Admin({ id: userId, socket });
+        } else {
+          currentClient = new Client({ id: userId, socket });
+        }
+
         currentRoom.addClient(currentClient);
 
         // Join socket room for broadcasting
@@ -138,7 +172,44 @@ io.on("connection", (socket: Socket) => {
         // Get existing producers for the new client to consume
         const existingProducers = currentRoom.getAllProducers(userId);
 
-        console.log(`[SFU] User ${userId} joined room ${roomId}`);
+        console.log(
+          `[SFU] User ${userId} joined room ${roomId} as ${
+            isAdmin ? "Admin" : "Client"
+          }`
+        );
+
+        // Register Admin listeners
+        if (currentClient instanceof Admin) {
+          socket.on(
+            "kickUser",
+            ({ userId: targetId }: { userId: string }, cb) => {
+              if (!currentRoom) return;
+              const target = currentRoom.getClient(targetId);
+              if (target) {
+                target.socket.emit("kicked"); // Notify client
+                target.socket.disconnect(true);
+                cb({ success: true });
+              } else {
+                cb({ error: "User not found" });
+              }
+            }
+          );
+
+          socket.on("closeRemoteProducer", ({ producerId }, cb) => {
+            if (!currentRoom) return;
+            for (const client of currentRoom.clients.values()) {
+              if (client.removeProducerById(producerId)) {
+                socket.to(currentRoom.id).emit("producerClosed", {
+                  producerId,
+                  producerUserId: client.id,
+                });
+                cb({ success: true });
+                return;
+              }
+            }
+            cb({ error: "Producer not found" });
+          });
+        }
 
         callback({
           rtpCapabilities: currentRoom.rtpCapabilities,
@@ -282,9 +353,6 @@ io.on("connection", (socket: Socket) => {
     }
   );
 
-  // ----------------------------------------
-  // Produce (Start sending audio/video)
-  // ----------------------------------------
   // ----------------------------------------
   // Produce (Start sending audio/video)
   // ----------------------------------------
@@ -649,15 +717,35 @@ io.on("connection", (socket: Socket) => {
     if (currentRoom && currentClient) {
       const userId = currentClient.id;
       const roomId = currentRoom.id;
+      const wasAdmin = currentClient instanceof Admin;
 
       // Remove client from room
       currentRoom.removeClient(userId);
-
-      // Notify others
       socket.to(roomId).emit("userLeft", { userId });
 
-      // Cleanup empty room
-      cleanupRoom(roomId);
+      // If Admin left, check if any other admins remain
+      if (wasAdmin) {
+        if (!currentRoom.hasActiveAdmin()) {
+          console.log(`[SFU] Last admin left room ${roomId}, dissolving...`);
+          for (const client of currentRoom.clients.values()) {
+            client.socket.emit("roomClosed", {
+              reason: "Last admin left the meeting",
+            });
+            client.socket.disconnect(true);
+          }
+          cleanupRoom(roomId);
+        } else {
+          // Admin left but others remain
+          console.log(
+            `[SFU] Admin left room ${roomId}, but other admins remain.`
+          );
+        }
+      }
+
+      // Always cleanup if empty (handled by cleanupRoom check internally if we didn't already)
+      if (rooms.has(roomId)) {
+        cleanupRoom(roomId);
+      }
 
       console.log(`[SFU] User ${userId} left room ${roomId}`);
     }
