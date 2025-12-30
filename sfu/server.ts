@@ -59,6 +59,7 @@ const io = new SocketIOServer(httpsServer, {
   },
 });
 
+//might need to rethink this logic (ask board)
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
@@ -69,6 +70,12 @@ io.use((socket, next) => {
     if (err) {
       return next(new Error("Authentication error: Invalid token"));
     }
+
+    // Explicit, robust check for decoded payload
+    if (!decoded || typeof decoded !== "object") {
+      return next(new Error("Authentication error: Invalid token payload"));
+    }
+
     // Attach user info to socket if needed
     (socket as any).user = decoded;
     next();
@@ -127,6 +134,10 @@ io.on("connection", (socket: Socket) => {
 
   let currentRoom: Room | null = null;
   let currentClient: Client | null = null;
+
+  // Rate limiting state
+  let lastChatTime = 0;
+  const CHAT_RATE_LIMIT_MS = 500;
 
   // ----------------------------------------
   // Join Room
@@ -678,6 +689,14 @@ io.on("connection", (socket: Socket) => {
           callback({ error: "Message too long (max 1000 characters)" });
           return;
         }
+
+        // Rate limiting check
+        const now = Date.now();
+        if (now - lastChatTime < CHAT_RATE_LIMIT_MS) {
+          callback({ error: "You are sending messages too fast" });
+          return;
+        }
+        lastChatTime = now;
 
         // Extract display name from userId (format: email#sessionId)
         const displayName =

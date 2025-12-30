@@ -448,6 +448,16 @@ export default function MeetsClient() {
           }
         });
 
+        socket.on("roomClosed", ({ reason }: { reason: string }) => {
+          console.log("[Meets] Room closed:", reason);
+          setMeetError({
+            code: "UNKNOWN", // Or a specific code like 'ROOM_CLOSED'
+            message: `Room closed: ${reason}`,
+            recoverable: false,
+          });
+          cleanup();
+        });
+
         socket.on("connect_error", (err) => {
           clearTimeout(connectionTimeout);
           console.error("[Meets] Connection error:", err);
@@ -590,6 +600,10 @@ export default function MeetsClient() {
     const consumer = consumersRef.current.get(producerId);
     if (consumer) {
       try {
+        // Stop the track to prevent memory leaks
+        if (consumer.track) {
+          consumer.track.stop();
+        }
         consumer.close();
       } catch {}
       consumersRef.current.delete(producerId);

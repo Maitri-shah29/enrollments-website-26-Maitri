@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 
 const SFU_SECRET = process.env.SFU_SECRET || "development-secret";
 
+//grab ts from env
 const ADMIN_EMAILS = [
   "ashman.singh2024@vitstudent.ac.in",
   "ashmangamer0406@gmail.com",
