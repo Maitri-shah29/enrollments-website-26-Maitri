@@ -38,6 +38,8 @@ export const config = {
   },
   // Grace period before dissolving room after last admin leaves (in ms)
   adminCleanupTimeout: Number(process.env.ADMIN_CLEANUP_TIMEOUT) || 120000,
+  // Allow non-admins to create rooms (for testing)
+  allowNonAdminRoomCreation: false,
   routerMediaCodecs: [
     {
       kind: "audio",

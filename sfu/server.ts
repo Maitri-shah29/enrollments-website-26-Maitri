@@ -156,11 +156,11 @@ io.on("connection", (socket: Socket) => {
         let room = rooms.get(roomId);
 
         if (!room) {
-          if (!isAdmin) {
+          if (!isAdmin && !config.allowNonAdminRoomCreation) {
             callback({ error: "Only admins can create rooms." });
             return;
           }
-          // Create room if admin
+          // Create room if admin or if allowed by config
           room = await getOrCreateRoom(roomId);
         } else {
           // Room exists, check if cleanup timer is active
