@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useReducer } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useReducer,
+  useMemo,
+} from "react";
 import { io, Socket } from "socket.io-client";
 import { Device } from "mediasoup-client";
 import type {
@@ -25,6 +32,8 @@ import {
   X,
 } from "lucide-react";
 import { getSfuToken } from "../actions/sfu-token";
+import { ADMIN_EMAILS } from "@/lib/admin-config";
+import { Users } from "lucide-react";
 
 // ============================================
 // Configuration
@@ -67,6 +76,9 @@ interface Participant {
   videoStream: MediaStream | null;
   audioStream: MediaStream | null;
   screenShareStream: MediaStream | null;
+  audioProducerId: string | null;
+  videoProducerId: string | null;
+  screenShareProducerId: string | null;
   isMuted: boolean;
   isCameraOff: boolean;
 }
@@ -79,6 +91,20 @@ interface ProducerInfo {
   type: ProducerType;
   paused?: boolean;
 }
+
+type VideoQuality = "low" | "standard";
+
+const STANDARD_QUALITY_CONSTRAINTS = {
+  width: { ideal: 640, max: 640 },
+  height: { ideal: 360, max: 360 },
+  frameRate: { ideal: 24, max: 24 },
+};
+
+const LOW_QUALITY_CONSTRAINTS = {
+  width: { ideal: 256, max: 256 },
+  height: { ideal: 144, max: 144 },
+  frameRate: { ideal: 15, max: 15 },
+};
 
 /** Socket response types */
 interface JoinRoomResponse {
@@ -140,6 +166,7 @@ type ParticipantAction =
       kind: "audio" | "video";
       streamType: ProducerType;
       stream: MediaStream | null;
+      producerId: string;
     }
   | { type: "UPDATE_MUTED"; userId: string; muted: boolean }
   | { type: "UPDATE_CAMERA_OFF"; userId: string; cameraOff: boolean }
@@ -159,6 +186,9 @@ function participantReducer(
           videoStream: null,
           audioStream: null,
           screenShareStream: null,
+          audioProducerId: null,
+          videoProducerId: null,
+          screenShareProducerId: null,
           isMuted: false,
           isCameraOff: false,
         });
@@ -177,14 +207,24 @@ function participantReducer(
         screenShareStream: null,
         isMuted: false,
         isCameraOff: false,
+        audioProducerId: null,
+        videoProducerId: null,
+        screenShareProducerId: null,
       };
 
       if (action.streamType === "screen") {
         participant.screenShareStream = action.stream;
+        participant.screenShareProducerId = action.stream
+          ? action.producerId
+          : null;
       } else if (action.kind === "video") {
         participant.videoStream = action.stream;
+        participant.videoProducerId = action.stream ? action.producerId : null;
+        if (action.stream) participant.isCameraOff = false;
       } else if (action.kind === "audio") {
         participant.audioStream = action.stream;
+        participant.audioProducerId = action.stream ? action.producerId : null;
+        if (action.stream) participant.isMuted = false;
       }
 
       newState.set(action.userId, { ...participant });
@@ -293,12 +333,22 @@ export default function MeetsClient() {
     hasAudioPermission: false,
     hasVideoPermission: false,
   });
+  const [videoQuality, setVideoQuality] = useState<VideoQuality>("standard");
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatInput, setChatInput] = useState("");
+
+  // Admin state
+  const isAdmin = useMemo(() => {
+    return (
+      session?.data?.user?.email &&
+      ADMIN_EMAILS.includes(session.data.user.email)
+    );
+  }, [session?.data?.user?.email]);
+  const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
 
   // Refs for WebRTC objects
   const socketRef = useRef<Socket | null>(null);
@@ -478,6 +528,28 @@ export default function MeetsClient() {
           ({ producerId }: { producerId: string }) => {
             console.log("[Meets] Producer closed:", producerId);
             handleProducerClosed(producerId);
+
+            // Check if this was our own producer (victim logic)
+            if (audioProducerRef.current?.id === producerId) {
+              setIsMuted(true);
+              audioProducerRef.current.close();
+              audioProducerRef.current = null;
+            } else if (videoProducerRef.current?.id === producerId) {
+              setIsCameraOff(true);
+              videoProducerRef.current.close();
+              videoProducerRef.current = null;
+              // Also stop local stream track
+              const track = localStream?.getVideoTracks()[0];
+              if (track) {
+                track.stop();
+                track.enabled = false;
+              }
+            } else if (screenProducerRef.current?.id === producerId) {
+              setIsScreenSharing(false);
+              screenProducerRef.current.close();
+              screenProducerRef.current = null;
+              setActiveScreenShareId(null);
+            }
           }
         );
 
@@ -535,6 +607,16 @@ export default function MeetsClient() {
               userId: camUserId,
               cameraOff,
             });
+          }
+        );
+
+        socket.on(
+          "setVideoQuality",
+          async ({ quality }: { quality: VideoQuality }) => {
+            console.log(`[Meets] Setting video quality to: ${quality}`);
+            setVideoQuality(quality);
+            // Trigger the quality update effect/function
+            await updateVideoQualityRef.current(quality);
           }
         );
 
@@ -618,7 +700,22 @@ export default function MeetsClient() {
         kind: info.kind,
         streamType: info.type,
         stream: null,
+        producerId: producerId,
       });
+
+      if (info.kind === "video") {
+        dispatchParticipants({
+          type: "UPDATE_CAMERA_OFF",
+          userId: info.userId,
+          cameraOff: true,
+        });
+      } else if (info.kind === "audio") {
+        dispatchParticipants({
+          type: "UPDATE_MUTED",
+          userId: info.userId,
+          muted: true,
+        });
+      }
 
       if (info.type === "screen") {
         setActiveScreenShareId(null);
@@ -637,11 +734,10 @@ export default function MeetsClient() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
-          video: {
-            width: { ideal: 640, max: 1280 },
-            height: { ideal: 360, max: 720 },
-            frameRate: { ideal: 24, max: 30 },
-          },
+          video:
+            videoQuality === "low"
+              ? LOW_QUALITY_CONSTRAINTS
+              : STANDARD_QUALITY_CONSTRAINTS,
         });
 
         setMediaState({
@@ -905,6 +1001,7 @@ export default function MeetsClient() {
                 kind: response.kind,
                 streamType: producerInfo.type,
                 stream,
+                producerId: producerInfo.producerId,
               });
 
               if (producerInfo.type === "screen") {
@@ -1039,11 +1136,72 @@ export default function MeetsClient() {
   }, [roomId, connectSocket, requestMediaPermissions, joinRoomInternal]);
 
   // ============================================
+  // Video Quality Switching
+  // ============================================
+
+  const updateVideoQualityRef = useRef<
+    (quality: VideoQuality) => Promise<void>
+  >(async () => {});
+
+  const updateVideoQuality = useCallback(
+    async (quality: VideoQuality) => {
+      // Don't update if camera is explicitly off, just update state for next time
+      if (isCameraOff) return;
+      if (!localStream) return;
+
+      try {
+        const constraints =
+          quality === "low"
+            ? LOW_QUALITY_CONSTRAINTS
+            : STANDARD_QUALITY_CONSTRAINTS;
+
+        console.log(
+          `[Meets] Switching to ${quality} quality`,
+          JSON.stringify(constraints)
+        );
+
+        // create new video track
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: constraints,
+        });
+        const newVideoTrack = newStream.getVideoTracks()[0];
+
+        // Replace track in local stream
+        const oldVideoTrack = localStream.getVideoTracks()[0];
+        if (oldVideoTrack) {
+          oldVideoTrack.stop();
+          localStream.removeTrack(oldVideoTrack);
+        }
+        localStream.addTrack(newVideoTrack);
+        setLocalStream(new MediaStream(localStream.getTracks())); // Trigger re-render if needed
+
+        // Replace track in producer
+        const producer = videoProducerRef.current;
+        if (producer) {
+          await producer.replaceTrack({ track: newVideoTrack });
+        }
+
+        // Clean up new stream shell (tracks already moved/used)
+        // actually we used newVideoTrack from newStream, so we don't stop it.
+      } catch (err) {
+        console.error("[Meets] Failed to update video quality:", err);
+      }
+    },
+    [isCameraOff, localStream]
+  );
+
+  // Keep ref up to date for socket listener
+  useEffect(() => {
+    updateVideoQualityRef.current = updateVideoQuality;
+  }, [updateVideoQuality]);
+
+  // ============================================
   // Media Controls
   // ============================================
 
-  const toggleMute = useCallback(() => {
+  const toggleMute = useCallback(async () => {
     const producer = audioProducerRef.current;
+
     if (producer) {
       const newMuted = !isMuted;
       if (newMuted) {
@@ -1058,11 +1216,58 @@ export default function MeetsClient() {
         { producerId: producer.id, paused: newMuted },
         () => {}
       );
+    } else {
+      // Producer doesn't exist, try to create it (unmute)
+      if (isMuted) {
+        try {
+          setIsMuted(false); // Optimistic update
+          const transport = producerTransportRef.current;
+          if (!transport) return;
+
+          // Get new audio track
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          const audioTrack = stream.getAudioTracks()[0];
+
+          if (!audioTrack) throw new Error("No audio track obtained");
+
+          // Update local stream
+          setLocalStream((prev) => {
+            if (prev) {
+              const newStream = new MediaStream(prev.getTracks());
+              // Remove old audio tracks if any
+              newStream.getAudioTracks().forEach((t) => {
+                t.stop();
+                newStream.removeTrack(t);
+              });
+              newStream.addTrack(audioTrack);
+              return newStream;
+            }
+            return new MediaStream([audioTrack]);
+          });
+
+          const audioProducer = await transport.produce({
+            track: audioTrack,
+            appData: { type: "webcam" as ProducerType, paused: false },
+          });
+
+          audioProducerRef.current = audioProducer;
+          audioProducer.on("transportclose", () => {
+            audioProducerRef.current = null;
+          });
+        } catch (err) {
+          console.error("[Meets] Failed to restart audio:", err);
+          setIsMuted(true); // Revert
+          setMeetError(createMeetError(err, "MEDIA_ERROR"));
+        }
+      }
     }
   }, [isMuted]);
 
-  const toggleCamera = useCallback(() => {
+  const toggleCamera = useCallback(async () => {
     const producer = videoProducerRef.current;
+
     if (producer) {
       const newCameraOff = !isCameraOff;
       if (newCameraOff) {
@@ -1077,8 +1282,58 @@ export default function MeetsClient() {
         { producerId: producer.id, paused: newCameraOff },
         () => {}
       );
+    } else {
+      // Producer doesn't exist, try to create it (turn camera on)
+      if (isCameraOff) {
+        try {
+          setIsCameraOff(false); // Optimistic
+          const transport = producerTransportRef.current;
+          if (!transport) return;
+
+          // Get new video track
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video:
+              videoQuality === "low"
+                ? LOW_QUALITY_CONSTRAINTS
+                : STANDARD_QUALITY_CONSTRAINTS,
+          });
+          const videoTrack = stream.getVideoTracks()[0];
+
+          if (!videoTrack) throw new Error("No video track obtained");
+
+          // Update local stream
+          setLocalStream((prev) => {
+            if (prev) {
+              const newStream = new MediaStream(prev.getTracks());
+              // Remove old video tracks
+              newStream.getVideoTracks().forEach((t) => {
+                t.stop();
+                newStream.removeTrack(t);
+              });
+              newStream.addTrack(videoTrack);
+              return newStream;
+            }
+            return new MediaStream([videoTrack]);
+          });
+
+          const videoProducer = await transport.produce({
+            track: videoTrack,
+            encodings: [{ maxBitrate: 500000 }],
+            appData: { type: "webcam" as ProducerType, paused: false },
+          });
+
+          videoProducerRef.current = videoProducer;
+          videoProducer.on("transportclose", () => {
+            videoProducerRef.current = null;
+          });
+        } catch (err) {
+          console.error("[Meets] Failed to restart video:", err);
+          setIsCameraOff(true); // Revert
+          setMeetError(createMeetError(err, "MEDIA_ERROR"));
+        }
+      }
     }
-  }, [isCameraOff]);
+  }, [isCameraOff, videoQuality]);
 
   const toggleScreenShare = useCallback(async () => {
     if (isScreenSharing) {
@@ -1326,6 +1581,9 @@ export default function MeetsClient() {
             onToggleScreenShare={toggleScreenShare}
             onToggleChat={toggleChat}
             onLeave={leaveRoom}
+            isAdmin={isAdmin}
+            isParticipantsOpen={isParticipantsOpen}
+            onToggleParticipants={() => setIsParticipantsOpen((prev) => !prev)}
           />
         )}
 
@@ -1338,6 +1596,17 @@ export default function MeetsClient() {
             onSend={sendChat}
             onClose={toggleChat}
             currentUserId={userId}
+          />
+        )}
+
+        {/* Admin Participants Panel */}
+        {isJoined && isParticipantsOpen && isAdmin && (
+          <ParticipantsPanel
+            participants={participants}
+            currentUserId={userId}
+            onClose={() => setIsParticipantsOpen(false)}
+            socket={socketRef.current}
+            isAdmin={isAdmin}
           />
         )}
       </div>
@@ -1591,6 +1860,9 @@ interface ControlsBarProps {
   onToggleScreenShare: () => void;
   onToggleChat: () => void;
   onLeave: () => void;
+  isAdmin?: boolean | null;
+  isParticipantsOpen?: boolean;
+  onToggleParticipants?: () => void;
 }
 
 function ControlsBar({
@@ -1605,11 +1877,28 @@ function ControlsBar({
   onToggleScreenShare,
   onToggleChat,
   onLeave,
+  isAdmin,
+  isParticipantsOpen,
+  onToggleParticipants,
 }: ControlsBarProps) {
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
 
   return (
     <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-white/10 shrink-0">
+      {isAdmin && (
+        <button
+          onClick={onToggleParticipants}
+          className={`p-3 rounded-full transition-all border ${
+            isParticipantsOpen
+              ? "bg-white text-black border-white"
+              : "bg-transparent text-white border-white/10 hover:bg-white/10"
+          }`}
+          title="Participants"
+        >
+          <Users className="w-5 h-5" />
+        </button>
+      )}
+
       <button
         onClick={onToggleMute}
         className={`p-3 rounded-full transition-all border ${
@@ -1886,6 +2175,153 @@ function ParticipantVideo({
       >
         <span className="font-medium">{displayName}</span>
         {participant.isMuted && <MicOff className="w-3 h-3 text-red-500" />}
+      </div>
+    </div>
+  );
+}
+
+interface ParticipantsPanelProps {
+  participants: Map<string, Participant>;
+  currentUserId: string;
+  onClose: () => void;
+}
+
+function ParticipantsPanel({
+  participants,
+  currentUserId,
+  onClose,
+  socket,
+  isAdmin,
+}: ParticipantsPanelProps & {
+  socket: Socket | null;
+  isAdmin?: boolean | null;
+}) {
+  const participantsList = Array.from(participants.values());
+
+  const handleCloseProducer = (producerId: string) => {
+    if (!socket || !isAdmin) return;
+    socket.emit("closeRemoteProducer", { producerId }, (res: any) => {
+      if (res.error) console.error("Failed to close producer:", res.error);
+    });
+  };
+
+  return (
+    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#111] rounded-lg shadow-2xl flex flex-col border border-white/10 z-10 font-[family-name:var(--font-geist-mono)]">
+      {/* Header */}
+      <div className="flex flex-col border-b border-white/10">
+        <div className="flex items-center justify-between p-3">
+          <h3 className="font-bold text-sm">
+            Participants ({participantsList.length})
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        {isAdmin && (
+          <div className="px-3 pb-3 flex gap-2">
+            <button
+              onClick={() =>
+                socket?.emit("muteAll", (res: any) =>
+                  console.log("Muted all:", res)
+                )
+              }
+              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
+            >
+              <MicOff className="w-3 h-3" />
+              Mute All
+            </button>
+            <button
+              onClick={() =>
+                socket?.emit("closeAllVideo", (res: any) =>
+                  console.log("Stopped all video:", res)
+                )
+              }
+              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
+            >
+              <VideoOff className="w-3 h-3" />
+              Stop Video
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {participantsList.map((p) => {
+          const isMe = p.userId === currentUserId;
+          const displayName = getDisplayName(p.userId);
+
+          return (
+            <div
+              key={p.userId}
+              className={`flex items-center justify-between p-2 rounded-lg border ${
+                isMe
+                  ? "bg-white/5 border-white/20"
+                  : "bg-transparent border-white/5"
+              }`}
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs border border-white/10 shrink-0">
+                  {displayName[0]?.toUpperCase() || "?"}
+                </div>
+                <span className="text-sm truncate">
+                  {displayName} {isMe && "(You)"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {p.screenShareStream && (
+                  <div className="flex items-center gap-1">
+                    <Monitor className="w-3 h-3 text-green-500" />
+                    {isAdmin && !isMe && p.screenShareProducerId && (
+                      <button
+                        onClick={() =>
+                          handleCloseProducer(p.screenShareProducerId!)
+                        }
+                        className="text-red-500 hover:text-red-400"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {p.isCameraOff ? (
+                  <VideoOff className="w-3 h-3 text-red-500" />
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Video className="w-3 h-3 text-green-500" />
+                    {isAdmin && !isMe && p.videoProducerId && (
+                      <button
+                        onClick={() => handleCloseProducer(p.videoProducerId!)}
+                        className="text-red-500 hover:text-red-400"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {p.isMuted ? (
+                  <MicOff className="w-3 h-3 text-red-500" />
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Mic className="w-3 h-3 text-green-500" />
+                    {isAdmin && !isMe && p.audioProducerId && (
+                      <button
+                        onClick={() => handleCloseProducer(p.audioProducerId!)}
+                        className="text-red-500 hover:text-red-400"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

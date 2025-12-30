@@ -7,6 +7,7 @@ import type {
 import { Client } from "./Client.js"; // Needed for types/Client class
 import { Admin } from "./Admin.js";
 import { config } from "../config.js";
+import { VideoQuality } from "../../types.js";
 
 export interface RoomOptions {
   id: string;
@@ -18,6 +19,7 @@ export class Room {
   public readonly router: Router;
   public clients: Map<string, Client> = new Map();
   public currentScreenShareProducerId: string | null = null;
+  public currentQuality: VideoQuality = "standard";
 
   constructor(options: RoomOptions) {
     this.id = options.id;
@@ -196,7 +198,40 @@ export class Room {
   /**
    * Close the room and all clients
    */
+  /**
+   * Determine the target video quality based on participant count
+   */
+  getTargetVideoQuality(): VideoQuality {
+    // Thresholds from config
+    const { lowThreshold, standardThreshold } = config.videoQuality;
+
+    if (this.currentQuality === "standard") {
+      if (this.clients.size >= lowThreshold) {
+        return "low";
+      }
+    } else {
+      // current is 'low'
+      if (this.clients.size <= standardThreshold) {
+        return "standard";
+      }
+    }
+    return this.currentQuality;
+  }
+
+  /**
+   * Update and return the new quality if it has changed
+   */
+  updateVideoQuality(): VideoQuality | null {
+    const target = this.getTargetVideoQuality();
+    if (target !== this.currentQuality) {
+      this.currentQuality = target;
+      return target;
+    }
+    return null;
+  }
+
   close(): void {
+    this.stopCleanupTimer();
     // Close all clients
     for (const client of this.clients.values()) {
       client.close();
@@ -205,6 +240,33 @@ export class Room {
 
     // Close the router
     this.router.close();
+  }
+
+  // ============================================
+  // Cleanup Timer (Admin Timeout)
+  // ============================================
+  public cleanupTimer: NodeJS.Timeout | null = null;
+
+  startCleanupTimer(callback: () => void) {
+    if (this.cleanupTimer) return;
+
+    console.log(
+      `[SFU] Room ${this.id}: Cleanup timer started (${config.adminCleanupTimeout}ms)`
+    );
+    this.cleanupTimer = setTimeout(() => {
+      console.log(
+        `[SFU] Room ${this.id}: Cleanup timer expired. Dissolving room.`
+      );
+      callback();
+    }, config.adminCleanupTimeout);
+  }
+
+  stopCleanupTimer() {
+    if (this.cleanupTimer) {
+      console.log(`[SFU] Room ${this.id}: Cleanup timer stopped.`);
+      clearTimeout(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
   }
 }
 

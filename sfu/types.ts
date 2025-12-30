@@ -86,6 +86,12 @@ export interface ToggleMediaData {
   paused: boolean;
 }
 
+export type VideoQuality = "low" | "standard";
+
+export interface SetVideoQualityNotification {
+  quality: VideoQuality;
+}
+
 export interface NewProducerNotification {
   producerId: string;
   producerUserId: string;

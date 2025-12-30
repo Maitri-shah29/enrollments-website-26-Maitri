@@ -162,6 +162,14 @@ io.on("connection", (socket: Socket) => {
           }
           // Create room if admin
           room = await getOrCreateRoom(roomId);
+        } else {
+          // Room exists, check if cleanup timer is active
+          if (isAdmin && room.cleanupTimer) {
+            console.log(
+              `[SFU] Admin returning to room ${roomId}, cleanup cancelled.`
+            );
+            room.stopCleanupTimer();
+          }
         }
         currentRoom = room;
 
@@ -179,6 +187,16 @@ io.on("connection", (socket: Socket) => {
 
         // Notify others
         socket.to(roomId).emit("userJoined", { userId });
+
+        // Check for video quality update
+        const newQuality = currentRoom.updateVideoQuality();
+        if (newQuality) {
+          // Quality changed (e.g. threshold crossed) -> Notify EVERYONE
+          io.to(roomId).emit("setVideoQuality", { quality: newQuality });
+        } else if (currentRoom.currentQuality === "low") {
+          // No change, but room is already Low -> Notify NEW user
+          socket.emit("setVideoQuality", { quality: "low" });
+        }
 
         // Get existing producers for the new client to consume
         const existingProducers = currentRoom.getAllProducers(userId);
@@ -219,6 +237,51 @@ io.on("connection", (socket: Socket) => {
               }
             }
             cb({ error: "Producer not found" });
+          });
+
+          // Bulk Actions
+          socket.on("muteAll", (cb) => {
+            if (!currentRoom) return;
+            let count = 0;
+
+            for (const client of currentRoom.clients.values()) {
+              // Skip admins (including self)
+              if (client instanceof Admin) continue;
+
+              const audioProducer = client.getProducer("audio");
+              if (audioProducer) {
+                if (client.removeProducerById(audioProducer.id)) {
+                  socket.to(currentRoom.id).emit("producerClosed", {
+                    producerId: audioProducer.id,
+                    producerUserId: client.id,
+                  });
+                  count++;
+                }
+              }
+            }
+            cb({ success: true, count });
+          });
+
+          socket.on("closeAllVideo", (cb) => {
+            if (!currentRoom) return;
+            let count = 0;
+
+            for (const client of currentRoom.clients.values()) {
+              // Skip admins (including self)
+              if (client instanceof Admin) continue;
+
+              const videoProducer = client.getProducer("video");
+              if (videoProducer) {
+                if (client.removeProducerById(videoProducer.id)) {
+                  socket.to(currentRoom.id).emit("producerClosed", {
+                    producerId: videoProducer.id,
+                    producerUserId: client.id,
+                  });
+                  count++;
+                }
+              }
+            }
+            cb({ success: true, count });
           });
         }
 
@@ -748,14 +811,26 @@ io.on("connection", (socket: Socket) => {
       // If Admin left, check if any other admins remain
       if (wasAdmin) {
         if (!currentRoom.hasActiveAdmin()) {
-          console.log(`[SFU] Last admin left room ${roomId}, dissolving...`);
-          for (const client of currentRoom.clients.values()) {
-            client.socket.emit("roomClosed", {
-              reason: "Last admin left the meeting",
-            });
-            client.socket.disconnect(true);
-          }
-          cleanupRoom(roomId);
+          console.log(
+            `[SFU] Last admin left room ${roomId}. Scheduling cleanup...`
+          );
+          currentRoom.startCleanupTimer(() => {
+            if (rooms.has(roomId)) {
+              const r = rooms.get(roomId);
+              if (r) {
+                console.log(
+                  `[SFU] Cleanup executed for room ${roomId}. Dissolving...`
+                );
+                for (const client of r.clients.values()) {
+                  client.socket.emit("roomClosed", {
+                    reason: "Admin did not return. Room closed.",
+                  });
+                  client.socket.disconnect(true);
+                }
+                cleanupRoom(roomId);
+              }
+            }
+          });
         } else {
           // Admin left but others remain
           console.log(
@@ -770,6 +845,18 @@ io.on("connection", (socket: Socket) => {
       }
 
       console.log(`[SFU] User ${userId} left room ${roomId}`);
+
+      // Check for video quality update (e.g. dropped below threshold)
+      if (rooms.has(roomId)) {
+        // Room might have been cleaned up if empty, check presence
+        const room = rooms.get(roomId);
+        if (room) {
+          const newQuality = room.updateVideoQuality();
+          if (newQuality) {
+            socket.to(roomId).emit("setVideoQuality", { quality: newQuality });
+          }
+        }
+      }
     }
 
     currentRoom = null;

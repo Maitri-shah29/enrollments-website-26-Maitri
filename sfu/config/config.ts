@@ -29,6 +29,15 @@ export const config = {
     logLevel: "warn" as WorkerLogLevel,
     logTags: ["info", "ice", "dtls", "rtp", "srtp", "rtcp"] as WorkerLogTag[],
   },
+  videoQuality: {
+    // Participants count to trigger Low Quality
+    lowThreshold: Number(process.env.VIDEO_QUALITY_LOW_THRESHOLD) || 10,
+    // Participants count to return to Standard Quality (Hysteresis)
+    standardThreshold:
+      Number(process.env.VIDEO_QUALITY_STANDARD_THRESHOLD) || 8,
+  },
+  // Grace period before dissolving room after last admin leaves (in ms)
+  adminCleanupTimeout: Number(process.env.ADMIN_CLEANUP_TIMEOUT) || 120000,
   routerMediaCodecs: [
     {
       kind: "audio",
