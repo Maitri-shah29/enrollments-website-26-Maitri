@@ -364,7 +364,7 @@ const Landing: React.FC<{
       // showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
       showAbout: url === "about",
-      showMeets: url === "meets" || "conclave",
+      showMeets: url === "meets",
 
       history: [
         {

@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { getSfuToken } from "../actions/sfu-token";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
-import { Users } from "lucide-react";
+import { Users, UserMinus } from "lucide-react";
 
 // ============================================
 // Configuration
@@ -628,6 +628,16 @@ export default function MeetsClient() {
           if (!isChatOpen) {
             setUnreadCount((prev) => prev + 1);
           }
+        });
+
+        // Kicked event
+        socket.on("kicked", () => {
+          cleanup();
+          setMeetError({
+            code: "UNKNOWN",
+            message: "You have been kicked from the meeting.",
+            recoverable: false,
+          });
         });
 
         socketRef.current = socket;
@@ -2263,7 +2273,7 @@ function ParticipantsPanel({
                   : "bg-transparent border-white/5"
               }`}
             >
-              <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs border border-white/10 shrink-0">
                   {displayName[0]?.toUpperCase() || "?"}
                 </div>
@@ -2319,6 +2329,17 @@ function ParticipantsPanel({
                   </div>
                 )}
               </div>
+              {isAdmin && !isMe && (
+                <button
+                  onClick={() =>
+                    socket?.emit("kickUser", { userId: p.userId }, () => {})
+                  }
+                  className="ml-2 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
+                  title="Kick user"
+                >
+                  <UserMinus className="w-4 h-4" />
+                </button>
+              )}
             </div>
           );
         })}
