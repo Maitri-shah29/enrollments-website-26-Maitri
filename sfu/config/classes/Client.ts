@@ -159,12 +159,22 @@ export class Client {
     producerId: string;
     kind: MediaKind;
     type: ProducerType;
+    paused: boolean;
   }[] {
-    const infos: { producerId: string; kind: MediaKind; type: ProducerType }[] =
-      [];
+    const infos: {
+      producerId: string;
+      kind: MediaKind;
+      type: ProducerType;
+      paused: boolean;
+    }[] = [];
     for (const [key, producer] of this.producers) {
       const [kind, type] = key.split("-") as [MediaKind, ProducerType];
-      infos.push({ producerId: producer.id, kind, type });
+      infos.push({
+        producerId: producer.id,
+        kind,
+        type,
+        paused: producer.paused,
+      });
     }
     return infos;
   }

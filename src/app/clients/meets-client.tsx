@@ -77,6 +77,7 @@ interface ProducerInfo {
   producerUserId: string;
   kind: "audio" | "video";
   type: ProducerType;
+  paused?: boolean;
 }
 
 /** Socket response types */
@@ -276,8 +277,8 @@ export default function MeetsClient() {
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
   const [roomId, setRoomId] = useState("default-room");
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
     null
@@ -693,88 +694,6 @@ export default function MeetsClient() {
   // Room Join Flow
   // ============================================
 
-  const joinRoom = useCallback(async () => {
-    if (abortControllerRef.current?.signal.aborted) return;
-
-    setMeetError(null);
-    setConnectionState("connecting");
-
-    try {
-      // Get media first
-      const stream = await requestMediaPermissions();
-      if (!stream) {
-        setConnectionState("error");
-        return;
-      }
-      setLocalStream(stream);
-
-      // Connect socket
-      const socket = await connectSocket();
-
-      // Join room
-      await joinRoomInternal(roomId, stream);
-    } catch (err) {
-      console.error("[Meets] Error joining room:", err);
-      setMeetError(createMeetError(err));
-      setConnectionState("error");
-    }
-  }, [roomId, connectSocket, requestMediaPermissions]);
-
-  const joinRoomInternal = useCallback(
-    async (targetRoomId: string, stream: MediaStream) => {
-      const socket = socketRef.current;
-      if (!socket) throw new Error("Socket not connected");
-
-      setConnectionState("joining");
-
-      return new Promise<void>((resolve, reject) => {
-        socket.emit(
-          "joinRoom",
-          { roomId: targetRoomId, userId },
-          async (response: JoinRoomResponse | { error: string }) => {
-            if ("error" in response) {
-              reject(new Error(response.error));
-              return;
-            }
-
-            try {
-              console.log(
-                "[Meets] Joined room, existing producers:",
-                response.existingProducers
-              );
-              currentRoomIdRef.current = targetRoomId;
-
-              // Create mediasoup device
-              const device = new Device();
-              await device.load({
-                routerRtpCapabilities: response.rtpCapabilities,
-              });
-              deviceRef.current = device;
-
-              // Create transports
-              await createProducerTransport(socket, device);
-              await createConsumerTransport(socket, device);
-
-              // Start producing
-              await produce(stream);
-
-              // Consume existing producers
-              for (const producer of response.existingProducers) {
-                await consumeProducer(producer);
-              }
-
-              setConnectionState("joined");
-              resolve();
-            } catch (err) {
-              reject(err);
-            }
-          }
-        );
-      });
-    },
-    [userId]
-  );
-
   // ============================================
   // Transport Creation
   // ============================================
@@ -878,47 +797,60 @@ export default function MeetsClient() {
   // Producing (Sending Media)
   // ============================================
 
-  const produce = useCallback(async (stream: MediaStream): Promise<void> => {
-    const transport = producerTransportRef.current;
-    if (!transport) return;
+  const produce = useCallback(
+    async (stream: MediaStream): Promise<void> => {
+      const transport = producerTransportRef.current;
+      if (!transport) return;
 
-    // Produce audio
-    const audioTrack = stream.getAudioTracks()[0];
-    if (audioTrack) {
-      try {
-        const audioProducer = await transport.produce({
-          track: audioTrack,
-          appData: { type: "webcam" as ProducerType },
-        });
-        audioProducerRef.current = audioProducer;
+      // Produce audio
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        try {
+          const audioProducer = await transport.produce({
+            track: audioTrack,
+            appData: { type: "webcam" as ProducerType, paused: isMuted },
+          });
 
-        audioProducer.on("transportclose", () => {
-          audioProducerRef.current = null;
-        });
-      } catch (err) {
-        console.error("[Meets] Failed to produce audio:", err);
+          if (isMuted) {
+            audioProducer.pause();
+          }
+
+          audioProducerRef.current = audioProducer;
+
+          audioProducer.on("transportclose", () => {
+            audioProducerRef.current = null;
+          });
+        } catch (err) {
+          console.error("[Meets] Failed to produce audio:", err);
+        }
       }
-    }
 
-    // Produce video
-    const videoTrack = stream.getVideoTracks()[0];
-    if (videoTrack) {
-      try {
-        const videoProducer = await transport.produce({
-          track: videoTrack,
-          encodings: [{ maxBitrate: 500000 }],
-          appData: { type: "webcam" as ProducerType },
-        });
-        videoProducerRef.current = videoProducer;
+      // Produce video
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        try {
+          const videoProducer = await transport.produce({
+            track: videoTrack,
+            encodings: [{ maxBitrate: 500000 }],
+            appData: { type: "webcam" as ProducerType, paused: isCameraOff },
+          });
 
-        videoProducer.on("transportclose", () => {
-          videoProducerRef.current = null;
-        });
-      } catch (err) {
-        console.error("[Meets] Failed to produce video:", err);
+          if (isCameraOff) {
+            videoProducer.pause();
+          }
+
+          videoProducerRef.current = videoProducer;
+
+          videoProducer.on("transportclose", () => {
+            videoProducerRef.current = null;
+          });
+        } catch (err) {
+          console.error("[Meets] Failed to produce video:", err);
+        }
       }
-    }
-  }, []);
+    },
+    [isMuted, isCameraOff]
+  );
 
   // ============================================
   // Consuming (Receiving Media)
@@ -979,6 +911,23 @@ export default function MeetsClient() {
                 setActiveScreenShareId(producerInfo.producerId);
               }
 
+              // Handle initial paused state
+              if (producerInfo.paused) {
+                if (response.kind === "audio") {
+                  dispatchParticipants({
+                    type: "UPDATE_MUTED",
+                    userId: producerInfo.producerUserId,
+                    muted: true,
+                  });
+                } else if (response.kind === "video") {
+                  dispatchParticipants({
+                    type: "UPDATE_CAMERA_OFF",
+                    userId: producerInfo.producerUserId,
+                    cameraOff: true,
+                  });
+                }
+              }
+
               // Resume consumer
               socket.emit(
                 "resumeConsumer",
@@ -996,6 +945,98 @@ export default function MeetsClient() {
     },
     []
   );
+
+  // ============================================
+  // Room Join Flow
+  // ============================================
+
+  const joinRoomInternal = useCallback(
+    async (targetRoomId: string, stream: MediaStream) => {
+      const socket = socketRef.current;
+      if (!socket) throw new Error("Socket not connected");
+
+      setConnectionState("joining");
+
+      return new Promise<void>((resolve, reject) => {
+        socket.emit(
+          "joinRoom",
+          { roomId: targetRoomId, userId },
+          async (response: JoinRoomResponse | { error: string }) => {
+            if ("error" in response) {
+              reject(new Error(response.error));
+              return;
+            }
+
+            try {
+              console.log(
+                "[Meets] Joined room, existing producers:",
+                response.existingProducers
+              );
+              currentRoomIdRef.current = targetRoomId;
+
+              // Create mediasoup device
+              const device = new Device();
+              await device.load({
+                routerRtpCapabilities: response.rtpCapabilities,
+              });
+              deviceRef.current = device;
+
+              // Create transports
+              await createProducerTransport(socket, device);
+              await createConsumerTransport(socket, device);
+
+              // Start producing
+              await produce(stream);
+
+              // Consume existing producers
+              for (const producer of response.existingProducers) {
+                await consumeProducer(producer);
+              }
+
+              setConnectionState("joined");
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          }
+        );
+      });
+    },
+    [
+      userId,
+      produce,
+      createProducerTransport,
+      createConsumerTransport,
+      consumeProducer,
+    ]
+  );
+
+  const joinRoom = useCallback(async () => {
+    if (abortControllerRef.current?.signal.aborted) return;
+
+    setMeetError(null);
+    setConnectionState("connecting");
+
+    try {
+      // Get media first
+      const stream = await requestMediaPermissions();
+      if (!stream) {
+        setConnectionState("error");
+        return;
+      }
+      setLocalStream(stream);
+
+      // Connect socket
+      const socket = await connectSocket();
+
+      // Join room
+      await joinRoomInternal(roomId, stream);
+    } catch (err) {
+      console.error("[Meets] Error joining room:", err);
+      setMeetError(createMeetError(err));
+      setConnectionState("error");
+    }
+  }, [roomId, connectSocket, requestMediaPermissions, joinRoomInternal]);
 
   // ============================================
   // Media Controls
@@ -1208,7 +1249,7 @@ export default function MeetsClient() {
         <div className="flex items-center gap-3">
           {isScreenSharing && (
             <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse">
-              REC
+              SCREEN IS BEING SHARED
             </span>
           )}
           {connectionState === "reconnecting" && (

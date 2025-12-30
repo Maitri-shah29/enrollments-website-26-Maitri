@@ -53,8 +53,8 @@ export interface ConnectTransportData {
 export interface ProduceData {
   transportId: string;
   kind: MediaKind;
-  rtpParameters: RtpParameters;
-  appData: { type: "webcam" | "screen" };
+  rtpParameters: RtpParameters; // Using RtpParameters from mediasoup/types
+  appData: { type: "webcam" | "screen"; paused?: boolean };
 }
 
 export interface ProduceResponse {
@@ -78,6 +78,7 @@ export interface ProducerInfo {
   producerUserId: string;
   kind: MediaKind;
   type: "webcam" | "screen";
+  paused?: boolean;
 }
 
 export interface ToggleMediaData {

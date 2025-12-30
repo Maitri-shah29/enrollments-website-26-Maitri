@@ -125,12 +125,14 @@ export class Room {
     producerUserId: string;
     kind: MediaKind;
     type: "webcam" | "screen";
+    paused: boolean;
   }[] {
     const producers: {
       producerId: string;
       producerUserId: string;
       kind: MediaKind;
       type: "webcam" | "screen";
+      paused: boolean;
     }[] = [];
 
     for (const [clientId, client] of this.clients) {
@@ -144,6 +146,7 @@ export class Room {
           producerUserId: clientId,
           kind: info.kind,
           type: info.type,
+          paused: info.paused,
         });
       }
     }

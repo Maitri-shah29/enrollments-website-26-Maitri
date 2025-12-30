@@ -381,6 +381,7 @@ io.on("connection", (socket: Socket) => {
 
         const { kind, rtpParameters, appData } = data;
         const type = (appData.type as "webcam" | "screen") || "webcam";
+        const paused = !!appData.paused;
 
         // Check if screen sharing is allowed
         if (type === "screen") {
@@ -395,6 +396,7 @@ io.on("connection", (socket: Socket) => {
           kind,
           rtpParameters,
           appData: { type },
+          paused,
         });
 
         if (type === "screen") {
@@ -409,6 +411,7 @@ io.on("connection", (socket: Socket) => {
           producerUserId: currentClient.id,
           kind,
           type,
+          paused: producer.paused,
         });
 
         producer.on("transportclose", () => {
