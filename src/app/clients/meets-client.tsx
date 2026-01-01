@@ -38,6 +38,7 @@ import type {
   GetRoomsResponse,
   RoomInfo,
   RedirectData,
+  WaitingClient,
 } from "../../../sfu/types";
 
 // ============================================
@@ -61,7 +62,8 @@ type ConnectionState =
   | "joining"
   | "joined"
   | "reconnecting"
-  | "error";
+  | "error"
+  | "waiting";
 
 /** Producer types */
 type ProducerType = "webcam" | "screen";
@@ -345,6 +347,7 @@ export default function MeetsClient() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatInput, setChatInput] = useState("");
+  const [waitingClients, setWaitingClients] = useState<WaitingClient[]>([]);
 
   // Admin state
   const isAdmin = useMemo(() => {
@@ -672,6 +675,29 @@ export default function MeetsClient() {
           );
           handleRedirectRef.current(newRoomId);
         });
+
+        // Waiting Room Events
+        socket.on("youAreWaiting", () => {
+          console.log("[Meets] Placed in waiting room.");
+          setConnectionState("waiting");
+        });
+
+        socket.on("clientWaiting", (client: WaitingClient) => {
+          console.log("[Meets] New client waiting:", client.displayName);
+          setWaitingClients((prev) => {
+            if (prev.find((c) => c.userId === client.userId)) return prev;
+            return [...prev, client];
+          });
+          // Optional: Show toast notification?
+        });
+
+        socket.on(
+          "admitQueueUpdate",
+          ({ queue }: { queue: WaitingClient[] }) => {
+            console.log("[Meets] Waiting queue updated:", queue.length);
+            setWaitingClients(queue);
+          }
+        );
 
         socketRef.current = socket;
       } catch (err) {
@@ -1569,6 +1595,19 @@ export default function MeetsClient() {
     connectionState === "joining" ||
     connectionState === "reconnecting";
 
+  if (connectionState === "waiting") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-900 text-white p-4 font-[family-name:var(--font-geist-mono)]">
+        <Loader2 className="w-12 h-12 text-yellow-500 animate-spin mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Waiting for Host</h2>
+        <p className="text-neutral-400">
+          You have been placed in the waiting room. The host will admit you
+          shortly.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
@@ -1680,6 +1719,7 @@ export default function MeetsClient() {
             onClose={() => setIsParticipantsOpen(false)}
             socket={socketRef.current}
             isAdmin={isAdmin}
+            waitingClients={waitingClients}
           />
         )}
       </div>
@@ -1700,6 +1740,7 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
     joined: "bg-green-500",
     reconnecting: "bg-yellow-500 animate-pulse",
     error: "bg-red-500",
+    waiting: "bg-yellow-500",
   };
 
   const labels: Record<ConnectionState, string> = {
@@ -1710,6 +1751,7 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
     joined: "In Meeting",
     reconnecting: "Reconnecting...",
     error: "Error",
+    waiting: "Waiting for Host...",
   };
 
   return (
@@ -2265,9 +2307,11 @@ function ParticipantsPanel({
   onClose,
   socket,
   isAdmin,
+  waitingClients = [],
 }: ParticipantsPanelProps & {
   socket: Socket | null;
   isAdmin?: boolean | null;
+  waitingClients?: WaitingClient[];
 }) {
   const participantsList = Array.from(participants.values());
   const [showRedirectModal, setShowRedirectModal] = useState(false);
@@ -2351,6 +2395,58 @@ function ParticipantsPanel({
           </div>
         )}
       </div>
+
+      {/* Waiting Room Section */}
+      {isAdmin && waitingClients && waitingClients.length > 0 && (
+        <div className="border-b border-white/10">
+          <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider my-2 px-3 flex items-center justify-between">
+            <span>Waiting Room ({waitingClients.length})</span>
+          </h3>
+          <div className="space-y-1 px-3 pb-3">
+            {waitingClients.map((client) => (
+              <div
+                key={client.userId}
+                className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center text-sm font-medium">
+                    {client.displayName[0]?.toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium truncate max-w-[100px]">
+                    {client.displayName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() =>
+                      socket?.emit("admitClient", {
+                        userId: client.userId,
+                        roomId: "default-room", // TODO: Pass real room ID if available or rely on server context
+                      })
+                    }
+                    className="p-1.5 rounded-md hover:bg-green-500/20 text-green-500 transition-colors"
+                    title="Admit"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() =>
+                      socket?.emit("rejectClient", {
+                        userId: client.userId,
+                        roomId: "default-room",
+                      })
+                    }
+                    className="p-1.5 rounded-md hover:bg-red-500/20 text-red-500 transition-colors"
+                    title="Reject"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
