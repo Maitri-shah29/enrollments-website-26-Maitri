@@ -33,7 +33,12 @@ import {
 } from "lucide-react";
 import { getSfuToken } from "../actions/sfu-token";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
-import { Users, UserMinus } from "lucide-react";
+import { Users, UserMinus, ArrowRight, List } from "lucide-react";
+import type {
+  GetRoomsResponse,
+  RoomInfo,
+  RedirectData,
+} from "../../../sfu/types";
 
 // ============================================
 // Configuration
@@ -364,6 +369,10 @@ export default function MeetsClient() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const currentRoomIdRef = useRef<string | null>(null);
+  const handleRedirectRef = useRef<(roomId: string) => Promise<void>>(
+    async () => {}
+  );
+  const isRedirectingRef = useRef(false);
 
   // Generate stable session ID per component instance
   const sessionIdRef = useRef<string>(generateSessionId());
@@ -391,8 +400,8 @@ export default function MeetsClient() {
     };
   }, []);
 
-  const cleanup = useCallback(() => {
-    console.log("[Meets] Running cleanup...");
+  const cleanupRoomResources = useCallback(() => {
+    console.log("[Meets] Cleaning up room resources...");
 
     // Close all consumers
     consumersRef.current.forEach((consumer) => {
@@ -427,6 +436,26 @@ export default function MeetsClient() {
     producerTransportRef.current = null;
     consumerTransportRef.current = null;
 
+    // Note: We DO NOT stop local stream tracks here, as we might reuse them for redirect
+
+    // Reset specific room state
+    dispatchParticipants({ type: "CLEAR_ALL" });
+    setIsScreenSharing(false);
+    setActiveScreenShareId(null);
+    // currentRoomIdRef.current = null; // Don't null this yet if redirecting? Actually better to null it.
+    currentRoomIdRef.current = null;
+  }, []);
+
+  const cleanup = useCallback(() => {
+    console.log("[Meets] Running full cleanup...");
+
+    if (isRedirectingRef.current) {
+      console.log("[Meets] Skipping cleanup during redirect");
+      return;
+    }
+
+    cleanupRoomResources();
+
     // Stop local stream tracks
     localStream?.getTracks().forEach((track) => {
       try {
@@ -442,12 +471,8 @@ export default function MeetsClient() {
     // Reset state
     setConnectionState("disconnected");
     setLocalStream(null);
-    dispatchParticipants({ type: "CLEAR_ALL" });
-    setIsScreenSharing(false);
-    setActiveScreenShareId(null);
-    currentRoomIdRef.current = null;
     reconnectAttemptsRef.current = 0;
-  }, [localStream]);
+  }, [localStream, cleanupRoomResources]);
 
   // ============================================
   // Socket Connection with Reconnection
@@ -500,6 +525,7 @@ export default function MeetsClient() {
         });
 
         socket.on("roomClosed", ({ reason }: { reason: string }) => {
+          if (isRedirectingRef.current) return;
           console.log("[Meets] Room closed:", reason);
           setMeetError({
             code: "UNKNOWN", // Or a specific code like 'ROOM_CLOSED'
@@ -526,6 +552,7 @@ export default function MeetsClient() {
         socket.on(
           "producerClosed",
           ({ producerId }: { producerId: string }) => {
+            if (isRedirectingRef.current) return;
             console.log("[Meets] Producer closed:", producerId);
             handleProducerClosed(producerId);
 
@@ -638,6 +665,43 @@ export default function MeetsClient() {
             message: "You have been kicked from the meeting.",
             recoverable: false,
           });
+        });
+
+        // Redirect event
+        socket.on("redirect", async ({ newRoomId }: { newRoomId: string }) => {
+          console.log(`[Meets] Redirecting to ${newRoomId}`);
+          isRedirectingRef.current = true;
+
+          // Update UI state
+          setRoomId(newRoomId);
+
+          // Clean up resources but keep socket and local stream
+          cleanupRoomResources();
+
+          // Re-join
+          // We need to access the LATEST localStream.
+          // Since this is a callback, 'localStream' closure variable might be stale if we didn't add it to dependency list.
+          // But 'connectSocket' has empty dependency list []. State!
+          // Workaround: We will use the state setter to access current stream or just use the one we have?
+          // Actually, 'localStream' in the component scope might be reachable if we rebuild connectSocket...
+          // better to rely on `localStream` state which we will check.
+
+          // Wait, `connectSocket` is memoized with []. `localStream` inside it will be the initial null.
+          // We need `localStream` to produce.
+
+          // Solution: The listener should trigger a state change or an effect.
+          // But we need to call `joinRoomInternal`.
+          // `joinRoomInternal` needs `stream`.
+
+          // Let's emit an event/state change that triggers the join logical flow?
+          // Or simpler: Just get the stream again if needed, or use a ref for localStream.
+
+          // Let's use a workaround:
+          // We will try to get the stream from a Ref if we add one, or just `requestMediaPermissions` again (which is cheap if already granted).
+
+          // Actually, we can just trigger a function that we updating in a Ref (like updateVideoQualityRef).
+
+          handleRedirectRef.current(newRoomId);
         });
 
         socketRef.current = socket;
@@ -1117,6 +1181,41 @@ export default function MeetsClient() {
       consumeProducer,
     ]
   );
+
+  const handleRedirectCallback = useCallback(
+    async (newRoomId: string) => {
+      console.log(`[Meets] Handling redirect to ${newRoomId}`);
+      try {
+        let stream = localStream;
+
+        // Check if stream is active and tracks are live
+        const isStreamEnded =
+          stream && stream.getTracks().some((t) => t.readyState === "ended");
+
+        if (!stream || isStreamEnded) {
+          console.log(
+            "[Meets] Stream is missing or ended, requesting new permissions..."
+          );
+          stream = await requestMediaPermissions();
+        }
+
+        if (stream) {
+          setLocalStream(stream);
+          await joinRoomInternal(newRoomId, stream);
+        }
+      } catch (err) {
+        console.error("Redirect join failed", err);
+        setMeetError(createMeetError(err));
+      } finally {
+        isRedirectingRef.current = false;
+      }
+    },
+    [localStream, joinRoomInternal, requestMediaPermissions]
+  );
+
+  useEffect(() => {
+    handleRedirectRef.current = handleRedirectCallback;
+  }, [handleRedirectCallback]);
 
   const joinRoom = useCallback(async () => {
     if (abortControllerRef.current?.signal.aborted) return;
@@ -2207,12 +2306,43 @@ function ParticipantsPanel({
   isAdmin?: boolean | null;
 }) {
   const participantsList = Array.from(participants.values());
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
+  const [selectedUserForRedirect, setSelectedUserForRedirect] = useState<
+    string | null
+  >(null);
 
   const handleCloseProducer = (producerId: string) => {
     if (!socket || !isAdmin) return;
     socket.emit("closeRemoteProducer", { producerId }, (res: any) => {
       if (res.error) console.error("Failed to close producer:", res.error);
     });
+  };
+
+  const openRedirectModal = (userId: string) => {
+    setSelectedUserForRedirect(userId);
+    socket?.emit("getRooms", (response: GetRoomsResponse) => {
+      setAvailableRooms(response.rooms || []);
+      setShowRedirectModal(true);
+    });
+  };
+
+  const handleRedirect = (roomId: string) => {
+    if (!selectedUserForRedirect || !socket) return;
+
+    socket.emit(
+      "redirectUser",
+      { userId: selectedUserForRedirect, newRoomId: roomId },
+      (res: any) => {
+        if (res.error) {
+          console.error("Redirect failed:", res.error);
+        } else {
+          console.log("Redirect success");
+          setShowRedirectModal(false);
+          setSelectedUserForRedirect(null);
+        }
+      }
+    );
   };
 
   return (
@@ -2298,6 +2428,7 @@ function ParticipantsPanel({
                     )}
                   </div>
                 )}
+
                 {p.isCameraOff ? (
                   <VideoOff className="w-3 h-3 text-red-500" />
                 ) : (
@@ -2329,21 +2460,70 @@ function ParticipantsPanel({
                   </div>
                 )}
               </div>
+
               {isAdmin && !isMe && (
-                <button
-                  onClick={() =>
-                    socket?.emit("kickUser", { userId: p.userId }, () => {})
-                  }
-                  className="ml-2 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
-                  title="Kick user"
-                >
-                  <UserMinus className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 ml-2">
+                  <button
+                    onClick={() => openRedirectModal(p.userId)}
+                    className="text-blue-500 hover:text-blue-400 p-1 hover:bg-white/5 rounded transition-colors"
+                    title="Redirect user"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() =>
+                      socket?.emit("kickUser", { userId: p.userId }, () => {})
+                    }
+                    className="text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
+                    title="Kick user"
+                  >
+                    <UserMinus className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* Redirect Modal Overlay */}
+      {showRedirectModal && (
+        <div className="absolute inset-0 bg-black/95 z-20 flex flex-col p-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+            <h4 className="font-bold text-sm">Select Room</h4>
+            <button
+              onClick={() => setShowRedirectModal(false)}
+              className="text-neutral-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {availableRooms.length === 0 ? (
+              <p className="text-sm text-neutral-500 text-center mt-4">
+                No other active rooms
+              </p>
+            ) : (
+              availableRooms.map((room) => (
+                <button
+                  key={room.id}
+                  onClick={() => handleRedirect(room.id)}
+                  className="w-full text-left p-3 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex justify-between items-center"
+                >
+                  <span className="font-medium text-sm truncate">
+                    {room.id}
+                  </span>
+                  <span className="text-xs text-neutral-400 flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    {room.userCount}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

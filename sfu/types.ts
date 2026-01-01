@@ -14,6 +14,20 @@ import type { Socket } from "socket.io";
 // Client & Room Types
 // ============================================
 
+export interface RoomInfo {
+  id: string;
+  userCount: number;
+}
+
+export interface GetRoomsResponse {
+  rooms: RoomInfo[];
+}
+
+export interface RedirectData {
+  userId: string;
+  newRoomId: string;
+}
+
 export interface ClientOptions {
   id: string;
   socket: Socket;

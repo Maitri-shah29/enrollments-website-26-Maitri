@@ -26,6 +26,8 @@ import type {
   ProducerInfo,
   SendChatData,
   ChatMessage,
+  GetRoomsResponse,
+  RedirectData,
 } from "./types.js";
 
 // ============================================
@@ -163,7 +165,17 @@ io.on("connection", (socket: Socket) => {
           // Create room if admin or if allowed by config
           room = await getOrCreateRoom(roomId);
         } else {
-          // Room exists, check if cleanup timer is active
+          // Room exists
+
+          // Check if user is already in THIS room
+          if (room.getClient(userId)) {
+            // If already in this room, effectively a reconnect/refresh.
+            // We technically don't need to do anything special here as the client object will be replaced.
+            // But let's log it.
+            console.log(`[SFU] User ${userId} re-joining room ${roomId}`);
+          }
+
+          // Check if cleanup timer is active
           if (isAdmin && room.cleanupTimer) {
             console.log(
               `[SFU] Admin returning to room ${roomId}, cleanup cancelled.`
@@ -171,6 +183,34 @@ io.on("connection", (socket: Socket) => {
             room.stopCleanupTimer();
           }
         }
+
+        // Handle Room Switching:
+        // If the socket was already in a room (different from the new one), allow them to leave cleanly
+        // WITHOUT disconnecting the socket.
+        if (currentRoom && currentRoom.id !== roomId && currentClient) {
+          console.log(
+            `[SFU] User ${userId} switching from ${currentRoom.id} to ${roomId}`
+          );
+
+          // Remove from old room
+          currentRoom.removeClient(currentClient.id);
+
+          // Notify old room
+          socket
+            .to(currentRoom.id)
+            .emit("userLeft", { userId: currentClient.id });
+
+          // Leave socket room
+          socket.leave(currentRoom.id);
+
+          // Check if old room is empty and needs cleanup
+          cleanupRoom(currentRoom.id);
+
+          // Reset references
+          currentRoom = null;
+          currentClient = null;
+        }
+
         currentRoom = room;
 
         // Create client based on role
@@ -283,6 +323,32 @@ io.on("connection", (socket: Socket) => {
             }
             cb({ success: true, count });
           });
+
+          socket.on("getRooms", (cb) => {
+            const roomList = Array.from(rooms.values()).map((r) => ({
+              id: r.id,
+              userCount: r.clientCount,
+            }));
+            cb({ rooms: roomList });
+          });
+
+          socket.on(
+            "redirectUser",
+            ({ userId: targetId, newRoomId }: RedirectData, cb) => {
+              if (!currentRoom) return;
+
+              const targetClient = currentRoom.getClient(targetId);
+              if (targetClient) {
+                console.log(
+                  `[SFU] Admin redirecting user ${targetId} to ${newRoomId}`
+                );
+                targetClient.socket.emit("redirect", { newRoomId });
+                cb({ success: true });
+              } else {
+                cb({ error: "User not found" });
+              }
+            }
+          );
         }
 
         callback({
