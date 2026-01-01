@@ -39,7 +39,7 @@ import type {
   RoomInfo,
   RedirectData,
   WaitingClient,
-} from "../../../sfu/types";
+} from "../../lib/sfu-types";
 
 // ============================================
 // Configuration
