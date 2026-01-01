@@ -372,7 +372,8 @@ export default function MeetsClient() {
   const handleRedirectRef = useRef<(roomId: string) => Promise<void>>(
     async () => {}
   );
-  const isRedirectingRef = useRef(false);
+  // Ref to trigger auto-join after redirect updates the roomId
+  const shouldAutoJoinRef = useRef(false);
 
   // Generate stable session ID per component instance
   const sessionIdRef = useRef<string>(generateSessionId());
@@ -449,10 +450,9 @@ export default function MeetsClient() {
   const cleanup = useCallback(() => {
     console.log("[Meets] Running full cleanup...");
 
-    if (isRedirectingRef.current) {
-      console.log("[Meets] Skipping cleanup during redirect");
-      return;
-    }
+    // Explicitly stop any cleanup guard logic - we WANT full cleanup now.
+
+    cleanupRoomResources();
 
     cleanupRoomResources();
 
@@ -525,7 +525,6 @@ export default function MeetsClient() {
         });
 
         socket.on("roomClosed", ({ reason }: { reason: string }) => {
-          if (isRedirectingRef.current) return;
           console.log("[Meets] Room closed:", reason);
           setMeetError({
             code: "UNKNOWN", // Or a specific code like 'ROOM_CLOSED'
@@ -552,7 +551,6 @@ export default function MeetsClient() {
         socket.on(
           "producerClosed",
           ({ producerId }: { producerId: string }) => {
-            if (isRedirectingRef.current) return;
             console.log("[Meets] Producer closed:", producerId);
             handleProducerClosed(producerId);
 
@@ -669,38 +667,9 @@ export default function MeetsClient() {
 
         // Redirect event
         socket.on("redirect", async ({ newRoomId }: { newRoomId: string }) => {
-          console.log(`[Meets] Redirecting to ${newRoomId}`);
-          isRedirectingRef.current = true;
-
-          // Update UI state
-          setRoomId(newRoomId);
-
-          // Clean up resources but keep socket and local stream
-          cleanupRoomResources();
-
-          // Re-join
-          // We need to access the LATEST localStream.
-          // Since this is a callback, 'localStream' closure variable might be stale if we didn't add it to dependency list.
-          // But 'connectSocket' has empty dependency list []. State!
-          // Workaround: We will use the state setter to access current stream or just use the one we have?
-          // Actually, 'localStream' in the component scope might be reachable if we rebuild connectSocket...
-          // better to rely on `localStream` state which we will check.
-
-          // Wait, `connectSocket` is memoized with []. `localStream` inside it will be the initial null.
-          // We need `localStream` to produce.
-
-          // Solution: The listener should trigger a state change or an effect.
-          // But we need to call `joinRoomInternal`.
-          // `joinRoomInternal` needs `stream`.
-
-          // Let's emit an event/state change that triggers the join logical flow?
-          // Or simpler: Just get the stream again if needed, or use a ref for localStream.
-
-          // Let's use a workaround:
-          // We will try to get the stream from a Ref if we add one, or just `requestMediaPermissions` again (which is cheap if already granted).
-
-          // Actually, we can just trigger a function that we updating in a Ref (like updateVideoQualityRef).
-
+          console.log(
+            `[Meets] Redirect received. Initiating full switch to ${newRoomId}`
+          );
           handleRedirectRef.current(newRoomId);
         });
 
@@ -1184,33 +1153,19 @@ export default function MeetsClient() {
 
   const handleRedirectCallback = useCallback(
     async (newRoomId: string) => {
-      console.log(`[Meets] Handling redirect to ${newRoomId}`);
-      try {
-        let stream = localStream;
+      console.log(`[Meets] Executing hard redirect to ${newRoomId}`);
 
-        // Check if stream is active and tracks are live
-        const isStreamEnded =
-          stream && stream.getTracks().some((t) => t.readyState === "ended");
+      // 1. Full cleanup (disconnects socket, stops tracks)
+      cleanup();
 
-        if (!stream || isStreamEnded) {
-          console.log(
-            "[Meets] Stream is missing or ended, requesting new permissions..."
-          );
-          stream = await requestMediaPermissions();
-        }
+      // 2. Set new room ID
+      setRoomId(newRoomId);
 
-        if (stream) {
-          setLocalStream(stream);
-          await joinRoomInternal(newRoomId, stream);
-        }
-      } catch (err) {
-        console.error("Redirect join failed", err);
-        setMeetError(createMeetError(err));
-      } finally {
-        isRedirectingRef.current = false;
-      }
+      // 3. Flag for auto-join
+      // We need to wait for the state (roomId) to update and joinRoom to be recreated.
+      shouldAutoJoinRef.current = true;
     },
-    [localStream, joinRoomInternal, requestMediaPermissions]
+    [cleanup]
   );
 
   useEffect(() => {
@@ -1243,6 +1198,15 @@ export default function MeetsClient() {
       setConnectionState("error");
     }
   }, [roomId, connectSocket, requestMediaPermissions, joinRoomInternal]);
+
+  // Effect to trigger auto-join after redirect updates roomId
+  useEffect(() => {
+    if (shouldAutoJoinRef.current) {
+      console.log("[Meets] Auto-joining new room...");
+      shouldAutoJoinRef.current = false;
+      joinRoom();
+    }
+  }, [joinRoom]);
 
   // ============================================
   // Video Quality Switching
