@@ -1720,6 +1720,7 @@ export default function MeetsClient() {
             socket={socketRef.current}
             isAdmin={isAdmin}
             waitingClients={waitingClients}
+            roomId={roomId}
           />
         )}
       </div>
@@ -2308,10 +2309,12 @@ function ParticipantsPanel({
   socket,
   isAdmin,
   waitingClients = [],
+  roomId,
 }: ParticipantsPanelProps & {
   socket: Socket | null;
   isAdmin?: boolean | null;
   waitingClients?: WaitingClient[];
+  roomId: string;
 }) {
   const participantsList = Array.from(participants.values());
   const [showRedirectModal, setShowRedirectModal] = useState(false);
@@ -2419,10 +2422,14 @@ function ParticipantsPanel({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() =>
-                      socket?.emit("admitClient", {
-                        userId: client.userId,
-                        roomId: "default-room", // TODO: Pass real room ID if available or rely on server context
-                      })
+                      socket?.emit(
+                        "admitClient",
+                        {
+                          userId: client.userId,
+                          roomId: "default-room",
+                        },
+                        () => {}
+                      )
                     }
                     className="p-1.5 rounded-md hover:bg-green-500/20 text-green-500 transition-colors"
                     title="Admit"
@@ -2431,10 +2438,14 @@ function ParticipantsPanel({
                   </button>
                   <button
                     onClick={() =>
-                      socket?.emit("rejectClient", {
-                        userId: client.userId,
-                        roomId: "default-room",
-                      })
+                      socket?.emit(
+                        "rejectClient",
+                        {
+                          userId: client.userId,
+                          roomId,
+                        },
+                        () => {}
+                      )
                     }
                     className="p-1.5 rounded-md hover:bg-red-500/20 text-red-500 transition-colors"
                     title="Reject"

@@ -431,12 +431,12 @@ io.on("connection", (socket: Socket) => {
                   })
                 );
 
-                cb({ success: true });
+                if (cb) cb({ success: true });
               } else {
-                cb({ error: "Client socket not found" });
+                if (cb) cb({ error: "Client socket not found" });
               }
             } else {
-              cb({ error: "Client not in pending list" });
+              if (cb) cb({ error: "Client not in pending list" });
             }
           });
 
