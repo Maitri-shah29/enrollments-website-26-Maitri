@@ -7,7 +7,7 @@ import type {
 import { Client } from "./Client.js"; // Needed for types/Client class
 import { Admin } from "./Admin.js";
 import { config } from "../config.js";
-import { VideoQuality, WaitingClient } from "../../types.js";
+import { VideoQuality } from "../../types.js";
 
 export interface RoomOptions {
   id: string;
@@ -18,7 +18,6 @@ export class Room {
   public readonly id: string;
   public readonly router: Router;
   public clients: Map<string, Client> = new Map();
-  public pendingClients: Map<string, WaitingClient> = new Map();
   public currentScreenShareProducerId: string | null = null;
   public currentQuality: VideoQuality = "standard";
 
@@ -39,27 +38,6 @@ export class Room {
    */
   addClient(client: Client): void {
     this.clients.set(client.id, client);
-  }
-
-  /**
-   * Add a client to the pending list (Waiting Room)
-   */
-  addPendingClient(client: WaitingClient): void {
-    this.pendingClients.set(client.userId, client);
-  }
-
-  /**
-   * Remove a client from the pending list
-   */
-  removePendingClient(clientId: string): boolean {
-    return this.pendingClients.delete(clientId);
-  }
-
-  /**
-   * Get all pending clients
-   */
-  getPendingClients(): WaitingClient[] {
-    return Array.from(this.pendingClients.values());
   }
 
   /**

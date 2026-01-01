@@ -28,9 +28,6 @@ import type {
   ChatMessage,
   GetRoomsResponse,
   RedirectData,
-  WaitingClient,
-  AdmitClientData,
-  RejectClientData,
 } from "./types.js";
 
 // ============================================
@@ -214,32 +211,6 @@ io.on("connection", (socket: Socket) => {
           currentClient = null;
         }
 
-        // Check if waiting room is active (always active for non-admins in this feature)
-        // If NOT admin, add to pending list
-        if (!isAdmin) {
-          const waitingClient: WaitingClient = {
-            userId,
-            displayName: userId.split("#")[0], // Simple display name
-            socketId: socket.id,
-            timestamp: Date.now(),
-          };
-
-          room.addPendingClient(waitingClient);
-
-          // Notify the user they are waiting
-          socket.emit("youAreWaiting", { roomId });
-
-          // Notify all admins in the room
-          room.getAdmins().forEach((admin) => {
-            admin.socket.emit("clientWaiting", waitingClient);
-          });
-
-          console.log(
-            `[SFU] User ${userId} placed in waiting room for ${roomId}`
-          );
-          return; // STOP EXECUTION HERE - Do not proceed to join
-        }
-
         currentRoom = room;
 
         // Create client based on role
@@ -279,10 +250,6 @@ io.on("connection", (socket: Socket) => {
 
         // Register Admin listeners
         if (currentClient instanceof Admin) {
-          // Send current waiting list to the new admin
-          socket.emit("admitQueueUpdate", {
-            queue: currentRoom.getPendingClients(),
-          });
           socket.on(
             "kickUser",
             ({ userId: targetId }: { userId: string }, cb) => {
@@ -383,89 +350,6 @@ io.on("connection", (socket: Socket) => {
               }
             }
           );
-
-          socket.on("admitClient", ({ userId }: AdmitClientData, cb) => {
-            if (!currentRoom) return;
-            const pending = currentRoom
-              .getPendingClients()
-              .find((c) => c.userId === userId);
-
-            if (pending) {
-              currentRoom.removePendingClient(userId);
-              const clientSocket = io.sockets.sockets.get(pending.socketId);
-              if (clientSocket) {
-                // Tell the client they are admitted.
-                // The CLIENT should then re-emit 'joinRoom' but with a flag?
-                // OR we can just finalize the join logic here if we had the context.
-                // Easier: Tell client "you are admitted", client calls "joinRoom" again.
-                // BUT "joinRoom" will check !isAdmin and put them back in queue.
-                // We need a mechanism to bypass queue.
-                // Actually, if we just promote them here, we need to replicate the "join" logic (create Client, add to room, notify).
-
-                // Let's implement Server-Side Promotion.
-                console.log(`[SFU] Promoting ${userId} to active client.`);
-                const newClient = new Client({
-                  id: userId,
-                  socket: clientSocket,
-                });
-                currentRoom.addClient(newClient);
-                clientSocket.join(currentRoom.id);
-
-                // Notify the user - we need to send them the JoinRoomResponse!
-                // But we lost the original callback.
-                // We must use an event 'roomJoined'.
-                const existingProducers = currentRoom.getAllProducers(userId);
-
-                clientSocket.emit("roomJoined", {
-                  rtpCapabilities: currentRoom.rtpCapabilities,
-                  existingProducers,
-                  roomId: currentRoom.id,
-                });
-
-                clientSocket.to(currentRoom.id).emit("userJoined", { userId });
-
-                // Notify admins of queue update
-                currentRoom!.getAdmins().forEach((a) =>
-                  a.socket.emit("admitQueueUpdate", {
-                    queue: currentRoom!.getPendingClients(),
-                  })
-                );
-
-                if (cb) cb({ success: true });
-              } else {
-                if (cb) cb({ error: "Client socket not found" });
-              }
-            } else {
-              if (cb) cb({ error: "Client not in pending list" });
-            }
-          });
-
-          socket.on("rejectClient", ({ userId }: RejectClientData, cb) => {
-            if (!currentRoom) return;
-            const pending = currentRoom
-              .getPendingClients()
-              .find((c) => c.userId === userId);
-            if (pending) {
-              currentRoom.removePendingClient(userId);
-              const clientSocket = io.sockets.sockets.get(pending.socketId);
-              if (clientSocket) {
-                clientSocket.emit("roomClosed", {
-                  reason: "You were denied entry.",
-                }); // Reuse roomClosed or new event
-                clientSocket.disconnect(true);
-              }
-
-              // Notify admins of queue update
-              currentRoom!.getAdmins().forEach((a) =>
-                a.socket.emit("admitQueueUpdate", {
-                  queue: currentRoom!.getPendingClients(),
-                })
-              );
-              cb({ success: true });
-            } else {
-              cb({ error: "Client not found" });
-            }
-          });
         }
 
         callback({

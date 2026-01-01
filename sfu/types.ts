@@ -28,23 +28,6 @@ export interface RedirectData {
   newRoomId: string;
 }
 
-export interface WaitingClient {
-  userId: string; // "name#sessionId"
-  displayName: string;
-  socketId: string;
-  timestamp: number;
-}
-
-export interface AdmitClientData {
-  userId: string;
-  roomId: string;
-}
-
-export interface RejectClientData {
-  userId: string;
-  roomId: string;
-}
-
 export interface ClientOptions {
   id: string;
   socket: Socket;
