@@ -377,7 +377,7 @@ export default function Management({
         }
 
         // Status-based rendering
-        if (roundUser?.status === "evaluate" && !isAnnounced) {
+        if (roundUser?.status !== "pending" && !isAnnounced) {
           return (
             <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
               <h2 className="text-3xl font-bold text-gray-800 mb-4">
@@ -386,6 +386,19 @@ export default function Management({
               <p className="text-lg text-gray-700 text-center">
                 Your responses have been submitted and are under evaluation.
                 You'll be notified about the results soon.
+              </p>
+            </div>
+          );
+        }
+
+        if (roundUser?.status === "pending" && isAnnounced) {
+          return (
+            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                This round's results have been announced
+              </h2>
+              <p className="text-lg text-gray-700 text-center">
+                You did not submit any answer for this domain
               </p>
             </div>
           );

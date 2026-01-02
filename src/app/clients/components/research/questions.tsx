@@ -536,7 +536,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     );
   }
   // Status-based rendering
-  if (roundUserStatus === "evaluate" && !isAnnounced) {
+  if (roundUserStatus !== "pending" && !isAnnounced) {
     return (
       <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
         <div className="text-center">
@@ -545,6 +545,21 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
           </h2>
           <p className="text-white text-lg font-monopoly">
             Please wait while we review your submission.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "pending" && isAnnounced) {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
+            This round's results have been announced
+          </h2>
+          <p className="text-white text-lg font-monopoly">
+            You did not submit any answer for this domain
           </p>
         </div>
       </div>

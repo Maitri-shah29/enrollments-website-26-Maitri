@@ -288,7 +288,7 @@ const Questions: React.FC<QuestionsProps> = ({
   const isAnnounced = !!roundUser?.round?.announced;
   const isHidden = !!roundUser?.round?.hidden;
   // Status-based rendering
-  if (roundUserStatus === "evaluate" && !isAnnounced) {
+  if (roundUserStatus !== "pending" && !isAnnounced) {
     return (
       <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
         <div className="text-center">
@@ -297,6 +297,21 @@ const Questions: React.FC<QuestionsProps> = ({
           </h2>
           <p className="text-white text-lg font-coolvetica">
             Please wait while we review your submission.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roundUserStatus === "pending" && isAnnounced) {
+    return (
+      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
+        <div className="text-center">
+          <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
+            This round's results have been announced.
+          </h2>
+          <p className="text-white text-lg font-coolvetica">
+            You did not submit answers for this domain.
           </p>
         </div>
       </div>

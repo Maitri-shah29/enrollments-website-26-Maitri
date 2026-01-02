@@ -196,7 +196,26 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
     }
     // Status-based rendering for evaluate, promoted, rejected
     if (
-      roundUserStatus === "evaluate" &&
+      roundUserStatus === "pending" &&
+      isAnnounced &&
+      activeSection === "round1"
+    ) {
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+              This round's results have been announced
+            </h2>
+            <p className="text-white text-lg">
+              You did not submit any answer for this domain
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (
+      roundUserStatus !== "pending" &&
       !isAnnounced &&
       activeSection === "round1"
     ) {
