@@ -8,14 +8,14 @@ import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
 const buildMaskUrl = (path: string) =>
   `url("data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`,
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`
   )}")`;
 
 const TAB_MASK_IMAGE = buildMaskUrl(
-  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z",
+  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z"
 );
 const PLUS_BUTTON_MASK_IMAGE = buildMaskUrl(
-  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z",
+  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z"
 );
 
 // Main Landing Component
@@ -56,6 +56,7 @@ const Landing: React.FC<{
           // showPintooRun: false,
           showSnake: false,
           showAbout: false,
+          showMeets: false,
           history: [],
           pointer: -1,
         },
@@ -82,6 +83,7 @@ const Landing: React.FC<{
                 // showPintooRun: false,
                 showSnake: false,
                 showAbout: false,
+                showMeets: false,
                 history: [],
                 pointer: -1,
               },
@@ -105,6 +107,7 @@ const Landing: React.FC<{
         // showPintooRun: false,
         showSnake: false,
         showAbout: false,
+        showMeets: false,
         history: [],
         pointer: -1,
       },
@@ -121,7 +124,7 @@ const Landing: React.FC<{
       if (savedActiveTabId && savedTabs) {
         const parsed = JSON.parse(savedTabs);
         const tabExists = parsed.some(
-          (tab: TabData) => tab.id === Number(savedActiveTabId),
+          (tab: TabData) => tab.id === Number(savedActiveTabId)
         );
         if (tabExists) {
           return Number(savedActiveTabId);
@@ -319,6 +322,7 @@ const Landing: React.FC<{
       // showPintooRun: false,
       showSnake: false,
       showAbout: false,
+      showMeets: false,
       history: [],
       pointer: -1,
     };
@@ -360,6 +364,8 @@ const Landing: React.FC<{
       // showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
       showAbout: url === "about",
+      showMeets: url === "meets",
+
       history: [
         {
           id: Date.now(),
@@ -413,7 +419,7 @@ const Landing: React.FC<{
 
   const handleDragOver = (
     event: DragEvent<HTMLButtonElement>,
-    targetId: number,
+    targetId: number
   ) => {
     event.preventDefault();
     if (draggingTabId === null || draggingTabId === targetId) return;
@@ -422,7 +428,7 @@ const Landing: React.FC<{
 
   const handleDrop = (
     event: DragEvent<HTMLButtonElement>,
-    targetId: number,
+    targetId: number
   ) => {
     event.preventDefault();
     const payload = event.dataTransfer.getData("text/plain");

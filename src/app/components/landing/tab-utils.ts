@@ -12,6 +12,7 @@ export type TabInternalFlags = {
   showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
+  showMeets: boolean;
 };
 
 export type TabDataLike = {
@@ -66,7 +67,8 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
   showCc: keyword === "cc",
   showManagement: keyword === "management",
   showTech:
-    keyword === "tech" || keyword === "tech.com" ||
+    keyword === "tech" ||
+    keyword === "tech.com" ||
     [
       "web",
       "ios",
@@ -87,10 +89,12 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
       "cloud",
     ].includes(keyword),
   showDesign:
-    keyword === "design" || keyword === "design.com" ||
+    keyword === "design" ||
+    keyword === "design.com" ||
     ["3d", "ui/ux", "ui", "ux", "uiux", "illustration"].includes(keyword),
   showResearch:
-    keyword === "research" || keyword === "research.com" ||
+    keyword === "research" ||
+    keyword === "research.com" ||
     [
       "aiml",
       "ai/ml",
@@ -104,13 +108,12 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
       "cybersecurity",
     ].includes(keyword),
   showInstructions: keyword === "instructions",
-  showCc: keyword === "cc.com" || keyword === "cc",
-  showManagement: keyword === "management.com" || keyword === "management",
   showEvents: keyword === "events",
   showDomains: keyword === "domains",
   showPintooRun: keyword === "pintoorun",
   showSnake: keyword === "snake",
   showAbout: keyword === "about",
+  showMeets: keyword === "meets",
 });
 
 export const resetTabFlags = (): TabInternalFlags => ({
@@ -125,4 +128,5 @@ export const resetTabFlags = (): TabInternalFlags => ({
   showPintooRun: false,
   showSnake: false,
   showAbout: false,
+  showMeets: false,
 });
