@@ -40,6 +40,15 @@ export const config = {
   adminCleanupTimeout: Number(process.env.ADMIN_CLEANUP_TIMEOUT) || 120000,
   // Allow non-admins to create rooms (for testing)
   allowNonAdminRoomCreation: false,
+  // Rate limiting configuration (in milliseconds)
+  rateLimits: {
+    chat: 500, // 500ms between chat messages
+    produce: 1000, // 1s between produce requests
+    consume: 200, // 200ms between consume requests
+    transport: 2000, // 2s between transport creation requests
+    toggleMedia: 300, // 300ms between mute/camera toggles
+    joinRoom: 3000, // 3s between room join attempts
+  },
   routerMediaCodecs: [
     {
       kind: "audio",
@@ -69,7 +78,7 @@ export const config = {
       {
         // ip: "0.0.0.0",
         ip: "0.0.0.0",
-        announcedIp: "10.38.65.71", //replace with your public IP
+        announcedIp: "10.149.224.180", //replace with your public IP
       },
     ],
     //for deployment

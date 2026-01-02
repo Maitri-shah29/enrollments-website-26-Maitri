@@ -399,7 +399,7 @@ const Tab: React.FC<TabProps> = ({
         )}
         {tabData.showInstructions ? (
           <Instructions onGetStarted={handleGetStarted} />
-        ) : !session?.data &&
+        ) : !session?.data?.user &&
           (tabData.showManagement ||
             tabData.showCc ||
             tabData.showDesign ||

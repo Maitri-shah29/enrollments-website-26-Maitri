@@ -1,5 +1,7 @@
 import express from "express";
 import { createServer as createHttpsServer } from "https";
+
+import { createServer as createHttpServer } from "http";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -46,15 +48,36 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
+// ============================================
+// Health Check Endpoint
+// ============================================
+app.get("/health", (req, res) => {
+  const healthData = {
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    workers: workers.length,
+    activeRooms: rooms.size,
+    totalConnections: io.engine?.clientsCount ?? 0,
+    roomDetails: Array.from(rooms.values()).map((room) => ({
+      id: room.id,
+      clients: room.clientCount,
+    })),
+  };
+  res.json(healthData);
+});
+
 // Load SSL certificates
-const httpsOptions = {
-  key: readFileSync(join(__dirname, "certs", "cert.key")),
-  cert: readFileSync(join(__dirname, "certs", "cert.crt")),
-};
+// const httpsOptions = {
+//   key: readFileSync(join(__dirname, "certs", "cert.key")),
+//   cert: readFileSync(join(__dirname, "certs", "cert.crt")),
+// };
 
-const httpsServer = createHttpsServer(httpsOptions, app);
+// const httpsServer = createHttpsServer(httpsOptions, app);
 
-const io = new SocketIOServer(httpsServer, {
+const httpServer = createHttpServer(app);
+
+const io = new SocketIOServer(httpServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -138,8 +161,27 @@ io.on("connection", (socket: Socket) => {
   let currentClient: Client | null = null;
 
   // Rate limiting state
-  let lastChatTime = 0;
-  const CHAT_RATE_LIMIT_MS = 500;
+  const rateLimitState: Record<string, number> = {
+    chat: 0,
+    produce: 0,
+    consume: 0,
+    transport: 0,
+    toggleMedia: 0,
+    joinRoom: 0,
+  };
+
+  // Rate limit helper function
+  const checkRateLimit = (
+    operation: keyof typeof config.rateLimits
+  ): boolean => {
+    const now = Date.now();
+    const limit = config.rateLimits[operation];
+    if (now - rateLimitState[operation] < limit) {
+      return false; // Rate limited
+    }
+    rateLimitState[operation] = now;
+    return true; // Allowed
+  };
 
   // ----------------------------------------
   // Join Room
@@ -151,6 +193,12 @@ io.on("connection", (socket: Socket) => {
       callback: (response: JoinRoomResponse | { error: string }) => void
     ) => {
       try {
+        // Rate limit check
+        if (!checkRateLimit("joinRoom")) {
+          callback({ error: "Too many join attempts. Please wait." });
+          return;
+        }
+
         const { roomId, userId } = data;
         const isAdmin = (socket as any).user?.isAdmin;
 
@@ -397,6 +445,12 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
+        // Rate limit check
+        if (!checkRateLimit("transport")) {
+          callback({ error: "Too many transport requests. Please wait." });
+          return;
+        }
+
         const transport = await currentRoom.createWebRtcTransport();
         currentClient.producerTransport = transport;
 
@@ -424,6 +478,12 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentRoom || !currentClient) {
           callback({ error: "Not in a room" });
+          return;
+        }
+
+        // Rate limit check
+        if (!checkRateLimit("transport")) {
+          callback({ error: "Too many transport requests. Please wait." });
           return;
         }
 
@@ -509,6 +569,12 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
+        // Rate limit check
+        if (!checkRateLimit("produce")) {
+          callback({ error: "Too many produce requests. Please wait." });
+          return;
+        }
+
         const { kind, rtpParameters, appData } = data;
         const type = (appData.type as "webcam" | "screen") || "webcam";
         const paused = !!appData.paused;
@@ -544,30 +610,42 @@ io.on("connection", (socket: Socket) => {
           paused: producer.paused,
         });
 
+        // Capture values for event listeners to avoid stale closure
+        const roomId = currentRoom.id;
+        const clientId = currentClient.id;
+
         producer.on("transportclose", () => {
           console.log(`[SFU] Producer transport closed: ${producer.id}`);
-          if (type === "screen" && currentRoom) {
-            currentRoom.clearScreenShareProducer(producer.id);
+          if (type === "screen") {
+            const room = rooms.get(roomId);
+            if (room) {
+              room.clearScreenShareProducer(producer.id);
+            }
           }
           // Notify others
-          if (currentRoom && currentClient) {
-            socket.to(currentRoom.id).emit("producerClosed", {
+          const room = rooms.get(roomId);
+          if (room) {
+            socket.to(roomId).emit("producerClosed", {
               producerId: producer.id,
-              producerUserId: currentClient.id,
+              producerUserId: clientId,
             });
           }
         });
 
         producer.on("@close", () => {
           console.log(`[SFU] Producer closed: ${producer.id}`);
-          if (type === "screen" && currentRoom) {
-            currentRoom.clearScreenShareProducer(producer.id);
+          if (type === "screen") {
+            const room = rooms.get(roomId);
+            if (room) {
+              room.clearScreenShareProducer(producer.id);
+            }
           }
           // Notify others
-          if (currentRoom && currentClient) {
-            socket.to(currentRoom.id).emit("producerClosed", {
+          const room = rooms.get(roomId);
+          if (room) {
+            socket.to(roomId).emit("producerClosed", {
               producerId: producer.id,
-              producerUserId: currentClient.id,
+              producerUserId: clientId,
             });
           }
         });
@@ -596,6 +674,12 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentRoom || !currentClient?.consumerTransport) {
           callback({ error: "Not ready to consume" });
+          return;
+        }
+
+        // Rate limit check
+        if (!checkRateLimit("consume")) {
+          callback({ error: "Too many consume requests. Please wait." });
           return;
         }
 
@@ -707,11 +791,17 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
+        // Rate limit check
+        if (!checkRateLimit("toggleMedia")) {
+          callback({ error: "Too many toggle requests. Please wait." });
+          return;
+        }
+
         await currentClient.toggleMute(data.paused);
 
         // Notify others
         socket.to(currentRoom.id).emit("participantMuted", {
-          oderId: currentClient.id,
+          userId: currentClient.id,
           muted: data.paused,
         });
 
@@ -734,6 +824,12 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentClient || !currentRoom) {
           callback({ error: "Not in a room" });
+          return;
+        }
+
+        // Rate limit check
+        if (!checkRateLimit("toggleMedia")) {
+          callback({ error: "Too many toggle requests. Please wait." });
           return;
         }
 
@@ -824,12 +920,10 @@ io.on("connection", (socket: Socket) => {
         }
 
         // Rate limiting check
-        const now = Date.now();
-        if (now - lastChatTime < CHAT_RATE_LIMIT_MS) {
+        if (!checkRateLimit("chat")) {
           callback({ error: "You are sending messages too fast" });
           return;
         }
-        lastChatTime = now;
 
         // Extract display name from userId (format: email#sessionId)
         const displayName =
@@ -938,7 +1032,7 @@ io.on("connection", (socket: Socket) => {
 const startServer = async (): Promise<void> => {
   await initMediaSoup();
 
-  httpsServer.listen(config.port, () => {
+  httpServer.listen(config.port, () => {
     console.log(`[SFU] HTTPS Server running on port ${config.port}`);
   });
 };
