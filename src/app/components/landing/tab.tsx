@@ -56,6 +56,8 @@ export interface TabData {
   // showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
+  showScheduler: boolean;
+  showTask: boolean;
 }
 
 interface TabProps {
@@ -68,6 +70,8 @@ interface TabProps {
   managementChildren?: ReactNode;
   techChildren?: ReactNode;
   researchChildren?: ReactNode;
+  schedulerChildren?: ReactNode;
+  taskChildren?: ReactNode;
 }
 
 const Tab: React.FC<TabProps> = ({
@@ -79,6 +83,8 @@ const Tab: React.FC<TabProps> = ({
   managementChildren,
   techChildren,
   researchChildren,
+  schedulerChildren,
+  taskChildren,
 }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
@@ -403,7 +409,9 @@ const Tab: React.FC<TabProps> = ({
             tabData.showDesign ||
             // tabData.showPintooRun ||
             tabData.showResearch ||
-            tabData.showTech) ? (
+            tabData.showTech ||
+            tabData.showScheduler ||
+            tabData.showTask) ? (
           <SignupPage onSignIn={() => {}} />
         ) : tabData.showManagement ? (
           <div
@@ -463,6 +471,20 @@ const Tab: React.FC<TabProps> = ({
             className="w-full h-full bg-white overflow-auto relative"
           >
             {researchChildren}
+          </div>
+        ) : tabData.showScheduler ? (
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
+            {schedulerChildren}
+          </div>
+        ) : tabData.showTask ? (
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
+            {taskChildren}
           </div>
         ) : // ) : tabData.showPintooRun ? (
         //   <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
