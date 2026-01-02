@@ -179,7 +179,7 @@ type ParticipantAction =
 
 function participantReducer(
   state: Map<string, Participant>,
-  action: ParticipantAction
+  action: ParticipantAction,
 ): Map<string, Participant> {
   const newState = new Map(state);
 
@@ -267,7 +267,7 @@ function participantReducer(
 /** Create a meet error with proper categorization */
 function createMeetError(
   error: unknown,
-  defaultCode: MeetError["code"] = "UNKNOWN"
+  defaultCode: MeetError["code"] = "UNKNOWN",
 ): MeetError {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -326,11 +326,11 @@ export default function MeetsClient() {
   const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
-    null
+    null,
   );
   const [participants, dispatchParticipants] = useReducer(
     participantReducer,
-    new Map()
+    new Map(),
   );
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
@@ -370,7 +370,7 @@ export default function MeetsClient() {
   const reconnectAttemptsRef = useRef(0);
   const currentRoomIdRef = useRef<string | null>(null);
   const handleRedirectRef = useRef<(roomId: string) => Promise<void>>(
-    async () => {}
+    async () => {},
   );
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
@@ -575,7 +575,7 @@ export default function MeetsClient() {
               screenProducerRef.current = null;
               setActiveScreenShareId(null);
             }
-          }
+          },
         );
 
         // User events
@@ -587,7 +587,7 @@ export default function MeetsClient() {
               type: "ADD_PARTICIPANT",
               userId: joinedUserId,
             });
-          }
+          },
         );
 
         socket.on("userLeft", ({ userId: leftUserId }: { userId: string }) => {
@@ -615,7 +615,7 @@ export default function MeetsClient() {
               userId: oderId,
               muted,
             });
-          }
+          },
         );
 
         socket.on(
@@ -632,7 +632,7 @@ export default function MeetsClient() {
               userId: camUserId,
               cameraOff,
             });
-          }
+          },
         );
 
         socket.on(
@@ -642,7 +642,7 @@ export default function MeetsClient() {
             setVideoQuality(quality);
             // Trigger the quality update effect/function
             await updateVideoQualityRef.current(quality);
-          }
+          },
         );
 
         // Chat message event
@@ -668,7 +668,7 @@ export default function MeetsClient() {
         // Redirect event
         socket.on("redirect", async ({ newRoomId }: { newRoomId: string }) => {
           console.log(
-            `[Meets] Redirect received. Initiating full switch to ${newRoomId}`
+            `[Meets] Redirect received. Initiating full switch to ${newRoomId}`,
           );
           handleRedirectRef.current(newRoomId);
         });
@@ -704,7 +704,7 @@ export default function MeetsClient() {
       RECONNECT_DELAY_MS * Math.pow(2, reconnectAttemptsRef.current - 1);
 
     console.log(
-      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`
+      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
     );
     await new Promise((r) => setTimeout(r, delay));
 
@@ -857,7 +857,7 @@ export default function MeetsClient() {
                 (res: { success: boolean } | { error: string }) => {
                   if ("error" in res) errback(new Error(res.error));
                   else callback();
-                }
+                },
               );
             });
 
@@ -870,9 +870,9 @@ export default function MeetsClient() {
                   (res: { producerId: string } | { error: string }) => {
                     if ("error" in res) errback(new Error(res.error));
                     else callback({ id: res.producerId });
-                  }
+                  },
                 );
-              }
+              },
             );
 
             transport.on("connectionstatechange", (state) => {
@@ -888,11 +888,11 @@ export default function MeetsClient() {
 
             producerTransportRef.current = transport;
             resolve();
-          }
+          },
         );
       });
     },
-    []
+    [],
   );
 
   const createConsumerTransport = useCallback(
@@ -915,7 +915,7 @@ export default function MeetsClient() {
                 (res: { success: boolean } | { error: string }) => {
                   if ("error" in res) errback(new Error(res.error));
                   else callback();
-                }
+                },
               );
             });
 
@@ -925,11 +925,11 @@ export default function MeetsClient() {
 
             consumerTransportRef.current = transport;
             resolve();
-          }
+          },
         );
       });
     },
-    []
+    [],
   );
 
   // ============================================
@@ -988,7 +988,7 @@ export default function MeetsClient() {
         }
       }
     },
-    [isMuted, isCameraOff]
+    [isMuted, isCameraOff],
   );
 
   // ============================================
@@ -1003,7 +1003,7 @@ export default function MeetsClient() {
 
       if (!socket || !device || !transport) {
         console.warn(
-          "[Meets] Cannot consume: missing socket, device, or transport"
+          "[Meets] Cannot consume: missing socket, device, or transport",
         );
         return;
       }
@@ -1072,18 +1072,18 @@ export default function MeetsClient() {
               socket.emit(
                 "resumeConsumer",
                 { consumerId: consumer.id },
-                () => {}
+                () => {},
               );
               resolve();
             } catch (err) {
               console.error("[Meets] Failed to create consumer:", err);
               resolve();
             }
-          }
+          },
         );
       });
     },
-    []
+    [],
   );
 
   // ============================================
@@ -1110,7 +1110,7 @@ export default function MeetsClient() {
             try {
               console.log(
                 "[Meets] Joined room, existing producers:",
-                response.existingProducers
+                response.existingProducers,
               );
               currentRoomIdRef.current = targetRoomId;
 
@@ -1138,7 +1138,7 @@ export default function MeetsClient() {
             } catch (err) {
               reject(err);
             }
-          }
+          },
         );
       });
     },
@@ -1148,7 +1148,7 @@ export default function MeetsClient() {
       createProducerTransport,
       createConsumerTransport,
       consumeProducer,
-    ]
+    ],
   );
 
   const handleRedirectCallback = useCallback(
@@ -1165,7 +1165,7 @@ export default function MeetsClient() {
       // We need to wait for the state (roomId) to update and joinRoom to be recreated.
       shouldAutoJoinRef.current = true;
     },
-    [cleanup]
+    [cleanup],
   );
 
   useEffect(() => {
@@ -1230,7 +1230,7 @@ export default function MeetsClient() {
 
         console.log(
           `[Meets] Switching to ${quality} quality`,
-          JSON.stringify(constraints)
+          JSON.stringify(constraints),
         );
 
         // create new video track
@@ -1260,7 +1260,7 @@ export default function MeetsClient() {
         console.error("[Meets] Failed to update video quality:", err);
       }
     },
-    [isCameraOff, localStream]
+    [isCameraOff, localStream],
   );
 
   // Keep ref up to date for socket listener
@@ -1287,7 +1287,7 @@ export default function MeetsClient() {
       socketRef.current?.emit(
         "toggleMute",
         { producerId: producer.id, paused: newMuted },
-        () => {}
+        () => {},
       );
     } else {
       // Producer doesn't exist, try to create it (unmute)
@@ -1353,7 +1353,7 @@ export default function MeetsClient() {
       socketRef.current?.emit(
         "toggleCamera",
         { producerId: producer.id, paused: newCameraOff },
-        () => {}
+        () => {},
       );
     } else {
       // Producer doesn't exist, try to create it (turn camera on)
@@ -1416,7 +1416,7 @@ export default function MeetsClient() {
         socketRef.current?.emit(
           "closeProducer",
           { producerId: producer.id },
-          () => {}
+          () => {},
         );
         try {
           producer.close();
@@ -1463,7 +1463,7 @@ export default function MeetsClient() {
         socketRef.current?.emit(
           "closeProducer",
           { producerId: producer.id },
-          () => {}
+          () => {},
         );
         try {
           producer.close();
@@ -1496,7 +1496,7 @@ export default function MeetsClient() {
       (
         response:
           | { success: boolean; message?: ChatMessage }
-          | { error: string }
+          | { error: string },
       ) => {
         if ("error" in response) {
           console.error("[Meets] Chat error:", response.error);
@@ -1506,7 +1506,7 @@ export default function MeetsClient() {
           // Add our own message to the list
           setChatMessages((prev) => [...prev, response.message!]);
         }
-      }
+      },
     );
   }, []);
 
@@ -1536,7 +1536,7 @@ export default function MeetsClient() {
       }
       localVideoRef.current = node;
     },
-    [localStream]
+    [localStream],
   );
 
   // ============================================
@@ -1573,7 +1573,15 @@ export default function MeetsClient() {
     <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-black border-b border-white/10">
-        <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
+          {isJoined && (
+            <div className="bg-white/5 px-3 py-1 rounded-md text-sm text-white/80 border border-white/10 hidden sm:block">
+              <span className="text-white/40 mr-2">Room:</span>
+              <span className="font-mono font-bold">{roomId}</span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           {isScreenSharing && (
             <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse">
@@ -1764,8 +1772,8 @@ function JoinScreen({
         {connectionState === "reconnecting"
           ? "Reconnecting..."
           : isLoading
-          ? "Joining..."
-          : "Join Room"}
+            ? "Joining..."
+            : "Join Room"}
       </button>
     </div>
   );
@@ -2007,15 +2015,15 @@ function ControlsBar({
           isScreenSharing
             ? "bg-white text-black border-white"
             : !canStartScreenShare
-            ? "bg-transparent text-neutral-600 border-white/5 cursor-not-allowed"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+              ? "bg-transparent text-neutral-600 border-white/5 cursor-not-allowed"
+              : "bg-transparent text-white border-white/10 hover:bg-white/10"
         }`}
         title={
           !canStartScreenShare
             ? "Someone else is presenting"
             : isScreenSharing
-            ? "Stop sharing"
-            : "Share screen"
+              ? "Stop sharing"
+              : "Share screen"
         }
       >
         <Monitor className="w-5 h-5" />
@@ -2194,7 +2202,7 @@ function ParticipantVideo({
       }
       videoRef.current = node;
     },
-    [participant.videoStream]
+    [participant.videoStream],
   );
 
   const setAudioRef = useCallback(
@@ -2209,7 +2217,7 @@ function ParticipantVideo({
       }
       audioRef.current = node;
     },
-    [participant.audioStream]
+    [participant.audioStream],
   );
 
   const displayName = getDisplayName(participant.userId);
@@ -2305,7 +2313,7 @@ function ParticipantsPanel({
           setShowRedirectModal(false);
           setSelectedUserForRedirect(null);
         }
-      }
+      },
     );
   };
 
@@ -2329,7 +2337,7 @@ function ParticipantsPanel({
             <button
               onClick={() =>
                 socket?.emit("muteAll", (res: any) =>
-                  console.log("Muted all:", res)
+                  console.log("Muted all:", res),
                 )
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
@@ -2340,7 +2348,7 @@ function ParticipantsPanel({
             <button
               onClick={() =>
                 socket?.emit("closeAllVideo", (res: any) =>
-                  console.log("Stopped all video:", res)
+                  console.log("Stopped all video:", res),
                 )
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
