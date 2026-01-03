@@ -194,6 +194,14 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     }
+    if (activeSection === "round1" && !roundActive) {
+      return (
+        <div className="text-center text-[#993C7A] text-xl py-12">
+          <h1 className="text-2xl font-bold mb-4">Round currently inactive.</h1>
+          <p className="text-white">This round will start soon...</p>
+        </div>
+      );
+    }
     // Status-based rendering for evaluate, promoted, rejected
     if (
       roundUserStatus === "pending" &&
@@ -322,16 +330,6 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         );
       }
 
-      if (!roundActive) {
-        return (
-          <div className="text-center text-[#993C7A] text-xl py-12">
-            <h1 className="text-2xl font-bold mb-4">
-              Round currently inactive.
-            </h1>
-            <p className="text-white">This round will start soon...</p>
-          </div>
-        );
-      }
       const folderForQuestions =
         activeRoundFolder ??
         (() => {
