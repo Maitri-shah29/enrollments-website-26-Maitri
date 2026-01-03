@@ -63,8 +63,8 @@ export const titleForKeyword = (keyword: string) =>
   keyword === "cc" ? "CC" : capitalize(keyword);
 
 export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
-  showCc: keyword === "cc",
-  showManagement: keyword === "management",
+  showCc: keyword === "cc" || keyword === "cc.com",
+  showManagement: keyword === "management" || keyword === "management.com",
   showTech:
     keyword === "tech" ||
     keyword === "tech.com" ||
