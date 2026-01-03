@@ -1,6 +1,7 @@
 import { IFRAME_WHITELIST } from "./tab-constants";
 
 export type TabInternalFlags = {
+  showInstructions: boolean;
   showCc: boolean;
   showManagement: boolean;
   showTech: boolean;
@@ -11,6 +12,8 @@ export type TabInternalFlags = {
   showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
+  showScheduler: boolean;
+  showTask: boolean;
 };
 
 export type TabDataLike = {
@@ -62,19 +65,61 @@ export const titleForKeyword = (keyword: string) =>
   keyword === "cc" ? "CC" : capitalize(keyword);
 
 export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
-  showCc: keyword === "cc",
-  showManagement: keyword === "management",
-  showTech: keyword === "tech",
-  showDesign: keyword === "design",
-  showResearch: keyword === "research",
+  showCc: keyword === "cc" || keyword === "cc.com",
+  showManagement: keyword === "management" || keyword === "management.com",
+  showTech:
+    keyword === "tech" ||
+    keyword === "tech.com" ||
+    [
+      "web",
+      "ios",
+      "android",
+      "app",
+      "webdev",
+      "webdevelopment",
+      "appdev",
+      "appdevelopment",
+      "game",
+      "gamedev",
+      "gamedevelopment",
+      "foss",
+      "opensource",
+      "git",
+      "github",
+      "devops",
+      "cloud",
+    ].includes(keyword),
+  showDesign:
+    keyword === "design" ||
+    keyword === "design.com" ||
+    ["3d", "ui/ux", "ui", "ux", "uiux", "illustration"].includes(keyword),
+  showResearch:
+    keyword === "research" ||
+    keyword === "research.com" ||
+    [
+      "aiml",
+      "ai/ml",
+      "quantum",
+      "blockchain",
+      "bioinformatics",
+      "iot",
+      "quantumcomputing",
+      "ai",
+      "ml",
+      "cybersecurity",
+    ].includes(keyword),
+  showInstructions: keyword === "instructions",
   showEvents: keyword === "events",
   showDomains: keyword === "domains",
   showPintooRun: keyword === "pintoorun",
   showSnake: keyword === "snake",
   showAbout: keyword === "about",
+  showScheduler: keyword === "scheduler.com",
+  showTask: keyword === "task.com" || keyword === "task",
 });
 
 export const resetTabFlags = (): TabInternalFlags => ({
+  showInstructions: false,
   showCc: false,
   showManagement: false,
   showTech: false,
@@ -85,4 +130,6 @@ export const resetTabFlags = (): TabInternalFlags => ({
   showPintooRun: false,
   showSnake: false,
   showAbout: false,
+  showScheduler: false,
+  showTask: false,
 });

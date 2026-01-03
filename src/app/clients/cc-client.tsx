@@ -18,26 +18,25 @@ type CCClientProps = {
 const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null
+    initialRoundUser ?? null,
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
     Set<string>
   >(new Set());
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
-  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
   // Create/fetch round user on demand (Get Started)
   const continueCheck = () => {
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -50,7 +49,7 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -78,7 +77,7 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user"
+        err instanceof Error ? err.message : "Failed to initialize round user",
       );
     } finally {
       setLoading(false);
@@ -149,14 +148,7 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
       {selectedPanel !== "Home" && (
         <div className="w-full min-h-full bg-[#121216] pt-28 pb-16">
           <div className="w-full space-y-8 md:px-6 lg:px-11 xl:px-15 2xl:px-20 mt-[45px]">
-            {selectedPanel === "Questions" && !roundActive ? (
-              <div className="text-center text-[#C9EB3E] font-ShareTechMono text-xl py-12">
-                <h1 className="text-2xl font-bold mb-4">
-                  Round currently inactive.
-                </h1>
-                <p>This round will start soon...</p>
-              </div>
-            ) : selectedPanel === "Questions" ? (
+            {selectedPanel === "Questions" ? (
               <Questions
                 roundUser={roundUser ?? undefined}
                 loading={loading}

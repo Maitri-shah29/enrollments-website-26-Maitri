@@ -14,6 +14,7 @@ interface Props {
   onSubmitAnswer: (q: QuestionPayload) => Promise<void>;
   goBack?: () => void;
   wallpaper: string;
+  savedAnswer?: string;
 }
 
 const themeButtonClasses: Record<string, string> = {
@@ -31,8 +32,10 @@ export default function Question({
   onSubmitAnswer,
   goBack,
   wallpaper,
+  savedAnswer,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
+  const isSavedDraft = savedAnswer !== undefined && savedAnswer === answer;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -75,24 +78,27 @@ export default function Question({
           <div className="flex items-center text-sm text-gray-700 space-x-2 mb-3">
             <Reply size={16} />
             <p>
-              mgmt(management@acmvit.in) - {/* todo: check if saved draft */}
-              <span className="text-gray-500 italic">Saved draft</span>
+              mgmt(management@acmvit.in)
+              {isSavedDraft && (
+                <>
+                  {" "}
+                  - <span className="text-gray-500 italic">Saved draft</span>
+                </>
+              )}
             </p>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
             <textarea
               value={answer}
               onChange={(e) => {
                 const text = e.target.value;
-
                 if (text.length > 1500) return;
-
                 onChangeAnswer(question.id, e.target.value);
               }}
               style={{
                 wordBreak: "break-word",
                 overflowWrap: "anywhere",
-                overflowY: "hidden",
+                overflowY: "auto",
               }}
               placeholder="Type your answer here..."
               className="text-black w-full h-full outline-none bg-transparent resize-none selection:bg-[#AA302E] selection:text-white"

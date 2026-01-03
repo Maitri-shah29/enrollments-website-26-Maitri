@@ -34,8 +34,8 @@ const unauthenticatedView = () => (
     </div>
     <div className="text-center space-y-1">
       <h3 className="text-lg font-semibold">Guest User</h3>
-      <p className="text-sm text-white/70 max-w-[14rem]">
-        Sign in with Google to access all ACM resources
+      <p className="text-sm text-white/70 max-w-56">
+        Sign in with Google to access all ACM-VIT resources
       </p>
     </div>
     <button
@@ -61,9 +61,13 @@ const authenticatedView = (
         </span>
       </div>
     </div>
-    <div className="text-center space-y-1">
-      <h3 className="text-lg font-semibold leading-tight">{user?.name}</h3>
-      <p className="text-sm text-white/70 leading-tight">{user?.email}</p>
+    <div className="text-center space-y-1 w-full px-2">
+      <h3 className="text-lg font-semibold leading-tight break-words">
+        {user?.name}
+      </h3>
+      <p className="text-sm text-white/70 leading-tight break-all">
+        {user?.email}
+      </p>
     </div>
     <button
       type="button"

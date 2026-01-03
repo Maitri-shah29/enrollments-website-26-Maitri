@@ -12,6 +12,7 @@ import {
 import saveFormResponse from "@/app/actions/save-form-response";
 import submitForm from "@/app/actions/submit-form";
 import type { ResearchAOI } from "@/lib/research-navigation";
+import { getRoundGateState } from "@/lib/round-status";
 
 export type RoundUserExtended = Prisma.RoundUserGetPayload<{
   include: {
@@ -370,6 +371,100 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     );
   }
 
+  const isHidden = !!roundUser?.round?.hidden;
+  if (isHidden) {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
+            The round you're looking for is not available.
+          </h2>
+          <p className="text-white text-lg">
+            Please contact support for more information.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isAnnounced = !!roundUser?.round?.announced;
+  const roundGateState = getRoundGateState({
+    isActive: !!roundUser?.round?.active,
+    isAnnounced,
+    status: roundUser?.status,
+  });
+  // Status-based rendering
+  switch (roundGateState) {
+    case "inactive":
+      return (
+        <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
+              Round currently inactive.
+            </h2>
+            <p className="text-white text-lg font-monopoly">
+              This round will start soon...
+            </p>
+          </div>
+        </div>
+      );
+    case "evaluating":
+      return (
+        <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
+              Your responses are being evaluated
+            </h2>
+            <p className="text-white text-lg font-monopoly">
+              Please wait while we review your submission.
+            </p>
+          </div>
+        </div>
+      );
+    case "announced_pending":
+      return (
+        <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
+              This round's results have been announced
+            </h2>
+            <p className="text-white text-lg font-monopoly">
+              You did not submit any answer for this domain
+            </p>
+          </div>
+        </div>
+      );
+    case "promoted":
+      return (
+        <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
+              Congratulations! 🎉
+            </h2>
+            <p className="text-white text-lg font-monopoly">
+              You are promoted to the next round
+            </p>
+          </div>
+        </div>
+      );
+    case "rejected":
+      return (
+        <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-red-500 text-3xl font-bold mb-4 font-monopoly-bold">
+              Unfortunately, you could not pass this round
+            </h2>
+            <p className="text-white text-lg font-monopoly">
+              Thank you for participating. Better luck next time!
+            </p>
+          </div>
+        </div>
+      );
+    case "content":
+    default:
+      break;
+  }
+
   if (subjectiveQuestions.length === 0) {
     return (
       <div className="text-white text-lg text-center py-8">
@@ -517,69 +612,6 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
   const handleCancelSubmit = () => {
     setShowConfirmDialog(false);
   };
-
-  const roundUserStatus = roundUser?.status || "pending";
-  const isAnnounced = !!roundUser?.round?.announced;
-  const isHidden = !!roundUser?.round?.hidden;
-  if (isHidden) {
-    return (
-      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4">
-            The round youre looking for is not available.
-          </h2>
-          <p className="text-white text-lg">
-            Please contact support for more information.
-          </p>
-        </div>
-      </div>
-    );
-  }
-  // Status-based rendering
-  if (roundUserStatus === "evaluate" && !isAnnounced) {
-    return (
-      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
-            Your responses are being evaluated
-          </h2>
-          <p className="text-white text-lg font-monopoly">
-            Please wait while we review your submission.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "promoted" && isAnnounced) {
-    return (
-      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-[#7D5BED] text-3xl font-bold mb-4 font-monopoly-bold">
-            Congratulations! 🎉
-          </h2>
-          <p className="text-white text-lg font-monopoly">
-            You are promoted to the next round
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "rejected" && isAnnounced) {
-    return (
-      <div className="w-full h-full bg-[#1a1a1a] p-6 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-red-500 text-3xl font-bold mb-4 font-monopoly-bold">
-            Unfortunately, you could not pass this round
-          </h2>
-          <p className="text-white text-lg font-monopoly">
-            Thank you for participating. Better luck next time!
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const canSubmit = currentResponse.trim() && !submitting;
   const buttonText = submitting ? "Saving..." : "Save Answer";

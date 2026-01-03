@@ -25,7 +25,15 @@ const Events = () => {
       title: "CODE2CREATE",
       logoScale: 1.4,
       textColor: "#fff",
-      logo: <Image src="Group.svg" alt="c2c logo" width={120} height={120} />,
+      logo: (
+        <Image
+          src="Group.svg"
+          alt="c2c logo"
+          width={120}
+          height={120}
+          draggable={false}
+        />
+      ),
       description:
         "Code2Create is ACM-VIT's flagship 48-hour national hackathon and one of the largest  events hosted in VIT. Bringing together thousands of innovative minds, participants collaborate intensively to build groundbreaking solutions, competing for exciting prizes while networking with industry mentors.",
       color: "#5EBF94",
@@ -41,6 +49,7 @@ const Events = () => {
           alt="crytptic hunt"
           width={120}
           height={120}
+          draggable={false}
         />
       ),
       description:
@@ -58,6 +67,7 @@ const Events = () => {
           alt="ExamCooker"
           width={120}
           height={120}
+          draggable={false}
         />
       ),
       description:
@@ -75,6 +85,7 @@ const Events = () => {
           alt="Unipool"
           width={120}
           height={120}
+          draggable={false}
         />
       ),
       description:
@@ -87,7 +98,13 @@ const Events = () => {
       logoScale: 2.1,
       textColor: "#FFFFFF",
       logo: (
-        <Image src="Vector.svg" alt="Reverse Coding" width={120} height={120} />
+        <Image
+          src="Vector.svg"
+          alt="Reverse Coding"
+          width={120}
+          height={120}
+          draggable={false}
+        />
       ),
       description:
         "Competitive coding with a twist, ACM's Reverse Coding requires participants to reverse engineer solutions. Instead of solving problems traditionally, coders must work backwards from expected outputs to deduce the original problem statement, testing their analytical thinking and pattern recognition in this brain-teasing competition.",
@@ -104,6 +121,7 @@ const Events = () => {
           alt="Forktober"
           width={120}
           height={120}
+          draggable={false}
         />
       ),
       description:
@@ -116,7 +134,13 @@ const Events = () => {
       logoScale: 2.5,
       textColor: "#FFFFFF",
       logo: (
-        <Image src="inspiher.svg" alt="Insipher" width={120} height={120} />
+        <Image
+          src="inspiher.svg"
+          alt="Insipher"
+          width={120}
+          height={120}
+          draggable={false}
+        />
       ),
       description:
         "InspiHER is ACM-W’s powerful speaker series featuring accomplished women in STEM. These sessions spark meaningful conversations, offer real-life insights into career growth, and most importantly, encourage young women to pursue technical fields with confidence. ",
@@ -129,7 +153,13 @@ const Events = () => {
       logoScale: 1.4,
       textColor: "#FFFFFF",
       logo: (
-        <Image src="Frame 8.svg" alt="The Tiny Hack" width={120} height={120} />
+        <Image
+          src="Frame 8.svg"
+          alt="The Tiny Hack"
+          width={120}
+          height={120}
+          draggable={false}
+        />
       ),
       description:
         "Another one-of-a-kind ACM event, Tiny Hack is a 10-hour long hackathon designed for students eager to develop and build innovative projects within a short time frame. It focuses on creating small yet impactful solutions to real-world problems using modern technologies.",
@@ -146,6 +176,7 @@ const Events = () => {
           alt="Insipher"
           width={120}
           height={120}
+          draggable={false}
         />
       ),
       description:
@@ -258,7 +289,9 @@ const Events = () => {
                 >
                   {/* Glow Effect */}
                   <div
-                    className={`absolute inset-0 rounded-full blur-2xl ${event.glowOpacity || "opacity-60"} transition-all duration-500 -z-10`}
+                    className={`absolute inset-0 rounded-full blur-2xl ${
+                      event.glowOpacity || "opacity-60"
+                    } transition-all duration-500 -z-10`}
                     style={{ backgroundColor: event.glowColor || event.color }}
                   />
                   {event.logo}

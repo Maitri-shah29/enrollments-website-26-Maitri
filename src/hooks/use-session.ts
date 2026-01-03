@@ -50,7 +50,7 @@ export function useSession(initialSession?: SessionType) {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(
         "better-auth-session-change",
-        handleLocalAuthEvent
+        handleLocalAuthEvent,
       );
     };
   }, []);

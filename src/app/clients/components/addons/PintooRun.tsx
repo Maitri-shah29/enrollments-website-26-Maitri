@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { publicAssetUrl } from "@/lib/public-asset-url";
+// import { publicAssetUrl } from "@/lib/public-asset-url";
 
 const PintooRun = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -67,12 +67,12 @@ const PintooRun = () => {
 
     // Load sprite
     const pintooImg = new Image();
-    pintooImg.src = publicAssetUrl("/images/addons/pintoo_sprite.png");
+    pintooImg.src = "/images/addons/pintoo_sprite.png";
     assetsRef.current.pintooSprite = pintooImg;
 
     // Load background
     const bgImg = new Image();
-    bgImg.src = publicAssetUrl("/images/addons/bgpintoorun.png");
+    bgImg.src = "/images/addons/bgpintoorun.png";
     assetsRef.current.bg = bgImg;
 
     const getFloorY = () => canvas.height - 25 * SCALE;

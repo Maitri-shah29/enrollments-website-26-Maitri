@@ -28,7 +28,13 @@ const Instructions: React.FC = () => {
             <br />
             <ul className="list-disc pl-6 space-y-2 text-white">
               <li>
-                You can select a maximum of 3 Areas of Interest (AoIs) that
+                PS - You’ll probably use AI for these questions, which is
+                totally fine. Just keep in mind that we’ll be evaluating your
+                originality and your ability to learn so feel free to use AI for
+                support, but make sure your answers reflect your own thinking.
+              </li>
+              <li>
+                You can select a maximum of 2 Areas of Interest (AoIs) that
                 align with your passion and skills. These AOIs will help us
                 understand your interests better and may influence the type of
                 projects you'll work on if you’re selected.{" "}

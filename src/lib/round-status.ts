@@ -1,0 +1,40 @@
+export type RoundStatus = "pending" | "evaluate" | "promoted" | "rejected";
+
+export type RoundGateState =
+  | "content"
+  | "inactive"
+  | "evaluating"
+  | "announced_pending"
+  | "promoted"
+  | "rejected";
+
+type RoundGateInput = {
+  isActive: boolean;
+  isAnnounced: boolean;
+  status?: RoundStatus | null;
+};
+
+export const getRoundGateState = ({
+  isActive,
+  isAnnounced,
+  status,
+}: RoundGateInput): RoundGateState => {
+  if (!isActive) return "inactive";
+
+  const normalized = status ?? "pending";
+  if (isAnnounced) {
+    switch (normalized) {
+      case "promoted":
+        return "promoted";
+      case "rejected":
+      case "evaluate":
+        return "rejected";
+      case "pending":
+      default:
+        return "announced_pending";
+    }
+  }
+
+  if (normalized !== "pending") return "evaluating";
+  return "content";
+};

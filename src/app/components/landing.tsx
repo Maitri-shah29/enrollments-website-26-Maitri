@@ -1,6 +1,7 @@
 "use client";
-import { type DragEvent, useEffect, useState } from "react";
+import { type DragEvent, Fragment, useEffect, useState } from "react";
 import FullscreenToggle from "./fullscreen-toggle";
+import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
 import App from "./loader/App";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
@@ -27,6 +28,8 @@ const Landing: React.FC<{
   managementChild?: React.ReactNode;
   techChild?: React.ReactNode;
   researchChild?: React.ReactNode;
+  schedulerChild?: React.ReactNode;
+  taskChild?: React.ReactNode;
 }> = ({
   session: _session,
   isAllowed: _isAllowed,
@@ -35,6 +38,8 @@ const Landing: React.FC<{
   managementChild,
   techChild,
   researchChild,
+  schedulerChild,
+  taskChild,
 }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
@@ -52,9 +57,11 @@ const Landing: React.FC<{
           showResearch: false,
           showEvents: false,
           showDomains: false,
-          showPintooRun: false,
+          // showPintooRun: false,
           showSnake: false,
           showAbout: false,
+          showScheduler: false,
+          showTask: false,
           history: [],
           pointer: -1,
         },
@@ -78,9 +85,10 @@ const Landing: React.FC<{
                 showResearch: false,
                 showEvents: false,
                 showDomains: false,
-                showPintooRun: false,
+                // showPintooRun: false,
                 showSnake: false,
                 showAbout: false,
+                showScheduler: false,
                 history: [],
                 pointer: -1,
               },
@@ -101,9 +109,11 @@ const Landing: React.FC<{
         showResearch: false,
         showEvents: false,
         showDomains: false,
-        showPintooRun: false,
+        // showPintooRun: false,
         showSnake: false,
         showAbout: false,
+        showScheduler: false,
+        showTask: false,
         history: [],
         pointer: -1,
       },
@@ -135,6 +145,10 @@ const Landing: React.FC<{
 
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
   const [showMaxTabsNotification, setShowMaxTabsNotification] = useState(false);
+  const [closingGhost, setClosingGhost] = useState<{
+    tab: TabData;
+    rect: DOMRect;
+  } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -192,33 +206,45 @@ const Landing: React.FC<{
   // null = loading (checking localStorage), true = show animation, false = skip animation
   const [showAnimation, setShowAnimation] = useState<boolean | null>(null);
   const [startAnimation, setStartAnimation] = useState(false);
+  // Show instructions after animation completes
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const hasSeenAnimation = localStorage.getItem("hasSeenAnimation");
+    const hasSeenInstructions = localStorage.getItem("hasSeenInstructions");
 
-    if (hasSeenAnimation === "true") {
+    if (hasSeenAnimation === "true" && hasSeenInstructions === "true") {
+      // User has seen both animation and instructions - go to main page
       setShowAnimation(false);
+      setShowInstructions(false);
+      return;
+    }
+
+    if (hasSeenAnimation === "true" && hasSeenInstructions !== "true") {
+      // User has seen animation but not instructions - show instructions
+      setShowAnimation(false);
+      setShowInstructions(true);
       return;
     }
 
     // First visit - show animation
     setShowAnimation(true);
 
-    // Add keydown listener to start animation on any key press
-    const handleKeyDown = () => {
+    // Add keydown/click listener to start animation on any key press or click
+    const handleInteraction = () => {
       localStorage.setItem("hasSeenAnimation", "true");
       setStartAnimation(true);
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleKeyDown);
+      document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("click", handleInteraction);
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("click", handleKeyDown);
+    document.addEventListener("keydown", handleInteraction);
+    document.addEventListener("click", handleInteraction);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleKeyDown);
+      document.removeEventListener("keydown", handleInteraction);
+      document.removeEventListener("click", handleInteraction);
     };
   }, []);
 
@@ -229,9 +255,10 @@ const Landing: React.FC<{
     const audio = new Audio("/ambient-piano.mp3");
     audio.play().catch(() => {});
 
-    // Hide animation after 15 seconds
+    // Hide animation after 15 seconds and show instructions
     const timer = setTimeout(() => {
       setShowAnimation(false);
+      setShowInstructions(true);
       audio.pause();
     }, 15000);
 
@@ -240,6 +267,12 @@ const Landing: React.FC<{
       audio.pause();
     };
   }, [startAnimation]);
+
+  // Handler for when user clicks "Start Exploring" in instructions
+  const handleGetStarted = () => {
+    localStorage.setItem("hasSeenInstructions", "true");
+    setShowInstructions(false);
+  };
 
   // Show black screen while checking localStorage (prevents white flash)
   if (showAnimation === null) {
@@ -264,6 +297,14 @@ const Landing: React.FC<{
       </div>
     );
 
+  // Show instructions after animation
+  if (showInstructions)
+    return (
+      <div className="fixed inset-0 z-[1]">
+        <Instructions onGetStarted={handleGetStarted} />
+      </div>
+    );
+
   if (isPending) return null;
 
   const addTab = () => {
@@ -276,6 +317,7 @@ const Landing: React.FC<{
     const newTab: TabData = {
       id: newId,
       title: "New Tab",
+      showInstructions: false,
       showCc: false,
       showManagement: false,
       showTech: false,
@@ -283,9 +325,11 @@ const Landing: React.FC<{
       showResearch: false,
       showEvents: false,
       showDomains: false,
-      showPintooRun: false,
+      // showPintooRun: false,
       showSnake: false,
       showAbout: false,
+      showScheduler: false,
+      showTask: false,
       history: [],
       pointer: -1,
     };
@@ -316,6 +360,7 @@ const Landing: React.FC<{
     const newTab: TabData = {
       id: newId,
       title: url.replace(/^https?:\/\//, "").split("/")[0],
+      showInstructions: url === "instructions",
       showCc: url === "cc",
       showManagement: url === "management",
       showTech: url === "tech",
@@ -323,9 +368,11 @@ const Landing: React.FC<{
       showResearch: url === "research",
       showEvents: url === "events",
       showDomains: url === "domains",
-      showPintooRun: url === "pintoorun",
+      // showPintooRun: url === "pintoorun",
       showSnake: url === "snake",
       showAbout: url === "about",
+      showScheduler: url === "scheduler",
+      showTask: url === "task",
       history: [
         {
           id: Date.now(),
@@ -340,36 +387,31 @@ const Landing: React.FC<{
     setTabs([...tabs, newTab]);
     setActiveTabId(newId);
   };
-
   const closeTab = (id: number) => {
-    if (tabs.length === 1) {
-      setTabs([
-        {
-          id: tabs[0].id,
-          title: "Home",
-          showCc: false,
-          showManagement: false,
-          showTech: false,
-          showDesign: false,
-          showResearch: false,
-          showEvents: false,
-          showDomains: false,
-          showPintooRun: false,
-          showSnake: false,
-          showAbout: false,
-          history: [],
-          pointer: -1,
-        },
-      ]);
-      return;
-    }
+    if (tabs.length === 1) return;
 
-    const remaining = tabs.filter((tab) => tab.id !== id);
-    setTabs(remaining);
+    const el = document.getElementById(`tab-${id}`);
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const tab = tabs.find((t) => t.id === id);
+    if (!tab) return;
+
+    // Create ghost
+    setClosingGhost({ tab, rect });
+
+    // Remove real tab immediately (siblings snap invisibly)
+    setTabs((prev) => prev.filter((t) => t.id !== id));
 
     if (activeTabId === id) {
-      setActiveTabId(remaining[remaining.length - 1].id);
+      const remaining = tabs.filter((t) => t.id !== id);
+      if (remaining.length) {
+        setActiveTabId(remaining[remaining.length - 1].id);
+      }
     }
+
+    // Remove ghost after animation
+    setTimeout(() => setClosingGhost(null), 320);
   };
 
   const updateTab = (updatedTab: TabData) => {
@@ -420,16 +462,52 @@ const Landing: React.FC<{
   };
 
   return (
-    <>
-      <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
-        <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
-          <div className="flex items-end">
-            <div className="flex items-end overflow-x-auto overflow-y-visible">
-              {tabs.map((tab, index) => {
-                const isActive = activeTabId === tab.id;
-                return (
+    <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
+      {showMaxTabsNotification && (
+        <div className="fixed top-35 left-1/2 transform -translate-x-1/2 z-[9999] animate-in slide-in-from-top-5 duration-300">
+          <div className="bg-gradient-to-r from-red-800 to-red-600 text-white px-6 py-3 rounded-lg shadow-2xl border border-red-400/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <p className="font-medium text-sm">
+                You have opened the maximum no. of tabs
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
+        <div className="flex items-end">
+          <div className="flex items-end overflow-x-auto overflow-y-visible">
+            {tabs.map((tab, index) => {
+              const isActive = activeTabId === tab.id;
+              return (
+                <Fragment key={tab.id}>
+                  {closingGhost && (
+                    <div
+                      className="fixed z-50 pointer-events-none"
+                      style={{
+                        left: closingGhost.rect.left,
+                        top: closingGhost.rect.top,
+                        width: closingGhost.rect.width,
+                        height: closingGhost.rect.height,
+                        WebkitMaskImage: TAB_MASK_IMAGE,
+                        maskImage: TAB_MASK_IMAGE,
+                        WebkitMaskSize: "100% 100%",
+                        maskSize: "100% 100%",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        background: "#252525",
+                        animation:
+                          "tab-close 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                      }}
+                    >
+                      <div className="flex items-center h-full px-6 text-sm text-white font-medium">
+                        {closingGhost.tab.title}
+                      </div>
+                    </div>
+                  )}
+
                   <button
-                    key={tab.id}
+                    id={`tab-${tab.id}`}
                     type="button"
                     onClick={() => setActiveTabId(tab.id)}
                     onAuxClick={(e) => {
@@ -444,7 +522,7 @@ const Landing: React.FC<{
                     onDragOver={(event) => handleDragOver(event, tab.id)}
                     onDrop={(event) => handleDrop(event, tab.id)}
                     onDragEnd={handleDragEnd}
-                    className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-200 ease-out overflow-visible ${
+                    className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-0 ease-out overflow-visible ${
                       isActive
                         ? "z-40 text-neutral-900 bg-[#FCF7F2]"
                         : "z-20 text-neutral-200 bg-[#252525]"
@@ -466,9 +544,13 @@ const Landing: React.FC<{
                         color: isActive ? "#252525" : "#ffffff",
                       }}
                     >
-                      {tab.title}
+                      {tab.title.charAt(0).toUpperCase() +
+                        tab.title.slice(1).toLowerCase()}
                     </span>
-                    <div
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Close tab"
                       onClick={(e) => {
                         e.stopPropagation();
                         closeTab(tab.id);
@@ -486,58 +568,60 @@ const Landing: React.FC<{
                       }`}
                     >
                       ×
-                    </div>
+                    </span>
                   </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={addTab}
-              disabled={tabs.length >= 6}
-              className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-300 ease-out overflow-visible mb-[6px] ${
-                tabs.length >= 6
-                  ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
-                  : "cursor-pointer text-neutral-200 bg-[#252525] from-[#585858] to-[#bdbdbd] hover:from-neutral-600/90 hover:to-neutral-600/90"
-              } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
-              style={{
-                WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,
-                maskImage: PLUS_BUTTON_MASK_IMAGE,
-                WebkitMaskSize: "100% 100%",
-                maskSize: "100% 100%",
-                WebkitMaskRepeat: "no-repeat",
-                maskRepeat: "no-repeat",
-              }}
-            >
-              <span className="relative z-10 text-xl leading-none">+</span>
-            </button>
-            <div className="ml-auto mb-[6px]">
-              <FullscreenToggle />
-            </div>
+                </Fragment>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={addTab}
+            disabled={tabs.length >= 6}
+            className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-0 ease-out overflow-visible mb-[6px] ${
+              tabs.length >= 6
+                ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
+                : "cursor-pointer text-neutral-200 bg-[#252525] from-[#585858] to-[#bdbdbd] hover:from-neutral-600/90 hover:to-neutral-600/90"
+            } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
+            style={{
+              WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,
+              maskImage: PLUS_BUTTON_MASK_IMAGE,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+            }}
+          >
+            <span className="relative z-10 text-xl leading-none">+</span>
+          </button>
+          <div className="ml-auto mb-[6px]">
+            <FullscreenToggle />
           </div>
         </div>
-
-        <div className="flex-1 overflow-hidden">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={activeTabId === tab.id ? "block h-full" : "hidden"}
-            >
-              <Tab
-                tabData={tab}
-                onUpdateTab={updateTab}
-                onAddTabWithUrl={addTabWithUrl}
-                ccChildren={ccChild}
-                designChildren={designChild}
-                managementChildren={managementChild}
-                techChildren={techChild}
-                researchChildren={researchChild}
-              />
-            </div>
-          ))}
-        </div>
       </div>
-    </>
+
+      <div className="flex-1 overflow-hidden">
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={activeTabId === tab.id ? "block h-full" : "hidden"}
+          >
+            <Tab
+              tabData={tab}
+              onUpdateTab={updateTab}
+              onAddTabWithUrl={addTabWithUrl}
+              ccChildren={ccChild}
+              designChildren={designChild}
+              managementChildren={managementChild}
+              techChildren={techChild}
+              researchChildren={researchChild}
+              schedulerChildren={schedulerChild}
+              taskChildren={taskChild}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

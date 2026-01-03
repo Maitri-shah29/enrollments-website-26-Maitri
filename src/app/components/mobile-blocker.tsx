@@ -1,11 +1,11 @@
-import { publicAssetUrl } from "@/lib/public-asset-url";
+// import { publicAssetUrl } from "@/lib/public-asset-url";
 
 export default function MobileBlocker() {
   return (
     <div
       className="font-doppio lg:hidden fixed inset-0 z-[9999]"
       style={{
-        backgroundImage: `url(${publicAssetUrl("/images/acm-guy.png")})`,
+        backgroundImage: `url(/images/acm-guy.png)`,
         backgroundSize: "auto 80%",
         backgroundPosition: "left bottom",
         backgroundRepeat: "no-repeat",

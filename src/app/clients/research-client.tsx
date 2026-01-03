@@ -49,7 +49,7 @@ const labelToKey: Record<string, AoiKey> = Object.fromEntries(
   (Object.keys(keyToLabel) as AoiKey[]).map((k) => [
     keyToLabel[k].toLowerCase(),
     k,
-  ])
+  ]),
 ) as Record<string, AoiKey>;
 
 function toAoiKey(input: string): AoiKey | null {
@@ -57,7 +57,7 @@ function toAoiKey(input: string): AoiKey | null {
   const trimmed = input.trim();
   const upper = trimmed.toUpperCase().replace(/\s+/g, "");
   const keyMatch = (AOI_KEYS as readonly string[]).find(
-    (k) => k === upper || k === trimmed.toUpperCase()
+    (k) => k === upper || k === trimmed.toUpperCase(),
   ) as AoiKey | undefined;
   if (keyMatch) return keyMatch;
 
@@ -78,13 +78,13 @@ const ResearchClient = ({
   const [selectedAOI, setSelectedAOI] = useState<string>("Common");
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number>(0);
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
-    initialRoundUser ?? null
+    initialRoundUser ?? null,
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [savedResponses, setSavedResponses] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
     Set<string>
@@ -98,7 +98,6 @@ const ResearchClient = ({
     value: string | number;
   } | null>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
-  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
   const {
     activeSection,
@@ -112,7 +111,7 @@ const ResearchClient = ({
   } = useResearchNavigation();
 
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const childRef = useRef<QuestionsRef>(null);
   const [isProceeding, setIsProceeding] = useState<boolean>(false);
@@ -163,7 +162,7 @@ const ResearchClient = ({
   const continueCheck = () => {
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -176,7 +175,7 @@ const ResearchClient = ({
     // console.log(await createRoundUser(Domain.cc));
     if (roundUserCount >= DOMAIN_CAP) {
       setError(
-        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`
+        `You have already enrolled in ${roundUserCount} domains. Maximum is ${DOMAIN_CAP}.`,
       );
       setLoading(false);
       return;
@@ -204,7 +203,7 @@ const ResearchClient = ({
       console.error("Error initializing round user:", err);
 
       setError(
-        err instanceof Error ? err.message : "Failed to initialize round user"
+        err instanceof Error ? err.message : "Failed to initialize round user",
       );
     } finally {
       setLoading(false);
@@ -228,7 +227,7 @@ const ResearchClient = ({
             .filter((q) => q.varName === question.varName)
             .sort((a, b) => a.serial - b.serial);
           const questionIndex = AOIQuestions.findIndex(
-            (q) => q.id === question.id
+            (q) => q.id === question.id,
           );
           if (questionIndex !== -1) {
             const questionKey = `${question.varName}-question${
@@ -257,6 +256,11 @@ const ResearchClient = ({
         setShowUnsavedDialog(true);
         return;
       }
+      // Handle collapse case (empty string)
+      if (!aoi) {
+        setSelectedAOI("");
+        return;
+      }
       const key = toAoiKey(aoi);
       if (key) {
         setSelectedAOI(keyToLabel[key]);
@@ -266,7 +270,7 @@ const ResearchClient = ({
         setSelectedPanel("AOIs");
       }
     },
-    [hasUnsavedChanges, selectedPanel]
+    [hasUnsavedChanges, selectedPanel],
   );
 
   // ✅ Memoized to keep `onSelect` stable for AOIs
@@ -291,7 +295,7 @@ const ResearchClient = ({
 
       setSelectedPanel(panelName);
     },
-    [hasUnsavedChanges, selectedPanel]
+    [hasUnsavedChanges, selectedPanel],
   );
 
   const handleQuestionSelect = useCallback(
@@ -308,7 +312,7 @@ const ResearchClient = ({
       setSelectedQuestionIdx(idx);
       setSelectedPanel("Round 1");
     },
-    [hasUnsavedChanges, selectedPanel, selectedQuestionIdx]
+    [hasUnsavedChanges, selectedPanel, selectedQuestionIdx],
   );
 
   const handleConfirmNavigation = useCallback(() => {
@@ -454,14 +458,7 @@ const ResearchClient = ({
             onLeaveAOI={handleLeaveAOI}
           />
         )}
-        {selectedPanel === "Round 1" && !roundActive ? (
-          <div className="text-center text-white text-xl py-12">
-            <h1 className="text-2xl font-bold mb-4">
-              Round currently inactive.
-            </h1>
-            <p>This round will start soon...</p>
-          </div>
-        ) : selectedPanel === "Round 1" ? (
+        {selectedPanel === "Round 1" ? (
           <Questions
             ref={childRef}
             roundUser={roundUser ?? undefined}
