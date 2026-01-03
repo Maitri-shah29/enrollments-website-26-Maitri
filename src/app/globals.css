@@ -45,7 +45,7 @@
 
 @font-face {
   font-family: "JetBrainsMono";
-  src: url("https://assets.acmvit.in/ocs/fonts/JetBrainsMono-Regular.ttf")
+  src: url("/fonts/JetBrainsMono-Regular.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -54,7 +54,7 @@
 
 @font-face {
   font-family: "ShareTechMono";
-  src: url("https://assets.acmvit.in/ocs/fonts/ShareTechMono-Regular.ttf")
+  src: url("/fonts/ShareTechMono-Regular.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -63,7 +63,7 @@
 
 @font-face {
   font-family: "PolysansTrial";
-  src: url("https://assets.acmvit.in/ocs/fonts/PolysansTrial-Regular.ttf")
+  src: url("/fonts/PolySansTrial-BulkyWide.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -72,7 +72,7 @@
 
 @font-face {
   font-family: "Brushwell";
-  src: url("https://assets.acmvit.in/ocs/fonts/Brushwell.ttf")
+  src: url("/fonts/Brushwell.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -81,7 +81,7 @@
 
 @font-face {
   font-family: "Coolvetica";
-  src: url("https://assets.acmvit.in/ocs/fonts/coolvetica-rg.ttf")
+  src: url("/fonts/coolvetica-rg.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -90,7 +90,7 @@
 
 @font-face {
   font-family: "PoppinsReg";
-  src: url("https://assets.acmvit.in/ocs/fonts/Poppins-Regular.ttf")
+  src: url("/fonts/Poppins-Regular.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -99,7 +99,7 @@
 
 @font-face {
   font-family: "PoppinsBlack";
-  src: url("https://assets.acmvit.in/ocs/fonts/Poppins-Black.ttf")
+  src: url("/fonts/Poppins-Black.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -108,7 +108,7 @@
 
 @font-face {
   font-family: "Helvetica";
-  src: url("https://assets.acmvit.in/ocs/fonts/Helvetica.ttf")
+  src: url("/fonts/Helvetica.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -121,7 +121,7 @@
 
 @font-face {
   font-family: "DoppioOne";
-  src: url("https://assets.acmvit.in/ocs/fonts/DoppioOne-Regular.ttf")
+  src: url("/fonts/DoppioOne-Regular.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -130,7 +130,7 @@
 
 @font-face {
   font-family: "MonopolyBold";
-  src: url("https://assets.acmvit.in/ocs/fonts/Monopoly%20Bold.ttf")
+  src: url("/fonts/Monopoly%20Bold.ttf")
     format("truetype");
   font-weight: 700;
   font-style: normal;
@@ -139,7 +139,7 @@
 
 @font-face {
   font-family: "MonopolyRegular";
-  src: url("https://assets.acmvit.in/ocs/fonts/Monopoly%20Regular.ttf")
+  src: url("/fonts/Monopoly%20Regular.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
