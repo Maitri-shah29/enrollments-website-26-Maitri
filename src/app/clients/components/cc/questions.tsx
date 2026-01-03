@@ -4,6 +4,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import saveFormResponse from "@/app/actions/save-form-response";
 import submitForm from "@/app/actions/submit-form";
+import { getRoundGateState } from "@/lib/round-status";
 import AnswerBox from "./answer-box";
 import Button from "./button";
 import QuestionBox from "./question-box";
@@ -394,9 +395,6 @@ const Questions = ({
     setPendingQuestionId(null);
   };
 
-  // Check round user status
-  const roundUserStatus = roundUser?.status || "pending";
-
   if (loading) {
     return (
       <div className="text-white text-lg text-center py-8">
@@ -419,65 +417,75 @@ const Questions = ({
     );
   }
   const isAnnounced = !!roundUser?.round?.announced;
+  const roundGateState = getRoundGateState({
+    isActive: !!roundUser?.round?.active,
+    isAnnounced,
+    status: roundUser?.status,
+  });
   // Status-based rendering
-  if (roundUserStatus !== "pending" && !isAnnounced) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
-            Your responses are being evaluated
-          </h2>
-          <p className="text-white text-lg">
-            Please wait while we review your submission.
-          </p>
+  switch (roundGateState) {
+    case "inactive":
+      return (
+        <div className="text-center text-[#C9EB3E] font-ShareTechMono text-xl py-12">
+          <h1 className="text-2xl font-bold mb-4">Round currently inactive.</h1>
+          <p>This round will start soon...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "pending" && isAnnounced) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
-            This round's results have been announced
-          </h2>
-          <p className="text-white text-lg">
-            You did not submit any answer for this domain
-          </p>
+      );
+    case "evaluating":
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
+              Your responses are being evaluated
+            </h2>
+            <p className="text-white text-lg">
+              Please wait while we review your submission.
+            </p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "promoted" && isAnnounced) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
-            Congratulations! 🎉
-          </h2>
-          <p className="text-white text-lg">
-            You are promoted to the next round
-          </p>
+      );
+    case "announced_pending":
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
+              This round's results have been announced
+            </h2>
+            <p className="text-white text-lg">
+              You did not submit any answer for this domain
+            </p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "rejected" && isAnnounced) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <h2 className="text-red-500 text-3xl font-ShareTechMono mb-4">
-            Unfortunately, you could not pass this round
-          </h2>
-          <p className="text-white text-lg">
-            Thank you for participating. Better luck next time!
-          </p>
+      );
+    case "promoted":
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-[#C9EB3E] text-3xl font-ShareTechMono mb-4">
+              Congratulations! 🎉
+            </h2>
+            <p className="text-white text-lg">
+              You are promoted to the next round
+            </p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    case "rejected":
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h2 className="text-red-500 text-3xl font-ShareTechMono mb-4">
+              Unfortunately, you could not pass this round
+            </h2>
+            <p className="text-white text-lg">
+              Thank you for participating. Better luck next time!
+            </p>
+          </div>
+        </div>
+      );
+    case "content":
+    default:
+      break;
   }
 
   return (

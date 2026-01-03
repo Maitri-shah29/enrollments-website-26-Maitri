@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, useEffect, useState } from "react";
+import { type DragEvent, Fragment, useEffect, useState } from "react";
 import FullscreenToggle from "./fullscreen-toggle";
 import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
@@ -480,7 +480,7 @@ const Landing: React.FC<{
             {tabs.map((tab, index) => {
               const isActive = activeTabId === tab.id;
               return (
-                <>
+                <Fragment key={tab.id}>
                   {closingGhost && (
                     <div
                       className="fixed z-50 pointer-events-none"
@@ -508,7 +508,6 @@ const Landing: React.FC<{
 
                   <button
                     id={`tab-${tab.id}`}
-                    key={tab.id}
                     type="button"
                     onClick={() => setActiveTabId(tab.id)}
                     onAuxClick={(e) => {
@@ -548,8 +547,10 @@ const Landing: React.FC<{
                       {tab.title.charAt(0).toUpperCase() +
                         tab.title.slice(1).toLowerCase()}
                     </span>
-                    <button
-                      type="button"
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Close tab"
                       onClick={(e) => {
                         e.stopPropagation();
                         closeTab(tab.id);
@@ -567,9 +568,9 @@ const Landing: React.FC<{
                       }`}
                     >
                       ×
-                    </button>
+                    </span>
                   </button>
-                </>
+                </Fragment>
               );
             })}
           </div>
