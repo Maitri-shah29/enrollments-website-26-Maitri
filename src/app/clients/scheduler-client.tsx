@@ -244,7 +244,7 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
               Link will be shared 15 min prior to the scheduled time.
             </div>
             {/*canJoin && meetLink && (*/}
-            {meetLink && (
+            {canJoin && meetLink && (
               <button
                 onClick={() => {
                   window.postMessage(
