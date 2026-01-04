@@ -5,6 +5,12 @@ import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
 import App from "./loader/App";
 import { useSessionContext } from "./session-provider"; // Adjust path as needed
+import {
+  resetTabFlags,
+  stripProtocol,
+  tabFlagsForKeyword,
+  titleForKeyword,
+} from "./landing/tab-utils";
 
 const buildMaskUrl = (path: string) =>
   `url("data:image/svg+xml,${encodeURIComponent(
@@ -250,6 +256,48 @@ const Landing: React.FC<{
       document.removeEventListener("click", handleInteraction);
     };
   }, []);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.data?.type === "SWITCH_TAB" &&
+        event.data?.url &&
+        typeof window !== "undefined"
+      ) {
+        const url = event.data.url;
+        const meetingId = event.data.meetingId;
+        const stripped = stripProtocol(url);
+
+        setTabs((prevTabs) => {
+          return prevTabs.map((t) => {
+            if (t.id === activeTabId) {
+              const newHistory = t.history.slice(0, t.pointer + 1);
+              newHistory.push({
+                id: Date.now(),
+                title: titleForKeyword(stripped),
+                url: stripped,
+              });
+
+              return {
+                ...t,
+                ...resetTabFlags(),
+                ...tabFlagsForKeyword(stripped),
+                history: newHistory,
+                pointer: newHistory.length - 1,
+                title: titleForKeyword(stripped),
+                meetingId: meetingId,
+                pendingUrl: stripped,
+              };
+            }
+            return t;
+          });
+        });
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [activeTabId]);
 
   useEffect(() => {
     if (!startAnimation) return;

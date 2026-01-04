@@ -46,7 +46,7 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
       setNotification({ message, type });
       setTimeout(() => setNotification(null), 3000);
     },
-    [],
+    []
   );
 
   const getNotificationClasses = (type: "success" | "error") => {
@@ -143,13 +143,13 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
 
     // Sort slots by time
     const sortedSlots = [...roundSlots].sort(
-      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
     );
 
     // Filter out past slots
     const now = new Date().getTime();
     const futureSlots = sortedSlots.filter(
-      (s) => new Date(s.from).getTime() > now,
+      (s) => new Date(s.from).getTime() > now
     );
 
     setSlots(futureSlots);
@@ -158,12 +158,12 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
   }, [selectedRound]);
 
   const availableDates = Array.from(
-    new Set(slots.map((s) => new Date(s.from).toDateString())),
+    new Set(slots.map((s) => new Date(s.from).toDateString()))
   ).map((dateString) => new Date(dateString));
 
   const slotsForSelectedDate = selectedDate
     ? slots.filter(
-        (s) => new Date(s.from).toDateString() === selectedDate.toDateString(),
+        (s) => new Date(s.from).toDateString() === selectedDate.toDateString()
       )
     : [];
 
@@ -208,7 +208,7 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
       {notification && (
         <div
           className={`fixed top-35 right-10 z-[1000] p-2 rounded-md shadow-xl text-white transition-opacity duration-300 ${getNotificationClasses(
-            notification.type,
+            notification.type
           )} border-2`}
         >
           {notification.message}
@@ -243,15 +243,23 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
             <div className="text-gray-500 text-sm">
               Link will be shared 15 min prior to the scheduled time.
             </div>
-            {canJoin && meetLink && (
-              <a
-                href={meetLink}
-                target="_blank"
-                rel="noopener noreferrer"
+            {/*canJoin && meetLink && (*/}
+            {meetLink && (
+              <button
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      type: "SWITCH_TAB",
+                      url: "meets",
+                      meetingId: meetLink,
+                    },
+                    "*"
+                  );
+                }}
                 className="mt-6 bg-[#5CAFFF] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#4a9ceb] transition-colors"
               >
                 Join Meeting
-              </a>
+              </button>
             )}
           </div>
         ) : selectedRound ? (

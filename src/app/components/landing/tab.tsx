@@ -60,6 +60,7 @@ export interface TabData {
   showMeets: boolean;
   showScheduler: boolean;
   showTask: boolean;
+  meetingId?: string;
 }
 
 interface TabProps {
@@ -502,7 +503,7 @@ const Tab: React.FC<TabProps> = ({
           </div>
         ) : tabData.showMeets ? (
           <div className="w-full h-full bg-gray-900 overflow-auto relative">
-            <MeetsClient key={refreshKey} />
+            <MeetsClient key={refreshKey} initialRoomId={tabData.meetingId} />
           </div>
         ) : activePageData?.url ? (
           iframeError || !isWhitelisted(activePageData.url) ? (

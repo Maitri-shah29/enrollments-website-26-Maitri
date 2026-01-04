@@ -316,12 +316,16 @@ function getDisplayName(userId: string): string {
 // Main Component
 // ============================================
 
-export default function MeetsClient() {
+export default function MeetsClient({
+  initialRoomId,
+}: {
+  initialRoomId?: string;
+}) {
   const { session } = useSessionContext();
   const [mounted, setMounted] = useState(false);
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
-  const [roomId, setRoomId] = useState("default-room");
+  const [roomId, setRoomId] = useState(initialRoomId || "default-room");
   const [isMuted, setIsMuted] = useState(true);
   const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
