@@ -349,6 +349,10 @@ export default function MeetsClient({
   const [videoQuality, setVideoQuality] = useState<VideoQuality>("standard");
   const [isMirrorCamera, setIsMirrorCamera] = useState(true);
   const [isVideoSettingsOpen, setIsVideoSettingsOpen] = useState(false);
+  const [selectedAudioInputDeviceId, setSelectedAudioInputDeviceId] =
+    useState<string>();
+  const [selectedAudioOutputDeviceId, setSelectedAudioOutputDeviceId] =
+    useState<string>();
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -855,12 +859,19 @@ export default function MeetsClient({
   const requestMediaPermissions =
     useCallback(async (): Promise<MediaStream | null> => {
       try {
+        const videoConstraints =
+          videoQuality === "low"
+            ? { ...LOW_QUALITY_CONSTRAINTS }
+            : { ...STANDARD_QUALITY_CONSTRAINTS };
+
+        const audioConstraints: boolean | MediaTrackConstraints =
+          selectedAudioInputDeviceId
+            ? { deviceId: { exact: selectedAudioInputDeviceId } }
+            : true;
+
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video:
-            videoQuality === "low"
-              ? LOW_QUALITY_CONSTRAINTS
-              : STANDARD_QUALITY_CONSTRAINTS,
+          audio: audioConstraints,
+          video: videoConstraints,
         });
 
         setMediaState({
@@ -891,8 +902,13 @@ export default function MeetsClient({
           meetErr.code === "MEDIA_ERROR"
         ) {
           try {
+            const audioOnlyConstraints: boolean | MediaTrackConstraints =
+              selectedAudioInputDeviceId
+                ? { deviceId: { exact: selectedAudioInputDeviceId } }
+                : true;
+
             const audioStream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
+              audio: audioOnlyConstraints,
             });
             setMediaState({
               hasAudioPermission: true,
@@ -907,7 +923,95 @@ export default function MeetsClient({
         }
         return null;
       }
-    }, []);
+    }, [videoQuality, selectedAudioInputDeviceId]);
+
+  // Device Change Handlers
+
+  const handleAudioInputDeviceChange = useCallback(
+    async (deviceId: string) => {
+      setSelectedAudioInputDeviceId(deviceId);
+
+      // Switch microphone
+      if (connectionState === "joined") {
+        try {
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            audio: { deviceId: { exact: deviceId } },
+          });
+
+          const newAudioTrack = newStream.getAudioTracks()[0];
+          if (newAudioTrack) {
+            newAudioTrack.enabled = !isMuted;
+            const oldAudioTrack = localStream?.getAudioTracks()[0];
+
+            // Replace track in producer FIRST (before modifying local stream)
+            if (audioProducerRef.current) {
+              await audioProducerRef.current.replaceTrack({
+                track: newAudioTrack,
+              });
+            }
+
+            setLocalStream((prev) => {
+              if (prev) {
+                // Remove old audio track from stream (don't stop it yet)
+                if (oldAudioTrack) {
+                  prev.removeTrack(oldAudioTrack);
+                }
+                // Add new audio track
+                prev.addTrack(newAudioTrack);
+                // Now stop the old track after it's been replaced
+                if (oldAudioTrack) {
+                  oldAudioTrack.stop();
+                }
+                // Return new MediaStream to trigger re-render
+                return new MediaStream(prev.getTracks());
+              }
+              return newStream;
+            });
+          }
+        } catch (err) {
+          console.error("[Meets] Failed to switch audio input device:", err);
+        }
+      }
+    },
+    [connectionState, isMuted, localStream]
+  );
+
+  const handleAudioOutputDeviceChange = useCallback(
+    async (deviceId: string) => {
+      setSelectedAudioOutputDeviceId(deviceId);
+
+      // Update audio output for all audio elements (remote participants use <audio> elements)
+      const audioElements = document.querySelectorAll("audio");
+      for (const audio of audioElements) {
+        const audioElement = audio as HTMLAudioElement & {
+          setSinkId?: (sinkId: string) => Promise<void>;
+        };
+        if (audioElement.setSinkId) {
+          try {
+            await audioElement.setSinkId(deviceId);
+          } catch (err) {
+            console.error("[Meets] Failed to set audio output device:", err);
+          }
+        }
+      }
+
+      // Also update any video elements that might have audio
+      const videoElements = document.querySelectorAll("video");
+      for (const video of videoElements) {
+        const videoElement = video as HTMLVideoElement & {
+          setSinkId?: (sinkId: string) => Promise<void>;
+        };
+        if (videoElement.setSinkId) {
+          try {
+            await videoElement.setSinkId(deviceId);
+          } catch (err) {
+            // Video elements may not have audio, so don't log errors
+          }
+        }
+      }
+    },
+    []
+  );
 
   // ============================================
   // Room Join Flow
@@ -1700,6 +1804,10 @@ export default function MeetsClient({
                 onToggleOpen={() => setIsVideoSettingsOpen((prev) => !prev)}
                 onToggleMirror={() => setIsMirrorCamera((prev) => !prev)}
                 isCameraOff={isCameraOff}
+                selectedAudioInputDeviceId={selectedAudioInputDeviceId}
+                selectedAudioOutputDeviceId={selectedAudioOutputDeviceId}
+                onAudioInputDeviceChange={handleAudioInputDeviceChange}
+                onAudioOutputDeviceChange={handleAudioOutputDeviceChange}
               />
             </div>
           )}
@@ -1760,6 +1868,7 @@ export default function MeetsClient({
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
+            audioOutputDeviceId={selectedAudioOutputDeviceId}
           />
         ) : (
           /* Grid Layout */
@@ -1770,6 +1879,7 @@ export default function MeetsClient({
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
+            audioOutputDeviceId={selectedAudioOutputDeviceId}
           />
         )}
 
@@ -1917,6 +2027,7 @@ interface PresentationLayoutProps {
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
+  audioOutputDeviceId?: string;
 }
 
 function PresentationLayout({
@@ -1927,6 +2038,7 @@ function PresentationLayout({
   participants,
   userEmail,
   isMirrorCamera,
+  audioOutputDeviceId,
 }: PresentationLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -1991,6 +2103,7 @@ function PresentationLayout({
             key={participant.userId}
             participant={participant}
             compact
+            audioOutputDeviceId={audioOutputDeviceId}
           />
         ))}
       </div>
@@ -2005,6 +2118,7 @@ interface GridLayoutProps {
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
+  audioOutputDeviceId?: string;
 }
 
 function GridLayout({
@@ -2014,6 +2128,7 @@ function GridLayout({
   participants,
   userEmail,
   isMirrorCamera,
+  audioOutputDeviceId,
 }: GridLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -2057,7 +2172,11 @@ function GridLayout({
 
       {/* Remote Participants */}
       {Array.from(participants.values()).map((participant) => (
-        <ParticipantVideo key={participant.userId} participant={participant} />
+        <ParticipantVideo
+          key={participant.userId}
+          participant={participant}
+          audioOutputDeviceId={audioOutputDeviceId}
+        />
       ))}
     </div>
   );
@@ -2315,11 +2434,13 @@ function ChatPanel({
 interface ParticipantVideoProps {
   participant: Participant;
   compact?: boolean;
+  audioOutputDeviceId?: string;
 }
 
 function ParticipantVideo({
   participant,
   compact = false,
+  audioOutputDeviceId,
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -2348,11 +2469,37 @@ function ParticipantVideo({
             console.error("[Meets] Audio play error:", err);
           }
         });
+
+        // Set audio output device if specified
+        if (audioOutputDeviceId) {
+          const audioElement = node as HTMLAudioElement & {
+            setSinkId?: (sinkId: string) => Promise<void>;
+          };
+          if (audioElement.setSinkId) {
+            audioElement.setSinkId(audioOutputDeviceId).catch((err) => {
+              console.error("[Meets] Failed to set audio output:", err);
+            });
+          }
+        }
       }
       audioRef.current = node;
     },
-    [participant.audioStream]
+    [participant.audioStream, audioOutputDeviceId]
   );
+
+  // Update audio output when device changes
+  useEffect(() => {
+    if (audioRef.current && audioOutputDeviceId) {
+      const audioElement = audioRef.current as HTMLAudioElement & {
+        setSinkId?: (sinkId: string) => Promise<void>;
+      };
+      if (audioElement.setSinkId) {
+        audioElement.setSinkId(audioOutputDeviceId).catch((err) => {
+          console.error("[Meets] Failed to update audio output:", err);
+        });
+      }
+    }
+  }, [audioOutputDeviceId]);
 
   const displayName = getDisplayName(participant.userId);
   const showPlaceholder = !participant.videoStream || participant.isCameraOff;
