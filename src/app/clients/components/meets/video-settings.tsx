@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { ChevronDown, FlipHorizontal, Mic, Volume2 } from "lucide-react";
+import { Settings, FlipHorizontal, Mic, Volume2 } from "lucide-react";
 
 interface MediaDeviceOption {
   deviceId: string;
@@ -99,18 +99,14 @@ export default function VideoSettings({
     <div ref={containerRef} className="relative">
       <button
         onClick={onToggleOpen}
-        className="p-1.5 hover:bg-white/10 rounded transition-colors"
-        title="Video settings"
+        className="p-2 hover:bg-white/10 rounded-md transition-colors bg-white/5 border border-white/10"
+        title="Settings"
       >
-        <ChevronDown
-          className={`w-4 h-4 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
+        <Settings className="w-4 h-4" />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-72 z-50">
+        <div className="absolute top-full right-0 mt-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-72 z-50">
           {/* Mirror Camera Toggle */}
           {!isCameraOff && (
             <button

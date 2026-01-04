@@ -1795,9 +1795,11 @@ export default function MeetsClient({
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
           {isJoined && (
-            <div className="flex items-center bg-white/5 px-3 py-1 rounded-md text-sm text-white/80 border border-white/10 hidden sm:flex">
-              <span className="text-white/40 mr-2">Room:</span>
-              <span className="font-mono font-bold">{roomId}</span>
+            <>
+              <div className="flex items-center bg-white/5 px-3 py-1 rounded-md text-sm text-white/80 border border-white/10 hidden sm:flex">
+                <span className="text-white/40 mr-2">Room:</span>
+                <span className="font-mono font-bold">{roomId}</span>
+              </div>
               <VideoSettings
                 isMirrorCamera={isMirrorCamera}
                 isOpen={isVideoSettingsOpen}
@@ -1809,7 +1811,7 @@ export default function MeetsClient({
                 onAudioInputDeviceChange={handleAudioInputDeviceChange}
                 onAudioOutputDeviceChange={handleAudioOutputDeviceChange}
               />
-            </div>
+            </>
           )}
         </div>
         <div className="flex items-center gap-3">
