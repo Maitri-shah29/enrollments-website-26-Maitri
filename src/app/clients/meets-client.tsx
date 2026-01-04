@@ -1792,11 +1792,11 @@ export default function MeetsClient({
     <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-black border-b border-white/10">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
           {isJoined && (
-            <>
-              <div className="flex items-center bg-white/5 px-3 py-1 rounded-md text-sm text-white/80 border border-white/10 hidden sm:flex">
+            <div className="flex items-stretch gap-2 ml-2 hidden sm:flex h-8">
+              <div className="flex items-center bg-white/5 px-3 rounded-md text-sm text-white/80 border border-white/10">
                 <span className="text-white/40 mr-2">Room:</span>
                 <span className="font-mono font-bold">{roomId}</span>
               </div>
@@ -1811,7 +1811,7 @@ export default function MeetsClient({
                 onAudioInputDeviceChange={handleAudioInputDeviceChange}
                 onAudioOutputDeviceChange={handleAudioOutputDeviceChange}
               />
-            </>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-3">

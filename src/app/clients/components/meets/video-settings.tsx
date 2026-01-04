@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Settings, FlipHorizontal, Mic, Volume2 } from "lucide-react";
+import {
+  Settings,
+  FlipHorizontal,
+  Mic,
+  Volume2,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 
 interface MediaDeviceOption {
   deviceId: string;
@@ -18,6 +25,86 @@ interface VideoSettingsProps {
   selectedAudioOutputDeviceId?: string;
   onAudioInputDeviceChange?: (deviceId: string) => void;
   onAudioOutputDeviceChange?: (deviceId: string) => void;
+}
+
+// Custom dropdown component
+function DeviceDropdown({
+  devices,
+  selectedDeviceId,
+  onSelect,
+  placeholder,
+}: {
+  devices: MediaDeviceOption[];
+  selectedDeviceId?: string;
+  onSelect: (deviceId: string) => void;
+  placeholder: string;
+}) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedDevice = devices.find((d) => d.deviceId === selectedDeviceId);
+  const displayLabel =
+    selectedDevice?.label ||
+    (devices.length > 0 ? devices[0].label : placeholder);
+
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isDropdownOpen]);
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className="w-full flex items-center justify-between gap-2 bg-[#222] hover:bg-[#2a2a2a] border border-white/10 rounded-md px-3 py-2 text-sm text-left transition-colors"
+      >
+        <span className="truncate text-white/90">{displayLabel}</span>
+        <ChevronDown
+          className={`w-4 h-4 text-white/50 shrink-0 transition-transform ${
+            isDropdownOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {isDropdownOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#222] border border-white/10 rounded-md shadow-lg max-h-48 overflow-y-auto z-50">
+          {devices.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-white/50">{placeholder}</div>
+          ) : (
+            devices.map((device) => (
+              <button
+                key={device.deviceId}
+                onClick={() => {
+                  onSelect(device.deviceId);
+                  setIsDropdownOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-white/5 transition-colors"
+              >
+                <span className="truncate flex-1 text-white/90">
+                  {device.label}
+                </span>
+                {(device.deviceId === selectedDeviceId ||
+                  (!selectedDeviceId && device === devices[0])) && (
+                  <Check className="w-4 h-4 text-blue-500 shrink-0" />
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function VideoSettings({
@@ -96,42 +183,40 @@ export default function VideoSettings({
   }, [isOpen, onToggleOpen]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative h-full">
       <button
         onClick={onToggleOpen}
-        className="p-2 hover:bg-white/10 rounded-md transition-colors bg-white/5 border border-white/10"
+        className="h-full px-2 hover:bg-white/10 rounded-md transition-colors bg-white/5 border border-white/10 flex items-center"
         title="Settings"
       >
         <Settings className="w-4 h-4" />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-72 z-50">
+        <div className="absolute top-full left-0 mt-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-100 z-50">
           {/* Mirror Camera Toggle */}
-          {!isCameraOff && (
-            <button
-              onClick={onToggleMirror}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded text-sm transition-colors"
-            >
-              <FlipHorizontal className="w-4 h-4" />
-              <span>Mirror camera</span>
-              <div className="ml-auto">
+          <button
+            onClick={onToggleMirror}
+            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded text-sm transition-colors"
+          >
+            <FlipHorizontal className="w-4 h-4" />
+            <span>Mirror camera</span>
+            <div className="ml-auto">
+              <div
+                className={`w-10 h-6 rounded-full transition-colors relative ${
+                  isMirrorCamera ? "bg-blue-600" : "bg-white/20"
+                }`}
+              >
                 <div
-                  className={`w-9 h-5 rounded-full transition-colors ${
-                    isMirrorCamera ? "bg-blue-600" : "bg-white/20"
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    isMirrorCamera ? "left-5" : "left-1"
                   }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${
-                      isMirrorCamera ? "translate-x-4" : "translate-x-0.5"
-                    }`}
-                  />
-                </div>
+                />
               </div>
-            </button>
-          )}
+            </div>
+          </button>
 
-          {!isCameraOff && <div className="border-t border-white/10 my-2" />}
+          <div className="border-t border-white/10 my-2" />
 
           {/* Microphone Selection */}
           <div className="px-3 py-2">
@@ -139,21 +224,12 @@ export default function VideoSettings({
               <Mic className="w-3.5 h-3.5" />
               <span>Microphone</span>
             </div>
-            <select
-              value={selectedAudioInputDeviceId || ""}
-              onChange={(e) => onAudioInputDeviceChange?.(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-white/30 cursor-pointer"
-            >
-              {audioInputDevices.length === 0 ? (
-                <option value="">No microphones found</option>
-              ) : (
-                audioInputDevices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label}
-                  </option>
-                ))
-              )}
-            </select>
+            <DeviceDropdown
+              devices={audioInputDevices}
+              selectedDeviceId={selectedAudioInputDeviceId}
+              onSelect={(deviceId) => onAudioInputDeviceChange?.(deviceId)}
+              placeholder="No microphones found"
+            />
           </div>
 
           {/* Speaker Selection */}
@@ -162,21 +238,12 @@ export default function VideoSettings({
               <Volume2 className="w-3.5 h-3.5" />
               <span>Speaker</span>
             </div>
-            <select
-              value={selectedAudioOutputDeviceId || ""}
-              onChange={(e) => onAudioOutputDeviceChange?.(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-white/30 cursor-pointer"
-            >
-              {audioOutputDevices.length === 0 ? (
-                <option value="">No speakers found</option>
-              ) : (
-                audioOutputDevices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label}
-                  </option>
-                ))
-              )}
-            </select>
+            <DeviceDropdown
+              devices={audioOutputDevices}
+              selectedDeviceId={selectedAudioOutputDeviceId}
+              onSelect={(deviceId) => onAudioOutputDeviceChange?.(deviceId)}
+              placeholder="No speakers found"
+            />
           </div>
         </div>
       )}
