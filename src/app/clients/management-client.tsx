@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { DOMAIN_CAP } from "@/lib/constants";
+import { getRoundGateState } from "@/lib/round-status";
 import type { QuestionPayload } from "@/lib/validation";
 import { validateAnswer } from "@/lib/validation";
 import createRoundUser from "../actions/create-round-user";
@@ -360,62 +361,77 @@ export default function Management({
         return <WhatWeDo onBack={() => setActiveSection("Landing")} />;
       case "Instructions":
         return <Instructions onBack={() => setActiveSection("Landing")} />;
-      case "Round 1":
+      case "Round 1": {
         if (loading) return <p className="text-white">Loading round...</p>;
         if (error) return <p className="text-red-600 font-semibold">{error}</p>;
-        if (!roundActive) {
-          return (
-            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
-              <h1 className="text-3xl font-bold mb-4 text-gray-800">
-                Round currently inactive.
-              </h1>
-              <p className="text-lg text-gray-700">
-                This round will start soon...
-              </p>
-            </div>
-          );
-        }
+        const roundGateState = getRoundGateState({
+          isActive: roundActive,
+          isAnnounced,
+          status: roundUser?.status,
+        });
 
         // Status-based rendering
-        if (roundUser?.status === "evaluate" && !isAnnounced) {
-          return (
-            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                Form Submitted Successfully!
-              </h2>
-              <p className="text-lg text-gray-700 text-center">
-                Your responses have been submitted and are under evaluation.
-                You'll be notified about the results soon.
-              </p>
-            </div>
-          );
-        }
-
-        if (roundUser?.status === "promoted" && isAnnounced) {
-          return (
-            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
-              <h2 className="text-3xl font-bold text-green-700 mb-4">
-                Congratulations! 🎉
-              </h2>
-              <p className="text-lg text-gray-700 text-center">
-                You have been promoted to the next round!
-              </p>
-            </div>
-          );
-        }
-
-        if (roundUser?.status === "rejected" && isAnnounced) {
-          return (
-            <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
-              <h2 className="text-3xl font-bold text-red-700 mb-4">
-                Thank You for Participating
-              </h2>
-              <p className="text-lg text-gray-700 text-center">
-                Unfortunately, you haven't been selected for the next round. We
-                appreciate your effort!
-              </p>
-            </div>
-          );
+        switch (roundGateState) {
+          case "inactive":
+            return (
+              <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+                <h1 className="text-3xl font-bold mb-4 text-gray-800">
+                  Round currently inactive.
+                </h1>
+                <p className="text-lg text-gray-700">
+                  This round will start soon...
+                </p>
+              </div>
+            );
+          case "evaluating":
+            return (
+              <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+                <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                  Form Submitted Successfully!
+                </h2>
+                <p className="text-lg text-gray-700 text-center">
+                  Your responses have been submitted and are under evaluation.
+                  You'll be notified about the results soon.
+                </p>
+              </div>
+            );
+          case "announced_pending":
+            return (
+              <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+                <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                  This round's results have been announced
+                </h2>
+                <p className="text-lg text-gray-700 text-center">
+                  You did not submit any answer for this domain
+                </p>
+              </div>
+            );
+          case "promoted":
+            return (
+              <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+                <h2 className="text-3xl font-bold text-green-700 mb-4">
+                  Congratulations! 🎉
+                </h2>
+                <p className="text-lg text-gray-700 text-center">
+                  You have been promoted to the next round!
+                </p>
+              </div>
+            );
+          case "rejected":
+            return (
+              <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-full h-[90%] shadow-lg flex flex-col items-center justify-center p-8">
+                <h2 className="text-3xl font-bold text-red-700 mb-4">
+                  Thank You for Participating
+                </h2>
+                <p className="text-lg text-gray-700 text-center">
+                  Unfortunately, you haven't been selected for the next round.
+                  We appreciate your effort!
+                </p>
+              </div>
+            );
+          case "content":
+          default:
+            break;
         }
 
         return roundId && questions.length > 0 ? (
@@ -440,6 +456,7 @@ export default function Management({
         ) : (
           <p className="text-gray-700">No questions available.</p>
         );
+      }
       default:
         return null;
     }

@@ -157,6 +157,10 @@ export const INTERNAL_KEYWORDS = new Set([
   "about",
   "meets",
   "concalve",
+  "scheduler",
+  "scheduler.com",
+  "task",
+  "task.com",
   "aiml",
   "ai/ml",
   "quantum",
@@ -204,6 +208,8 @@ export const normalizeInternalKeyword = (keyword: string) => {
   if (keyword === "management") return "management.com";
   if (keyword === "design") return "design.com";
   if (keyword === "research") return "research.com";
+  // if (keyword === "scheduler") return "scheduler.com";
+  // if (keyword === "task") return "task.com";
   return keyword;
 };
 
@@ -220,6 +226,8 @@ export const BOOKMARK_LABELS: Record<string, string> = {
   design: "Design",
   research: "Research",
   meets: "Meets",
+  // scheduler: "Scheduler",
+  // task: "Task",
   // events: "Events",
   // domains: "Domains",
   // pintoorun: "PintooRun",

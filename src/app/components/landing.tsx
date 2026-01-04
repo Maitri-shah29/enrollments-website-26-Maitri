@@ -1,5 +1,5 @@
 "use client";
-import { type DragEvent, useEffect, useState } from "react";
+import { type DragEvent, Fragment, useEffect, useState } from "react";
 import FullscreenToggle from "./fullscreen-toggle";
 import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
@@ -28,6 +28,8 @@ const Landing: React.FC<{
   managementChild?: React.ReactNode;
   techChild?: React.ReactNode;
   researchChild?: React.ReactNode;
+  schedulerChild?: React.ReactNode;
+  taskChild?: React.ReactNode;
 }> = ({
   session: _session,
   isAllowed: _isAllowed,
@@ -36,6 +38,8 @@ const Landing: React.FC<{
   managementChild,
   techChild,
   researchChild,
+  schedulerChild,
+  taskChild,
 }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
@@ -57,6 +61,8 @@ const Landing: React.FC<{
           showSnake: false,
           showAbout: false,
           showMeets: false,
+          showScheduler: false,
+          showTask: false,
           history: [],
           pointer: -1,
         },
@@ -84,6 +90,7 @@ const Landing: React.FC<{
                 showSnake: false,
                 showAbout: false,
                 showMeets: false,
+                showScheduler: false,
                 history: [],
                 pointer: -1,
               },
@@ -108,6 +115,8 @@ const Landing: React.FC<{
         showSnake: false,
         showAbout: false,
         showMeets: false,
+        showScheduler: false,
+        showTask: false,
         history: [],
         pointer: -1,
       },
@@ -323,6 +332,8 @@ const Landing: React.FC<{
       showSnake: false,
       showAbout: false,
       showMeets: false,
+      showScheduler: false,
+      showTask: false,
       history: [],
       pointer: -1,
     };
@@ -366,6 +377,8 @@ const Landing: React.FC<{
       showAbout: url === "about",
       showMeets: url === "meets",
 
+      showScheduler: url === "scheduler",
+      showTask: url === "task",
       history: [
         {
           id: Date.now(),
@@ -455,153 +468,166 @@ const Landing: React.FC<{
   };
 
   return (
-    <>
-      <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
-        <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
-          <div className="flex items-end">
-            <div className="flex items-end overflow-x-auto overflow-y-visible">
-              {tabs.map((tab, index) => {
-                const isActive = activeTabId === tab.id;
-                return (
-                  <>
-                    {closingGhost && (
-                      <div
-                        className="fixed z-50 pointer-events-none"
-                        style={{
-                          left: closingGhost.rect.left,
-                          top: closingGhost.rect.top,
-                          width: closingGhost.rect.width,
-                          height: closingGhost.rect.height,
-                          WebkitMaskImage: TAB_MASK_IMAGE,
-                          maskImage: TAB_MASK_IMAGE,
-                          WebkitMaskSize: "100% 100%",
-                          maskSize: "100% 100%",
-                          WebkitMaskRepeat: "no-repeat",
-                          maskRepeat: "no-repeat",
-                          background: "#252525",
-                          animation:
-                            "tab-close 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
-                        }}
-                      >
-                        <div className="flex items-center h-full px-6 text-sm text-white font-medium">
-                          {closingGhost.tab.title}
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      id={`tab-${tab.id}`}
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveTabId(tab.id)}
-                      onAuxClick={(e) => {
-                        // Middle-click (button 1) closes tab
-                        if (e.button === 1) {
-                          e.preventDefault();
-                          closeTab(tab.id);
-                        }
-                      }}
-                      draggable
-                      onDragStart={(event) => handleDragStart(event, tab.id)}
-                      onDragOver={(event) => handleDragOver(event, tab.id)}
-                      onDrop={(event) => handleDrop(event, tab.id)}
-                      onDragEnd={handleDragEnd}
-                      className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-0 ease-out overflow-visible ${
-                        isActive
-                          ? "z-40 text-neutral-900 bg-[#FCF7F2]"
-                          : "z-20 text-neutral-200 bg-[#252525]"
-                      } ${index > 0 ? "-ml-6" : ""} ${
-                        draggingTabId === tab.id ? "opacity-70" : ""
-                      }`}
+    <div className="bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 w-full h-full flex flex-col">
+      {showMaxTabsNotification && (
+        <div className="fixed top-35 left-1/2 transform -translate-x-1/2 z-[9999] animate-in slide-in-from-top-5 duration-300">
+          <div className="bg-gradient-to-r from-red-800 to-red-600 text-white px-6 py-3 rounded-lg shadow-2xl border border-red-400/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <p className="font-medium text-sm">
+                You have opened the maximum no. of tabs
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="w-full pl-1 pr-4 pt-4 pb-0 border-b border-white/10 relative overflow-visible bg-neutral-950/50">
+        <div className="flex items-end">
+          <div className="flex items-end overflow-x-auto overflow-y-visible">
+            {tabs.map((tab, index) => {
+              const isActive = activeTabId === tab.id;
+              return (
+                <Fragment key={tab.id}>
+                  {closingGhost && (
+                    <div
+                      className="fixed z-50 pointer-events-none"
                       style={{
+                        left: closingGhost.rect.left,
+                        top: closingGhost.rect.top,
+                        width: closingGhost.rect.width,
+                        height: closingGhost.rect.height,
                         WebkitMaskImage: TAB_MASK_IMAGE,
                         maskImage: TAB_MASK_IMAGE,
                         WebkitMaskSize: "100% 100%",
                         maskSize: "100% 100%",
                         WebkitMaskRepeat: "no-repeat",
                         maskRepeat: "no-repeat",
+                        background: "#252525",
+                        animation:
+                          "tab-close 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
                       }}
                     >
-                      <span
-                        className="truncate pr-4 relative z-10 font-poppinsReg"
-                        style={{
-                          color: isActive ? "#252525" : "#ffffff",
-                        }}
-                      >
-                        {tab.title.charAt(0).toUpperCase() +
-                          tab.title.slice(1).toLowerCase()}
-                      </span>
-                      <div
-                        onClick={(e) => {
+                      <div className="flex items-center h-full px-6 text-sm text-white font-medium">
+                        {closingGhost.tab.title}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    id={`tab-${tab.id}`}
+                    type="button"
+                    onClick={() => setActiveTabId(tab.id)}
+                    onAuxClick={(e) => {
+                      // Middle-click (button 1) closes tab
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        closeTab(tab.id);
+                      }
+                    }}
+                    draggable
+                    onDragStart={(event) => handleDragStart(event, tab.id)}
+                    onDragOver={(event) => handleDragOver(event, tab.id)}
+                    onDrop={(event) => handleDrop(event, tab.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`relative flex items-center flex-shrink-0 h-9 min-w-[13rem] px-6 text-sm font-medium transform-gpu transition-all duration-0 ease-out overflow-visible ${
+                      isActive
+                        ? "z-40 text-neutral-900 bg-[#FCF7F2]"
+                        : "z-20 text-neutral-200 bg-[#252525]"
+                    } ${index > 0 ? "-ml-6" : ""} ${
+                      draggingTabId === tab.id ? "opacity-70" : ""
+                    }`}
+                    style={{
+                      WebkitMaskImage: TAB_MASK_IMAGE,
+                      maskImage: TAB_MASK_IMAGE,
+                      WebkitMaskSize: "100% 100%",
+                      maskSize: "100% 100%",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                    }}
+                  >
+                    <span
+                      className="truncate pr-4 relative z-10 font-poppinsReg"
+                      style={{
+                        color: isActive ? "#252525" : "#ffffff",
+                      }}
+                    >
+                      {tab.title.charAt(0).toUpperCase() +
+                        tab.title.slice(1).toLowerCase()}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Close tab"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeTab(tab.id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.stopPropagation();
                           closeTab(tab.id);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.stopPropagation();
-                            closeTab(tab.id);
-                          }
-                        }}
-                        className={`ml-auto flex h-4 w-4 items-center justify-center rounded-full transition-colors relative z-10 text-base ${
-                          isActive
-                            ? "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200"
-                            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
-                        }`}
-                      >
-                        ×
-                      </div>
-                    </button>
-                  </>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={addTab}
-              disabled={tabs.length >= 6}
-              className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-0 ease-out overflow-visible mb-[6px] ${
-                tabs.length >= 6
-                  ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
-                  : "cursor-pointer text-neutral-200 bg-[#252525] from-[#585858] to-[#bdbdbd] hover:from-neutral-600/90 hover:to-neutral-600/90"
-              } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
-              style={{
-                WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,
-                maskImage: PLUS_BUTTON_MASK_IMAGE,
-                WebkitMaskSize: "100% 100%",
-                maskSize: "100% 100%",
-                WebkitMaskRepeat: "no-repeat",
-                maskRepeat: "no-repeat",
-              }}
-            >
-              <span className="relative z-10 text-xl leading-none">+</span>
-            </button>
-            <div className="ml-auto mb-[6px]">
-              <FullscreenToggle />
-            </div>
+                        }
+                      }}
+                      className={`ml-auto flex h-4 w-4 items-center justify-center rounded-full transition-colors relative z-10 text-base ${
+                        isActive
+                          ? "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200"
+                          : "text-neutral-400 hover:text-neutral-200 hover:bg-white/10"
+                      }`}
+                    >
+                      ×
+                    </span>
+                  </button>
+                </Fragment>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={addTab}
+            disabled={tabs.length >= 6}
+            className={`relative -left-3 flex h-7 w-16 border-[#252525] bg-[#252525] from-[#585858] to-[#bdbdbd] items-center justify-center text-lg rounded-lg font-semibold transform-gpu transition-all duration-0 ease-out overflow-visible mb-[6px] ${
+              tabs.length >= 6
+                ? "cursor-not-allowed text-neutral-600 bg-gradient-to-b from-neutral-700/90 to-neutral-800/90"
+                : "cursor-pointer text-neutral-200 bg-[#252525] from-[#585858] to-[#bdbdbd] hover:from-neutral-600/90 hover:to-neutral-600/90"
+            } z-30 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]`}
+            style={{
+              WebkitMaskImage: PLUS_BUTTON_MASK_IMAGE,
+              maskImage: PLUS_BUTTON_MASK_IMAGE,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+            }}
+          >
+            <span className="relative z-10 text-xl leading-none">+</span>
+          </button>
+          <div className="ml-auto mb-[6px]">
+            <FullscreenToggle />
           </div>
         </div>
-
-        <div className="flex-1 overflow-hidden">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={activeTabId === tab.id ? "block h-full" : "hidden"}
-            >
-              <Tab
-                tabData={tab}
-                onUpdateTab={updateTab}
-                onAddTabWithUrl={addTabWithUrl}
-                ccChildren={ccChild}
-                designChildren={designChild}
-                managementChildren={managementChild}
-                techChildren={techChild}
-                researchChildren={researchChild}
-              />
-            </div>
-          ))}
-        </div>
       </div>
-    </>
+
+      <div className="flex-1 overflow-hidden">
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={activeTabId === tab.id ? "block h-full" : "hidden"}
+          >
+            <Tab
+              tabData={tab}
+              onUpdateTab={updateTab}
+              onAddTabWithUrl={addTabWithUrl}
+              ccChildren={ccChild}
+              designChildren={designChild}
+              managementChildren={managementChild}
+              techChildren={techChild}
+              researchChildren={researchChild}
+              schedulerChildren={schedulerChild}
+              taskChildren={taskChild}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

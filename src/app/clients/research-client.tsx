@@ -98,7 +98,6 @@ const ResearchClient = ({
     value: string | number;
   } | null>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
-  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
   const {
     activeSection,
@@ -459,14 +458,7 @@ const ResearchClient = ({
             onLeaveAOI={handleLeaveAOI}
           />
         )}
-        {selectedPanel === "Round 1" && !roundActive ? (
-          <div className="text-center text-white text-xl py-12">
-            <h1 className="text-2xl font-bold mb-4">
-              Round currently inactive.
-            </h1>
-            <p>This round will start soon...</p>
-          </div>
-        ) : selectedPanel === "Round 1" ? (
+        {selectedPanel === "Round 1" ? (
           <Questions
             ref={childRef}
             roundUser={roundUser ?? undefined}

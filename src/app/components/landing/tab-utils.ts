@@ -13,6 +13,8 @@ export type TabInternalFlags = {
   showSnake: boolean;
   showAbout: boolean;
   showMeets: boolean;
+  showScheduler: boolean;
+  showTask: boolean;
 };
 
 export type TabDataLike = {
@@ -114,6 +116,8 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
   showSnake: keyword === "snake",
   showAbout: keyword === "about",
   showMeets: keyword === "meets",
+  showScheduler: keyword === "scheduler.com",
+  showTask: keyword === "task.com" || keyword === "task",
 });
 
 export const resetTabFlags = (): TabInternalFlags => ({
@@ -129,4 +133,6 @@ export const resetTabFlags = (): TabInternalFlags => ({
   showSnake: false,
   showAbout: false,
   showMeets: false,
+  showScheduler: false,
+  showTask: false,
 });

@@ -63,6 +63,11 @@ export default async function submitTask(
         },
       });
 
+      await prisma.roundUser.update({
+        where: { id: roundUserId },
+        data: { status: "evaluate" },
+      });
+
       updateTag(cacheTags.tasks(userId));
       if (ru.round.domain) {
         updateTag(cacheTags.roundUser(userId, ru.round.domain));
@@ -74,6 +79,11 @@ export default async function submitTask(
           text: submitText,
           roundUserId: roundUserId,
         },
+      });
+
+      await prisma.roundUser.update({
+        where: { id: roundUserId },
+        data: { status: "evaluate" },
       });
 
       updateTag(cacheTags.tasks(userId));

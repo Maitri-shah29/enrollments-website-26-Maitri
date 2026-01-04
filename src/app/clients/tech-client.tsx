@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 import { DOMAIN_CAP } from "@/lib/constants";
+import { getRoundGateState } from "@/lib/round-status";
 import { useTechNavigation } from "@/lib/tech-navigation";
 import type { AOI, QuestionId } from "@/lib/types";
 import createRoundUser from "../actions/create-round-user";
@@ -178,7 +179,11 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   };
 
   const renderContent = () => {
-    const roundUserStatus = roundUser?.status || "pending";
+    const roundGateState = getRoundGateState({
+      isActive: roundActive,
+      isAnnounced,
+      status: roundUser?.status,
+    });
 
     // Allow about, instructions, and aoi pages to be displayed normally
     if (activeSection === "about") return <About />;
@@ -191,63 +196,6 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           <p className="mt-4 text-lg text-white">
             Select a subtopic from the sidebar to view more details.
           </p>
-        </div>
-      );
-    }
-    // Status-based rendering for evaluate, promoted, rejected
-    if (
-      roundUserStatus === "evaluate" &&
-      !isAnnounced &&
-      activeSection === "round1"
-    ) {
-      return (
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-center">
-            <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
-              Your responses are being evaluated
-            </h2>
-            <p className="text-white text-lg">
-              Please wait while we review your submission.
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    if (
-      roundUserStatus === "promoted" &&
-      isAnnounced &&
-      activeSection === "round1"
-    ) {
-      return (
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-center">
-            <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
-              Congratulations! 🎉
-            </h2>
-            <p className="text-white text-lg">
-              You are promoted to the next round
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    if (
-      roundUserStatus === "rejected" &&
-      isAnnounced &&
-      activeSection === "round1"
-    ) {
-      return (
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-center">
-            <h2 className="text-red-500 text-3xl font-jetbrains mb-4">
-              Unfortunately, you could not pass this round
-            </h2>
-            <p className="text-white text-lg">
-              Thank you for participating. Better luck next time!
-            </p>
-          </div>
         </div>
       );
     }
@@ -276,6 +224,73 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         </div>
       );
     if (activeSection === "round1") {
+      switch (roundGateState) {
+        case "inactive":
+          return (
+            <div className="text-center text-[#993C7A] text-xl py-12">
+              <h1 className="text-2xl font-bold mb-4">
+                Round currently inactive.
+              </h1>
+              <p className="text-white">This round will start soon...</p>
+            </div>
+          );
+        case "evaluating":
+          return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+              <div className="text-center">
+                <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+                  Your responses are being evaluated
+                </h2>
+                <p className="text-white text-lg">
+                  Please wait while we review your submission.
+                </p>
+              </div>
+            </div>
+          );
+        case "announced_pending":
+          return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+              <div className="text-center">
+                <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+                  This round's results have been announced
+                </h2>
+                <p className="text-white text-lg">
+                  You did not submit any answer for this domain
+                </p>
+              </div>
+            </div>
+          );
+        case "promoted":
+          return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+              <div className="text-center">
+                <h2 className="text-[#993C7A] text-3xl font-jetbrains mb-4">
+                  Congratulations! 🎉
+                </h2>
+                <p className="text-white text-lg">
+                  You are promoted to the next round
+                </p>
+              </div>
+            </div>
+          );
+        case "rejected":
+          return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+              <div className="text-center">
+                <h2 className="text-red-500 text-3xl font-jetbrains mb-4">
+                  Unfortunately, you could not pass this round
+                </h2>
+                <p className="text-white text-lg">
+                  Thank you for participating. Better luck next time!
+                </p>
+              </div>
+            </div>
+          );
+        case "content":
+        default:
+          break;
+      }
+
       const hasCommonOrTechQuestions = (roundUser?.round?.Question || []).some(
         (q) => q.varName === "tech" || q.varName === "common",
       );
@@ -303,16 +318,6 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
         );
       }
 
-      if (!roundActive) {
-        return (
-          <div className="text-center text-[#993C7A] text-xl py-12">
-            <h1 className="text-2xl font-bold mb-4">
-              Round currently inactive.
-            </h1>
-            <p className="text-white">This round will start soon...</p>
-          </div>
-        );
-      }
       const folderForQuestions =
         activeRoundFolder ??
         (() => {

@@ -4,7 +4,6 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import ReactLenis from "lenis/react";
 import React, { useRef } from "react";
 
-
 const projects = [
   {
     title: "Project 1",
@@ -59,11 +58,7 @@ const StickyCard_001 = ({
         }}
         className="rounded-4xl relative -top-1/4 flex h-[300px] w-[500px] origin-top flex-col overflow-hidden"
       >
-        <img
-          src={src}
-          alt={title}
-          className="h-full w-full object-cover"
-        />
+        <img src={src} alt={title} className="h-full w-full object-cover" />
       </motion.div>
     </div>
   );

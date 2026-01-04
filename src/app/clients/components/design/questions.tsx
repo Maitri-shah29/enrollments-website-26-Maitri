@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import createResponse from "@/app/actions/create-response";
 import submitForm from "@/app/actions/submit-form";
 import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
+import { getRoundGateState } from "@/lib/round-status";
 import type { DesignAOI } from "@/lib/types";
 
 interface TransformedQuestion {
@@ -284,52 +285,81 @@ const Questions: React.FC<QuestionsProps> = ({
       : "bg-red-500 border-red-700";
   };
 
-  const roundUserStatus = roundUser?.status || "pending";
   const isAnnounced = !!roundUser?.round?.announced;
-  const isHidden = !!roundUser?.round?.hidden;
+  const roundGateState = getRoundGateState({
+    isActive: !!roundUser?.round?.active,
+    isAnnounced,
+    status: roundUser?.status,
+  });
   // Status-based rendering
-  if (roundUserStatus === "evaluate" && !isAnnounced) {
-    return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
-        <div className="text-center">
-          <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
-            Your responses are being evaluated
-          </h2>
-          <p className="text-white text-lg font-coolvetica">
-            Please wait while we review your submission.
-          </p>
+  switch (roundGateState) {
+    case "inactive":
+      return (
+        <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
+          <div className="text-center">
+            <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
+              Round currently inactive.
+            </h2>
+            <p className="text-white text-lg font-coolvetica">
+              This round will start soon...
+            </p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "promoted" && isAnnounced) {
-    return (
-      <div className="flex-1 w-full flex items-center justify-center flex-col">
-        <h2 className="text-[#F55F4B] text-9xl font-brushwell mb-4">
-          Congratulations! 🎉
-        </h2>
-        <p className="text-white text-3xl font-coolvetica">
-          You have been promoted to the next round
-        </p>
-      </div>
-    );
-  }
-
-  if (roundUserStatus === "rejected" && isAnnounced) {
-    return (
-      <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
-        <div className="text-center">
-          <h2 className="text-red-500 text-9xl font-brushwell mb-4">
-            Sorry 😞
+      );
+    case "evaluating":
+      return (
+        <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
+          <div className="text-center">
+            <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
+              Your responses are being evaluated
+            </h2>
+            <p className="text-white text-lg font-coolvetica">
+              Please wait while we review your submission.
+            </p>
+          </div>
+        </div>
+      );
+    case "announced_pending":
+      return (
+        <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
+          <div className="text-center">
+            <h2 className="text-[#F55F4B] text-3xl font-brushwell mb-4">
+              This round's results have been announced.
+            </h2>
+            <p className="text-white text-lg font-coolvetica">
+              You did not submit answers for this domain.
+            </p>
+          </div>
+        </div>
+      );
+    case "promoted":
+      return (
+        <div className="flex-1 w-full flex items-center justify-center flex-col">
+          <h2 className="text-[#F55F4B] text-9xl font-brushwell mb-4">
+            Congratulations! 🎉
           </h2>
           <p className="text-white text-3xl font-coolvetica">
-            Unfortunately you did not pass this round. <br />
-            Thank you for participating. Better luck next time!
+            You have been promoted to the next round
           </p>
         </div>
-      </div>
-    );
+      );
+    case "rejected":
+      return (
+        <div className="h-full w-full flex items-center justify-center flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-[3%] [--scrollbar-thumb:#F55F4B]">
+          <div className="text-center">
+            <h2 className="text-red-500 text-9xl font-brushwell mb-4">
+              Sorry 😞
+            </h2>
+            <p className="text-white text-3xl font-coolvetica">
+              Unfortunately you did not pass this round. <br />
+              Thank you for participating. Better luck next time!
+            </p>
+          </div>
+        </div>
+      );
+    case "content":
+    default:
+      break;
   }
 
   // If no AOIs are joined, show a message

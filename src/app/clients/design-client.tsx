@@ -72,7 +72,6 @@ const DesignClient = ({
   const [questionsWithUnsavedEdits, setQuestionsWithUnsavedEdits] = useState<
     Set<string>
   >(new Set());
-  const roundActive = !!roundUser?.round?.active;
   const roundHidden = !!roundUser?.round?.hidden;
 
   const designAOIToVarName: Record<DesignAOI, string> = {
@@ -299,17 +298,7 @@ const DesignClient = ({
             aoiJoinLimit={AOI_JOIN_LIMIT}
           />
         )}
-        {selectedPanel === "Questions" && !roundActive ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center text-white text-xl py-12">
-              <h1 className="text-2xl font-bold mb-4">
-                Round currently inactive.
-              </h1>
-              <p>This round will start soon...</p>
-            </div>
-          </div>
-        ) : (
-          selectedPanel === "Questions" &&
+        {selectedPanel === "Questions" &&
           roundUser &&
           roundUser.formSubmission && (
             <Questions
@@ -341,8 +330,7 @@ const DesignClient = ({
               savedResponses={savedResponses}
               setSavedResponses={setSavedResponses}
             />
-          )
-        )}
+          )}
         {selectedPanel === "Interview" && <Interview />}
       </div>
     </div>
