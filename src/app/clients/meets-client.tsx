@@ -30,6 +30,8 @@ import {
   MessageSquare,
   Send,
   X,
+  ChevronUp,
+  FlipHorizontal,
 } from "lucide-react";
 import { getSfuToken } from "../actions/sfu-token";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
@@ -346,6 +348,8 @@ export default function MeetsClient({
     hasVideoPermission: false,
   });
   const [videoQuality, setVideoQuality] = useState<VideoQuality>("standard");
+  const [isMirrorCamera, setIsMirrorCamera] = useState(true);
+  const [isVideoSettingsOpen, setIsVideoSettingsOpen] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -417,6 +421,20 @@ export default function MeetsClient({
       cleanup();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isVideoSettingsOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".video-settings-container")) {
+        setIsVideoSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isVideoSettingsOpen]);
 
   const cleanupRoomResources = useCallback(() => {
     console.log("[Meets] Cleaning up room resources...");
@@ -1749,6 +1767,12 @@ export default function MeetsClient({
             isCameraOff={isCameraOff}
             participants={participants}
             userEmail={userEmail}
+            isMirrorCamera={isMirrorCamera}
+            isVideoSettingsOpen={isVideoSettingsOpen}
+            onToggleVideoSettings={() =>
+              setIsVideoSettingsOpen((prev) => !prev)
+            }
+            onToggleMirror={() => setIsMirrorCamera((prev) => !prev)}
           />
         ) : (
           /* Grid Layout */
@@ -1758,6 +1782,12 @@ export default function MeetsClient({
             isMuted={isMuted}
             participants={participants}
             userEmail={userEmail}
+            isMirrorCamera={isMirrorCamera}
+            isVideoSettingsOpen={isVideoSettingsOpen}
+            onToggleVideoSettings={() =>
+              setIsVideoSettingsOpen((prev) => !prev)
+            }
+            onToggleMirror={() => setIsMirrorCamera((prev) => !prev)}
           />
         )}
 
@@ -1904,6 +1934,10 @@ interface PresentationLayoutProps {
   isCameraOff: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
+  isMirrorCamera: boolean;
+  isVideoSettingsOpen: boolean;
+  onToggleVideoSettings: () => void;
+  onToggleMirror: () => void;
 }
 
 function PresentationLayout({
@@ -1913,6 +1947,10 @@ function PresentationLayout({
   isCameraOff,
   participants,
   userEmail,
+  isMirrorCamera,
+  isVideoSettingsOpen,
+  onToggleVideoSettings,
+  onToggleMirror,
 }: PresentationLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -1957,7 +1995,7 @@ function PresentationLayout({
             playsInline
             className={`w-full h-full object-cover ${
               isCameraOff ? "hidden" : ""
-            }`}
+            } ${isMirrorCamera ? "scale-x-[-1]" : ""}`}
           />
           {isCameraOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
@@ -1969,6 +2007,43 @@ function PresentationLayout({
           <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/80 border border-white/10 rounded text-xs">
             You
           </div>
+
+          {!isCameraOff && (
+            <div className="absolute bottom-1 right-1 video-settings-container">
+              <button
+                onClick={onToggleVideoSettings}
+                className="p-1.5 bg-black/80 hover:bg-black/90 border border-white/10 rounded-full transition-colors"
+                title="Video settings"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+
+              {isVideoSettingsOpen && (
+                <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-48">
+                  <button
+                    onClick={onToggleMirror}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 rounded text-sm transition-colors"
+                  >
+                    <FlipHorizontal className="w-4 h-4" />
+                    <span>Mirror camera</span>
+                    <div className="ml-auto">
+                      <div
+                        className={`w-9 h-5 rounded-full transition-colors ${
+                          isMirrorCamera ? "bg-blue-600" : "bg-white/20"
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${
+                            isMirrorCamera ? "translate-x-4" : "translate-x-0.5"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Remote Participants */}
@@ -1990,6 +2065,10 @@ interface GridLayoutProps {
   isMuted: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
+  isMirrorCamera: boolean;
+  isVideoSettingsOpen: boolean;
+  onToggleVideoSettings: () => void;
+  onToggleMirror: () => void;
 }
 
 function GridLayout({
@@ -1998,6 +2077,10 @@ function GridLayout({
   isMuted,
   participants,
   userEmail,
+  isMirrorCamera,
+  isVideoSettingsOpen,
+  onToggleVideoSettings,
+  onToggleMirror,
 }: GridLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -2025,7 +2108,7 @@ function GridLayout({
           playsInline
           className={`w-full h-full object-cover ${
             isCameraOff ? "hidden" : ""
-          }`}
+          } ${isMirrorCamera ? "scale-x-[-1]" : ""}`}
         />
         {isCameraOff && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
@@ -2037,6 +2120,45 @@ function GridLayout({
         <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/80 border border-white/10 rounded text-sm flex items-center gap-2">
           You {isMuted && <MicOff className="w-3 h-3 text-red-500" />}
         </div>
+
+        {/* Video Settings Button */}
+        {!isCameraOff && (
+          <div className="absolute bottom-2 right-2 video-settings-container">
+            <button
+              onClick={onToggleVideoSettings}
+              className="p-2 bg-black/80 hover:bg-black/90 border border-white/10 rounded-full transition-colors"
+              title="Video settings"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
+
+            {/* Settings Popup */}
+            {isVideoSettingsOpen && (
+              <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-52 z-10">
+                <button
+                  onClick={onToggleMirror}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded text-sm transition-colors"
+                >
+                  <FlipHorizontal className="w-4 h-4" />
+                  <span>Mirror camera</span>
+                  <div className="ml-auto">
+                    <div
+                      className={`w-9 h-5 rounded-full transition-colors ${
+                        isMirrorCamera ? "bg-blue-600" : "bg-white/20"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${
+                          isMirrorCamera ? "translate-x-4" : "translate-x-0.5"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Remote Participants */}
