@@ -288,7 +288,7 @@ const SchedulerClient = ({
               Link will be shared 15 min prior to the scheduled time.
             </div>
             {/* {canJoin && activeLink && ( */}
-            {activeLink && (
+            {canJoin && activeLink && (
               <div className="bg-gray-800/50 p-4 rounded-lg mb-6 border border-gray-700 max-w-md w-full">
                 <div className="text-sm text-gray-400 mb-2">
                   {isSfuHealthy
@@ -312,7 +312,7 @@ const SchedulerClient = ({
               </div>
             )}
             {/* {canJoin && activeLink && isSfuHealthy && ( */}
-            {activeLink && isSfuHealthy && (
+            {canJoin && activeLink && isSfuHealthy && (
               <button
                 onClick={() => {
                   window.postMessage(
@@ -329,7 +329,7 @@ const SchedulerClient = ({
                 Join Meeting
               </button>
             )}
-            {activeLink && !isSfuHealthy && (
+            {canJoin && activeLink && !isSfuHealthy && (
               <a
                 href={activeLink}
                 target="_blank"
