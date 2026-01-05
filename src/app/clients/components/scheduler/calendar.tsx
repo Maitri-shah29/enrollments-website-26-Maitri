@@ -103,7 +103,9 @@ const Calendar = ({
 
   return (
     <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-8">
-      <div className="text-center mb-8 text-gray-200">Available Dates</div>
+      <div className="text-center mb-8 text-gray-200 text-lg font-semibold">
+        Available Dates
+      </div>
 
       <div className="flex items-center justify-between mb-8 px-4">
         <button
