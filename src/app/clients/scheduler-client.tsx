@@ -226,11 +226,11 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
             : "Choose your preferred date and slot:"}
         </h1>
         {bookedSlot ? (
-          <div className="flex flex-col items-center justify-center h-[50vh] bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
+          <div className="flex flex-col items-center justify-center min-h-[50vh] h-auto bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
             <div className="text-gray-400 mb-2">
               You have successfully booked a slot for
             </div>
-            <div className="text-3xl font-bold mb-4 text-[#5CAFFF]">
+            <div className="text-3xl font-bold mb-4 text-[#FF5C5C]">
               {selectedDomain} Interview
             </div>
             <div className="text-xl mb-2">
@@ -240,10 +240,32 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
               {formatTime(new Date(bookedSlot.from))} -{" "}
               {formatTime(new Date(bookedSlot.to))}
             </div>
-            <div className="text-gray-500 text-sm">
+            <div className="text-gray-500 text-sm mb-4">
               Link will be shared 15 min prior to the scheduled time.
             </div>
-            {/*canJoin && meetLink && (*/}
+            {canJoin && meetLink && (
+              <div className="bg-gray-800/50 p-4 rounded-lg mb-6 border border-gray-700 max-w-md w-full">
+                <div className="text-sm text-gray-400 mb-2">
+                  Use this Room ID inside the Meets website "meets.com" inside
+                  the ACM Explore Browser or click on the button below to join
+                  the meeting.
+                </div>
+                <div className="flex items-center justify-between bg-black/50 p-3 rounded border border-gray-800">
+                  <span className="font-mono text-[#FF5C5C] font-medium break-all mr-2">
+                    {meetLink}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(meetLink);
+                      showNotification("Room ID copied!", "success");
+                    }}
+                    className="text-xs text-gray-500 hover:text-white transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
             {canJoin && meetLink && (
               <button
                 onClick={() => {
@@ -256,7 +278,7 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
                     "*"
                   );
                 }}
-                className="mt-6 bg-[#5CAFFF] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#4a9ceb] transition-colors"
+                className="mt-6 bg-[#FF5C5C] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#ff7b7b] transition-colors"
               >
                 Join Meeting
               </button>

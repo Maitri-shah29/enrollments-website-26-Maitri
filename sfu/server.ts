@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import { config } from "./config/config.js";
 import createWorkers from "./utilities/createWorkers.js";
 import getWorker from "./utilities/getWorker.js";
+import { Logger } from "./utilities/Logger.js";
 import { Room } from "./config/classes/Room.js";
 import { Client } from "./config/classes/Client.js";
 import { Admin } from "./config/classes/Admin.js";
@@ -113,7 +114,7 @@ io.use((socket, next) => {
 
 const initMediaSoup = async (): Promise<void> => {
   workers = (await createWorkers()) as Worker[];
-  console.log(`[SFU] Created ${workers.length} mediasoup workers`);
+  Logger.info(`Created ${workers.length} mediasoup workers`);
 };
 
 // ============================================
@@ -136,7 +137,7 @@ const getOrCreateRoom = async (roomId: string): Promise<Room> => {
 
   room = new Room({ id: roomId, router });
   rooms.set(roomId, room);
-  console.log(`[SFU] Created room: ${roomId}`);
+  Logger.success(`Created room: ${roomId}`);
 
   return room;
 };
@@ -146,7 +147,7 @@ const cleanupRoom = (roomId: string): void => {
   if (room && room.isEmpty()) {
     room.close();
     rooms.delete(roomId);
-    console.log(`[SFU] Closed empty room: ${roomId}`);
+    Logger.info(`Closed empty room: ${roomId}`);
   }
 };
 
@@ -155,33 +156,10 @@ const cleanupRoom = (roomId: string): void => {
 // ============================================
 
 io.on("connection", (socket: Socket) => {
-  console.log(`[SFU] Client connected: ${socket.id}`);
+  Logger.info(`Client connected: ${socket.id}`);
 
   let currentRoom: Room | null = null;
   let currentClient: Client | null = null;
-
-  // Rate limiting state
-  const rateLimitState: Record<string, number> = {
-    chat: 0,
-    produce: 0,
-    consume: 0,
-    transport: 0,
-    toggleMedia: 0,
-    joinRoom: 0,
-  };
-
-  // Rate limit helper function
-  const checkRateLimit = (
-    operation: keyof typeof config.rateLimits
-  ): boolean => {
-    const now = Date.now();
-    const limit = config.rateLimits[operation];
-    if (now - rateLimitState[operation] < limit) {
-      return false; // Rate limited
-    }
-    rateLimitState[operation] = now;
-    return true; // Allowed
-  };
 
   // ----------------------------------------
   // Join Room
@@ -193,21 +171,16 @@ io.on("connection", (socket: Socket) => {
       callback: (response: JoinRoomResponse | { error: string }) => void
     ) => {
       try {
-        // Rate limit check
-        if (!checkRateLimit("joinRoom")) {
-          callback({ error: "Too many join attempts. Please wait." });
-          return;
-        }
-
         const { roomId, userId } = data;
-        const isAdmin = (socket as any).user?.isAdmin;
+        const user = (socket as any).user;
+        const isAdmin = user?.isAdmin;
 
         // Get or create room
         let room = rooms.get(roomId);
 
         if (!room) {
           if (!isAdmin && !config.allowNonAdminRoomCreation) {
-            callback({ error: "Only admins can create rooms." });
+            callback({ error: "This meeting hasn't started." });
             return;
           }
           // Create room if admin or if allowed by config
@@ -220,24 +193,48 @@ io.on("connection", (socket: Socket) => {
             // If already in this room, effectively a reconnect/refresh.
             // We technically don't need to do anything special here as the client object will be replaced.
             // But let's log it.
-            console.log(`[SFU] User ${userId} re-joining room ${roomId}`);
+            Logger.warn(`User ${userId} re-joining room ${roomId}`);
           }
 
           // Check if cleanup timer is active
           if (isAdmin && room.cleanupTimer) {
-            console.log(
-              `[SFU] Admin returning to room ${roomId}, cleanup cancelled.`
+            Logger.info(
+              `Admin returning to room ${roomId}, cleanup cancelled.`
             );
             room.stopCleanupTimer();
           }
+        }
+
+        // ============================================
+        // WAITING ROOM LOGIC
+        // ============================================
+        if (!isAdmin && !room.isAllowed(userId)) {
+          Logger.info(`User ${userId} added to waiting room ${roomId}`);
+          room.addPendingClient(userId, socket);
+
+          // Notify all admins in the room
+          const admins = room.getAdmins();
+          for (const admin of admins) {
+            admin.socket.emit("userRequestedJoin", {
+              userId,
+              displayName: user?.name || userId, // Assuming user object has name, fallback to ID
+            });
+          }
+
+          callback({
+            rtpCapabilities: room.rtpCapabilities,
+            existingProducers: [],
+            status: "waiting",
+          });
+          return;
         }
 
         // Handle Room Switching:
         // If the socket was already in a room (different from the new one), allow them to leave cleanly
         // WITHOUT disconnecting the socket.
         if (currentRoom && currentRoom.id !== roomId && currentClient) {
-          console.log(
-            `[SFU] User ${userId} switching from ${currentRoom.id} to ${roomId}`
+          Logger.info(
+            `User ${userId} switching from ${currentRoom.id} to ${roomId}`
           );
 
           // Remove from old room
@@ -388,8 +385,8 @@ io.on("connection", (socket: Socket) => {
 
               const targetClient = currentRoom.getClient(targetId);
               if (targetClient) {
-                console.log(
-                  `[SFU] Admin redirecting user ${targetId} to ${newRoomId}`
+                Logger.info(
+                  `Admin redirecting user ${targetId} to ${newRoomId}`
                 );
                 targetClient.socket.emit("redirect", { newRoomId });
                 cb({ success: true });
@@ -398,14 +395,57 @@ io.on("connection", (socket: Socket) => {
               }
             }
           );
+
+          socket.on("admitUser", ({ userId: targetId }, cb) => {
+            if (!currentRoom) return;
+
+            const pending = currentRoom.pendingClients.get(targetId);
+            if (pending) {
+              Logger.info(`Admin admitted user ${targetId} to room ${roomId}`);
+              currentRoom.allowUser(targetId);
+              pending.socket.emit("joinApproved");
+
+              // Notify all admins so they can remove from list
+              for (const admin of currentRoom.getAdmins()) {
+                admin.socket.emit("userAdmitted", { userId: targetId });
+              }
+
+              cb({ success: true });
+            } else {
+              cb({ error: "User not found in waiting room" });
+            }
+          });
+
+          socket.on("rejectUser", ({ userId: targetId }, cb) => {
+            if (!currentRoom) return;
+
+            const pending = currentRoom.pendingClients.get(targetId);
+            if (pending) {
+              Logger.info(
+                `Admin rejected user ${targetId} from room ${roomId}`
+              );
+              currentRoom.removePendingClient(targetId);
+              pending.socket.emit("joinRejected");
+
+              // Notify all admins so they can remove from list
+              for (const admin of currentRoom.getAdmins()) {
+                admin.socket.emit("userRejected", { userId: targetId });
+              }
+
+              cb({ success: true });
+            } else {
+              cb({ error: "User not found in waiting room" });
+            }
+          });
         }
 
         callback({
           rtpCapabilities: currentRoom!.rtpCapabilities,
           existingProducers,
+          status: "joined",
         });
       } catch (error) {
-        console.error("[SFU] Error joining room:", error);
+        Logger.error("Error joining room:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -445,12 +485,6 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        // Rate limit check
-        if (!checkRateLimit("transport")) {
-          callback({ error: "Too many transport requests. Please wait." });
-          return;
-        }
-
         const transport = await currentRoom.createWebRtcTransport();
         currentClient.producerTransport = transport;
 
@@ -461,7 +495,7 @@ io.on("connection", (socket: Socket) => {
           dtlsParameters: transport.dtlsParameters,
         });
       } catch (error) {
-        console.error("[SFU] Error creating producer transport:", error);
+        Logger.error("Error creating producer transport:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -481,12 +515,6 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        // Rate limit check
-        if (!checkRateLimit("transport")) {
-          callback({ error: "Too many transport requests. Please wait." });
-          return;
-        }
-
         const transport = await currentRoom.createWebRtcTransport();
         currentClient.consumerTransport = transport;
 
@@ -497,7 +525,7 @@ io.on("connection", (socket: Socket) => {
           dtlsParameters: transport.dtlsParameters,
         });
       } catch (error) {
-        console.error("[SFU] Error creating consumer transport:", error);
+        Logger.error("Error creating consumer transport:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -524,7 +552,7 @@ io.on("connection", (socket: Socket) => {
 
         callback({ success: true });
       } catch (error) {
-        console.error("[SFU] Error connecting producer transport:", error);
+        Logger.error("Error connecting producer transport:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -548,7 +576,7 @@ io.on("connection", (socket: Socket) => {
 
         callback({ success: true });
       } catch (error) {
-        console.error("[SFU] Error connecting consumer transport:", error);
+        Logger.error("Error connecting consumer transport:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -566,12 +594,6 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentRoom || !currentClient?.producerTransport) {
           callback({ error: "Not ready to produce" });
-          return;
-        }
-
-        // Rate limit check
-        if (!checkRateLimit("produce")) {
-          callback({ error: "Too many produce requests. Please wait." });
           return;
         }
 
@@ -615,7 +637,7 @@ io.on("connection", (socket: Socket) => {
         const clientId = currentClient.id;
 
         producer.on("transportclose", () => {
-          console.log(`[SFU] Producer transport closed: ${producer.id}`);
+          Logger.info(`Producer transport closed: ${producer.id}`);
           if (type === "screen") {
             const room = rooms.get(roomId);
             if (room) {
@@ -633,7 +655,7 @@ io.on("connection", (socket: Socket) => {
         });
 
         producer.on("@close", () => {
-          console.log(`[SFU] Producer closed: ${producer.id}`);
+          Logger.info(`Producer closed: ${producer.id}`);
           if (type === "screen") {
             const room = rooms.get(roomId);
             if (room) {
@@ -650,13 +672,13 @@ io.on("connection", (socket: Socket) => {
           }
         });
 
-        console.log(
-          `[SFU] User ${currentClient.id} started producing ${kind} (${type}): ${producer.id}`
+        Logger.info(
+          `User ${currentClient.id} started producing ${kind} (${type}): ${producer.id}`
         );
 
         callback({ producerId: producer.id });
       } catch (error) {
-        console.error("[SFU] Error producing:", error);
+        Logger.error("Error producing:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -677,12 +699,6 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        // Rate limit check
-        if (!checkRateLimit("consume")) {
-          callback({ error: "Too many consume requests. Please wait." });
-          return;
-        }
-
         const { producerId, rtpCapabilities } = data;
 
         // Check if the router can consume this producer
@@ -700,11 +716,11 @@ io.on("connection", (socket: Socket) => {
         currentClient.addConsumer(consumer);
 
         consumer.on("transportclose", () => {
-          console.log(`[SFU] Consumer transport closed: ${consumer.id}`);
+          Logger.info(`Consumer transport closed: ${consumer.id}`);
         });
 
         consumer.on("producerclose", () => {
-          console.log(`[SFU] Producer closed for consumer: ${consumer.id}`);
+          Logger.info(`Producer closed for consumer: ${consumer.id}`);
           socket.emit("producerClosed", { producerId });
         });
 
@@ -715,7 +731,7 @@ io.on("connection", (socket: Socket) => {
           rtpParameters: consumer.rtpParameters,
         });
       } catch (error) {
-        console.error("[SFU] Error consuming:", error);
+        Logger.error("Error consuming:", error);
         callback({ error: (error as Error).message });
       }
     }
@@ -791,12 +807,6 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        // Rate limit check
-        if (!checkRateLimit("toggleMedia")) {
-          callback({ error: "Too many toggle requests. Please wait." });
-          return;
-        }
-
         await currentClient.toggleMute(data.paused);
 
         // Notify others
@@ -824,12 +834,6 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentClient || !currentRoom) {
           callback({ error: "Not in a room" });
-          return;
-        }
-
-        // Rate limit check
-        if (!checkRateLimit("toggleMedia")) {
-          callback({ error: "Too many toggle requests. Please wait." });
           return;
         }
 
@@ -919,12 +923,6 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        // Rate limiting check
-        if (!checkRateLimit("chat")) {
-          callback({ error: "You are sending messages too fast" });
-          return;
-        }
-
         // Extract display name from userId (format: email#sessionId)
         const displayName =
           currentClient.id.split("#")[0]?.split("@")[0] || "Anonymous";
@@ -940,11 +938,11 @@ io.on("connection", (socket: Socket) => {
 
         // Broadcast to all users in the room (including sender for confirmation)
         socket.to(currentRoom.id).emit("chatMessage", message);
-
-        console.log(
-          `[SFU] Chat in room ${
-            currentRoom.id
-          }: ${displayName}: ${content.substring(0, 50)}`
+        Logger.info(
+          `Chat in room ${currentRoom.id}: ${displayName}: ${content.substring(
+            0,
+            50
+          )}`
         );
 
         callback({ success: true, message });
@@ -958,7 +956,7 @@ io.on("connection", (socket: Socket) => {
   // Disconnect
   // ----------------------------------------
   socket.on("disconnect", () => {
-    console.log(`[SFU] Client disconnected: ${socket.id}`);
+    Logger.info(`Client disconnected: ${socket.id}`);
 
     if (currentRoom && currentClient) {
       const userId = currentClient.id;
@@ -972,15 +970,13 @@ io.on("connection", (socket: Socket) => {
       // If Admin left, check if any other admins remain
       if (wasAdmin) {
         if (!currentRoom.hasActiveAdmin()) {
-          console.log(
-            `[SFU] Last admin left room ${roomId}. Scheduling cleanup...`
-          );
+          Logger.info(`Last admin left room ${roomId}. Scheduling cleanup...`);
           currentRoom.startCleanupTimer(() => {
             if (rooms.has(roomId)) {
               const r = rooms.get(roomId);
               if (r) {
-                console.log(
-                  `[SFU] Cleanup executed for room ${roomId}. Dissolving...`
+                Logger.info(
+                  `Cleanup executed for room ${roomId}. Dissolving...`
                 );
                 for (const client of r.clients.values()) {
                   client.socket.emit("roomClosed", {
@@ -994,9 +990,7 @@ io.on("connection", (socket: Socket) => {
           });
         } else {
           // Admin left but others remain
-          console.log(
-            `[SFU] Admin left room ${roomId}, but other admins remain.`
-          );
+          Logger.info(`Admin left room ${roomId}, but other admins remain.`);
         }
       }
 
@@ -1005,7 +999,7 @@ io.on("connection", (socket: Socket) => {
         cleanupRoom(roomId);
       }
 
-      console.log(`[SFU] User ${userId} left room ${roomId}`);
+      Logger.info(`User ${userId} left room ${roomId}`);
 
       // Check for video quality update (e.g. dropped below threshold)
       if (rooms.has(roomId)) {
@@ -1033,7 +1027,7 @@ const startServer = async (): Promise<void> => {
   await initMediaSoup();
 
   httpServer.listen(config.port, () => {
-    console.log(`[SFU] HTTPS Server running on port ${config.port}`);
+    Logger.success(`HTTPS Server running on port ${config.port}`);
   });
 };
 

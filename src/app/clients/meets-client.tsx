@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { getSfuToken } from "../actions/sfu-token";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
+import SignupPage from "../components/sign-up";
 import { Users, UserMinus, List, ArrowRight } from "lucide-react";
 import type {
   GetRoomsResponse,
@@ -61,6 +62,7 @@ type ConnectionState =
   | "joining"
   | "joined"
   | "reconnecting"
+  | "waiting"
   | "error";
 
 /** Producer types */
@@ -115,6 +117,7 @@ const LOW_QUALITY_CONSTRAINTS = {
 interface JoinRoomResponse {
   rtpCapabilities: RtpCapabilities;
   existingProducers: ProducerInfo[];
+  status?: "waiting" | "joined";
 }
 
 interface TransportResponse {
@@ -358,6 +361,9 @@ export default function MeetsClient({
     );
   }, [session?.data?.user?.email]);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
+  const [pendingUsers, setPendingUsers] = useState<Map<string, string>>(
+    new Map()
+  ); // userId -> displayName
 
   // Refs for WebRTC objects
   const socketRef = useRef<Socket | null>(null);
@@ -382,6 +388,9 @@ export default function MeetsClient({
 
   // Ref to track chat open state for socket listener (avoids stale closure)
   const isChatOpenRef = useRef(false);
+
+  // Ref to track local stream for socket listener (avoids stale closure)
+  const localStreamRef = useRef<MediaStream | null>(null);
 
   // Generate stable session ID per component instance
   const sessionIdRef = useRef<string>(generateSessionId());
@@ -675,6 +684,70 @@ export default function MeetsClient({
             `[Meets] Redirect received. Initiating full switch to ${newRoomId}`
           );
           handleRedirectRef.current(newRoomId);
+        });
+
+        // Waiting Room Events
+        socket.on(
+          "userRequestedJoin",
+          ({
+            userId,
+            displayName,
+          }: {
+            userId: string;
+            displayName: string;
+          }) => {
+            console.log("[Meets] User requesting to join:", userId);
+            setPendingUsers((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(userId, displayName);
+              return newMap;
+            });
+          }
+        );
+
+        socket.on("userAdmitted", ({ userId }: { userId: string }) => {
+          setPendingUsers((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(userId);
+            return newMap;
+          });
+        });
+
+        socket.on("userRejected", ({ userId }: { userId: string }) => {
+          setPendingUsers((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(userId);
+            return newMap;
+          });
+        });
+
+        socket.on("joinApproved", () => {
+          console.log("[Meets] Join approved! Re-attempting join...");
+          if (currentRoomIdRef.current && localStreamRef.current) {
+            joinRoomInternal(
+              currentRoomIdRef.current,
+              localStreamRef.current
+            ).catch(console.error);
+          } else {
+            console.error(
+              "[Meets] Cannot re-join: missing room ID or local stream",
+              {
+                roomId: currentRoomIdRef.current,
+                hasStream: !!localStreamRef.current,
+              }
+            );
+          }
+        });
+
+        socket.on("joinRejected", () => {
+          console.log("[Meets] Join rejected.");
+          setMeetError({
+            code: "PERMISSION_DENIED",
+            message: "The host has denied your request to join.",
+            recoverable: false,
+          });
+          setConnectionState("error");
+          cleanup();
         });
 
         socketRef.current = socket;
@@ -1111,6 +1184,13 @@ export default function MeetsClient({
               return;
             }
 
+            if (response.status === "waiting") {
+              setConnectionState("waiting");
+              currentRoomIdRef.current = targetRoomId; // Keep track of attempted room
+              resolve();
+              return;
+            }
+
             try {
               console.log(
                 "[Meets] Joined room, existing producers:",
@@ -1183,6 +1263,7 @@ export default function MeetsClient({
     setConnectionState("connecting");
 
     try {
+      const socket = await connectSocket();
       // Get media first
       const stream = await requestMediaPermissions();
       if (!stream) {
@@ -1192,7 +1273,6 @@ export default function MeetsClient({
       setLocalStream(stream);
 
       // Connect socket
-      const socket = await connectSocket();
 
       // Join room
       await joinRoomInternal(roomId, stream);
@@ -1417,6 +1497,11 @@ export default function MeetsClient({
     }
   }, [isCameraOff, videoQuality]);
 
+  // Sync localStream to ref
+  useEffect(() => {
+    localStreamRef.current = localStream;
+  }, [localStream]);
+
   const toggleScreenShare = useCallback(async () => {
     if (isScreenSharing) {
       // Stop sharing
@@ -1556,6 +1641,11 @@ export default function MeetsClient({
 
   if (!mounted) return null;
 
+  // Show login page if not authenticated
+  if (!session?.data?.user) {
+    return <SignupPage onSignIn={() => {}} />;
+  }
+
   // Determine presentation mode
   let presentationStream: MediaStream | null = null;
   let presenterName = "";
@@ -1578,7 +1668,18 @@ export default function MeetsClient({
   const isLoading =
     connectionState === "connecting" ||
     connectionState === "joining" ||
-    connectionState === "reconnecting";
+    connectionState === "reconnecting" ||
+    connectionState === "waiting"; // Waiting is a kind of loading state visually, or handled separately
+
+  if (connectionState === "waiting") {
+    return (
+      <div className="flex flex-col h-full w-full bg-black items-center justify-center text-white">
+        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Waiting for host...</h2>
+        <p className="text-white/60">Using room ID: {roomId}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
@@ -1699,6 +1800,7 @@ export default function MeetsClient({
             onClose={() => setIsParticipantsOpen(false)}
             socket={socketRef.current}
             isAdmin={isAdmin}
+            pendingUsers={pendingUsers}
           />
         )}
       </div>
@@ -1718,6 +1820,7 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
     joining: "bg-yellow-500 animate-pulse",
     joined: "bg-green-500",
     reconnecting: "bg-yellow-500 animate-pulse",
+    waiting: "bg-blue-500 animate-pulse",
     error: "bg-red-500",
   };
 
@@ -1728,6 +1831,7 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
     joining: "Joining...",
     joined: "In Meeting",
     reconnecting: "Reconnecting...",
+    waiting: "Waiting...",
     error: "Error",
   };
 
@@ -2276,6 +2380,7 @@ interface ParticipantsPanelProps {
   participants: Map<string, Participant>;
   currentUserId: string;
   onClose: () => void;
+  pendingUsers?: Map<string, string>;
 }
 
 function ParticipantsPanel({
@@ -2284,11 +2389,13 @@ function ParticipantsPanel({
   onClose,
   socket,
   isAdmin,
+  pendingUsers,
 }: ParticipantsPanelProps & {
   socket: Socket | null;
   isAdmin?: boolean | null;
 }) {
   const participantsList = Array.from(participants.values());
+  const pendingList = pendingUsers ? Array.from(pendingUsers.entries()) : [];
   const [showRedirectModal, setShowRedirectModal] = useState(false);
   const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
   const [selectedUserForRedirect, setSelectedUserForRedirect] = useState<
@@ -2370,6 +2477,52 @@ function ParticipantsPanel({
           </div>
         )}
       </div>
+
+      {/* Pending Requests */}
+      {isAdmin && pendingList.length > 0 && (
+        <div className="p-3 border-b border-white/10 bg-blue-500/10">
+          <h4 className="font-bold text-xs text-blue-400 mb-2 uppercase tracking-wide">
+            Pending Requests ({pendingList.length})
+          </h4>
+          <div className="space-y-2">
+            {pendingList.map(([userId, displayName]) => (
+              <div
+                key={userId}
+                className="flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
+              >
+                <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+                  <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] border border-white/10 shrink-0">
+                    {displayName[0]?.toUpperCase() || "?"}
+                  </div>
+                  <span className="text-sm truncate text-white/80">
+                    {displayName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() =>
+                      socket?.emit("admitUser", { userId }, () => {})
+                    }
+                    className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
+                    title="Admit"
+                  >
+                    Admit
+                  </button>
+                  <button
+                    onClick={() =>
+                      socket?.emit("rejectUser", { userId }, () => {})
+                    }
+                    className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
+                    title="Reject"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
