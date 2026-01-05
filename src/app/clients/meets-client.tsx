@@ -1738,6 +1738,7 @@ export default function MeetsClient({
             isLoading={isLoading}
             userEmail={userEmail}
             connectionState={connectionState}
+            isAdmin={!!isAdmin}
           />
         ) : isPresentationMode ? (
           /* Presentation Layout */
@@ -1852,6 +1853,7 @@ interface JoinScreenProps {
   isLoading: boolean;
   userEmail: string;
   connectionState: ConnectionState;
+  isAdmin: boolean;
 }
 
 function JoinScreen({
@@ -1861,6 +1863,7 @@ function JoinScreen({
   isLoading,
   userEmail,
   connectionState,
+  isAdmin,
 }: JoinScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
@@ -1874,7 +1877,7 @@ function JoinScreen({
         value={roomId}
         onChange={(e) => onRoomIdChange(e.target.value)}
         placeholder="Enter Room ID"
-        disabled={isLoading}
+        disabled={isLoading || !isAdmin}
         className="px-4 py-2 bg-[#111] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
       />
 
