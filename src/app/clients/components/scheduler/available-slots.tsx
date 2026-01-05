@@ -26,7 +26,7 @@ const AvailableSlots = ({
       <div className="grid grid-cols-2 gap-3">
         {slots.length === 0 ? (
           <div className="col-span-2 text-center text-gray-500 py-4">
-            No slots available for this date
+            Please select a date first
           </div>
         ) : (
           slots.map((slot) => {
