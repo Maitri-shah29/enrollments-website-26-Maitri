@@ -1780,7 +1780,7 @@ export default function MeetsClient({
 
   if (connectionState === "waiting") {
     return (
-      <div className="flex flex-col h-full w-full bg-black items-center justify-center text-white">
+      <div className="flex flex-col h-full w-full bg-[#252525] items-center justify-center text-white">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
         <h2 className="text-2xl font-bold mb-2">Waiting for host...</h2>
         <p className="text-white/60">Using room ID: {roomId}</p>
@@ -1789,9 +1789,9 @@ export default function MeetsClient({
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
+    <div className="flex flex-col h-full w-full bg-[#1a1a1a] text-white font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-black border-b border-white/10">
+      <div className="flex items-center justify-between p-4 bg-[#151515] border-b border-white/5">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
           {isJoined && (
@@ -2002,7 +2002,7 @@ function JoinScreen({
         onChange={(e) => onRoomIdChange(e.target.value)}
         placeholder="Enter Room ID"
         disabled={isLoading || !isAdmin}
-        className="px-4 py-2 bg-[#111] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+        className="px-4 py-2 bg-[#252525] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
       />
 
       <button
@@ -2060,7 +2060,7 @@ function PresentationLayout({
   return (
     <div className="flex flex-1 gap-4 overflow-hidden">
       {/* Main Presentation Area */}
-      <div className="flex-1 bg-[#111] border border-white/10 rounded-lg overflow-hidden relative flex items-center justify-center">
+      <div className="flex-1 bg-[#252525] border border-white/5 rounded-lg overflow-hidden relative flex items-center justify-center">
         <video
           ref={(el) => {
             if (el && presentationStream) el.srcObject = presentationStream;
@@ -2069,7 +2069,7 @@ function PresentationLayout({
           playsInline
           className="max-w-full max-h-full"
         />
-        <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-sm">
+        <div className="absolute top-2 left-2 bg-black/40 px-2 py-1 rounded text-white text-sm">
           {presenterName} is presenting
         </div>
       </div>
@@ -2077,7 +2077,7 @@ function PresentationLayout({
       {/* Sidebar Participants - scrollable with fixed-height tiles */}
       <div className="w-64 flex flex-col gap-3 overflow-y-auto pr-1">
         {/* Local User */}
-        <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden h-36 shrink-0">
+        <div className="relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden h-36 shrink-0">
           <video
             ref={localVideoRef}
             autoPlay
@@ -2088,13 +2088,13 @@ function PresentationLayout({
             } ${isMirrorCamera ? "scale-x-[-1]" : ""}`}
           />
           {isCameraOff && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
-              <div className="w-10 h-10 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
+              <div className="w-10 h-10 rounded-full bg-[#333] border border-white/10 flex items-center justify-center text-lg">
                 {userEmail[0]?.toUpperCase() || "?"}
               </div>
             </div>
           )}
-          <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/80 border border-white/10 rounded text-xs">
+          <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/60 border border-white/5 rounded text-xs">
             You
           </div>
         </div>
@@ -2150,7 +2150,7 @@ function GridLayout({
   return (
     <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-auto">
       {/* Local Video */}
-      <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden aspect-video">
+      <div className="relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden aspect-video">
         <video
           ref={localVideoRef}
           autoPlay
@@ -2161,13 +2161,13 @@ function GridLayout({
           } ${isMirrorCamera ? "scale-x-[-1]" : ""}`}
         />
         {isCameraOff && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
-            <div className="w-16 h-16 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-xl">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
+            <div className="w-16 h-16 rounded-full bg-[#333] border border-white/10 flex items-center justify-center text-xl">
               {userEmail[0]?.toUpperCase() || "?"}
             </div>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/80 border border-white/10 rounded text-sm flex items-center gap-2">
+        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 border border-white/5 rounded text-sm flex items-center gap-2">
           You {isMuted && <MicOff className="w-3 h-3 text-red-500" />}
         </div>
       </div>
@@ -2220,14 +2220,14 @@ function ControlsBar({
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
 
   return (
-    <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-white/10 shrink-0">
+    <div className="flex justify-center gap-2 mt-4 shrink-0">
       {isAdmin && (
         <button
           onClick={onToggleParticipants}
-          className={`p-3 rounded-full transition-all border ${
+          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
             isParticipantsOpen
-              ? "bg-white text-black border-white"
-              : "bg-transparent text-white border-white/10 hover:bg-white/10"
+              ? "bg-white text-black hover:bg-neutral-200"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
           }`}
           title="Participants"
         >
@@ -2237,10 +2237,10 @@ function ControlsBar({
 
       <button
         onClick={onToggleMute}
-        className={`p-3 rounded-full transition-all border ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isMuted
-            ? "bg-red-500 text-white border-red-600"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={isMuted ? "Unmute" : "Mute"}
       >
@@ -2249,10 +2249,10 @@ function ControlsBar({
 
       <button
         onClick={onToggleCamera}
-        className={`p-3 rounded-full transition-all border ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isCameraOff
-            ? "bg-red-500 text-white border-red-600"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={isCameraOff ? "Turn on camera" : "Turn off camera"}
       >
@@ -2266,12 +2266,12 @@ function ControlsBar({
       <button
         onClick={onToggleScreenShare}
         disabled={!canStartScreenShare}
-        className={`p-3 rounded-full transition-all border ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isScreenSharing
-            ? "bg-white text-black border-white"
+            ? "bg-white text-black hover:bg-neutral-200"
             : !canStartScreenShare
-            ? "bg-transparent text-neutral-600 border-white/5 cursor-not-allowed"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={
           !canStartScreenShare
@@ -2286,16 +2286,16 @@ function ControlsBar({
 
       <button
         onClick={onToggleChat}
-        className={`p-3 rounded-full transition-all border relative ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center relative ${
           isChatOpen
-            ? "bg-white text-black border-white"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-white text-black hover:bg-neutral-200"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title="Chat"
       >
         <MessageSquare className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center border border-black font-bold">
+          <span className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -2303,10 +2303,10 @@ function ControlsBar({
 
       <button
         onClick={onLeave}
-        className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all border border-red-500 hover:border-red-600"
+        className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all duration-200 flex items-center justify-center"
         title="Leave meeting"
       >
-        <Phone className="rotate-[135deg]" />
+        <Phone className="rotate-[135deg] w-5 h-5" />
       </button>
     </div>
   );
@@ -2352,9 +2352,9 @@ function ChatPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#111] rounded-lg shadow-2xl flex flex-col border border-white/10 z-10 font-[family-name:var(--font-geist-mono)]">
+    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10 font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-white/10">
+      <div className="flex items-center justify-between p-3 border-b border-white/5">
         <h3 className="font-bold text-sm">Chat</h3>
         <button
           onClick={onClose}
@@ -2382,7 +2382,7 @@ function ChatPanel({
                   className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                     isOwn
                       ? "bg-white text-black"
-                      : "bg-[#222] text-neutral-200 border border-white/10"
+                      : "bg-[#2a2a2a] text-neutral-200 border border-white/5"
                   }`}
                 >
                   {!isOwn && (
@@ -2408,7 +2408,7 @@ function ChatPanel({
       {/* Input */}
       <form
         onSubmit={handleSubmit}
-        className="p-3 border-t border-white/10 bg-[#111]"
+        className="p-3 border-t border-white/5 bg-[#1f1f1f]"
       >
         <div className="flex gap-2">
           <input
@@ -2418,7 +2418,7 @@ function ChatPanel({
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             maxLength={1000}
-            className="flex-1 px-3 py-2 bg-[#222] border border-white/10 rounded-md text-sm focus:outline-none focus:border-white transition-colors placeholder:text-neutral-600"
+            className="flex-1 px-3 py-2 bg-[#2a2a2a] border border-white/5 rounded-md text-sm focus:outline-none focus:border-white/30 transition-colors placeholder:text-neutral-600"
           />
           <button
             type="submit"
@@ -2508,7 +2508,7 @@ function ParticipantVideo({
 
   return (
     <div
-      className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden shrink-0 ${
+      className={`relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden shrink-0 ${
         compact ? "h-36" : "aspect-video"
       }`}
     >
@@ -2521,9 +2521,9 @@ function ParticipantVideo({
         }`}
       />
       {showPlaceholder && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
           <div
-            className={`rounded-full bg-[#222] border border-white/10 flex items-center justify-center ${
+            className={`rounded-full bg-[#333] border border-white/10 flex items-center justify-center ${
               compact ? "w-10 h-10 text-lg" : "w-16 h-16 text-2xl"
             }`}
           >
@@ -2533,7 +2533,7 @@ function ParticipantVideo({
       )}
       <audio ref={setAudioRef} autoPlay />
       <div
-        className={`absolute bottom-2 left-2 bg-black/80 border border-white/10 rounded px-2 py-0.5 flex items-center gap-2 ${
+        className={`absolute bottom-2 left-2 bg-black/60 border border-white/5 rounded px-2 py-0.5 flex items-center gap-2 ${
           compact ? "text-[10px]" : "text-xs"
         }`}
       >
@@ -2604,9 +2604,9 @@ function ParticipantsPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#111] rounded-lg shadow-2xl flex flex-col border border-white/10 z-10 font-[family-name:var(--font-geist-mono)]">
+    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10 font-[family-name:var(--font-geist-mono)]">
       {/* Header */}
-      <div className="flex flex-col border-b border-white/10">
+      <div className="flex flex-col border-b border-white/5">
         <div className="flex items-center justify-between p-3">
           <h3 className="font-bold text-sm">
             Participants ({participantsList.length})
