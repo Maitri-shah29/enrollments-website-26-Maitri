@@ -131,7 +131,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
 
   if (allRoundUsers.length === 0) {
     return (
-      <div className="flex min-h-screen bg-black text-white font-sans items-center justify-center">
+      <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)] items-center justify-center">
         <div className="flex flex-col items-center max-w-md text-center p-8">
           <h1 className="text-2xl font-medium mb-4">Task Submissions</h1>
           <p className="text-gray-400 mb-8">
@@ -143,7 +143,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-sans">
+    <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)]">
       {/* Notification */}
       {notification && (
         <div

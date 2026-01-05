@@ -236,7 +236,7 @@ const SchedulerClient = ({
 
   if (participatingRounds.length === 0) {
     return (
-      <div className="flex min-h-screen bg-black text-white font-sans items-center justify-center">
+      <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)] items-center justify-center">
         <div className="flex flex-col items-center max-w-md text-center p-8">
           <h1 className="text-2xl font-medium mb-4">Interview Scheduler</h1>
           <p className="text-gray-400 mb-8">
@@ -250,7 +250,7 @@ const SchedulerClient = ({
   const activeLink = isSfuHealthy ? meetLink : schedulingLink;
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-sans">
+    <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)]">
       {notification && (
         <div
           className={`fixed top-35 right-10 z-[1000] p-2 rounded-md shadow-xl text-white transition-opacity duration-300 ${getNotificationClasses(
