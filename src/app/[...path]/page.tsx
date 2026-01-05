@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-
-export const dynamic = "force-dynamic";
+import { cacheLife } from "next/cache";
 
 type CatchAllPageProps = {
   params: Promise<{
@@ -9,6 +8,8 @@ type CatchAllPageProps = {
 };
 
 export default async function CatchAllPage({ params }: CatchAllPageProps) {
+  'use cache'
+  cacheLife('max')
   const { path } = await params;
   const rawPath = path?.join("/") ?? "";
   if (!rawPath) {
