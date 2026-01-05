@@ -26,9 +26,13 @@ type RoundWithRelations = {
 
 type SchedulerClientProps = {
   initialRounds: RoundWithRelations[];
+  initialSfuHealth: boolean;
 };
 
-const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
+const SchedulerClient = ({
+  initialRounds,
+  initialSfuHealth,
+}: SchedulerClientProps) => {
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
@@ -92,7 +96,28 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
 
   const bookedSlot = selectedRound?.RoundUser?.[0]?.Meet_User?.slot;
   const meetLink = bookedSlot?.meet?.meetLink;
+  const schedulingLink = bookedSlot?.meet?.schedulingLink;
   const [canJoin, setCanJoin] = useState(false);
+  const [isSfuHealthy, setIsSfuHealthy] = useState(initialSfuHealth);
+
+  useEffect(() => {
+    const checkSfuHealth = async () => {
+      try {
+        const response = await fetch("/api/sfu/health");
+        if (response.ok) {
+          const data = await response.json();
+          setIsSfuHealthy(data.status === "healthy");
+        } else {
+          setIsSfuHealthy(false);
+        }
+      } catch (error) {
+        setIsSfuHealthy(false);
+      }
+    };
+
+    const interval = setInterval(checkSfuHealth, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!bookedSlot) {
@@ -203,6 +228,8 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
     );
   }
 
+  const activeLink = isSfuHealthy ? meetLink : schedulingLink;
+
   return (
     <div className="flex min-h-screen bg-black text-white font-sans">
       {notification && (
@@ -243,21 +270,22 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
             <div className="text-gray-500 text-sm mb-4">
               Link will be shared 15 min prior to the scheduled time.
             </div>
-            {canJoin && meetLink && (
+            {/* {canJoin && activeLink && ( */}
+            {canJoin && activeLink && (
               <div className="bg-gray-800/50 p-4 rounded-lg mb-6 border border-gray-700 max-w-md w-full">
                 <div className="text-sm text-gray-400 mb-2">
-                  Use this Room ID inside the Meets website "meets.com" inside
-                  the ACM Explore Browser or click on the button below to join
-                  the meeting.
+                  {isSfuHealthy
+                    ? 'Use this Room ID inside the Meets website "meets.com" inside the ACM Explore Browser or click on the button below to join the meeting.'
+                    : "The internal meeting service is currently unavailable. Please use the following backup link to join your meeting."}
                 </div>
                 <div className="flex items-center justify-between bg-black/50 p-3 rounded border border-gray-800">
                   <span className="font-mono text-[#FF5C5C] font-medium break-all mr-2">
-                    {meetLink}
+                    {activeLink}
                   </span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(meetLink);
-                      showNotification("Room ID copied!", "success");
+                      navigator.clipboard.writeText(activeLink);
+                      showNotification("Link copied!", "success");
                     }}
                     className="text-xs text-gray-500 hover:text-white transition-colors"
                   >
@@ -266,14 +294,15 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
                 </div>
               </div>
             )}
-            {canJoin && meetLink && (
+            {/* {canJoin && activeLink && ( */}
+            {canJoin && activeLink && isSfuHealthy && (
               <button
                 onClick={() => {
                   window.postMessage(
                     {
                       type: "SWITCH_TAB",
                       url: "meets",
-                      meetingId: meetLink,
+                      meetingId: activeLink,
                     },
                     "*"
                   );
@@ -282,6 +311,16 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
               >
                 Join Meeting
               </button>
+            )}
+            {canJoin && activeLink && !isSfuHealthy && (
+              <a
+                href={activeLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 bg-[#FF5C5C] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#ff7b7b] transition-colors inline-block"
+              >
+                Go to Meeting
+              </a>
             )}
           </div>
         ) : selectedRound ? (
