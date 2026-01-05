@@ -19,8 +19,6 @@ export const getRoundGateState = ({
   isAnnounced,
   status,
 }: RoundGateInput): RoundGateState => {
-  if (!isActive) return "inactive";
-
   const normalized = status ?? "pending";
   if (isAnnounced) {
     switch (normalized) {
@@ -35,6 +33,7 @@ export const getRoundGateState = ({
     }
   }
 
+  if (!isActive) return "inactive";
   if (normalized !== "pending") return "evaluating";
   return "content";
 };

@@ -5,8 +5,6 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "npx prisma generate && next build --turbopack",
-    "postbuild": "node scripts/upload-r2-assets.cjs --all --concurrency=6",
-    "vercel-build": "npx prisma generate && next build --turbopack && node scripts/upload-r2-assets.cjs --all --concurrency=6",
     "upload:r2": "node scripts/upload-r2-assets.cjs --all --concurrency=6",
     "start": "next start",
     "lint": "biome check",
