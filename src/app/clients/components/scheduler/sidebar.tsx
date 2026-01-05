@@ -24,7 +24,9 @@ const Sidebar = ({
         <span className="font-medium">Scheduler</span>
       </div>
 
-      <div className="mb-6 text-gray-400 text-sm">Select Domain</div>
+      <div className="mb-6 text-gray-400 text-base font-semibold">
+        Select Domain
+      </div>
 
       <div className="flex flex-col gap-6">
         {availableDomains.map(({ name, roundNumber }) => {
