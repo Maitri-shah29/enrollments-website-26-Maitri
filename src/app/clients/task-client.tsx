@@ -20,6 +20,37 @@ type TaskClientProps = {
   initialRoundUsers: RoundUserWithRelations[];
 };
 
+const LinkifiedText = ({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) => {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+
+  return (
+    <p className={className}>
+      {parts.map((part, i) => {
+        if (part.match(/^(https?:\/\/[^\s]+)$/)) {
+          return (
+            <a
+              key={i}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline break-all"
+            >
+              {part}
+            </a>
+          );
+        }
+        return part;
+      })}
+    </p>
+  );
+};
+
 const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [allRoundUsers, setAllRoundUsers] =
@@ -236,9 +267,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     style={{ fontFamily: "PoppinsReg" }}
                   ></span>
                 </div>
-                <p className="text-gray-300 whitespace-pre-wrap bg-zinc-900 rounded-lg border border-zinc-800 min-y-[3rem] p-4">
-                  {selectedRoundUser.Task.text}
-                </p>
+                <LinkifiedText
+                  text={selectedRoundUser.Task.text}
+                  className="text-gray-300 whitespace-pre-wrap bg-zinc-900 rounded-lg border border-zinc-800 min-y-[3rem] p-4"
+                />
               </div>
             )}
 
