@@ -31,9 +31,13 @@ async function HomeWithSession({ initialUrl }: HomeShellProps) {
   const session = await getRequestSession();
 
   let roundUserCount = 0;
+  let promotedDomains: string[] = [];
   const userId = session?.session?.userId;
   if (userId) {
-    roundUserCount = await getRoundUserCountCached(userId);
+    [roundUserCount, promotedDomains] = await Promise.all([
+      getRoundUserCountCached(userId),
+      getPromotedDomainsCached(userId),
+    ]);
   }
   return (
     <SessionProvider initialSession={session}>
@@ -41,13 +45,39 @@ async function HomeWithSession({ initialUrl }: HomeShellProps) {
         session={session}
         initialUrl={initialUrl}
         isAllowed={true}
-        ccChild={<CCServer roundUserCount={roundUserCount} />}
-        designChild={<DesignServer roundUserCount={roundUserCount} />}
-        managementChild={<ManagementServer roundUserCount={roundUserCount} />}
-        techChild={<TechServer roundUserCount={roundUserCount} />}
-        researchChild={<ResearchServer roundUserCount={roundUserCount} />}
+        promotedDomains={promotedDomains}
+        designChild={
+          <DesignServer
+            roundUserCount={roundUserCount}
+            hasPromotedRound1={promotedDomains.includes("design")}
+          />
+        }
+        managementChild={
+          <ManagementServer
+            roundUserCount={roundUserCount}
+            hasPromotedRound1={promotedDomains.includes("management")}
+          />
+        }
+        techChild={
+          <TechServer
+            roundUserCount={roundUserCount}
+            hasPromotedRound1={promotedDomains.includes("tech")}
+          />
+        }
+        researchChild={
+          <ResearchServer
+            roundUserCount={roundUserCount}
+            hasPromotedRound1={promotedDomains.includes("research")}
+          />
+        }
         schedulerChild={<SchedulerServer />}
         taskChild={<TaskServer />}
+        ccChild={
+          <CCServer
+            roundUserCount={roundUserCount}
+            hasPromotedRound1={promotedDomains.includes("cc")}
+          />
+        }
       />
     </SessionProvider>
   );
@@ -68,4 +98,33 @@ async function getRoundUserCountCached(userId: string) {
       },
     },
   });
+}
+
+async function getPromotedDomainsCached(userId: string) {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 120, expire: 600 });
+  cacheTag(cacheTags.homePromotedDomains(userId));
+
+  const roundUsers = await prisma.roundUser.findMany({
+    where: {
+      userId,
+      status: "promoted",
+      round: {
+        number: 1,
+        type: "form",
+      },
+    },
+    select: {
+      round: {
+        select: {
+          domain: true,
+        },
+      },
+    },
+  });
+
+  const unique = new Set(
+    roundUsers.map((entry) => entry.round.domain.toLowerCase()),
+  );
+  return Array.from(unique);
 }

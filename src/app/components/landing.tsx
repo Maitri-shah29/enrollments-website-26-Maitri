@@ -149,6 +149,7 @@ const Landing: React.FC<{
   schedulerChild?: React.ReactNode;
   taskChild?: React.ReactNode;
   initialUrl?: string;
+  promotedDomains?: string[];
 }> = ({
   session: _session,
   isAllowed: _isAllowed,
@@ -160,6 +161,7 @@ const Landing: React.FC<{
   schedulerChild,
   taskChild,
   initialUrl,
+  promotedDomains = [],
 }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
@@ -718,6 +720,7 @@ const Landing: React.FC<{
               researchChildren={researchChild}
               schedulerChildren={schedulerChild}
               taskChildren={taskChild}
+              promotedDomains={promotedDomains}
             />
           </div>
         ))}

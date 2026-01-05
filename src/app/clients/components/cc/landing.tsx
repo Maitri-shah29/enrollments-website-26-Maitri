@@ -7,6 +7,8 @@ type Props = {
   loading?: boolean;
   hasRoundUser?: boolean;
   onContinue?: () => void;
+  showResults?: boolean;
+  onViewResults?: () => void;
 };
 
 const Homepage: React.FC<Props> = ({
@@ -14,7 +16,10 @@ const Homepage: React.FC<Props> = ({
   loading = false,
   hasRoundUser = false,
   onContinue,
+  showResults = false,
+  onViewResults,
 }) => {
+  const showResultsCta = showResults && !!onViewResults;
   const cells = Array.from({ length: 8 }, (_, idx) => `cell-${idx + 1}`);
   return (
     <div className="w-full h-full relative overflow-hidden">
@@ -111,15 +116,23 @@ const Homepage: React.FC<Props> = ({
           </h1>
           <Button
             label={
-              hasRoundUser
-                ? "Continue →"
-                : loading
-                  ? "Loading..."
-                  : "Get Started →"
+              showResultsCta
+                ? "View Results →"
+                : hasRoundUser
+                  ? "Continue →"
+                  : loading
+                    ? "Loading..."
+                    : "Get Started →"
             }
-            onClick={hasRoundUser ? onContinue : onGetStarted}
+            onClick={
+              showResultsCta
+                ? onViewResults
+                : hasRoundUser
+                  ? onContinue
+                  : onGetStarted
+            }
             buttonClassName="py-3 !px-[30px] text-lg"
-            disabled={loading && !hasRoundUser}
+            disabled={loading && !hasRoundUser && !showResultsCta}
           />
         </div>
       </div>

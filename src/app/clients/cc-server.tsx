@@ -5,8 +5,10 @@ import type { RoundUserExtended } from "@/app/clients/components/cc/questions";
 
 export default async function CCServer({
   roundUserCount,
+  hasPromotedRound1 = false,
 }: {
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 }) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
@@ -23,6 +25,7 @@ export default async function CCServer({
     <CCClient
       initialRoundUser={initialRoundUser}
       roundUserCount={roundUserCount}
+      hasPromotedRound1={hasPromotedRound1}
     />
   );
 }

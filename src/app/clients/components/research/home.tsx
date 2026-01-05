@@ -7,6 +7,8 @@ type Props = {
   loading?: boolean;
   hasRoundUser?: boolean;
   onContinue?: () => void;
+  showResults?: boolean;
+  onViewResults?: () => void;
 };
 
 export default function Home({
@@ -14,7 +16,10 @@ export default function Home({
   loading = false,
   hasRoundUser = false,
   onContinue,
+  showResults = false,
+  onViewResults,
 }: Props) {
+  const showResultsCta = showResults && !!onViewResults;
   return (
     <div className="relative w-full h-full bg-[#1A1A1A] overflow-hidden flex flex-col items-center justify-center">
       <NetworkGraph />
@@ -38,11 +43,23 @@ export default function Home({
 
       <button
         type="button"
-        onClick={hasRoundUser ? onContinue : onGetStarted}
-        disabled={loading && !hasRoundUser}
+        onClick={
+          showResultsCta
+            ? onViewResults
+            : hasRoundUser
+              ? onContinue
+              : onGetStarted
+        }
+        disabled={loading && !hasRoundUser && !showResultsCta}
         className="mt-8 px-8 py-3 bg-[#7D5BED] text-white font-medium rounded-md hover:bg-[#6B4DD1] transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {hasRoundUser ? "Continue →" : loading ? "Loading..." : "Get Started →"}
+        {showResultsCta
+          ? "View Results →"
+          : hasRoundUser
+            ? "Continue →"
+            : loading
+              ? "Loading..."
+              : "Get Started →"}
       </button>
     </div>
   );

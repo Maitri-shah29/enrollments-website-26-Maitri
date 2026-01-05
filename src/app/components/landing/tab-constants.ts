@@ -219,15 +219,15 @@ export const titleFromDomain = (value: string) => {
 };
 
 export const BOOKMARK_LABELS: Record<string, string> = {
-  instructions: "Instructions",
+  // instructions: "Instructions",
   cc: "Competitive Coding",
   management: "Management",
   tech: "Tech",
   design: "Design",
   research: "Research",
-  meets: "Meets",
+  // meets: "Meets",
   scheduler: "Scheduler",
-  task: "Task",
+  // task: "Task",
   // events: "Events",
   // domains: "Domains",
   // pintoorun: "PintooRun",

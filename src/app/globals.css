@@ -280,6 +280,38 @@
   animation: spin-slow 8s linear infinite;
 }
 
+@keyframes promo-text-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.promo-text {
+  background: linear-gradient(
+    90deg,
+    #ff7a59,
+    #ffd66b,
+    #6be1a1,
+    #6bb6ff,
+    #ff7a59
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.15em;
+  text-shadow: 0 0 10px rgba(255, 214, 107, 0.35);
+  animation: promo-text-shift 2.4s ease-in-out infinite;
+}
+
+
 @layer utilities {
   @keyframes spin-once {
     0% {

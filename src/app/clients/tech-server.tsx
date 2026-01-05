@@ -5,8 +5,10 @@ import TechWebsite from "@/app/clients/tech-client";
 
 export default async function TechServer({
   roundUserCount,
+  hasPromotedRound1 = false,
 }: {
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 }) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
@@ -22,6 +24,7 @@ export default async function TechServer({
     <TechWebsite
       initialRoundUser={initialRoundUser}
       roundUserCount={roundUserCount}
+      hasPromotedRound1={hasPromotedRound1}
     />
   );
 }

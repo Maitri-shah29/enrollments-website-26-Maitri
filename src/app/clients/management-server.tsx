@@ -5,8 +5,10 @@ import ManagementClient from "@/app/clients/management-client";
 
 export default async function ManagementServer({
   roundUserCount,
+  hasPromotedRound1 = false,
 }: {
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 }) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
@@ -24,6 +26,7 @@ export default async function ManagementServer({
     <ManagementClient
       initialRoundUser={initialRoundUser}
       roundUserCount={roundUserCount}
+      hasPromotedRound1={hasPromotedRound1}
     />
   );
 }

@@ -8,6 +8,8 @@ type ManagementLandingProps = {
   loading?: boolean;
   hasRoundUser?: boolean;
   onContinue?: () => void;
+  showResults?: boolean;
+  onViewResults?: () => void;
 };
 
 const ManagementLanding = ({
@@ -16,7 +18,10 @@ const ManagementLanding = ({
   loading = false,
   hasRoundUser = false,
   onContinue,
+  showResults = false,
+  onViewResults,
 }: ManagementLandingProps) => {
+  const showResultsCta = showResults && !!onViewResults;
   const buttonColors: Record<string, string> = {
     "big sur": "bg-[#AD3232] hover:bg-[#AD3232]/70",
     sequoia: "bg-[#2E4A7A] hover:bg-[#2E4A7A]/70",
@@ -72,8 +77,14 @@ const ManagementLanding = ({
         <div className="w-full flex justify-center mt-auto">
           <button
             type="button"
-            onClick={hasRoundUser ? onContinue : onGetStarted}
-            disabled={loading && !hasRoundUser}
+            onClick={
+              showResultsCta
+                ? onViewResults
+                : hasRoundUser
+                  ? onContinue
+                  : onGetStarted
+            }
+            disabled={loading && !hasRoundUser && !showResultsCta}
             className={`
     ${buttonColors[wallpaper] || buttonColors.default}
     text-white font-bold py-3 px-8 rounded-lg
@@ -81,7 +92,13 @@ const ManagementLanding = ({
     disabled:opacity-50 disabled:cursor-not-allowed
   `}
           >
-            {hasRoundUser ? "Continue" : loading ? "Loading..." : "Get Started"}
+            {showResultsCta
+              ? "View Results"
+              : hasRoundUser
+                ? "Continue"
+                : loading
+                  ? "Loading..."
+                  : "Get Started"}
           </button>
         </div>
       </div>
