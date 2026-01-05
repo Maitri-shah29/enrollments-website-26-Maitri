@@ -74,18 +74,11 @@ const Calendar = ({
         (availableDate) => availableDate.toDateString() === date.toDateString(),
       );
 
-      let bgColor = "transparent";
-      let textColor = "text-white";
-
-      if (isSelected) {
-        bgColor = "bg-[#FF5C5C]"; // Reddish
-        textColor = "text-white";
-      } else if (isAvailable) {
-        bgColor = "bg-[#9D8CFF]"; // Purpleish
-        textColor = "text-white";
-      } else {
-        textColor = "text-gray-600"; // Unavailable
-      }
+      const isUnavailable = !isAvailable;
+      const baseAvailable =
+        "border border-[#2f2f2f] text-white hover:border-[#5CAFFF]";
+      const baseUnavailable = "text-gray-600 border border-transparent";
+      const selectedStyles = "bg-[#FF5C5C] text-white border-none";
 
       grid.push(
         <button
@@ -95,10 +88,10 @@ const Calendar = ({
           disabled={!isAvailable}
           className={clsx(
             "w-10 h-10 rounded-full flex items-center justify-center text-lg transition-colors",
-            bgColor,
-            textColor,
-            isAvailable && !isSelected && "hover:bg-gray-800",
-            !isAvailable && "cursor-not-allowed",
+            isSelected && selectedStyles,
+            !isSelected && !isUnavailable && baseAvailable,
+            isUnavailable && baseUnavailable,
+            isUnavailable && "cursor-not-allowed",
           )}
         >
           {d}
@@ -109,14 +102,14 @@ const Calendar = ({
   };
 
   return (
-    <div className="bg-[#111] border border-gray-800 rounded-xl p-8">
-      <div className="text-center mb-8 text-gray-300">Available Dates</div>
+    <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-8">
+      <div className="text-center mb-8 text-gray-200">Available Dates</div>
 
       <div className="flex items-center justify-between mb-8 px-4">
         <button
           type="button"
           onClick={handlePrevMonth}
-          className="p-1 hover:bg-gray-800 rounded"
+          className="p-1 hover:bg-[#2b2b2b] rounded"
         >
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
@@ -124,7 +117,7 @@ const Calendar = ({
         <button
           type="button"
           onClick={handleNextMonth}
-          className="p-1 hover:bg-gray-800 rounded"
+          className="p-1 hover:bg-[#2b2b2b] rounded"
         >
           <ChevronRight className="w-5 h-5 text-white" />
         </button>

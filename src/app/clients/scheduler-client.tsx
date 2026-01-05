@@ -343,7 +343,7 @@ const SchedulerClient = ({
             )}
           </div>
         ) : selectedRound ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-8 max-w-6xl">
             <Calendar
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}

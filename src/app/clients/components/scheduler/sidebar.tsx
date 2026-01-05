@@ -18,7 +18,7 @@ const Sidebar = ({
   availableDomains,
 }: SidebarProps) => {
   return (
-    <div className="w-64 bg-[#111] p-8 flex flex-col border-r border-gray-800 hidden md:flex">
+    <div className="w-64 bg-[#1c1c1c] p-8 flex flex-col border-r border-[#2b2b2b] hidden md:flex">
       <div className="flex items-center gap-2 mb-12 text-white">
         <CalendarIcon className="w-5 h-5" />
         <span className="font-medium">Scheduler</span>
@@ -39,7 +39,7 @@ const Sidebar = ({
               "text-left text-sm transition-colors",
               selectedDomain === name
                 ? "text-[#FF5C5C] font-medium"
-                : "text-white hover:text-gray-300",
+                : "text-gray-300 hover:text-white",
             )}
           >
             <span>{label}</span>
