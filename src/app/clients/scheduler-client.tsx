@@ -238,9 +238,9 @@ const SchedulerClient = ({
     return (
       <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)] items-center justify-center">
         <div className="flex flex-col items-center max-w-md text-center p-8">
-          <h1 className="text-2xl font-medium mb-4">Interview Scheduler</h1>
+          <h1 className="text-2xl font-medium mb-4">Interactions Scheduler</h1>
           <p className="text-gray-400 mb-8">
-            You are not eligible for any interviews at the moment.
+            You are not eligible for any interactions at the moment.
           </p>
         </div>
       </div>
@@ -267,15 +267,17 @@ const SchedulerClient = ({
       />
       <div className="flex-1 p-8 md:p-12 lg:p-16">
         <h1 className="text-2xl font-medium mb-8">
-          {bookedSlot ? "" : "Choose your preferred date and slot:"}
+          {bookedSlot
+            ? "Your scheduled interaction:"
+            : "Choose your preferred date and slot:"}
         </h1>
         {bookedSlot ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] h-auto bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
             <div className="text-gray-400 mb-2">
               You have successfully booked a slot for
             </div>
-            <div className="text-3xl font-bold mb-4 text-[#FF5C5C]">
-              {selectedDomain} Interview
+            <div className="text-3xl font-bold mb-4 text-[#5CAFFF]">
+              {selectedDomain} Interaction
             </div>
             <div className="text-xl mb-2">
               {formatDate(new Date(bookedSlot.from))}
