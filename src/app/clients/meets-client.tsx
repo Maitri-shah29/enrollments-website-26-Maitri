@@ -41,6 +41,13 @@ import type {
   RedirectData,
 } from "../../lib/sfu-types";
 import VideoSettings from "./components/meets/video-settings";
+import { Roboto } from "next/font/google";
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-roboto",
+});
 
 // ============================================
 // Configuration
@@ -1789,16 +1796,32 @@ export default function MeetsClient({
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#1a1a1a] text-white font-[family-name:var(--font-geist-mono)]">
+    <div
+      className={`flex flex-col h-full w-full bg-[#1a1a1a] text-white ${roboto.className}`}
+      style={{ fontFamily: "'Roboto', sans-serif" }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-[#151515] border-b border-white/5">
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
+          <h1
+            className="text-xl font-bold tracking-[0.5px]"
+            style={{ fontWeight: 700 }}
+          >
+            ACM c0nclav3
+          </h1>
           {isJoined && (
             <div className="flex items-stretch gap-2 ml-2 hidden sm:flex h-8">
-              <div className="flex items-center bg-white/5 px-3 rounded-md text-sm text-white/80 border border-white/10">
+              <div
+                className="flex items-center bg-white/5 px-3 rounded-md text-sm text-white/80 border border-white/10"
+                style={{ fontWeight: 500 }}
+              >
                 <span className="text-white/40 mr-2">Room:</span>
-                <span className="font-mono font-bold">{roomId}</span>
+                <span
+                  className="font-bold tabular-nums"
+                  style={{ fontWeight: 700 }}
+                >
+                  {roomId}
+                </span>
               </div>
               <VideoSettings
                 isMirrorCamera={isMirrorCamera}
@@ -1816,12 +1839,18 @@ export default function MeetsClient({
         </div>
         <div className="flex items-center gap-3">
           {isScreenSharing && (
-            <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse">
-              SCREEN IS BEING SHARED
+            <span
+              className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
+            >
+              Screen is being shared
             </span>
           )}
           {connectionState === "reconnecting" && (
-            <span className="bg-yellow-600 text-xs px-2 py-1 rounded flex items-center gap-1">
+            <span
+              className="bg-yellow-600 text-xs px-2 py-1 rounded flex items-center gap-1 tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
+            >
               <RefreshCw className="w-3 h-3 animate-spin" />
               Reconnecting...
             </span>
@@ -1963,7 +1992,7 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
   return (
     <div className="flex items-center gap-2">
       <span className={`w-1.5 h-1.5 rounded-full ${colors[state]}`} />
-      <span className="text-xs text-neutral-500 uppercase tracking-wider">
+      <span className="text-xs text-neutral-500 tracking-wider">
         {labels[state]}
       </span>
     </div>
@@ -1992,8 +2021,15 @@ function JoinScreen({
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
       <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold mb-2">Join a Meeting</h2>
-        <p className="text-gray-400">Logged in as: {userEmail}</p>
+        <h2
+          className="text-2xl font-bold mb-2 tracking-[0.5px]"
+          style={{ fontWeight: 700 }}
+        >
+          Join a meeting
+        </h2>
+        <p className="text-gray-400" style={{ fontWeight: 500 }}>
+          Logged in as: {userEmail}
+        </p>
       </div>
 
       <input
@@ -2008,7 +2044,8 @@ function JoinScreen({
       <button
         onClick={onJoin}
         disabled={isLoading || !roomId.trim()}
-        className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md font-medium transition-colors flex items-center gap-2 text-sm"
+        className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md transition-colors flex items-center gap-2 text-sm tracking-[0.5px]"
+        style={{ fontWeight: 500 }}
       >
         {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
         {connectionState === "reconnecting"
@@ -2069,7 +2106,10 @@ function PresentationLayout({
           playsInline
           className="max-w-full max-h-full"
         />
-        <div className="absolute top-2 left-2 bg-black/40 px-2 py-1 rounded text-white text-sm">
+        <div
+          className="absolute top-2 left-2 bg-black/40 px-2 py-1 rounded text-white text-sm tracking-[0.5px]"
+          style={{ fontWeight: 500 }}
+        >
           {presenterName} is presenting
         </div>
       </div>
@@ -2094,7 +2134,10 @@ function PresentationLayout({
               </div>
             </div>
           )}
-          <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/60 border border-white/5 rounded text-xs">
+          <div
+            className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/60 border border-white/5 rounded text-xs"
+            style={{ fontWeight: 500 }}
+          >
             You
           </div>
         </div>
@@ -2167,7 +2210,10 @@ function GridLayout({
             </div>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 border border-white/5 rounded text-sm flex items-center gap-2">
+        <div
+          className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 border border-white/5 rounded text-sm flex items-center gap-2"
+          style={{ fontWeight: 500 }}
+        >
           You {isMuted && <MicOff className="w-3 h-3 text-red-500" />}
         </div>
       </div>
@@ -2295,7 +2341,10 @@ function ControlsBar({
       >
         <MessageSquare className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold">
+          <span
+            className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center tabular-nums"
+            style={{ fontWeight: 500 }}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -2352,10 +2401,15 @@ function ChatPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10 font-[family-name:var(--font-geist-mono)]">
+    <div
+      className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10"
+      style={{ fontFamily: "'Roboto', sans-serif" }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-white/5">
-        <h3 className="font-bold text-sm">Chat</h3>
+        <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
+          Chat
+        </h3>
         <button
           onClick={onClose}
           className="p-1 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white"
@@ -2392,7 +2446,7 @@ function ChatPanel({
                   )}
                   <p className="text-sm break-words">{msg.content}</p>
                 </div>
-                <span className="text-xs text-gray-500 mt-1">
+                <span className="text-xs text-gray-500 mt-1 tabular-nums">
                   {new Date(msg.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -2537,7 +2591,7 @@ function ParticipantVideo({
           compact ? "text-[10px]" : "text-xs"
         }`}
       >
-        <span className="font-medium">{displayName}</span>
+        <span style={{ fontWeight: 500 }}>{displayName}</span>
         {participant.isMuted && <MicOff className="w-3 h-3 text-red-500" />}
       </div>
     </div>
@@ -2604,12 +2658,16 @@ function ParticipantsPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10 font-[family-name:var(--font-geist-mono)]">
+    <div
+      className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10"
+      style={{ fontFamily: "'Roboto', sans-serif" }}
+    >
       {/* Header */}
       <div className="flex flex-col border-b border-white/5">
         <div className="flex items-center justify-between p-3">
-          <h3 className="font-bold text-sm">
-            Participants ({participantsList.length})
+          <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
+            Participants (
+            <span className="tabular-nums">{participantsList.length}</span>)
           </h3>
           <button
             onClick={onClose}
@@ -2626,7 +2684,8 @@ function ParticipantsPanel({
                   console.log("Muted all:", res)
                 )
               }
-              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
+              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
             >
               <MicOff className="w-3 h-3" />
               Mute All
@@ -2637,7 +2696,8 @@ function ParticipantsPanel({
                   console.log("Stopped all video:", res)
                 )
               }
-              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
+              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
             >
               <VideoOff className="w-3 h-3" />
               Stop Video
@@ -2708,10 +2768,13 @@ function ParticipantsPanel({
               }`}
             >
               <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs border border-white/10 shrink-0">
+                <div
+                  className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs border border-white/10 shrink-0"
+                  style={{ fontWeight: 500 }}
+                >
                   {displayName[0]?.toUpperCase() || "?"}
                 </div>
-                <span className="text-sm truncate">
+                <span className="text-sm truncate" style={{ fontWeight: 500 }}>
                   {displayName} {isMe && "(You)"}
                 </span>
               </div>
@@ -2793,7 +2856,12 @@ function ParticipantsPanel({
       {showRedirectModal && (
         <div className="absolute inset-0 bg-black/95 z-20 flex flex-col p-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-            <h4 className="font-bold text-sm">Select Room</h4>
+            <h4
+              className="text-sm tracking-[0.5px]"
+              style={{ fontWeight: 700 }}
+            >
+              Select Room
+            </h4>
             <button
               onClick={() => setShowRedirectModal(false)}
               className="text-neutral-400 hover:text-white"
@@ -2813,11 +2881,15 @@ function ParticipantsPanel({
                   key={room.id}
                   onClick={() => handleRedirect(room.id)}
                   className="w-full text-left p-3 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex justify-between items-center"
+                  style={{ fontWeight: 500 }}
                 >
-                  <span className="font-medium text-sm truncate">
+                  <span
+                    className="text-sm truncate"
+                    style={{ fontWeight: 500 }}
+                  >
                     {room.id}
                   </span>
-                  <span className="text-xs text-neutral-400 flex items-center gap-1">
+                  <span className="text-xs text-neutral-400 flex items-center gap-1 tabular-nums">
                     <Users className="w-3 h-3" />
                     {room.userCount}
                   </span>
