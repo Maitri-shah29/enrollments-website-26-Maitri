@@ -6,28 +6,17 @@ const Instructions: React.FC = () => {
   return (
     <>
       <div></div>
-      <NeonSection title="INSTRUCTIONS">
-        <ul className="list-disc pl-6 space-y-2 text-white">
-          <li>Answer all the questions of Round 1.</li>
+      <NeonSection title="INSTRUCTIONS: ROUND 2">
+        <ul className="list-disc pl-6 sm:pl-8 space-y-3 text-white text-sm md:text-base leading-relaxed marker:text-[#c9eb3e]">
+          <li>Round 2 is a CC contest round.</li>
           <li>
-            PS - You’ll probably use AI for these questions, which is totally
-            fine. Just keep in mind that we’ll be evaluating your originality
-            and your ability to learn so feel free to use AI for support, but
-            make sure your answers reflect your own thinking.
+            Register for the HackerRank contest on January 10, 2026 at 9:30 PM
+            IST at https://www.hackerrank.com/acm-cc-contest.
           </li>
+          <li>The contest will continue for 2 hours.</li>
           <li>
-            After answering every question, click on "Save Answer" to save your
-            response.
-          </li>
-          <li>
-            Click on “Submit Form” after answering and reviewing all questions.
-            You may change your answers after you save answer. You cannot change
-            your answers once you have submitted the form.
-          </li>
-          <li>Next round will be a CC contest round.</li>
-          <li>
-            It will be organised on 9th January, 2026 for which the link will be
-            shared later.
+            Before submitting your solution, be sure to write your name and
+            registration number in comments.
           </li>
         </ul>
       </NeonSection>

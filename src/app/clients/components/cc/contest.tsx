@@ -6,10 +6,15 @@ const Contest: React.FC = () => {
   return (
     <NeonSection title="CONTEST">
       <p>
-        Join our weekly coding competition and test your skills against other
-        developers.
+        The Round 2 of Competitive Coding domain is a contest hosted on
+        HackerRank.
       </p>
-      <Button label="Coming Soon!"></Button>
+      <Button
+        label="Go to Contest"
+        onClick={() =>
+          window.open("https://www.hackerrank.com/acm-cc-contest", "_blank")
+        }
+      ></Button>
     </NeonSection>
   );
 };
