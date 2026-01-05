@@ -1,47 +1,46 @@
 "use client";
 
 import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useReducer,
-  useMemo,
-} from "react";
-import { io, Socket } from "socket.io-client";
-import { Device } from "mediasoup-client";
-import type {
-  Transport,
-  Producer,
-  Consumer,
-  RtpCapabilities,
-} from "mediasoup-client/types";
-import { useSessionContext } from "../components/session-provider";
-import {
-  Monitor,
-  Phone,
+  AlertCircle,
+  ArrowRight,
+  Loader2,
+  MessageSquare,
   Mic,
   MicOff,
+  Monitor,
+  Phone,
+  RefreshCw,
+  Send,
+  UserMinus,
+  Users,
   Video,
   VideoOff,
-  Loader2,
-  AlertCircle,
-  RefreshCw,
-  MessageSquare,
-  Send,
   X,
 } from "lucide-react";
-import { getSfuToken } from "../actions/sfu-token";
-import { ADMIN_EMAILS } from "@/lib/admin-config";
-import SignupPage from "../components/sign-up";
-import { Users, UserMinus, List, ArrowRight } from "lucide-react";
+import { Device } from "mediasoup-client";
 import type {
-  GetRoomsResponse,
-  RoomInfo,
-  RedirectData,
-} from "../../lib/sfu-types";
-import VideoSettings from "./components/meets/video-settings";
+  Consumer,
+  Producer,
+  RtpCapabilities,
+  Transport,
+} from "mediasoup-client/types";
 import { Roboto } from "next/font/google";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { io, type Socket } from "socket.io-client";
+import { ADMIN_EMAILS } from "@/lib/admin-config";
+import type { GetRoomsResponse, RoomInfo } from "../../lib/sfu-types";
+import { getSfuToken } from "../actions/sfu-token";
+import { useSessionContext } from "../components/session-provider";
+import SignupPage from "../components/sign-up";
+import VideoSettings from "./components/meets/video-settings";
+
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
@@ -192,7 +191,7 @@ type ParticipantAction =
 
 function participantReducer(
   state: Map<string, Participant>,
-  action: ParticipantAction
+  action: ParticipantAction,
 ): Map<string, Participant> {
   const newState = new Map(state);
 
@@ -287,7 +286,7 @@ function participantReducer(
 /** Create a meet error with proper categorization */
 function createMeetError(
   error: unknown,
-  defaultCode: MeetError["code"] = "UNKNOWN"
+  defaultCode: MeetError["code"] = "UNKNOWN",
 ): MeetError {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -350,15 +349,15 @@ export default function MeetsClient({
   const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
-    null
+    null,
   );
   const [participants, dispatchParticipants] = useReducer(
     participantReducer,
-    new Map()
+    new Map(),
   );
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
-  const [mediaState, setMediaState] = useState<MediaState>({
+  const [_mediaState, setMediaState] = useState<MediaState>({
     hasAudioPermission: false,
     hasVideoPermission: false,
   });
@@ -385,7 +384,7 @@ export default function MeetsClient({
   }, [session?.data?.user?.email]);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<Map<string, string>>(
-    new Map()
+    new Map(),
   ); // userId -> displayName
 
   // Refs for WebRTC objects
@@ -404,7 +403,7 @@ export default function MeetsClient({
   const videoQualityRef = useRef<VideoQuality>("standard");
   const currentRoomIdRef = useRef<string | null>(null);
   const handleRedirectRef = useRef<(roomId: string) => Promise<void>>(
-    async () => {}
+    async () => {},
   );
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
@@ -527,259 +526,268 @@ export default function MeetsClient({
 
           const token = await getSfuToken();
 
-        const socket = io(SFU_URL, {
-          transports: ["websocket", "polling"],
-          timeout: SOCKET_TIMEOUT_MS,
-          reconnection: false, // We handle reconnection manually
-          auth: { token },
-        });
-
-        const connectionTimeout = setTimeout(() => {
-          socket.disconnect();
-          reject(new Error("Connection timeout"));
-        }, SOCKET_TIMEOUT_MS);
-
-        socket.on("connect", () => {
-          clearTimeout(connectionTimeout);
-          console.log("[Meets] Connected to SFU");
-          setConnectionState("connected");
-          setMeetError(null);
-          reconnectAttemptsRef.current = 0;
-          resolve(socket);
-        });
-
-        socket.on("disconnect", (reason) => {
-          console.log("[Meets] Disconnected:", reason);
-          if (
-            reason === "io server disconnect" ||
-            reason === "io client disconnect"
-          ) {
-            setConnectionState("disconnected");
-          } else if (currentRoomIdRef.current) {
-            // Unexpected disconnect during active session
-            handleReconnect();
-          }
-        });
-
-        socket.on("roomClosed", ({ reason }: { reason: string }) => {
-          console.log("[Meets] Room closed:", reason);
-          setMeetError({
-            code: "UNKNOWN", // Or a specific code like 'ROOM_CLOSED'
-            message: `Room closed: ${reason}`,
-            recoverable: false,
+          const socket = io(SFU_URL, {
+            transports: ["websocket", "polling"],
+            timeout: SOCKET_TIMEOUT_MS,
+            reconnection: false, // We handle reconnection manually
+            auth: { token },
           });
-          cleanup();
-        });
 
-        socket.on("connect_error", (err) => {
-          clearTimeout(connectionTimeout);
-          console.error("[Meets] Connection error:", err);
-          setMeetError(createMeetError(err, "CONNECTION_FAILED"));
-          setConnectionState("error");
-          reject(err);
-        });
+          const connectionTimeout = setTimeout(() => {
+            socket.disconnect();
+            reject(new Error("Connection timeout"));
+          }, SOCKET_TIMEOUT_MS);
 
-        // Producer events
-        socket.on("newProducer", async (data: ProducerInfo) => {
-          console.log("[Meets] New producer:", data);
-          await consumeProducer(data);
-        });
+          socket.on("connect", () => {
+            clearTimeout(connectionTimeout);
+            console.log("[Meets] Connected to SFU");
+            setConnectionState("connected");
+            setMeetError(null);
+            reconnectAttemptsRef.current = 0;
+            resolve(socket);
+          });
 
-        socket.on(
-          "producerClosed",
-          ({ producerId }: { producerId: string }) => {
-            console.log("[Meets] Producer closed:", producerId);
-            handleProducerClosed(producerId);
+          socket.on("disconnect", (reason) => {
+            console.log("[Meets] Disconnected:", reason);
+            if (
+              reason === "io server disconnect" ||
+              reason === "io client disconnect"
+            ) {
+              setConnectionState("disconnected");
+            } else if (currentRoomIdRef.current) {
+              // Unexpected disconnect during active session
+              handleReconnect();
+            }
+          });
 
-            // Check if this was our own producer (victim logic)
-            if (audioProducerRef.current?.id === producerId) {
-              setIsMuted(true);
-              audioProducerRef.current.close();
-              audioProducerRef.current = null;
-            } else if (videoProducerRef.current?.id === producerId) {
-              setIsCameraOff(true);
-              videoProducerRef.current.close();
-              videoProducerRef.current = null;
-              // Also stop local stream track
-              const track = localStream?.getVideoTracks()[0];
-              if (track) {
-                track.stop();
-                track.enabled = false;
+          socket.on("roomClosed", ({ reason }: { reason: string }) => {
+            console.log("[Meets] Room closed:", reason);
+            setMeetError({
+              code: "UNKNOWN", // Or a specific code like 'ROOM_CLOSED'
+              message: `Room closed: ${reason}`,
+              recoverable: false,
+            });
+            cleanup();
+          });
+
+          socket.on("connect_error", (err) => {
+            clearTimeout(connectionTimeout);
+            console.error("[Meets] Connection error:", err);
+            setMeetError(createMeetError(err, "CONNECTION_FAILED"));
+            setConnectionState("error");
+            reject(err);
+          });
+
+          // Producer events
+          socket.on("newProducer", async (data: ProducerInfo) => {
+            console.log("[Meets] New producer:", data);
+            await consumeProducer(data);
+          });
+
+          socket.on(
+            "producerClosed",
+            ({ producerId }: { producerId: string }) => {
+              console.log("[Meets] Producer closed:", producerId);
+              handleProducerClosed(producerId);
+
+              // Check if this was our own producer (victim logic)
+              if (audioProducerRef.current?.id === producerId) {
+                setIsMuted(true);
+                audioProducerRef.current.close();
+                audioProducerRef.current = null;
+              } else if (videoProducerRef.current?.id === producerId) {
+                setIsCameraOff(true);
+                videoProducerRef.current.close();
+                videoProducerRef.current = null;
+                // Also stop local stream track
+                const track = localStream?.getVideoTracks()[0];
+                if (track) {
+                  track.stop();
+                  track.enabled = false;
+                }
+              } else if (screenProducerRef.current?.id === producerId) {
+                setIsScreenSharing(false);
+                screenProducerRef.current.close();
+                screenProducerRef.current = null;
+                setActiveScreenShareId(null);
               }
-            } else if (screenProducerRef.current?.id === producerId) {
-              setIsScreenSharing(false);
-              screenProducerRef.current.close();
-              screenProducerRef.current = null;
-              setActiveScreenShareId(null);
-            }
-          }
-        );
+            },
+          );
 
-        // User events
-        socket.on(
-          "userJoined",
-          ({ userId: joinedUserId }: { userId: string }) => {
-            console.log("[Meets] User joined:", joinedUserId);
-            dispatchParticipants({
-              type: "ADD_PARTICIPANT",
-              userId: joinedUserId,
-            });
-          }
-        );
+          // User events
+          socket.on(
+            "userJoined",
+            ({ userId: joinedUserId }: { userId: string }) => {
+              console.log("[Meets] User joined:", joinedUserId);
+              dispatchParticipants({
+                type: "ADD_PARTICIPANT",
+                userId: joinedUserId,
+              });
+            },
+          );
 
-        socket.on("userLeft", ({ userId: leftUserId }: { userId: string }) => {
-          console.log("[Meets] User left:", leftUserId);
-          
-          dispatchParticipants({ type: "MARK_LEAVING", userId: leftUserId });
-          
-          setTimeout(() => {
-            dispatchParticipants({
-              type: "REMOVE_PARTICIPANT",
-              userId: leftUserId,
-            });
-          }, 100);
+          socket.on(
+            "userLeft",
+            ({ userId: leftUserId }: { userId: string }) => {
+              console.log("[Meets] User left:", leftUserId);
 
-          // Clear screen share if the presenter left
-          for (const [producerId, info] of producerMapRef.current) {
-            if (info.userId === leftUserId && info.type === "screen") {
-              setActiveScreenShareId(null);
-              producerMapRef.current.delete(producerId);
-            }
-          }
-        });
+              dispatchParticipants({
+                type: "MARK_LEAVING",
+                userId: leftUserId,
+              });
 
-        // Media state events
-        socket.on(
-          "participantMuted",
-          ({ userId, muted }: { userId: string; muted: boolean }) => {
-            dispatchParticipants({
-              type: "UPDATE_MUTED",
-              userId,
-              muted,
-            });
-          }
-        );
+              setTimeout(() => {
+                dispatchParticipants({
+                  type: "REMOVE_PARTICIPANT",
+                  userId: leftUserId,
+                });
+              }, 100);
 
-        socket.on(
-          "participantCameraOff",
-          ({
-            userId: camUserId,
-            cameraOff,
-          }: {
-            userId: string;
-            cameraOff: boolean;
-          }) => {
-            dispatchParticipants({
-              type: "UPDATE_CAMERA_OFF",
+              // Clear screen share if the presenter left
+              for (const [producerId, info] of producerMapRef.current) {
+                if (info.userId === leftUserId && info.type === "screen") {
+                  setActiveScreenShareId(null);
+                  producerMapRef.current.delete(producerId);
+                }
+              }
+            },
+          );
+
+          // Media state events
+          socket.on(
+            "participantMuted",
+            ({ userId, muted }: { userId: string; muted: boolean }) => {
+              dispatchParticipants({
+                type: "UPDATE_MUTED",
+                userId,
+                muted,
+              });
+            },
+          );
+
+          socket.on(
+            "participantCameraOff",
+            ({
               userId: camUserId,
               cameraOff,
-            });
-          }
-        );
-
-        socket.on(
-          "setVideoQuality",
-          async ({ quality }: { quality: VideoQuality }) => {
-            console.log(`[Meets] Setting video quality to: ${quality}`);
-            setVideoQuality(quality);
-            // Trigger the quality update effect/function
-            await updateVideoQualityRef.current(quality);
-          }
-        );
-
-        // Chat message event
-        socket.on("chatMessage", (message: ChatMessage) => {
-          console.log("[Meets] Chat message received:", message);
-          setChatMessages((prev) => [...prev, message]);
-          // Use ref to avoid stale closure - check current chat open state
-          if (!isChatOpenRef.current) {
-            setUnreadCount((prev) => prev + 1);
-          }
-        });
-
-        // Kicked event
-        socket.on("kicked", () => {
-          cleanup();
-          setMeetError({
-            code: "UNKNOWN",
-            message: "You have been kicked from the meeting.",
-            recoverable: false,
-          });
-        });
-
-        // Redirect event
-        socket.on("redirect", async ({ newRoomId }: { newRoomId: string }) => {
-          console.log(
-            `[Meets] Redirect received. Initiating full switch to ${newRoomId}`
+            }: {
+              userId: string;
+              cameraOff: boolean;
+            }) => {
+              dispatchParticipants({
+                type: "UPDATE_CAMERA_OFF",
+                userId: camUserId,
+                cameraOff,
+              });
+            },
           );
-          handleRedirectRef.current(newRoomId);
-        });
 
-        // Waiting Room Events
-        socket.on(
-          "userRequestedJoin",
-          ({
-            userId,
-            displayName,
-          }: {
-            userId: string;
-            displayName: string;
-          }) => {
-            console.log("[Meets] User requesting to join:", userId);
+          socket.on(
+            "setVideoQuality",
+            async ({ quality }: { quality: VideoQuality }) => {
+              console.log(`[Meets] Setting video quality to: ${quality}`);
+              setVideoQuality(quality);
+              // Trigger the quality update effect/function
+              await updateVideoQualityRef.current(quality);
+            },
+          );
+
+          // Chat message event
+          socket.on("chatMessage", (message: ChatMessage) => {
+            console.log("[Meets] Chat message received:", message);
+            setChatMessages((prev) => [...prev, message]);
+            // Use ref to avoid stale closure - check current chat open state
+            if (!isChatOpenRef.current) {
+              setUnreadCount((prev) => prev + 1);
+            }
+          });
+
+          // Kicked event
+          socket.on("kicked", () => {
+            cleanup();
+            setMeetError({
+              code: "UNKNOWN",
+              message: "You have been kicked from the meeting.",
+              recoverable: false,
+            });
+          });
+
+          // Redirect event
+          socket.on(
+            "redirect",
+            async ({ newRoomId }: { newRoomId: string }) => {
+              console.log(
+                `[Meets] Redirect received. Initiating full switch to ${newRoomId}`,
+              );
+              handleRedirectRef.current(newRoomId);
+            },
+          );
+
+          // Waiting Room Events
+          socket.on(
+            "userRequestedJoin",
+            ({
+              userId,
+              displayName,
+            }: {
+              userId: string;
+              displayName: string;
+            }) => {
+              console.log("[Meets] User requesting to join:", userId);
+              setPendingUsers((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(userId, displayName);
+                return newMap;
+              });
+            },
+          );
+
+          socket.on("userAdmitted", ({ userId }: { userId: string }) => {
             setPendingUsers((prev) => {
               const newMap = new Map(prev);
-              newMap.set(userId, displayName);
+              newMap.delete(userId);
               return newMap;
             });
-          }
-        );
-
-        socket.on("userAdmitted", ({ userId }: { userId: string }) => {
-          setPendingUsers((prev) => {
-            const newMap = new Map(prev);
-            newMap.delete(userId);
-            return newMap;
           });
-        });
 
-        socket.on("userRejected", ({ userId }: { userId: string }) => {
-          setPendingUsers((prev) => {
-            const newMap = new Map(prev);
-            newMap.delete(userId);
-            return newMap;
+          socket.on("userRejected", ({ userId }: { userId: string }) => {
+            setPendingUsers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(userId);
+              return newMap;
+            });
           });
-        });
 
-        socket.on("joinApproved", () => {
-          console.log("[Meets] Join approved! Re-attempting join...");
-          if (currentRoomIdRef.current && localStreamRef.current) {
-            joinRoomInternal(
-              currentRoomIdRef.current,
-              localStreamRef.current
-            ).catch(console.error);
-          } else {
-            console.error(
-              "[Meets] Cannot re-join: missing room ID or local stream",
-              {
-                roomId: currentRoomIdRef.current,
-                hasStream: !!localStreamRef.current,
-              }
-            );
-          }
-        });
-
-        socket.on("joinRejected", () => {
-          console.log("[Meets] Join rejected.");
-          setMeetError({
-            code: "PERMISSION_DENIED",
-            message: "The host has denied your request to join.",
-            recoverable: false,
+          socket.on("joinApproved", () => {
+            console.log("[Meets] Join approved! Re-attempting join...");
+            if (currentRoomIdRef.current && localStreamRef.current) {
+              joinRoomInternal(
+                currentRoomIdRef.current,
+                localStreamRef.current,
+              ).catch(console.error);
+            } else {
+              console.error(
+                "[Meets] Cannot re-join: missing room ID or local stream",
+                {
+                  roomId: currentRoomIdRef.current,
+                  hasStream: !!localStreamRef.current,
+                },
+              );
+            }
           });
-          setConnectionState("error");
-          cleanup();
-        });
 
-        socketRef.current = socket;
+          socket.on("joinRejected", () => {
+            console.log("[Meets] Join rejected.");
+            setMeetError({
+              code: "PERMISSION_DENIED",
+              message: "The host has denied your request to join.",
+              recoverable: false,
+            });
+            setConnectionState("error");
+            cleanup();
+          });
+
+          socketRef.current = socket;
         } catch (err) {
           console.error("Failed to get auth token:", err);
           setMeetError({
@@ -807,11 +815,10 @@ export default function MeetsClient({
 
     setConnectionState("reconnecting");
     reconnectAttemptsRef.current++;
-    const delay =
-      RECONNECT_DELAY_MS * Math.pow(2, reconnectAttemptsRef.current - 1);
+    const delay = RECONNECT_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
 
     console.log(
-      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`
+      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
     );
     await new Promise((r) => setTimeout(r, delay));
 
@@ -824,7 +831,7 @@ export default function MeetsClient({
       if (currentRoomIdRef.current && localStream) {
         await joinRoomInternal(currentRoomIdRef.current, localStream);
       }
-    } catch (err) {
+    } catch (_err) {
       handleReconnect();
     }
   }, [connectSocket, localStream]);
@@ -996,7 +1003,7 @@ export default function MeetsClient({
         }
       }
     },
-    [connectionState, isMuted, localStream]
+    [connectionState, isMuted, localStream],
   );
 
   const handleAudioOutputDeviceChange = useCallback(
@@ -1027,13 +1034,13 @@ export default function MeetsClient({
         if (videoElement.setSinkId) {
           try {
             await videoElement.setSinkId(deviceId);
-          } catch (err) {
+          } catch (_err) {
             // Video elements may not have audio, so don't log errors
           }
         }
       }
     },
-    []
+    [],
   );
 
   // ============================================
@@ -1064,7 +1071,7 @@ export default function MeetsClient({
                 (res: { success: boolean } | { error: string }) => {
                   if ("error" in res) errback(new Error(res.error));
                   else callback();
-                }
+                },
               );
             });
 
@@ -1077,9 +1084,9 @@ export default function MeetsClient({
                   (res: { producerId: string } | { error: string }) => {
                     if ("error" in res) errback(new Error(res.error));
                     else callback({ id: res.producerId });
-                  }
+                  },
                 );
-              }
+              },
             );
 
             transport.on("connectionstatechange", (state) => {
@@ -1095,11 +1102,11 @@ export default function MeetsClient({
 
             producerTransportRef.current = transport;
             resolve();
-          }
+          },
         );
       });
     },
-    []
+    [],
   );
 
   const createConsumerTransport = useCallback(
@@ -1122,7 +1129,7 @@ export default function MeetsClient({
                 (res: { success: boolean } | { error: string }) => {
                   if ("error" in res) errback(new Error(res.error));
                   else callback();
-                }
+                },
               );
             });
 
@@ -1132,11 +1139,11 @@ export default function MeetsClient({
 
             consumerTransportRef.current = transport;
             resolve();
-          }
+          },
         );
       });
     },
-    []
+    [],
   );
 
   // ============================================
@@ -1195,7 +1202,7 @@ export default function MeetsClient({
         }
       }
     },
-    [isMuted, isCameraOff]
+    [isMuted, isCameraOff],
   );
 
   // ============================================
@@ -1210,7 +1217,7 @@ export default function MeetsClient({
 
       if (!socket || !device || !transport) {
         console.warn(
-          "[Meets] Cannot consume: missing socket, device, or transport"
+          "[Meets] Cannot consume: missing socket, device, or transport",
         );
         return;
       }
@@ -1279,18 +1286,18 @@ export default function MeetsClient({
               socket.emit(
                 "resumeConsumer",
                 { consumerId: consumer.id },
-                () => {}
+                () => {},
               );
               resolve();
             } catch (err) {
               console.error("[Meets] Failed to create consumer:", err);
               resolve();
             }
-          }
+          },
         );
       });
     },
-    []
+    [],
   );
 
   // ============================================
@@ -1324,7 +1331,7 @@ export default function MeetsClient({
             try {
               console.log(
                 "[Meets] Joined room, existing producers:",
-                response.existingProducers
+                response.existingProducers,
               );
               currentRoomIdRef.current = targetRoomId;
 
@@ -1352,7 +1359,7 @@ export default function MeetsClient({
             } catch (err) {
               reject(err);
             }
-          }
+          },
         );
       });
     },
@@ -1362,7 +1369,7 @@ export default function MeetsClient({
       createProducerTransport,
       createConsumerTransport,
       consumeProducer,
-    ]
+    ],
   );
 
   const handleRedirectCallback = useCallback(
@@ -1379,7 +1386,7 @@ export default function MeetsClient({
       // We need to wait for the state (roomId) to update and joinRoom to be recreated.
       shouldAutoJoinRef.current = true;
     },
-    [cleanup]
+    [cleanup],
   );
 
   useEffect(() => {
@@ -1393,7 +1400,7 @@ export default function MeetsClient({
     setConnectionState("connecting");
 
     try {
-      const socket = await connectSocket();
+      const _socket = await connectSocket();
       // Get media first
       const stream = await requestMediaPermissions();
       if (!stream) {
@@ -1411,7 +1418,7 @@ export default function MeetsClient({
       setMeetError(createMeetError(err));
       setConnectionState("error");
     }
-  }, [roomId, connectSocket, requestMediaPermissions, joinRoomInternal]);
+  }, [roomId, connectSocket]);
 
   // Effect to trigger auto-join after redirect updates roomId
   useEffect(() => {
@@ -1444,7 +1451,7 @@ export default function MeetsClient({
 
         console.log(
           `[Meets] Switching to ${quality} quality`,
-          JSON.stringify(constraints)
+          JSON.stringify(constraints),
         );
 
         // create new video track
@@ -1474,7 +1481,7 @@ export default function MeetsClient({
         console.error("[Meets] Failed to update video quality:", err);
       }
     },
-    [isCameraOff, localStream]
+    [isCameraOff, localStream],
   );
 
   // Keep ref up to date for socket listener
@@ -1506,7 +1513,7 @@ export default function MeetsClient({
       socketRef.current?.emit(
         "toggleMute",
         { producerId: producer.id, paused: newMuted },
-        () => {}
+        () => {},
       );
     } else {
       // Producer doesn't exist, try to create it (unmute)
@@ -1572,7 +1579,7 @@ export default function MeetsClient({
       socketRef.current?.emit(
         "toggleCamera",
         { producerId: producer.id, paused: newCameraOff },
-        () => {}
+        () => {},
       );
     } else {
       // Producer doesn't exist, try to create it (turn camera on)
@@ -1625,7 +1632,7 @@ export default function MeetsClient({
         }
       }
     }
-  }, [isCameraOff, videoQuality]);
+  }, [isCameraOff]);
 
   // Sync localStream to ref
   useEffect(() => {
@@ -1640,7 +1647,7 @@ export default function MeetsClient({
         socketRef.current?.emit(
           "closeProducer",
           { producerId: producer.id },
-          () => {}
+          () => {},
         );
         try {
           producer.close();
@@ -1687,7 +1694,7 @@ export default function MeetsClient({
         socketRef.current?.emit(
           "closeProducer",
           { producerId: producer.id },
-          () => {}
+          () => {},
         );
         try {
           producer.close();
@@ -1720,7 +1727,7 @@ export default function MeetsClient({
       (
         response:
           | { success: boolean; message?: ChatMessage }
-          | { error: string }
+          | { error: string },
       ) => {
         if ("error" in response) {
           console.error("[Meets] Chat error:", response.error);
@@ -1730,7 +1737,7 @@ export default function MeetsClient({
           // Add our own message to the list
           setChatMessages((prev) => [...prev, response.message]);
         }
-      }
+      },
     );
   }, []);
 
@@ -1750,7 +1757,7 @@ export default function MeetsClient({
   // Local Video Ref Callback
   // ============================================
 
-  const setLocalVideoRef = useCallback(
+  const _setLocalVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
       if (node && localStream) {
         node.srcObject = localStream;
@@ -1762,7 +1769,7 @@ export default function MeetsClient({
       }
       localVideoRef.current = node;
     },
-    [localStream]
+    [localStream],
   );
 
   // ============================================
@@ -2067,8 +2074,8 @@ function JoinScreen({
         {connectionState === "reconnecting"
           ? "Reconnecting..."
           : isLoading
-          ? "Joining..."
-          : "Join Room"}
+            ? "Joining..."
+            : "Join Room"}
       </button>
     </div>
   );
@@ -2159,7 +2166,7 @@ function PresentationLayout({
         </div>
 
         {/* Remote Participants */}
-        {Array.from(participants.values()).map((participant, index) => (
+        {Array.from(participants.values()).map((participant, _index) => (
           <ParticipantVideo
             key={participant.userId}
             participant={participant}
@@ -2207,17 +2214,17 @@ function GridLayout({
   }, [localStream]);
 
   const totalParticipants = participants.size + 1;
-  
+
   const getGridLayout = (count: number) => {
     if (count === 1) return "grid-cols-1 grid-rows-1";
     if (count === 2) return "grid-cols-2 grid-rows-1";
     if (count === 3) return "grid-cols-3 grid-rows-1";
     if (count === 4) return "grid-cols-2 grid-rows-2";
-    if (count <= 6) return "grid-cols-3 grid-rows-2"; 
-    if (count <= 9) return "grid-cols-3 grid-rows-3"; 
+    if (count <= 6) return "grid-cols-3 grid-rows-2";
+    if (count <= 9) return "grid-cols-3 grid-rows-3";
     if (count <= 12) return "grid-cols-4 grid-rows-3";
     if (count <= 16) return "grid-cols-4 grid-rows-4";
-    return "grid-cols-5 grid-rows-4"; 
+    return "grid-cols-5 grid-rows-4";
   };
 
   const gridClass = getGridLayout(totalParticipants);
@@ -2251,7 +2258,7 @@ function GridLayout({
       </div>
 
       {/* Remote Participants */}
-      {Array.from(participants.values()).map((participant, index) => (
+      {Array.from(participants.values()).map((participant, _index) => (
         <ParticipantVideo
           key={participant.userId}
           participant={participant}
@@ -2348,15 +2355,15 @@ function ControlsBar({
           isScreenSharing
             ? "bg-white text-black hover:bg-neutral-200"
             : !canStartScreenShare
-            ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
-            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+              ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={
           !canStartScreenShare
             ? "Someone else is presenting"
             : isScreenSharing
-            ? "Stop sharing"
-            : "Share screen"
+              ? "Stop sharing"
+              : "Share screen"
         }
       >
         <Monitor className="w-5 h-5" />
@@ -2415,7 +2422,7 @@ function ChatPanel({
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2551,7 +2558,7 @@ function ParticipantVideo({
       }
       videoRef.current = node;
     },
-    [participant.videoStream]
+    [participant.videoStream],
   );
 
   const setAudioRef = useCallback(
@@ -2578,7 +2585,7 @@ function ParticipantVideo({
       }
       audioRef.current = node;
     },
-    [participant.audioStream, audioOutputDeviceId]
+    [participant.audioStream, audioOutputDeviceId],
   );
 
   // Update audio output when device changes
@@ -2606,8 +2613,8 @@ function ParticipantVideo({
         isNew
           ? "animate-participant-join"
           : participant.isLeaving
-          ? "animate-participant-leave"
-          : ""
+            ? "animate-participant-leave"
+            : ""
       }`}
     >
       <video
@@ -2697,7 +2704,7 @@ function ParticipantsPanel({
           setShowRedirectModal(false);
           setSelectedUserForRedirect(null);
         }
-      }
+      },
     );
   };
 
@@ -2725,7 +2732,7 @@ function ParticipantsPanel({
             <button
               onClick={() =>
                 socket?.emit("muteAll", (res: unknown) =>
-                  console.log("Muted all:", res)
+                  console.log("Muted all:", res),
                 )
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
@@ -2737,7 +2744,7 @@ function ParticipantsPanel({
             <button
               onClick={() =>
                 socket?.emit("closeAllVideo", (res: unknown) =>
-                  console.log("Stopped all video:", res)
+                  console.log("Stopped all video:", res),
                 )
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
@@ -2830,7 +2837,8 @@ function ParticipantsPanel({
                     {isAdmin && !isMe && p.screenShareProducerId && (
                       <button
                         onClick={() => {
-                          if (p.screenShareProducerId) handleCloseProducer(p.screenShareProducerId);
+                          if (p.screenShareProducerId)
+                            handleCloseProducer(p.screenShareProducerId);
                         }}
                         className="text-red-500 hover:text-red-400"
                       >
@@ -2845,7 +2853,8 @@ function ParticipantsPanel({
                 ) : isAdmin && !isMe && p.videoProducerId ? (
                   <button
                     onClick={() => {
-                      if (p.videoProducerId) handleCloseProducer(p.videoProducerId);
+                      if (p.videoProducerId)
+                        handleCloseProducer(p.videoProducerId);
                     }}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
                     title="Force stop user's video"
@@ -2862,7 +2871,8 @@ function ParticipantsPanel({
                 ) : isAdmin && !isMe && p.audioProducerId ? (
                   <button
                     onClick={() => {
-                      if (p.audioProducerId) handleCloseProducer(p.audioProducerId);
+                      if (p.audioProducerId)
+                        handleCloseProducer(p.audioProducerId);
                     }}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
                     title="Force stop user's audio"

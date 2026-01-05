@@ -37,7 +37,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       setNotification({ message, type });
       setTimeout(() => setNotification(null), 3000);
     },
-    []
+    [],
   );
 
   const getNotificationClasses = (type: "success" | "error") => {
@@ -111,7 +111,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       console.error("Error submitting task:", error);
       showNotification(
         error instanceof Error ? error.message : "Failed to submit task",
-        "error"
+        "error",
       );
     } finally {
       setSubmitting(false);
@@ -146,7 +146,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       console.error("Error submitting task:", error);
       showNotification(
         error instanceof Error ? error.message : "Failed to submit task",
-        "error"
+        "error",
       );
     } finally {
       setSubmitting(false);
@@ -211,7 +211,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       {notification && (
         <div
           className={`fixed top-35 right-10 z-50 p-4 rounded-lg border ${getNotificationClasses(
-            notification.type
+            notification.type,
           )}`}
         >
           {notification.message}
@@ -394,7 +394,9 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                           dateStyle: "medium",
                           timeStyle: "short",
                         }).format(
-                          new Date(selectedRoundUser.TaskSubmission.submittedAt)
+                          new Date(
+                            selectedRoundUser.TaskSubmission.submittedAt,
+                          ),
                         )}
                       </span>
                     )}
