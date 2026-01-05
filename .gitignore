@@ -9,10 +9,10 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+/sfu/node_modules
 # testing
 /coverage
-
+/.kiro
 # next.js
 /.next/
 /out/
@@ -41,3 +41,5 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/
+/sfu/certs/cert.key
+/sfu/certs/cert.crt

@@ -1,5 +1,12 @@
 "use client";
-import type { Domain, Meet, Meet_User, RoundUser, Slot } from "@prisma/client";
+import type {
+  Domain,
+  Meet,
+  Meet_User,
+  Round,
+  RoundUser,
+  Slot,
+} from "@prisma/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { bookSlot } from "@/app/actions/book-slot";
 import fetchInterviewRounds from "@/app/actions/fetch-slots";
@@ -14,6 +21,7 @@ type RoundWithRelations = {
   number: number;
   Meet: (Meet & { Slot: Slot[] }) | null;
   RoundUser: (RoundUser & {
+    round: Pick<Round, "number">;
     Meet_User:
       | (Meet_User & {
           slot: Slot & {
@@ -26,9 +34,18 @@ type RoundWithRelations = {
 
 type SchedulerClientProps = {
   initialRounds: RoundWithRelations[];
+  initialSfuHealth: boolean;
 };
 
-const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
+type DomainOption = {
+  name: string;
+  roundNumber?: number;
+};
+
+const SchedulerClient = ({
+  initialRounds,
+  initialSfuHealth,
+}: SchedulerClientProps) => {
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
@@ -46,7 +63,7 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
       setNotification({ message, type });
       setTimeout(() => setNotification(null), 3000);
     },
-    [],
+    []
   );
 
   const getNotificationClasses = (type: "success" | "error") => {
@@ -59,21 +76,27 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
     return allRounds.filter((r) => r.RoundUser && r.RoundUser.length > 0);
   }, [allRounds]);
 
-  const availableDomains = useMemo(() => {
+  const availableDomains = useMemo<DomainOption[]>(() => {
     return participatingRounds.map((r) => {
-      if (r.domain === "cc") return "Competitive Coding";
-      return r.domain.charAt(0).toUpperCase() + r.domain.slice(1);
+      const name =
+        r.domain === "cc"
+          ? "Competitive Coding"
+          : r.domain.charAt(0).toUpperCase() + r.domain.slice(1);
+
+      const roundNumber = r.RoundUser?.[0]?.round?.number ?? r.number;
+
+      return { name, roundNumber };
     });
   }, [participatingRounds]);
 
   useEffect(() => {
     if (availableDomains.length > 0 && !selectedDomain) {
-      setSelectedDomain(availableDomains[0]);
+      setSelectedDomain(availableDomains[0].name);
     } else if (
       availableDomains.length > 0 &&
-      !availableDomains.includes(selectedDomain)
+      !availableDomains.some((domain) => domain.name === selectedDomain)
     ) {
-      setSelectedDomain(availableDomains[0]);
+      setSelectedDomain(availableDomains[0].name);
     }
   }, [availableDomains, selectedDomain]);
 
@@ -92,7 +115,28 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
 
   const bookedSlot = selectedRound?.RoundUser?.[0]?.Meet_User?.slot;
   const meetLink = bookedSlot?.meet?.meetLink;
+  const schedulingLink = bookedSlot?.meet?.schedulingLink;
   const [canJoin, setCanJoin] = useState(false);
+  const [isSfuHealthy, setIsSfuHealthy] = useState(initialSfuHealth);
+
+  useEffect(() => {
+    const checkSfuHealth = async () => {
+      try {
+        const response = await fetch("/api/sfu/health");
+        if (response.ok) {
+          const data = await response.json();
+          setIsSfuHealthy(data.status === "healthy");
+        } else {
+          setIsSfuHealthy(false);
+        }
+      } catch (error) {
+        setIsSfuHealthy(false);
+      }
+    };
+
+    const interval = setInterval(checkSfuHealth, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!bookedSlot) {
@@ -143,13 +187,13 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
 
     // Sort slots by time
     const sortedSlots = [...roundSlots].sort(
-      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
     );
 
     // Filter out past slots
     const now = new Date().getTime();
     const futureSlots = sortedSlots.filter(
-      (s) => new Date(s.from).getTime() > now,
+      (s) => new Date(s.from).getTime() > now
     );
 
     setSlots(futureSlots);
@@ -158,12 +202,12 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
   }, [selectedRound]);
 
   const availableDates = Array.from(
-    new Set(slots.map((s) => new Date(s.from).toDateString())),
+    new Set(slots.map((s) => new Date(s.from).toDateString()))
   ).map((dateString) => new Date(dateString));
 
   const slotsForSelectedDate = selectedDate
     ? slots.filter(
-        (s) => new Date(s.from).toDateString() === selectedDate.toDateString(),
+        (s) => new Date(s.from).toDateString() === selectedDate.toDateString()
       )
     : [];
 
@@ -192,23 +236,25 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
 
   if (participatingRounds.length === 0) {
     return (
-      <div className="flex min-h-screen bg-black text-white font-sans items-center justify-center">
+      <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)] items-center justify-center">
         <div className="flex flex-col items-center max-w-md text-center p-8">
-          <h1 className="text-2xl font-medium mb-4">Interview Scheduler</h1>
+          <h1 className="text-2xl font-medium mb-4">Interactions Scheduler</h1>
           <p className="text-gray-400 mb-8">
-            You are not eligible for any interviews at the moment.
+            You are not eligible for any interactions at the moment.
           </p>
         </div>
       </div>
     );
   }
 
+  const activeLink = isSfuHealthy ? meetLink : schedulingLink;
+
   return (
-    <div className="flex min-h-screen bg-black text-white font-sans">
+    <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)]">
       {notification && (
         <div
           className={`fixed top-35 right-10 z-[1000] p-2 rounded-md shadow-xl text-white transition-opacity duration-300 ${getNotificationClasses(
-            notification.type,
+            notification.type
           )} border-2`}
         >
           {notification.message}
@@ -222,16 +268,16 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
       <div className="flex-1 p-8 md:p-12 lg:p-16">
         <h1 className="text-2xl font-medium mb-8">
           {bookedSlot
-            ? "Your scheduled interview:"
+            ? "Your scheduled interaction:"
             : "Choose your preferred date and slot:"}
         </h1>
         {bookedSlot ? (
-          <div className="flex flex-col items-center justify-center h-[50vh] bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
+          <div className="flex flex-col items-center justify-center min-h-[50vh] h-auto bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
             <div className="text-gray-400 mb-2">
               You have successfully booked a slot for
             </div>
             <div className="text-3xl font-bold mb-4 text-[#5CAFFF]">
-              {selectedDomain} Interview
+              {selectedDomain} Interaction
             </div>
             <div className="text-xl mb-2">
               {formatDate(new Date(bookedSlot.from))}
@@ -240,22 +286,64 @@ const SchedulerClient = ({ initialRounds }: SchedulerClientProps) => {
               {formatTime(new Date(bookedSlot.from))} -{" "}
               {formatTime(new Date(bookedSlot.to))}
             </div>
-            <div className="text-gray-500 text-sm">
+            <div className="text-gray-500 text-sm mb-4">
               Link will be shared 15 min prior to the scheduled time.
             </div>
-            {canJoin && meetLink && (
-              <a
-                href={meetLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 bg-[#5CAFFF] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#4a9ceb] transition-colors"
+            {/* {canJoin && activeLink && ( */}
+            {canJoin && activeLink && (
+              <div className="bg-gray-800/50 p-4 rounded-lg mb-6 border border-gray-700 max-w-md w-full">
+                <div className="text-sm text-gray-400 mb-2">
+                  {isSfuHealthy
+                    ? 'Use this Room ID inside the Meets website "meets.com" inside the ACM Explore Browser or click on the button below to join the meeting.'
+                    : "The internal meeting service is currently unavailable. Please use the following backup link to join your meeting."}
+                </div>
+                <div className="flex items-center justify-between bg-black/50 p-3 rounded border border-gray-800">
+                  <span className="font-mono text-[#FF5C5C] font-medium break-all mr-2">
+                    {activeLink}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(activeLink);
+                      showNotification("Link copied!", "success");
+                    }}
+                    className="text-xs text-gray-500 hover:text-white transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* {canJoin && activeLink && isSfuHealthy && ( */}
+            {canJoin && activeLink && isSfuHealthy && (
+              <button
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      type: "SWITCH_TAB",
+                      url: "meets",
+                      meetingId: activeLink,
+                    },
+                    "*"
+                  );
+                }}
+                className="mt-6 bg-[#FF5C5C] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#ff7b7b] transition-colors"
               >
                 Join Meeting
+              </button>
+            )}
+            {canJoin && activeLink && !isSfuHealthy && (
+              <a
+                href={activeLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 bg-[#FF5C5C] text-black px-6 py-3 rounded-lg font-medium hover:bg-[#ff7b7b] transition-colors inline-block"
+              >
+                Go to Meeting
               </a>
             )}
           </div>
         ) : selectedRound ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-8 max-w-6xl">
             <Calendar
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
