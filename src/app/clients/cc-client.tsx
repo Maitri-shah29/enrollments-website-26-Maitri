@@ -13,9 +13,14 @@ import Questions, { type RoundUserExtended } from "./components/cc/questions";
 type CCClientProps = {
   initialRoundUser?: RoundUserExtended | null;
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 };
 
-const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
+const Page = ({
+  initialRoundUser,
+  roundUserCount,
+  hasPromotedRound1 = false,
+}: CCClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
     initialRoundUser ?? null,
@@ -31,6 +36,7 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
   >(new Set());
   const [formSubmissionId, setFormSubmissionId] = useState<string | null>(null);
   const roundHidden = !!roundUser?.round?.hidden;
+  const showResults = hasPromotedRound1 || roundUser?.status === "promoted";
 
   // Create/fetch round user on demand (Get Started)
   const continueCheck = () => {
@@ -143,6 +149,8 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
           loading={loading}
           hasRoundUser={!!roundUser}
           onContinue={continueCheck}
+          showResults={showResults}
+          onViewResults={() => setSelectedPanel("Questions")}
         />
       )}
       {selectedPanel !== "Home" && (

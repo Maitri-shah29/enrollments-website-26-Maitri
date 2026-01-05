@@ -3,6 +3,7 @@ export const cacheTags = {
   roundQuestions: (roundId: string) => `round-questions:${roundId}`,
   user: (userId: string) => `user:${userId}`,
   homeRoundUserCount: (userId: string) => `home-round-user-count:${userId}`,
+  homePromotedDomains: (userId: string) => `home-promoted-domains:${userId}`,
   roundUser: (userId: string, domain: string) =>
     `round-user:${userId}:${domain}`,
   tasks: (userId: string) => `tasks:${userId}`,

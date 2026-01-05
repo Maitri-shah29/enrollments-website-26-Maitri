@@ -20,6 +20,7 @@ const AOI_JOIN_LIMIT = 2;
 interface DesignClientProps {
   initialRoundUser?: RoundUserExtended | null;
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 }
 interface TransformedQuestion {
   header: string;
@@ -59,6 +60,7 @@ const groupQuestionsByVarName = (questions: Question[]): AOIData[] => {
 const DesignClient = ({
   initialRoundUser,
   roundUserCount,
+  hasPromotedRound1 = false,
 }: DesignClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [roundUser, setRoundUser] = useState<RoundUserExtended | null>(
@@ -73,6 +75,7 @@ const DesignClient = ({
     Set<string>
   >(new Set());
   const roundHidden = !!roundUser?.round?.hidden;
+  const showResults = hasPromotedRound1 || roundUser?.status === "promoted";
 
   const designAOIToVarName: Record<DesignAOI, string> = {
     uiux: "uiux",
@@ -286,6 +289,8 @@ const DesignClient = ({
             loading={loading}
             hasRoundUser={!!roundUser}
             onContinue={continueCheck}
+            showResults={showResults}
+            onViewResults={() => setSelectedPanel("Questions")}
           />
         )}
         {selectedPanel === "About" && <About />}

@@ -58,7 +58,6 @@ async function getRoundUserCached(enumDomain: Domain, userId: string) {
     where: {
       domain: enumDomain,
       type: "form",
-      active: true,
       number: 1,
     },
     select: {
@@ -72,7 +71,6 @@ async function getRoundUserCached(enumDomain: Domain, userId: string) {
         domain: enumDomain,
         type: "form",
         number: 1,
-        active: true,
       },
       userId,
     },

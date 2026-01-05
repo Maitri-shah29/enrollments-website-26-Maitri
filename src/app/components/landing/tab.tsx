@@ -75,6 +75,7 @@ interface TabProps {
   researchChildren?: ReactNode;
   schedulerChildren?: ReactNode;
   taskChildren?: ReactNode;
+  promotedDomains?: string[];
 }
 
 const Tab: React.FC<TabProps> = ({
@@ -88,6 +89,7 @@ const Tab: React.FC<TabProps> = ({
   researchChildren,
   schedulerChildren,
   taskChildren,
+  promotedDomains = [],
 }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
@@ -520,7 +522,10 @@ const Tab: React.FC<TabProps> = ({
           )
         ) : (
           <div className="h-full flex flex-col overflow-hidden">
-            <HomePageNavbar onNavigate={(keyword) => commitFrom(keyword)} />
+            <HomePageNavbar
+              onNavigate={(keyword) => commitFrom(keyword)}
+              promotedDomains={promotedDomains}
+            />
             <div className="flex-1 min-h-0 overflow-auto">
               <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
             </div>

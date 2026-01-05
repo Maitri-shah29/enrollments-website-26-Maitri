@@ -19,9 +19,14 @@ const AOI_JOIN_LIMIT = 2;
 type TechClientProps = {
   initialRoundUser?: RoundUserExtended | null;
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 };
 
-const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
+const TechWebsite = ({
+  initialRoundUser,
+  roundUserCount,
+  hasPromotedRound1 = false,
+}: TechClientProps) => {
   const {
     activeSection,
     aoiExpanded,
@@ -57,6 +62,7 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
   const hasUnsavedChangesRef = useRef<boolean>(false);
   const [isProceeding, setIsProceeding] = useState<boolean>(false);
   const childRef = useRef<QuestionsRef>(null);
+  const showResults = hasPromotedRound1 || roundUser?.status === "promoted";
   const roundActive = !!roundUser?.round?.active;
   const isAnnounced = !!roundUser?.round?.announced;
   const roundHidden = !!roundUser?.round?.hidden;
@@ -371,6 +377,8 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
           loading={loading}
           hasRoundUser={!!roundUser}
           onContinue={continueCheck}
+          showResults={showResults}
+          onViewResults={() => setSection("round1")}
         />
       );
     }

@@ -21,11 +21,13 @@ import WhatWeDo from "./components/management/whatwedo";
 interface ManagementClientProps {
   initialRoundUser?: RoundUserExtended | null;
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 }
 
 export default function Management({
   initialRoundUser,
   roundUserCount,
+  hasPromotedRound1 = false,
 }: ManagementClientProps) {
   const [activeSection, setActiveSection] = useState("Landing");
   const [loading, setLoading] = useState(false);
@@ -56,6 +58,7 @@ export default function Management({
   const roundActive = !!roundUser?.round?.active;
   const _roundHidden = !!roundUser?.round?.hidden;
   const [isProceeding, setIsProceeding] = useState<boolean>(false);
+  const showResults = hasPromotedRound1 || roundUser?.status === "promoted";
 
   const questions = useMemo(() => {
     const qs = (roundUser?.round?.Question ||
@@ -353,6 +356,8 @@ export default function Management({
             loading={loading}
             hasRoundUser={!!roundUser}
             onContinue={continueCheck}
+            showResults={showResults}
+            onViewResults={() => setActiveSection("Round 1")}
           />
         );
       case "About":

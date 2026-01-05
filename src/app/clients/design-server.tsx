@@ -5,8 +5,10 @@ import DesignClient from "@/app/clients/design-client";
 
 export default async function DesignServer({
   roundUserCount,
+  hasPromotedRound1 = false,
 }: {
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 }) {
   let initialRoundUser: RoundUserExtended | null = null;
   try {
@@ -22,6 +24,7 @@ export default async function DesignServer({
     <DesignClient
       initialRoundUser={initialRoundUser}
       roundUserCount={roundUserCount}
+      hasPromotedRound1={hasPromotedRound1}
     />
   );
 }

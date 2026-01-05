@@ -68,11 +68,13 @@ function toAoiKey(input: string): AoiKey | null {
 type ResearchClientProps = {
   initialRoundUser?: RoundUserExtended | null;
   roundUserCount: number;
+  hasPromotedRound1?: boolean;
 };
 
 const ResearchClient = ({
   initialRoundUser,
   roundUserCount,
+  hasPromotedRound1 = false,
 }: ResearchClientProps) => {
   const [selectedPanel, setSelectedPanel] = useState<string>("Home");
   const [selectedAOI, setSelectedAOI] = useState<string>("Common");
@@ -99,6 +101,7 @@ const ResearchClient = ({
   } | null>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
   const roundHidden = !!roundUser?.round?.hidden;
+  const showResults = hasPromotedRound1 || roundUser?.status === "promoted";
   const {
     activeSection,
     aoiExpanded,
@@ -446,6 +449,11 @@ const ResearchClient = ({
             loading={loading}
             hasRoundUser={!!roundUser}
             onContinue={continueCheck}
+            showResults={showResults}
+            onViewResults={() => {
+              setSelectedPanel("Round 1");
+              setSection("round1");
+            }}
           />
         )}
         {selectedPanel === "About" && <About />}

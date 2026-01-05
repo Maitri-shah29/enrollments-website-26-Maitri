@@ -7,6 +7,8 @@ type Props = {
   loading?: boolean;
   hasRoundUser?: boolean;
   onContinue?: () => void;
+  showResults?: boolean;
+  onViewResults?: () => void;
 };
 
 export default function Home({
@@ -14,7 +16,10 @@ export default function Home({
   loading = false,
   hasRoundUser = false,
   onContinue,
+  showResults = false,
+  onViewResults,
 }: Props) {
+  const showResultsCta = showResults && !!onViewResults;
   return (
     <div className="w-full h-full flex items-center justify-center overflow-y-auto  [--scrollbar-thumb:#F55F4B]">
       <Image
@@ -56,15 +61,23 @@ export default function Home({
         <div className="flex gap-4">
           <button
             type="button"
-            onClick={hasRoundUser ? onContinue : onGetStarted}
-            disabled={loading && !hasRoundUser}
+            onClick={
+              showResultsCta
+                ? onViewResults
+                : hasRoundUser
+                  ? onContinue
+                  : onGetStarted
+            }
+            disabled={loading && !hasRoundUser && !showResultsCta}
             className="mt-8 px-8 py-3 bg-white text-black font-coolvetica text-lg rounded-lg hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {hasRoundUser
-              ? "Continue →"
-              : loading
-                ? "Loading..."
-                : "Get Started →"}
+            {showResultsCta
+              ? "View Results →"
+              : hasRoundUser
+                ? "Continue →"
+                : loading
+                  ? "Loading..."
+                  : "Get Started →"}
           </button>
         </div>
 

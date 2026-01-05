@@ -2,27 +2,34 @@
 
 import React from "react";
 
-import { BOOKMARK_LABELS, INTERNAL_KEYWORDS } from "./tab-constants";
+import { BOOKMARK_LABELS } from "./tab-constants";
 
 export interface HomePageNavbarProps {
   onNavigate: (keyword: string) => void;
+  promotedDomains?: string[];
 }
 
-const HomePageNavbar: React.FC<HomePageNavbarProps> = ({ onNavigate }) => {
-  const items = Object.values(BOOKMARK_LABELS);
+const HomePageNavbar: React.FC<HomePageNavbarProps> = ({
+  onNavigate,
+  promotedDomains = [],
+}) => {
+  const promotedSet = new Set(promotedDomains);
 
   return (
-    <nav className="w-full bg-[#555] text-white py-2">
-      <ul className="flex items-center justify-center pl-8 gap-6 text-sm font-semibold">
+    <nav className="w-full bg-[#555] text-white py-2 overflow-visible">
+      <ul className="flex items-center justify-center pl-8 gap-6 text-sm font-semibold overflow-visible">
         {Object.entries(BOOKMARK_LABELS).map(([key, label], index, arr) => (
           <React.Fragment key={key}>
             <li>
               <button
                 type="button"
                 onClick={() => onNavigate(key)} // ← key used here
-                className="hover:text-gray-300 transition-colors"
+                title={promotedSet.has(key) ? "Results available" : undefined}
+                className="relative overflow-visible hover:text-gray-300 transition-colors"
               >
-                {label}
+                <span className={promotedSet.has(key) ? "promo-text" : ""}>
+                  {label}
+                </span>
               </button>
             </li>
 
