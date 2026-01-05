@@ -193,7 +193,7 @@ export default function VideoSettings({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-100 z-50">
+        <div className="absolute top-full left-0 mt-2 bg-[#1a1a1a] border border-white/20 rounded-lg shadow-xl p-2 w-96 z-50">
           {/* Mirror Camera Toggle */}
           <button
             onClick={onToggleMirror}

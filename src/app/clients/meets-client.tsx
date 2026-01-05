@@ -2739,7 +2739,7 @@ function ParticipantsPanel({
                   <button
                     onClick={() => handleCloseProducer(p.videoProducerId!)}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
-                    title="Turn off video"
+                    title="Force stop user's video"
                   >
                     <Video className="w-3 h-3 text-green-500" />
                     <X className="w-3 h-3" />
@@ -2754,7 +2754,7 @@ function ParticipantsPanel({
                   <button
                     onClick={() => handleCloseProducer(p.audioProducerId!)}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
-                    title="Turn off audio"
+                    title="Force stop user's audio"
                   >
                     <Mic className="w-3 h-3 text-green-500" />
                     <X className="w-3 h-3" />
