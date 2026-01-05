@@ -267,9 +267,7 @@ const SchedulerClient = ({
       />
       <div className="flex-1 p-8 md:p-12 lg:p-16">
         <h1 className="text-2xl font-medium mb-8">
-          {bookedSlot
-            ? "Your scheduled interview:"
-            : "Choose your preferred date and slot:"}
+          {bookedSlot ? "" : "Choose your preferred date and slot:"}
         </h1>
         {bookedSlot ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] h-auto bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
