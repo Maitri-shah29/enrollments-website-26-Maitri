@@ -58,6 +58,9 @@ export interface TabData {
   showSnake: boolean;
   showAbout: boolean;
   showMeets: boolean;
+  showScheduler: boolean;
+  showTask: boolean;
+  meetingId?: string;
 }
 
 interface TabProps {
@@ -70,6 +73,8 @@ interface TabProps {
   managementChildren?: ReactNode;
   techChildren?: ReactNode;
   researchChildren?: ReactNode;
+  schedulerChildren?: ReactNode;
+  taskChildren?: ReactNode;
 }
 
 const Tab: React.FC<TabProps> = ({
@@ -81,6 +86,8 @@ const Tab: React.FC<TabProps> = ({
   managementChildren,
   techChildren,
   researchChildren,
+  schedulerChildren,
+  taskChildren,
 }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
@@ -399,13 +406,15 @@ const Tab: React.FC<TabProps> = ({
         )}
         {tabData.showInstructions ? (
           <Instructions onGetStarted={handleGetStarted} />
-        ) : !session?.data &&
+        ) : !session?.data?.user &&
           (tabData.showManagement ||
             tabData.showCc ||
             tabData.showDesign ||
             // tabData.showPintooRun ||
             tabData.showResearch ||
-            tabData.showTech) ? (
+            tabData.showTech ||
+            tabData.showScheduler ||
+            tabData.showTask) ? (
           <SignupPage onSignIn={() => {}} />
         ) : tabData.showManagement ? (
           <div
@@ -466,6 +475,20 @@ const Tab: React.FC<TabProps> = ({
           >
             {researchChildren}
           </div>
+        ) : tabData.showScheduler ? (
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
+            {schedulerChildren}
+          </div>
+        ) : tabData.showTask ? (
+          <div
+            key={refreshKey}
+            className="w-full h-full bg-white overflow-auto relative"
+          >
+            {taskChildren}
+          </div>
         ) : // ) : tabData.showPintooRun ? (
         //   <div className="w-full h-full bg-[#1A1A1A] overflow-hidden relative">
         //     <PintooRun key={refreshKey} />
@@ -480,7 +503,7 @@ const Tab: React.FC<TabProps> = ({
           </div>
         ) : tabData.showMeets ? (
           <div className="w-full h-full bg-gray-900 overflow-auto relative">
-            <MeetsClient key={refreshKey} />
+            <MeetsClient key={refreshKey} initialRoomId={tabData.meetingId} />
           </div>
         ) : activePageData?.url ? (
           iframeError || !isWhitelisted(activePageData.url) ? (

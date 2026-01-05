@@ -12,7 +12,7 @@
 /sfu/node_modules
 # testing
 /coverage
-
+/.kiro
 # next.js
 /.next/
 /out/

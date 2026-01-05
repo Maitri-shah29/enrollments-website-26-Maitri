@@ -18,6 +18,9 @@ export class Room {
   public readonly id: string;
   public readonly router: Router;
   public clients: Map<string, Client> = new Map();
+  public pendingClients: Map<string, { userId: string; socket: any }> =
+    new Map();
+  public allowedUsers: Set<string> = new Set();
   public currentScreenShareProducerId: string | null = null;
   public currentQuality: VideoQuality = "standard";
 
@@ -49,6 +52,8 @@ export class Room {
       client.close();
       this.clients.delete(clientId);
     }
+    // Also remove from pending if present
+    this.pendingClients.delete(clientId);
     return client;
   }
 
@@ -267,6 +272,27 @@ export class Room {
       clearTimeout(this.cleanupTimer);
       this.cleanupTimer = null;
     }
+  }
+
+  // ============================================
+  // Waiting Room Methods
+  // ============================================
+
+  addPendingClient(userId: string, socket: any) {
+    this.pendingClients.set(userId, { userId, socket });
+  }
+
+  removePendingClient(userId: string) {
+    this.pendingClients.delete(userId);
+  }
+
+  allowUser(userId: string) {
+    this.allowedUsers.add(userId);
+    this.pendingClients.delete(userId);
+  }
+
+  isAllowed(userId: string): boolean {
+    return this.allowedUsers.has(userId);
   }
 }
 

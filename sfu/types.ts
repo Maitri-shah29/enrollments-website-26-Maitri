@@ -50,6 +50,7 @@ export interface JoinRoomData {
 export interface JoinRoomResponse {
   rtpCapabilities: RtpCapabilities;
   existingProducers: ProducerInfo[];
+  status?: "waiting" | "joined";
 }
 
 export interface CreateTransportResponse {
