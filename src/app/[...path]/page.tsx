@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 type CatchAllPageProps = {
   params: Promise<{
     path?: string[];
