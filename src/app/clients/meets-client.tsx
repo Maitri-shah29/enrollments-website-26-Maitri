@@ -2190,10 +2190,26 @@ function GridLayout({
     }
   }, [localStream]);
 
+  const totalParticipants = participants.size + 1;
+  
+  const getGridLayout = (count: number) => {
+    if (count === 1) return "grid-cols-1 grid-rows-1";
+    if (count === 2) return "grid-cols-2 grid-rows-1";
+    if (count === 3) return "grid-cols-3 grid-rows-1";
+    if (count === 4) return "grid-cols-2 grid-rows-2";
+    if (count <= 6) return "grid-cols-3 grid-rows-2"; 
+    if (count <= 9) return "grid-cols-3 grid-rows-3"; 
+    if (count <= 12) return "grid-cols-4 grid-rows-3";
+    if (count <= 16) return "grid-cols-4 grid-rows-4";
+    return "grid-cols-5 grid-rows-4"; 
+  };
+
+  const gridClass = getGridLayout(totalParticipants);
+
   return (
-    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-auto">
+    <div className={`flex-1 grid ${gridClass} gap-3 overflow-auto p-2`}>
       {/* Local Video */}
-      <div className="relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden aspect-video">
+      <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden">
         <video
           ref={localVideoRef}
           autoPlay
@@ -2562,8 +2578,8 @@ function ParticipantVideo({
 
   return (
     <div
-      className={`relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden shrink-0 ${
-        compact ? "h-36" : "aspect-video"
+      className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden ${
+        compact ? "h-36 shrink-0" : "w-full h-full"
       }`}
     >
       <video
