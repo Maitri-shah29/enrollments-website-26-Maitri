@@ -1,5 +1,5 @@
+import { type ReactElement, Suspense } from "react";
 import { redirect } from "next/navigation";
-import { cacheLife } from "next/cache";
 
 type CatchAllPageProps = {
   params: Promise<{
@@ -7,9 +7,17 @@ type CatchAllPageProps = {
   }>;
 };
 
-export default async function CatchAllPage({ params }: CatchAllPageProps) {
-  "use cache";
-  cacheLife("max");
+export default function CatchAllPage({ params }: CatchAllPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <CatchAllRedirect params={params} />
+    </Suspense>
+  );
+}
+
+async function CatchAllRedirect({
+  params,
+}: CatchAllPageProps): Promise<ReactElement | null> {
   const { path } = await params;
   const rawPath = path?.join("/") ?? "";
   if (!rawPath) {
@@ -17,4 +25,5 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
   }
 
   redirect(`/?path=${encodeURIComponent(rawPath)}`);
+  return null;
 }
