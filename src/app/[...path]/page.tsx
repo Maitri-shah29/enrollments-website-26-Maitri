@@ -2,15 +2,16 @@ import { redirect } from "next/navigation";
 import { cacheLife } from "next/cache";
 
 type CatchAllPageProps = {
-  params: {
+  params: Promise<{
     path?: string[];
-  };
+  }>;
 };
 
 export default async function CatchAllPage({ params }: CatchAllPageProps) {
   "use cache";
   cacheLife("max");
-  const rawPath = params.path?.join("/") ?? "";
+  const { path } = await params;
+  const rawPath = path?.join("/") ?? "";
   if (!rawPath) {
     redirect("/");
   }
