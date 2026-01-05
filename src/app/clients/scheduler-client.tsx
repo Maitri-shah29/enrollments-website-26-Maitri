@@ -1,5 +1,12 @@
 "use client";
-import type { Domain, Meet, Meet_User, RoundUser, Slot } from "@prisma/client";
+import type {
+  Domain,
+  Meet,
+  Meet_User,
+  Round,
+  RoundUser,
+  Slot,
+} from "@prisma/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { bookSlot } from "@/app/actions/book-slot";
 import fetchInterviewRounds from "@/app/actions/fetch-slots";
@@ -14,6 +21,7 @@ type RoundWithRelations = {
   number: number;
   Meet: (Meet & { Slot: Slot[] }) | null;
   RoundUser: (RoundUser & {
+    round: Pick<Round, "number">;
     Meet_User:
       | (Meet_User & {
           slot: Slot & {
@@ -27,6 +35,11 @@ type RoundWithRelations = {
 type SchedulerClientProps = {
   initialRounds: RoundWithRelations[];
   initialSfuHealth: boolean;
+};
+
+type DomainOption = {
+  name: string;
+  roundNumber?: number;
 };
 
 const SchedulerClient = ({
@@ -63,21 +76,27 @@ const SchedulerClient = ({
     return allRounds.filter((r) => r.RoundUser && r.RoundUser.length > 0);
   }, [allRounds]);
 
-  const availableDomains = useMemo(() => {
+  const availableDomains = useMemo<DomainOption[]>(() => {
     return participatingRounds.map((r) => {
-      if (r.domain === "cc") return "Competitive Coding";
-      return r.domain.charAt(0).toUpperCase() + r.domain.slice(1);
+      const name =
+        r.domain === "cc"
+          ? "Competitive Coding"
+          : r.domain.charAt(0).toUpperCase() + r.domain.slice(1);
+
+      const roundNumber = r.RoundUser?.[0]?.round?.number ?? r.number;
+
+      return { name, roundNumber };
     });
   }, [participatingRounds]);
 
   useEffect(() => {
     if (availableDomains.length > 0 && !selectedDomain) {
-      setSelectedDomain(availableDomains[0]);
+      setSelectedDomain(availableDomains[0].name);
     } else if (
       availableDomains.length > 0 &&
-      !availableDomains.includes(selectedDomain)
+      !availableDomains.some((domain) => domain.name === selectedDomain)
     ) {
-      setSelectedDomain(availableDomains[0]);
+      setSelectedDomain(availableDomains[0].name);
     }
   }, [availableDomains, selectedDomain]);
 
@@ -217,7 +236,7 @@ const SchedulerClient = ({
 
   if (participatingRounds.length === 0) {
     return (
-      <div className="flex min-h-screen bg-black text-white font-sans items-center justify-center">
+      <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)] items-center justify-center">
         <div className="flex flex-col items-center max-w-md text-center p-8">
           <h1 className="text-2xl font-medium mb-4">Interview Scheduler</h1>
           <p className="text-gray-400 mb-8">
@@ -231,7 +250,7 @@ const SchedulerClient = ({
   const activeLink = isSfuHealthy ? meetLink : schedulingLink;
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-sans">
+    <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)]">
       {notification && (
         <div
           className={`fixed top-35 right-10 z-[1000] p-2 rounded-md shadow-xl text-white transition-opacity duration-300 ${getNotificationClasses(
@@ -248,9 +267,7 @@ const SchedulerClient = ({
       />
       <div className="flex-1 p-8 md:p-12 lg:p-16">
         <h1 className="text-2xl font-medium mb-8">
-          {bookedSlot
-            ? "Your scheduled interview:"
-            : "Choose your preferred date and slot:"}
+          {bookedSlot ? "" : "Choose your preferred date and slot:"}
         </h1>
         {bookedSlot ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] h-auto bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
@@ -324,7 +341,7 @@ const SchedulerClient = ({
             )}
           </div>
         ) : selectedRound ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-8 max-w-6xl">
             <Calendar
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
