@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { createServer as createHttpsServer } from "https";
 
 import { createServer as createHttpServer } from "http";
@@ -48,16 +49,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.use(cors());
 
 // ============================================
 // Health Check Endpoint
 // ============================================
 app.get("/health", (req, res) => {
+  const healthyWorkers = workers.filter((worker) => !worker.closed);
+  const isHealthy = healthyWorkers.length > 0;
+
   const healthData = {
-    status: "healthy",
+    status: isHealthy ? "healthy" : "unhealthy",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    workers: workers.length,
+    workers: {
+      total: workers.length,
+      healthy: healthyWorkers.length,
+      closed: workers.length - healthyWorkers.length,
+    },
     activeRooms: rooms.size,
     totalConnections: io.engine?.clientsCount ?? 0,
     roomDetails: Array.from(rooms.values()).map((room) => ({
@@ -65,6 +74,12 @@ app.get("/health", (req, res) => {
       clients: room.clientCount,
     })),
   };
+
+  if (!isHealthy) {
+    Logger.error("Health check failed: No healthy workers available");
+    return res.status(503).json(healthData);
+  }
+
   res.json(healthData);
 });
 

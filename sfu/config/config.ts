@@ -70,7 +70,7 @@ export const config = {
       {
         // ip: "0.0.0.0",
         ip: "0.0.0.0",
-        announcedIp: "10.149.224.180", //replace with your public IP
+        announcedIp: "172.16.22.196", //replace with your public IP
       },
     ],
     //for deployment
