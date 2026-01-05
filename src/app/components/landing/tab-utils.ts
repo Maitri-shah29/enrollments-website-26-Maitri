@@ -12,6 +12,7 @@ export type TabInternalFlags = {
   showPintooRun: boolean;
   showSnake: boolean;
   showAbout: boolean;
+  showMeets: boolean;
   showScheduler: boolean;
   showTask: boolean;
 };
@@ -114,6 +115,7 @@ export const tabFlagsForKeyword = (keyword: string): TabInternalFlags => ({
   showPintooRun: keyword === "pintoorun",
   showSnake: keyword === "snake",
   showAbout: keyword === "about",
+  showMeets: keyword === "meets",
   showScheduler: keyword === "scheduler.com",
   showTask: keyword === "task.com" || keyword === "task",
 });
@@ -130,6 +132,7 @@ export const resetTabFlags = (): TabInternalFlags => ({
   showPintooRun: false,
   showSnake: false,
   showAbout: false,
+  showMeets: false,
   showScheduler: false,
   showTask: false,
 });

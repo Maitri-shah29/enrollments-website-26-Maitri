@@ -40,10 +40,10 @@ const SelectedSlot = ({
     : "";
 
   return (
-    <div className="bg-[#111] border border-gray-800 rounded-xl p-6 flex flex-col items-center justify-between min-h-[150px]">
-      <div className="text-gray-300 mb-4">Selected Slot</div>
+    <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-6 flex flex-col items-center justify-between min-h-[150px]">
+      <div className="text-gray-200 mb-4">Selected Slot</div>
 
-      <div className="text-gray-400 text-sm mb-6">
+      <div className="text-gray-400 text-sm mb-6 text-center">
         {selectedDate && slot
           ? `${displayDate} • ${displayTime}`
           : "Please select a date and slot"}
@@ -53,7 +53,7 @@ const SelectedSlot = ({
         type="button"
         disabled={!slot || loading}
         onClick={onConfirm}
-        className="bg-white text-black font-medium py-2 px-8 rounded hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-white text-[#0f1a2a] font-medium py-2 px-8 rounded border border-[#5CAFFF] hover:bg-[#e8f4ff] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? "Confirming..." : "Confirm Slot"}
       </button>
