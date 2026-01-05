@@ -73,6 +73,7 @@ interface QuestionsProps {
   onQuestionChange?: (idx: number) => void;
   joinedAOIs?: Set<ResearchAOI>;
   onSubmit: (key: string) => void;
+  onViewInstructions?: () => void;
 }
 
 export interface QuestionsRef {
@@ -96,6 +97,7 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
     onQuestionChange: _onQuestionChange,
     onSubmit,
     joinedAOIs = new Set(),
+    onViewInstructions,
   } = props;
   const questionKey = `${propSelectedAOI}-question${
     propSelectedQuestionIdx + 1
@@ -442,8 +444,18 @@ const Questions = forwardRef<QuestionsRef, QuestionsProps>((props, ref) => {
               Congratulations! 🎉
             </h2>
             <p className="text-white text-lg font-monopoly">
-              You are promoted to the next round
+              You have advanced to Round 2. Please check the instructions to
+              schedule your meet.
             </p>
+            {onViewInstructions && (
+              <button
+                type="button"
+                onClick={onViewInstructions}
+                className="mt-6 px-6 py-2 bg-[#7D5BED] text-white font-monopoly rounded-full hover:bg-[#6b4fde] transition-colors"
+              >
+                View Round 2 Instructions
+              </button>
+            )}
           </div>
         </div>
       );

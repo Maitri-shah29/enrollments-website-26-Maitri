@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Header from "./header";
 
@@ -10,7 +12,7 @@ export default function Instructions({ onBack }: InstructionsProps) {
     <div className="relative bg-white/60 backdrop-blur-xl rounded-2xl w-[100%] h-[90%] shadow-lg flex flex-col overflow-auto">
       <Header onClick={onBack} />
       <div className="px-10 py-5 overflow-y-auto h-full">
-        <h1 className="text-2xl text-black mb-1">Instructions</h1>
+        <h1 className="text-2xl text-black mb-1">Round 2 Instructions</h1>
 
         {/* Email Header */}
         <div className="flex items-center justify-between mb-3">
@@ -29,29 +31,47 @@ export default function Instructions({ onBack }: InstructionsProps) {
         {/* Dynamic Content */}
         <div className="text-black leading-relaxed space-y-4 text-base mt-5">
           <p>
-            Welcome to the first round of ACM-VIT's Management Domain
-            selections. First let’s get the instructions out of the way.
-            <br />
-            &nbsp;1. Answer all the questions of Round 1.
-            <br />
-            &nbsp;PS - You’ll probably use AI for these questions, which is
-            totally fine. Just keep in mind that we’ll be evaluating your
-            originality and your ability to learn so feel free to use AI for
-            support, but make sure your answers reflect your own thinking.
-            <br />
-            &nbsp;2. Click on "Save Answer" after answering every question, to
-            save your response. You may change your answers after you save
-            answer. You cannot change your answers once you have submitted the
-            form.
-            <br />
-            &nbsp;3. Click on “Submit Form” after answering and reviewing all
-            questions.
-            <br />
-            In this round, you'll be presented with a series of situational
-            questions that assess your management skills and certain quirky
-            questions just for our fun!
+            <span className="font-semibold">Round 2</span> scheduling is now
+            open for promoted candidates.
           </p>
-          <p>Good luck!</p>
+          <p>
+            Open the Scheduler from the header or type{" "}
+            <span className="font-semibold">scheduler.com</span> in the search
+            bar to book your meet.
+          </p>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                window.parent.postMessage(
+                  { type: "NAVIGATE_TO", url: "scheduler.com" },
+                  "*",
+                );
+              }}
+              className="inline-flex items-center justify-center px-6 py-2 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
+            >
+              Open Scheduler
+            </button>
+          </div>
+          <p className="font-semibold">Booking steps:</p>
+          <ol className="list-decimal pl-6 space-y-2">
+            <li>Select the domain(s) you applied for.</li>
+            <li>
+              Choose a date from the{" "}
+              <span className="font-semibold">calendar</span> (blue dots show
+              availability).
+            </li>
+            <li>Pick a time slot.</li>
+            <li>
+              Click <span className="font-semibold">Confirm</span> to lock your
+              slot. It will appear below after confirmation.
+            </li>
+          </ol>
+          <p>
+            <span className="font-semibold">Note:</span> Confirmed slots cannot
+            be changed. If everything looks full, check back for newly opened
+            slots.
+          </p>
         </div>
       </div>
     </div>

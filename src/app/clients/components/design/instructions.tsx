@@ -7,7 +7,7 @@ const Instructions: React.FC = () => {
   return (
     <div className="w-full h-full flex items-center justify-start flex-col px-[5%] pb-[3%] overflow-y-auto [--scrollbar-thumb:#F55F4B]">
       <h1 className="text-[8vh] lg:text-[10vh] font-brushwell text-[#F55F4B] m-0 p-0 mb-[1.5%]">
-        Instructions
+        Round 2 Instructions
       </h1>
 
       <div className="flex flex-col lg:flex-row justify-center items-center gap-[3%] w-full">
@@ -20,41 +20,53 @@ const Instructions: React.FC = () => {
             className="w-[8%] lg:w-[10%] absolute -top-7 -left-7"
             draggable={false}
           />
-          <p className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl">
-            Welcome to the first round of ACM-VIT's Design Domain selections! In
-            this round, you'll have the opportunity to showcase your creative
-            skills and design thinking by answering a series of questions.
-            <br />
-            <br />
-            <ul className="list-disc pl-6 space-y-2 text-white">
+          <div className="px-[5%] lg:px-[8%] pt-[5%] font-coolvetica text-2xl text-white space-y-6">
+            <p>
+              <span className="text-[#F55F4B] font-semibold">Round 2</span>{" "}
+              scheduling is now open for promoted candidates.
+            </p>
+            <p>
+              Open the Scheduler from the header or type{" "}
+              <span className="text-[#F55F4B] font-semibold">
+                scheduler.com
+              </span>{" "}
+              in the search bar to book your meet.
+            </p>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  window.parent.postMessage(
+                    { type: "NAVIGATE_TO", url: "scheduler.com" },
+                    "*",
+                  );
+                }}
+                className="inline-flex items-center justify-center px-6 py-3 bg-[#F55F4B] text-white rounded-full font-coolvetica text-xl hover:bg-[#ff7a68] transition-colors"
+              >
+                Open Scheduler
+              </button>
+            </div>
+            <p className="font-semibold">Booking steps:</p>
+            <ol className="list-decimal pl-6 space-y-2">
+              <li>Pick the domain(s) you applied for.</li>
               <li>
-                PS - You’ll probably use AI for these questions, which is
-                totally fine. Just keep in mind that we’ll be evaluating your
-                originality and your ability to learn so feel free to use AI for
-                support, but make sure your answers reflect your own thinking.
+                Choose a date from the{" "}
+                <span className="text-[#F55F4B] font-semibold">calendar</span>{" "}
+                (blue dots show availability).
               </li>
+              <li>Select a time slot.</li>
               <li>
-                You can select a maximum of 2 Areas of Interest (AoIs) that
-                align with your passion and skills. These AOIs will help us
-                understand your interests better and may influence the type of
-                projects you'll work on if you’re selected.{" "}
+                Click{" "}
+                <span className="text-[#F55F4B] font-semibold">Confirm</span> to
+                lock your slot. It will appear below once confirmed.
               </li>
-              <li>
-                Click on “Save Answer” after every question you answer. You may
-                change your answers after you save answer. You cannot change
-                your answers once you have submitted the form.
-              </li>
-              <li>
-                Once you've answered all the questions, review your responses
-                and click “Submit Form”.{" "}
-              </li>
-            </ul>
-            <br></br>
-            We're looking for creativity, originality, and your personal
-            approach to solving design challenges together.
-            <br></br>
-            Good Luck!
-          </p>
+            </ol>
+            <p>
+              <span className="text-[#F55F4B] font-semibold">Note:</span> Once a
+              slot is confirmed, it cannot be changed. If everything looks
+              booked, check back soon for newly opened slots.
+            </p>
+          </div>
         </div>
         <Image
           src="/images/design/instructions_post.svg"

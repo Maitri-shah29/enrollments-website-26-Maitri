@@ -268,8 +268,16 @@ const TechWebsite = ({ initialRoundUser, roundUserCount }: TechClientProps) => {
                   Congratulations! 🎉
                 </h2>
                 <p className="text-white text-lg">
-                  You are promoted to the next round
+                  You have advanced to Round 2. Please check the instructions to
+                  schedule your meet.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setSection("instructions")}
+                  className="mt-6 px-6 py-2 bg-[#993C7A] text-white font-jetbrains rounded-full hover:bg-[#b84a92] transition-colors"
+                >
+                  View Round 2 Instructions
+                </button>
               </div>
             </div>
           );

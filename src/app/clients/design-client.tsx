@@ -329,6 +329,7 @@ const DesignClient = ({
               setHasUnsavedChanges={setHasUnsavedChanges}
               savedResponses={savedResponses}
               setSavedResponses={setSavedResponses}
+              onViewInstructions={() => setSelectedPanel("Instructions")}
             />
           )}
         {selectedPanel === "Interview" && <Interview />}

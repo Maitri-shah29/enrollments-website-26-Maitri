@@ -475,6 +475,7 @@ const ResearchClient = ({
             onAOIChange={setSelectedAOI}
             onQuestionChange={setSelectedQuestionIdx}
             joinedAOIs={joinedAOIs}
+            onViewInstructions={() => handlePanelSelect("Instructions")}
             onSubmit={(key) => {
               setSubmittedQuestions((prev) => new Set([...prev, key]));
               setQuestionsWithUnsavedEdits((prev) => {

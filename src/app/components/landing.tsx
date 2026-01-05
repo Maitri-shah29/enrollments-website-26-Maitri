@@ -3,26 +3,138 @@ import { type DragEvent, Fragment, useEffect, useState } from "react";
 import FullscreenToggle from "./fullscreen-toggle";
 import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
-import App from "./loader/App";
-import { useSessionContext } from "./session-provider"; // Adjust path as needed
 import {
+  INTERNAL_KEYWORDS,
+  normalizeInternalKeyword,
+  titleFromDomain,
+} from "./landing/tab-constants";
+import {
+  ensureHttps,
   resetTabFlags,
   stripProtocol,
   tabFlagsForKeyword,
   titleForKeyword,
 } from "./landing/tab-utils";
+import App from "./loader/App";
+import { useSessionContext } from "./session-provider"; // Adjust path as needed
 
 const buildMaskUrl = (path: string) =>
   `url("data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${path}' fill='black'/></svg>`,
   )}")`;
 
 const TAB_MASK_IMAGE = buildMaskUrl(
-  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z"
+  "M0 100 L8 15 Q9 3 11 1 Q13 0 16 0 L84 0 Q87 0 89 1 Q91 3 92 15 L100 100 Z",
 );
 const PLUS_BUTTON_MASK_IMAGE = buildMaskUrl(
-  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z"
+  "M8 12 Q7 0 10 0 L66 0 Q70 0 72 4 L95 95 Q97 100 92 100 L34 100 Q30 100 28 96 L8 20 Q7 16 8 12 Z",
 );
+
+const buildEmptyTab = (id: number): TabData => ({
+  id,
+  title: "New Tab",
+  showInstructions: false,
+  showCc: false,
+  showManagement: false,
+  showTech: false,
+  showDesign: false,
+  showResearch: false,
+  showEvents: false,
+  showDomains: false,
+  // showPintooRun: false,
+  showMeets: false,
+  showSnake: false,
+  showAbout: false,
+  showScheduler: false,
+  showTask: false,
+  history: [],
+  pointer: -1,
+});
+
+const applyInputToTab = (tab: TabData, rawInput: string): TabData => {
+  const trimmed = rawInput.trim();
+  if (!trimmed) return tab;
+
+  const lower = trimmed.toLowerCase();
+  const isInternal = INTERNAL_KEYWORDS.has(lower);
+  const normalized = isInternal ? normalizeInternalKeyword(lower) : trimmed;
+  const historyUrl = isInternal ? normalized : ensureHttps(trimmed);
+  const title = isInternal ? titleFromDomain(normalized) : trimmed;
+
+  const newHistory = tab.history.slice(0, tab.pointer + 1);
+  if (newHistory.length === 0) {
+    newHistory.push({ id: Date.now() - 1, title: "Home", url: "" });
+  }
+  newHistory.push({ id: Date.now(), title, url: historyUrl });
+
+  return {
+    ...tab,
+    history: newHistory,
+    pointer: newHistory.length - 1,
+    title,
+    pendingUrl: normalized,
+    ...(isInternal ? tabFlagsForKeyword(normalized) : resetTabFlags()),
+  };
+};
+
+const resolveInitialPath = (value: string) => {
+  if (!value) return "";
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+const getInitialPathFromLocation = () => {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  return params.get("path") || "";
+};
+
+const applyInitialNavigation = (
+  savedTabs: TabData[],
+  activeTabId: number,
+  rawInitial: string,
+) => {
+  const cleaned = rawInitial.trim().replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!cleaned) {
+    return { tabs: savedTabs, activeTabId };
+  }
+
+  const lowered = cleaned.toLowerCase();
+  const isInternal = INTERNAL_KEYWORDS.has(lowered);
+  const normalized = isInternal ? normalizeInternalKeyword(lowered) : cleaned;
+  const targetUrl = isInternal ? normalized : ensureHttps(cleaned);
+
+  const existingTab = savedTabs.find((tab) => {
+    const currentUrl =
+      tab.pointer >= 0 ? (tab.history[tab.pointer]?.url ?? "") : "";
+    return currentUrl === targetUrl;
+  });
+
+  if (existingTab) {
+    return { tabs: savedTabs, activeTabId: existingTab.id };
+  }
+
+  if (savedTabs.length < 6) {
+    const newId = Date.now();
+    const newTab = applyInputToTab(buildEmptyTab(newId), cleaned);
+    return { tabs: [...savedTabs, newTab], activeTabId: newId };
+  }
+
+  return {
+    tabs: savedTabs.map((tab) =>
+      tab.id === activeTabId ? applyInputToTab(tab, cleaned) : tab,
+    ),
+    activeTabId,
+  };
+};
+
+// const logInitialState = (label: string, payload: Record<string, unknown>) => {
+//   if (process.env.NODE_ENV === "production") return;
+//   console.log(`[landing] ${label}`, payload);
+// };
 
 // Main Landing Component
 const Landing: React.FC<{
@@ -36,6 +148,7 @@ const Landing: React.FC<{
   researchChild?: React.ReactNode;
   schedulerChild?: React.ReactNode;
   taskChild?: React.ReactNode;
+  initialUrl?: string;
 }> = ({
   session: _session,
   isAllowed: _isAllowed,
@@ -46,111 +159,61 @@ const Landing: React.FC<{
   researchChild,
   schedulerChild,
   taskChild,
+  initialUrl,
 }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
 
-  const [tabs, setTabs] = useState<TabData[]>(() => {
+  const [initialState] = useState(() => {
+    const fallbackTabs = [buildEmptyTab(initialId)];
     if (typeof window === "undefined") {
-      return [
-        {
-          id: initialId,
-          title: "New Tab",
-          showCc: false,
-          showManagement: false,
-          showTech: false,
-          showDesign: false,
-          showResearch: false,
-          showEvents: false,
-          showDomains: false,
-          // showPintooRun: false,
-          showSnake: false,
-          showAbout: false,
-          showMeets: false,
-          showScheduler: false,
-          showTask: false,
-          history: [],
-          pointer: -1,
-        },
-      ];
+      const resolved = resolveInitialPath(initialUrl || "");
+      if (!resolved) {
+        return { tabs: fallbackTabs, activeTabId: fallbackTabs[0].id };
+      }
+      return applyInitialNavigation(fallbackTabs, fallbackTabs[0].id, resolved);
     }
 
+    let savedTabs = fallbackTabs;
     try {
-      const savedTabs = localStorage.getItem("browserTabs");
-      if (savedTabs) {
-        const parsed = JSON.parse(savedTabs);
-        return parsed.length > 0
-          ? parsed
-          : [
-              {
-                id: initialId,
-                title: "New Tab",
-                showCc: false,
-                showManagement: false,
-                showTech: false,
-                showDesign: false,
-                showResearch: false,
-                showEvents: false,
-                showDomains: false,
-                // showPintooRun: false,
-                showSnake: false,
-                showAbout: false,
-                showMeets: false,
-                showScheduler: false,
-                history: [],
-                pointer: -1,
-              },
-            ];
+      const stored = localStorage.getItem("browserTabs");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        savedTabs = parsed.length > 0 ? parsed : fallbackTabs;
       }
     } catch (error) {
       console.error("Failed to load tabs from localStorage:", error);
     }
 
-    return [
-      {
-        id: initialId,
-        title: "New Tab",
-        showCc: false,
-        showManagement: false,
-        showTech: false,
-        showDesign: false,
-        showResearch: false,
-        showEvents: false,
-        showDomains: false,
-        // showPintooRun: false,
-        showSnake: false,
-        showAbout: false,
-        showMeets: false,
-        showScheduler: false,
-        showTask: false,
-        history: [],
-        pointer: -1,
-      },
-    ];
-  });
-
-  const [activeTabId, setActiveTabId] = useState<number>(() => {
-    if (typeof window === "undefined") return initialId;
-
+    let savedActiveTabId = savedTabs[0]?.id ?? initialId;
     try {
-      const savedActiveTabId = localStorage.getItem("activeTabId");
-      const savedTabs = localStorage.getItem("browserTabs");
-
-      if (savedActiveTabId && savedTabs) {
-        const parsed = JSON.parse(savedTabs);
-        const tabExists = parsed.some(
-          (tab: TabData) => tab.id === Number(savedActiveTabId)
+      const storedActiveTabId = localStorage.getItem("activeTabId");
+      if (storedActiveTabId) {
+        const exists = savedTabs.some(
+          (tab) => tab.id === Number(storedActiveTabId),
         );
-        if (tabExists) {
-          return Number(savedActiveTabId);
+        if (exists) {
+          savedActiveTabId = Number(storedActiveTabId);
         }
       }
     } catch (error) {
       console.error("Failed to load activeTabId from localStorage:", error);
     }
 
-    return tabs[0]?.id || initialId;
+    const resolved = resolveInitialPath(
+      initialUrl || getInitialPathFromLocation(),
+    );
+    if (!resolved) {
+      return { tabs: savedTabs, activeTabId: savedActiveTabId };
+    }
+
+    return applyInitialNavigation(savedTabs, savedActiveTabId, resolved);
   });
+
+  const [tabs, setTabs] = useState<TabData[]>(() => initialState.tabs);
+  const [activeTabId, setActiveTabId] = useState<number>(
+    () => initialState.activeTabId,
+  );
 
   const [draggingTabId, setDraggingTabId] = useState<number | null>(null);
   const [showMaxTabsNotification, setShowMaxTabsNotification] = useState(false);
@@ -178,6 +241,14 @@ const Landing: React.FC<{
       }
     }
   }, [activeTabId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("path")) return;
+    // logInitialState("clear-query", { before: window.location.search });
+    window.history.replaceState({}, "", "/");
+  }, []);
 
   // Dynamic Favicon Logic
   useEffect(() => {
@@ -365,36 +436,23 @@ const Landing: React.FC<{
       return;
     }
     const newId = Date.now();
-    const newTab: TabData = {
-      id: newId,
-      title: "New Tab",
-      showInstructions: false,
-      showCc: false,
-      showManagement: false,
-      showTech: false,
-      showDesign: false,
-      showResearch: false,
-      showEvents: false,
-      showDomains: false,
-      // showPintooRun: false,
-      showSnake: false,
-      showAbout: false,
-      showMeets: false,
-      showScheduler: false,
-      showTask: false,
-      history: [],
-      pointer: -1,
-    };
-    setTabs([...tabs, newTab]);
+    setTabs([...tabs, buildEmptyTab(newId)]);
     setActiveTabId(newId);
   };
 
   const addTabWithUrl = (url: string) => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const lower = trimmed.toLowerCase();
+    const isInternal = INTERNAL_KEYWORDS.has(lower);
+    const normalized = isInternal ? normalizeInternalKeyword(lower) : trimmed;
+    const historyUrl = isInternal ? normalized : ensureHttps(trimmed);
+
     // Only check if another tab is currently showing this URL (not entire history)
     const existingTab = tabs.find((tab) => {
       const currentUrl =
         tab.pointer >= 0 ? tab.history[tab.pointer]?.url : null;
-      return currentUrl === url;
+      return currentUrl === historyUrl;
     });
 
     if (existingTab) {
@@ -409,33 +467,22 @@ const Landing: React.FC<{
     }
 
     const newId = Date.now() + Math.random();
+    const title = isInternal
+      ? titleFromDomain(normalized)
+      : stripProtocol(historyUrl).split("/")[0];
     const newTab: TabData = {
       id: newId,
-      title: url.replace(/^https?:\/\//, "").split("/")[0],
-      showInstructions: url === "instructions",
-      showCc: url === "cc",
-      showManagement: url === "management",
-      showTech: url === "tech",
-      showDesign: url === "design",
-      showResearch: url === "research",
-      showEvents: url === "events",
-      showDomains: url === "domains",
-      // showPintooRun: url === "pintoorun",
-      showSnake: url === "snake",
-      showAbout: url === "about",
-      showMeets: url === "meets",
-
-      showScheduler: url === "scheduler",
-      showTask: url === "task",
+      title,
+      ...(isInternal ? tabFlagsForKeyword(normalized) : resetTabFlags()),
       history: [
         {
           id: Date.now(),
-          title: url,
-          url: url,
+          title,
+          url: historyUrl,
         },
       ],
       pointer: 0,
-      pendingUrl: url,
+      pendingUrl: normalized,
     };
 
     setTabs([...tabs, newTab]);
@@ -480,7 +527,7 @@ const Landing: React.FC<{
 
   const handleDragOver = (
     event: DragEvent<HTMLButtonElement>,
-    targetId: number
+    targetId: number,
   ) => {
     event.preventDefault();
     if (draggingTabId === null || draggingTabId === targetId) return;
@@ -489,7 +536,7 @@ const Landing: React.FC<{
 
   const handleDrop = (
     event: DragEvent<HTMLButtonElement>,
-    targetId: number
+    targetId: number,
   ) => {
     event.preventDefault();
     const payload = event.dataTransfer.getData("text/plain");

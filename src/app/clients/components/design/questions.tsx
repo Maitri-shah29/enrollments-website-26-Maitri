@@ -52,6 +52,7 @@ interface QuestionsProps {
   setHasUnsavedChanges: React.Dispatch<React.SetStateAction<boolean>>;
   savedResponses: Response[];
   setSavedResponses: React.Dispatch<React.SetStateAction<Response[]>>;
+  onViewInstructions?: () => void;
 }
 
 interface Toast {
@@ -87,6 +88,7 @@ const Questions: React.FC<QuestionsProps> = ({
   setHasUnsavedChanges,
   savedResponses,
   setSavedResponses,
+  onViewInstructions,
 }) => {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState<boolean>(false);
   const [pendingNavigation, setPendingNavigation] = useState<{
@@ -339,8 +341,18 @@ const Questions: React.FC<QuestionsProps> = ({
             Congratulations! 🎉
           </h2>
           <p className="text-white text-3xl font-coolvetica">
-            You have been promoted to the next round
+            You have advanced to Round 2. Please follow the instructions to
+            schedule your meet.
           </p>
+          {onViewInstructions && (
+            <button
+              type="button"
+              onClick={onViewInstructions}
+              className="mt-6 px-6 py-3 bg-[#F55F4B] text-white font-coolvetica text-2xl rounded-full hover:bg-[#ff7a68] transition-colors"
+            >
+              View Round 2 Instructions
+            </button>
+          )}
         </div>
       );
     case "rejected":

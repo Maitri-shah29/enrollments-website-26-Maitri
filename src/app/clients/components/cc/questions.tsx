@@ -65,6 +65,7 @@ type QuestionsProps = {
   setQuestionsWithUnsavedEdits?: React.Dispatch<
     React.SetStateAction<Set<string>>
   >; // setter from parent
+  onViewInstructions?: () => void;
 };
 
 const Questions = ({
@@ -77,6 +78,7 @@ const Questions = ({
   setSavedResponses: externalSetSavedResponses,
   questionsWithUnsavedEdits: externalQuestionsWithUnsavedEdits,
   setQuestionsWithUnsavedEdits: externalSetQuestionsWithUnsavedEdits,
+  onViewInstructions,
 }: QuestionsProps) => {
   const [notification, setNotification] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"success" | "error">(
@@ -465,8 +467,18 @@ const Questions = ({
               Congratulations! 🎉
             </h2>
             <p className="text-white text-lg">
-              You are promoted to the next round
+              You have advanced to Round 2. Please check the instructions to
+              schedule your meet.
             </p>
+            {onViewInstructions && (
+              <button
+                type="button"
+                onClick={onViewInstructions}
+                className="mt-6 px-6 py-2 bg-[#C9EB3E] text-[#121216] font-ShareTechMono rounded-full hover:bg-[#b8d938] transition-colors"
+              >
+                View Round 2 Instructions
+              </button>
+            )}
           </div>
         </div>
       );
