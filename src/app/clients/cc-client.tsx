@@ -159,6 +159,7 @@ const Page = ({ initialRoundUser, roundUserCount }: CCClientProps) => {
                 setSavedResponses={setSavedResponses}
                 questionsWithUnsavedEdits={questionsWithUnsavedEdits}
                 setQuestionsWithUnsavedEdits={setQuestionsWithUnsavedEdits}
+                onViewInstructions={() => setSelectedPanel("Instructions")}
               />
             ) : (
               <>

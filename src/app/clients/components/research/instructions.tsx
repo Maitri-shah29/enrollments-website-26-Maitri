@@ -13,34 +13,54 @@ export default function Instructions() {
       {/* Foreground Content */}
       <div className="relative z-10 px-[4vw] py-[5vh] max-w-7xl">
         <h1 className="text-[clamp(2rem,1.5vw,1.25rem)] font-semibold text-[#C8B7FF] mb-[1vh] font-monopoly-bold">
-          Instructions
+          Round 2 Instructions
         </h1>
 
-        <p className="text-gray-300 leading-relaxed text-justify font-monopoly text-[clamp(1.2rem,1.2vw,1rem)]">
-          Welcome to the first round of ACM-VIT's Research Domain selections!{" "}
-          <br></br>
-          1. Go to the Explore tab on the left sidebar and join up to 3 AoIs
-          based on your preferences.
-          <br />
-          2. Proceed to Round 1. Answer the common questions first, and then the
-          domain-wise questions.
-          <br />
-          3. Make sure you click on Save after every answer. If you see the
-          "Saved Successfully" popup on the top right, your answer has been
-          saved. You may change your answers after you save answer. You cannot
-          change your answers once you have submitted the form.
-          <br />
-          4. After answering all questions, click on ‘Submit Form’ at the bottom
-          of the left sidebar.
-          <br />
-          All the best!
-          <br />
-          <br />
-          PS - You’ll probably use AI for these questions, which is totally
-          fine. Just keep in mind that we’ll be evaluating your originality and
-          your ability to learn so feel free to use AI for support, but make
-          sure your answers reflect your own thinking.
-        </p>
+        <div className="text-gray-300 leading-relaxed text-justify font-monopoly text-[clamp(1.2rem,1.2vw,1rem)] space-y-5">
+          <p>
+            <span className="text-[#C8B7FF] font-semibold">Round 2</span>{" "}
+            scheduling is now open for promoted candidates.
+          </p>
+          <p>
+            Open the Scheduler from the header or type{" "}
+            <span className="text-[#C8B7FF] font-semibold">scheduler.com</span>{" "}
+            in the search bar to book your meet.
+          </p>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                window.parent.postMessage(
+                  { type: "NAVIGATE_TO", url: "scheduler.com" },
+                  "*",
+                );
+              }}
+              className="inline-flex items-center justify-center px-6 py-2 bg-[#7D5BED] text-white rounded-full font-monopoly text-base hover:bg-[#6b4fde] transition-colors"
+            >
+              Open Scheduler
+            </button>
+          </div>
+          <p className="font-semibold text-[#C8B7FF]">Booking steps:</p>
+          <ol className="list-decimal pl-6 space-y-2">
+            <li>Select the domain(s) you applied for.</li>
+            <li>
+              Choose a date from the{" "}
+              <span className="text-[#C8B7FF] font-semibold">calendar</span>{" "}
+              (blue dots show availability).
+            </li>
+            <li>Pick a time slot.</li>
+            <li>
+              Click{" "}
+              <span className="text-[#C8B7FF] font-semibold">Confirm</span> to
+              lock your slot. It will appear below after confirmation.
+            </li>
+          </ol>
+          <p>
+            <span className="text-[#C8B7FF] font-semibold">Note:</span>{" "}
+            Confirmed slots cannot be changed. If everything looks full, check
+            back for newly opened slots.
+          </p>
+        </div>
       </div>
     </div>
   );

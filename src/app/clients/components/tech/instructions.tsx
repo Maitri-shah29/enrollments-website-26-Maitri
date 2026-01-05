@@ -13,22 +13,52 @@ export default function Instructions() {
           draggable={false}
         />
       </div>
-      <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-15">
-        {/* <pre className="text-right pr-4 select-none text-[#993C7A]">
-          {Array.from({ length: 6 }, (_, i) => (
-            <div key={`instructions-line-${i + 1}`}>{i + 1}</div>
-          ))}
-        </pre> */}
-        <pre className="whitespace-pre-wrap text-[#E097CE]">
-          {`1. Go to the Explore tab on the left sidebar and join up to 3 AoIs based on your preferences.
-2. Proceed to Round 1. Answer the common questions first, and then the domain-wise questions. 
-3. Make sure you click on Save after every answer. If you see the "Saved Successfully" popup on the top right, your answer has been saved. You may change your answers after you save answer. You cannot change your answers once you have submitted the form.
-4. After answering all questions, click on ‘Submit Form’ at the bottom of the left sidebar.
-
-Bonus - You will be judged on your technical skills but more importantly, on your ability to quickly learn new concepts. Points will be given for originality.
-
-All the Best!`}
-        </pre>
+      <div className="flex text-[#993C7A] font-mono text-lg leading-relaxed mt-10">
+        <div className="text-[#E097CE] max-w-3xl space-y-6">
+          <p>
+            <span className="text-[#993C7A] font-semibold">Round 2</span>{" "}
+            scheduling is now open for promoted candidates.
+          </p>
+          <p>
+            Open the Scheduler from the header or type{" "}
+            <span className="text-[#993C7A] font-semibold">scheduler.com</span>{" "}
+            in the search bar to book your meet.
+          </p>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                window.parent.postMessage(
+                  { type: "NAVIGATE_TO", url: "scheduler.com" },
+                  "*",
+                );
+              }}
+              className="inline-flex items-center justify-center px-6 py-2 bg-[#993C7A] text-white rounded-full font-mono text-base hover:bg-[#b84a92] transition-colors"
+            >
+              Open Scheduler
+            </button>
+          </div>
+          <p className="font-semibold">Booking steps:</p>
+          <ol className="list-decimal pl-6 space-y-2">
+            <li>Select the domain(s) you applied for.</li>
+            <li>
+              Choose a date from the{" "}
+              <span className="text-[#993C7A] font-semibold">calendar</span>{" "}
+              (blue dots show availability).
+            </li>
+            <li>Pick a time slot.</li>
+            <li>
+              Click{" "}
+              <span className="text-[#993C7A] font-semibold">Confirm</span> to
+              lock your slot. It will appear below after confirmation.
+            </li>
+          </ol>
+          <p>
+            <span className="text-[#993C7A] font-semibold">Note:</span>{" "}
+            Confirmed slots cannot be changed. If everything looks full, check
+            back for newly opened slots.
+          </p>
+        </div>
       </div>
     </div>
   );

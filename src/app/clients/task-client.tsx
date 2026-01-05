@@ -368,25 +368,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                 <p className="text-gray-300 max-w-md">
                   You have been promoted to the next round. Keep up the great
                   work!
-            {/* Task Description */}
-            {selectedRoundUser.Task && (
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h2
-                    className="text-xl font-semibold"
-                    style={{ fontFamily: "PoppinsBlack" }}
-                  >
-                    Task Description
-                  </h2>
-                  <span
-                    className="text-sm text-gray-400"
-                    style={{ fontFamily: "PoppinsReg" }}
-                  ></span>
-                </div>
-                <LinkifiedText
-                  text={selectedRoundUser.Task.text}
-                  className="text-gray-300 whitespace-pre-wrap bg-zinc-900 rounded-lg border border-zinc-800 min-y-[3rem] p-4"
-                />
+                </p>
               </div>
             ) : selectedRoundUser.status === "rejected" ? (
               <div className="flex flex-col items-center justify-center p-12 text-center bg-zinc-900/50 rounded-xl border border-zinc-800">
@@ -417,27 +399,47 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
               <>
                 {/* Task Description */}
                 {selectedRoundUser.Task && (
-                  <div className="mb-6 p-6 bg-zinc-900 rounded-lg border border-zinc-800">
-                    <h2 className="text-xl font-semibold mb-3">
-                      Task Description
-                    </h2>
-                    <p className="text-gray-300 whitespace-pre-wrap">
-                      {selectedRoundUser.Task.text}
-                    </p>
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <h2
+                        className="text-xl font-semibold"
+                        style={{ fontFamily: "PoppinsBlack" }}
+                      >
+                        Task Description
+                      </h2>
+                      <span
+                        className="text-sm text-gray-400"
+                        style={{ fontFamily: "PoppinsReg" }}
+                      ></span>
+                    </div>
+                    <LinkifiedText
+                      text={selectedRoundUser.Task.text}
+                      className="text-gray-300 whitespace-pre-wrap bg-zinc-900 rounded-lg border border-zinc-800 min-h-[3rem] p-4"
+                    />
                   </div>
                 )}
 
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-xl font-semibold">Your Submission</h2>
+                    <h2
+                      className="text-xl font-semibold"
+                      style={{ fontFamily: "PoppinsBlack" }}
+                    >
+                      Your Submission
+                    </h2>
                     {selectedRoundUser.TaskSubmission && (
-                      <span className="text-sm text-gray-400">
+                      <span
+                        className="text-sm text-gray-400"
+                        style={{ fontFamily: "PoppinsReg" }}
+                      >
                         Last submitted:{" "}
                         {new Intl.DateTimeFormat("en-US", {
                           dateStyle: "medium",
                           timeStyle: "short",
                         }).format(
-                          new Date(selectedRoundUser.TaskSubmission.submittedAt)
+                          new Date(
+                            selectedRoundUser.TaskSubmission.submittedAt
+                          )
                         )}
                       </span>
                     )}
@@ -445,6 +447,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                   <textarea
                     value={submissionText}
                     onChange={(e) => setSubmissionText(e.target.value)}
+                    style={{ fontFamily: "PoppinsReg" }}
                     placeholder="Enter your submission here..."
                     className="w-full h-64 p-4 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={submitting || isReadOnly}
@@ -454,91 +457,38 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                 {selectedRoundUser.status !== "evaluate" && (
                   <button
                     type="button"
+                    style={{ fontFamily: "PoppinsReg" }}
                     onClick={handleSubmitClick}
-                    disabled={
-                      submitting || !submissionText.trim() || isReadOnly
-                    }
-                    className="px-6 py-3 bg-sky-50 hover:bg-blue-700 text-gray-900 hover:text-sky-50 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+                    disabled={submitting || !submissionText.trim() || isReadOnly}
+                    className="px-6 py-3 bg-sky-50 hover:bg-blue-700 text-gray-900 hover:text-sky-50 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors hover:border-white hover:border-1"
                   >
                     {submitting ? "Submitting..." : "Submit Task"}
                   </button>
                 )}
 
                 {isReadOnly && (
-                  <p className="mt-4 text-gray-400 text-sm">
+                  <p
+                    className="mt-4 text-gray-400 text-sm"
+                    style={{ fontFamily: "PoppinsReg" }}
+                  >
                     {selectedRoundUser.status === "evaluate"
                       ? "Your submission is currently under evaluation."
                       : "Submissions are no longer accepted for this task."}
                   </p>
                 )}
+
+                {selectedRoundUser.Task &&
+                  isDeadlinePassed(selectedRoundUser.Task.deadline) && (
+                    <p
+                      className="mt-4 text-red-400 text-sm"
+                      style={{ fontFamily: "PoppinsReg" }}
+                    >
+                      The deadline for this task has passed. Submissions are no
+                      longer accepted.
+                    </p>
+                  )}
               </>
             )}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-3">
-                <h2
-                  className="text-xl font-semibold"
-                  style={{ fontFamily: "PoppinsBlack" }}
-                >
-                  Your Submission
-                </h2>
-                {selectedRoundUser.TaskSubmission && (
-                  <span
-                    className="text-sm text-gray-400"
-                    style={{ fontFamily: "PoppinsReg" }}
-                  >
-                    Last submitted:{" "}
-                    {new Intl.DateTimeFormat("en-US", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(
-                      new Date(selectedRoundUser.TaskSubmission.submittedAt),
-                    )}
-                  </span>
-                )}
-              </div>
-              <textarea
-                value={submissionText}
-                onChange={(e) => setSubmissionText(e.target.value)}
-                style={{ fontFamily: "PoppinsReg" }}
-                placeholder="Enter your submission here..."
-                className="w-full h-64 p-4 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                disabled={
-                  submitting ||
-                  Boolean(
-                    selectedRoundUser.Task &&
-                      isDeadlinePassed(selectedRoundUser.Task.deadline),
-                  )
-                }
-              />
-            </div>
-
-            <button
-              type="button"
-              style={{ fontFamily: "PoppinsReg" }}
-              onClick={handleSubmit}
-              disabled={
-                submitting ||
-                !submissionText.trim() ||
-                Boolean(
-                  selectedRoundUser.Task &&
-                    isDeadlinePassed(selectedRoundUser.Task.deadline),
-                )
-              }
-              className="px-6 py-3 bg-sky-50 hover:bg-blue-700 text-gray-900 hover:text-sky-50 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors hover:border-white hover:border-1"
-            >
-              {submitting ? "Submitting..." : "Submit Task"}
-            </button>
-
-            {selectedRoundUser.Task &&
-              isDeadlinePassed(selectedRoundUser.Task.deadline) && (
-                <p
-                  className="mt-4 text-red-400 text-sm"
-                  style={{ fontFamily: "PoppinsReg" }}
-                >
-                  The deadline for this task has passed. Submissions are no
-                  longer accepted.
-                </p>
-              )}
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
