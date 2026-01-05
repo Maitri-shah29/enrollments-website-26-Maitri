@@ -182,7 +182,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
     )
       return true;
     return false;
-  }, [selectedRoundUser]);
+  }, [selectedRoundUser, isDeadlinePassed]);
 
   if (allRoundUsers.length === 0) {
     return (
@@ -322,7 +322,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    role="img"
+                    aria-label="Success"
                   >
+                    <title>Success</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -337,23 +340,6 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                 <p className="text-gray-300 max-w-md">
                   You have been promoted to the next round. Keep up the great
                   work!
-            {/* Task Description */}
-            {selectedRoundUser.Task && (
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h2
-                    className="text-xl font-semibold"
-                    style={{ fontFamily: "PoppinsBlack" }}
-                  >
-                    Task Description
-                  </h2>
-                  <span
-                    className="text-sm text-gray-400"
-                    style={{ fontFamily: "PoppinsReg" }}
-                  ></span>
-                </div>
-                <p className="text-gray-300 whitespace-pre-wrap bg-zinc-900 rounded-lg border border-zinc-800 min-y-[3rem] p-4">
-                  {selectedRoundUser.Task.text}
                 </p>
               </div>
             ) : selectedRoundUser.status === "rejected" ? (
@@ -364,7 +350,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    role="img"
+                    aria-label="Not selected"
                   >
+                    <title>Not selected</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"

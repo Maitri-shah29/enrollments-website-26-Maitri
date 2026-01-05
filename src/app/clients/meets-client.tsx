@@ -96,6 +96,7 @@ interface Participant {
   screenShareProducerId: string | null;
   isMuted: boolean;
   isCameraOff: boolean;
+  isLeaving?: boolean;
 }
 
 /** Producer info from server */
@@ -130,16 +131,16 @@ interface JoinRoomResponse {
 
 interface TransportResponse {
   id: string;
-  iceParameters: any;
-  iceCandidates: any[];
-  dtlsParameters: any;
+  iceParameters: unknown;
+  iceCandidates: unknown[];
+  dtlsParameters: unknown;
 }
 
 interface ConsumeResponse {
   id: string;
   producerId: string;
   kind: "audio" | "video";
-  rtpParameters: any;
+  rtpParameters: unknown;
 }
 
 /** Producer ownership tracking */
@@ -176,6 +177,7 @@ interface MeetError {
 type ParticipantAction =
   | { type: "ADD_PARTICIPANT"; userId: string }
   | { type: "REMOVE_PARTICIPANT"; userId: string }
+  | { type: "MARK_LEAVING"; userId: string }
   | {
       type: "UPDATE_STREAM";
       userId: string;
@@ -213,6 +215,13 @@ function participantReducer(
     }
     case "REMOVE_PARTICIPANT": {
       newState.delete(action.userId);
+      return newState;
+    }
+    case "MARK_LEAVING": {
+      const participant = newState.get(action.userId);
+      if (participant) {
+        newState.set(action.userId, { ...participant, isLeaving: true });
+      }
       return newState;
     }
     case "UPDATE_STREAM": {
@@ -506,16 +515,17 @@ export default function MeetsClient({
   // ============================================
 
   const connectSocket = useCallback((): Promise<Socket> => {
-    return new Promise(async (resolve, reject) => {
-      if (socketRef.current?.connected) {
-        resolve(socketRef.current);
-        return;
-      }
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          if (socketRef.current?.connected) {
+            resolve(socketRef.current);
+            return;
+          }
 
-      setConnectionState("connecting");
+          setConnectionState("connecting");
 
-      try {
-        const token = await getSfuToken();
+          const token = await getSfuToken();
 
         const socket = io(SFU_URL, {
           transports: ["websocket", "polling"],
@@ -619,10 +629,15 @@ export default function MeetsClient({
 
         socket.on("userLeft", ({ userId: leftUserId }: { userId: string }) => {
           console.log("[Meets] User left:", leftUserId);
-          dispatchParticipants({
-            type: "REMOVE_PARTICIPANT",
-            userId: leftUserId,
-          });
+          
+          dispatchParticipants({ type: "MARK_LEAVING", userId: leftUserId });
+          
+          setTimeout(() => {
+            dispatchParticipants({
+              type: "REMOVE_PARTICIPANT",
+              userId: leftUserId,
+            });
+          }, 100);
 
           // Clear screen share if the presenter left
           for (const [producerId, info] of producerMapRef.current) {
@@ -765,16 +780,17 @@ export default function MeetsClient({
         });
 
         socketRef.current = socket;
-      } catch (err) {
-        console.error("Failed to get auth token:", err);
-        setMeetError({
-          code: "CONNECTION_FAILED",
-          message: "Authentication failed",
-          recoverable: false, // Maybe true if they login?
-        });
-        setConnectionState("error");
-        reject(err);
-      }
+        } catch (err) {
+          console.error("Failed to get auth token:", err);
+          setMeetError({
+            code: "CONNECTION_FAILED",
+            message: "Authentication failed",
+            recoverable: false, // Maybe true if they login?
+          });
+          setConnectionState("error");
+          reject(err);
+        }
+      })();
     });
   }, []);
 
@@ -1712,7 +1728,7 @@ export default function MeetsClient({
         }
         if (response.message) {
           // Add our own message to the list
-          setChatMessages((prev) => [...prev, response.message!]);
+          setChatMessages((prev) => [...prev, response.message]);
         }
       }
     );
@@ -1892,7 +1908,7 @@ export default function MeetsClient({
         ) : isPresentationMode ? (
           /* Presentation Layout */
           <PresentationLayout
-            presentationStream={presentationStream!}
+            presentationStream={presentationStream}
             presenterName={presenterName}
             localStream={localStream}
             isCameraOff={isCameraOff}
@@ -2143,7 +2159,7 @@ function PresentationLayout({
         </div>
 
         {/* Remote Participants */}
-        {Array.from(participants.values()).map((participant) => (
+        {Array.from(participants.values()).map((participant, index) => (
           <ParticipantVideo
             key={participant.userId}
             participant={participant}
@@ -2235,7 +2251,7 @@ function GridLayout({
       </div>
 
       {/* Remote Participants */}
-      {Array.from(participants.values()).map((participant) => (
+      {Array.from(participants.values()).map((participant, index) => (
         <ParticipantVideo
           key={participant.userId}
           participant={participant}
@@ -2516,6 +2532,12 @@ function ParticipantVideo({
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [isNew, setIsNew] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsNew(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const setVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
@@ -2580,6 +2602,12 @@ function ParticipantVideo({
     <div
       className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden ${
         compact ? "h-36 shrink-0" : "w-full h-full"
+      } ${
+        isNew
+          ? "animate-participant-join"
+          : participant.isLeaving
+          ? "animate-participant-leave"
+          : ""
       }`}
     >
       <video
@@ -2661,7 +2689,7 @@ function ParticipantsPanel({
     socket.emit(
       "redirectUser",
       { userId: selectedUserForRedirect, newRoomId: roomId },
-      (res: any) => {
+      (res: { error?: string }) => {
         if (res.error) {
           console.error("Redirect failed:", res.error);
         } else {
@@ -2696,7 +2724,7 @@ function ParticipantsPanel({
           <div className="px-3 pb-3 flex gap-2">
             <button
               onClick={() =>
-                socket?.emit("muteAll", (res: any) =>
+                socket?.emit("muteAll", (res: unknown) =>
                   console.log("Muted all:", res)
                 )
               }
@@ -2708,7 +2736,7 @@ function ParticipantsPanel({
             </button>
             <button
               onClick={() =>
-                socket?.emit("closeAllVideo", (res: any) =>
+                socket?.emit("closeAllVideo", (res: unknown) =>
                   console.log("Stopped all video:", res)
                 )
               }
@@ -2801,9 +2829,9 @@ function ParticipantsPanel({
                     <Monitor className="w-3 h-3 text-green-500" />
                     {isAdmin && !isMe && p.screenShareProducerId && (
                       <button
-                        onClick={() =>
-                          handleCloseProducer(p.screenShareProducerId!)
-                        }
+                        onClick={() => {
+                          if (p.screenShareProducerId) handleCloseProducer(p.screenShareProducerId);
+                        }}
                         className="text-red-500 hover:text-red-400"
                       >
                         <X className="w-3 h-3" />
@@ -2816,7 +2844,9 @@ function ParticipantsPanel({
                   <VideoOff className="w-3 h-3 text-red-500" />
                 ) : isAdmin && !isMe && p.videoProducerId ? (
                   <button
-                    onClick={() => handleCloseProducer(p.videoProducerId!)}
+                    onClick={() => {
+                      if (p.videoProducerId) handleCloseProducer(p.videoProducerId);
+                    }}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
                     title="Force stop user's video"
                   >
@@ -2831,7 +2861,9 @@ function ParticipantsPanel({
                   <MicOff className="w-3 h-3 text-red-500" />
                 ) : isAdmin && !isMe && p.audioProducerId ? (
                   <button
-                    onClick={() => handleCloseProducer(p.audioProducerId!)}
+                    onClick={() => {
+                      if (p.audioProducerId) handleCloseProducer(p.audioProducerId);
+                    }}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
                     title="Force stop user's audio"
                   >
