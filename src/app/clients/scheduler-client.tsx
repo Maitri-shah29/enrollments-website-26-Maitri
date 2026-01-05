@@ -1,5 +1,12 @@
 "use client";
-import type { Domain, Meet, Meet_User, RoundUser, Slot } from "@prisma/client";
+import type {
+  Domain,
+  Meet,
+  Meet_User,
+  Round,
+  RoundUser,
+  Slot,
+} from "@prisma/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { bookSlot } from "@/app/actions/book-slot";
 import fetchInterviewRounds from "@/app/actions/fetch-slots";
@@ -14,6 +21,7 @@ type RoundWithRelations = {
   number: number;
   Meet: (Meet & { Slot: Slot[] }) | null;
   RoundUser: (RoundUser & {
+    round: Pick<Round, "number">;
     Meet_User:
       | (Meet_User & {
           slot: Slot & {
@@ -27,6 +35,11 @@ type RoundWithRelations = {
 type SchedulerClientProps = {
   initialRounds: RoundWithRelations[];
   initialSfuHealth: boolean;
+};
+
+type DomainOption = {
+  name: string;
+  roundNumber?: number;
 };
 
 const SchedulerClient = ({
@@ -63,21 +76,27 @@ const SchedulerClient = ({
     return allRounds.filter((r) => r.RoundUser && r.RoundUser.length > 0);
   }, [allRounds]);
 
-  const availableDomains = useMemo(() => {
+  const availableDomains = useMemo<DomainOption[]>(() => {
     return participatingRounds.map((r) => {
-      if (r.domain === "cc") return "Competitive Coding";
-      return r.domain.charAt(0).toUpperCase() + r.domain.slice(1);
+      const name =
+        r.domain === "cc"
+          ? "Competitive Coding"
+          : r.domain.charAt(0).toUpperCase() + r.domain.slice(1);
+
+      const roundNumber = r.RoundUser?.[0]?.round?.number ?? r.number;
+
+      return { name, roundNumber };
     });
   }, [participatingRounds]);
 
   useEffect(() => {
     if (availableDomains.length > 0 && !selectedDomain) {
-      setSelectedDomain(availableDomains[0]);
+      setSelectedDomain(availableDomains[0].name);
     } else if (
       availableDomains.length > 0 &&
-      !availableDomains.includes(selectedDomain)
+      !availableDomains.some((domain) => domain.name === selectedDomain)
     ) {
-      setSelectedDomain(availableDomains[0]);
+      setSelectedDomain(availableDomains[0].name);
     }
   }, [availableDomains, selectedDomain]);
 

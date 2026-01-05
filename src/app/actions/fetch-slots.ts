@@ -93,6 +93,11 @@ export default async function fetchInterviewRounds() {
             },
           },
           include: {
+            round: {
+              select: {
+                number: true,
+              },
+            },
             Meet_User: {
               include: {
                 slot: {
