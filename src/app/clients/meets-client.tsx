@@ -40,6 +40,14 @@ import type {
   RoomInfo,
   RedirectData,
 } from "../../lib/sfu-types";
+import VideoSettings from "./components/meets/video-settings";
+import { Roboto } from "next/font/google";
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-roboto",
+});
 
 // ============================================
 // Configuration
@@ -346,6 +354,12 @@ export default function MeetsClient({
     hasVideoPermission: false,
   });
   const [videoQuality, setVideoQuality] = useState<VideoQuality>("standard");
+  const [isMirrorCamera, setIsMirrorCamera] = useState(true);
+  const [isVideoSettingsOpen, setIsVideoSettingsOpen] = useState(false);
+  const [selectedAudioInputDeviceId, setSelectedAudioInputDeviceId] =
+    useState<string>();
+  const [selectedAudioOutputDeviceId, setSelectedAudioOutputDeviceId] =
+    useState<string>();
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -852,12 +866,19 @@ export default function MeetsClient({
   const requestMediaPermissions =
     useCallback(async (): Promise<MediaStream | null> => {
       try {
+        const videoConstraints =
+          videoQuality === "low"
+            ? { ...LOW_QUALITY_CONSTRAINTS }
+            : { ...STANDARD_QUALITY_CONSTRAINTS };
+
+        const audioConstraints: boolean | MediaTrackConstraints =
+          selectedAudioInputDeviceId
+            ? { deviceId: { exact: selectedAudioInputDeviceId } }
+            : true;
+
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video:
-            videoQuality === "low"
-              ? LOW_QUALITY_CONSTRAINTS
-              : STANDARD_QUALITY_CONSTRAINTS,
+          audio: audioConstraints,
+          video: videoConstraints,
         });
 
         setMediaState({
@@ -888,8 +909,13 @@ export default function MeetsClient({
           meetErr.code === "MEDIA_ERROR"
         ) {
           try {
+            const audioOnlyConstraints: boolean | MediaTrackConstraints =
+              selectedAudioInputDeviceId
+                ? { deviceId: { exact: selectedAudioInputDeviceId } }
+                : true;
+
             const audioStream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
+              audio: audioOnlyConstraints,
             });
             setMediaState({
               hasAudioPermission: true,
@@ -904,7 +930,95 @@ export default function MeetsClient({
         }
         return null;
       }
-    }, []);
+    }, [videoQuality, selectedAudioInputDeviceId]);
+
+  // Device Change Handlers
+
+  const handleAudioInputDeviceChange = useCallback(
+    async (deviceId: string) => {
+      setSelectedAudioInputDeviceId(deviceId);
+
+      // Switch microphone
+      if (connectionState === "joined") {
+        try {
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            audio: { deviceId: { exact: deviceId } },
+          });
+
+          const newAudioTrack = newStream.getAudioTracks()[0];
+          if (newAudioTrack) {
+            newAudioTrack.enabled = !isMuted;
+            const oldAudioTrack = localStream?.getAudioTracks()[0];
+
+            // Replace track in producer FIRST (before modifying local stream)
+            if (audioProducerRef.current) {
+              await audioProducerRef.current.replaceTrack({
+                track: newAudioTrack,
+              });
+            }
+
+            setLocalStream((prev) => {
+              if (prev) {
+                // Remove old audio track from stream (don't stop it yet)
+                if (oldAudioTrack) {
+                  prev.removeTrack(oldAudioTrack);
+                }
+                // Add new audio track
+                prev.addTrack(newAudioTrack);
+                // Now stop the old track after it's been replaced
+                if (oldAudioTrack) {
+                  oldAudioTrack.stop();
+                }
+                // Return new MediaStream to trigger re-render
+                return new MediaStream(prev.getTracks());
+              }
+              return newStream;
+            });
+          }
+        } catch (err) {
+          console.error("[Meets] Failed to switch audio input device:", err);
+        }
+      }
+    },
+    [connectionState, isMuted, localStream]
+  );
+
+  const handleAudioOutputDeviceChange = useCallback(
+    async (deviceId: string) => {
+      setSelectedAudioOutputDeviceId(deviceId);
+
+      // Update audio output for all audio elements (remote participants use <audio> elements)
+      const audioElements = document.querySelectorAll("audio");
+      for (const audio of audioElements) {
+        const audioElement = audio as HTMLAudioElement & {
+          setSinkId?: (sinkId: string) => Promise<void>;
+        };
+        if (audioElement.setSinkId) {
+          try {
+            await audioElement.setSinkId(deviceId);
+          } catch (err) {
+            console.error("[Meets] Failed to set audio output device:", err);
+          }
+        }
+      }
+
+      // Also update any video elements that might have audio
+      const videoElements = document.querySelectorAll("video");
+      for (const video of videoElements) {
+        const videoElement = video as HTMLVideoElement & {
+          setSinkId?: (sinkId: string) => Promise<void>;
+        };
+        if (videoElement.setSinkId) {
+          try {
+            await videoElement.setSinkId(deviceId);
+          } catch (err) {
+            // Video elements may not have audio, so don't log errors
+          }
+        }
+      }
+    },
+    []
+  );
 
   // ============================================
   // Room Join Flow
@@ -1673,7 +1787,7 @@ export default function MeetsClient({
 
   if (connectionState === "waiting") {
     return (
-      <div className="flex flex-col h-full w-full bg-black items-center justify-center text-white">
+      <div className="flex flex-col h-full w-full bg-[#252525] items-center justify-center text-white">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
         <h2 className="text-2xl font-bold mb-2">Waiting for host...</h2>
         <p className="text-white/60">Using room ID: {roomId}</p>
@@ -1682,26 +1796,61 @@ export default function MeetsClient({
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-black text-white font-[family-name:var(--font-geist-mono)]">
+    <div
+      className={`flex flex-col h-full w-full bg-[#1a1a1a] text-white ${roboto.className}`}
+      style={{ fontFamily: "'Roboto', sans-serif" }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-black border-b border-white/10">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight">ACM c0nclav3</h1>
+      <div className="flex items-center justify-between p-4 bg-[#151515] border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <h1
+            className="text-xl font-bold tracking-[0.5px]"
+            style={{ fontWeight: 700 }}
+          >
+            ACM c0nclav3
+          </h1>
           {isJoined && (
-            <div className="bg-white/5 px-3 py-1 rounded-md text-sm text-white/80 border border-white/10 hidden sm:block">
-              <span className="text-white/40 mr-2">Room:</span>
-              <span className="font-mono font-bold">{roomId}</span>
+            <div className="flex items-stretch gap-2 ml-2 hidden sm:flex h-8">
+              <div
+                className="flex items-center bg-white/5 px-3 rounded-md text-sm text-white/80 border border-white/10"
+                style={{ fontWeight: 500 }}
+              >
+                <span className="text-white/40 mr-2">Room:</span>
+                <span
+                  className="font-bold tabular-nums"
+                  style={{ fontWeight: 700 }}
+                >
+                  {roomId}
+                </span>
+              </div>
+              <VideoSettings
+                isMirrorCamera={isMirrorCamera}
+                isOpen={isVideoSettingsOpen}
+                onToggleOpen={() => setIsVideoSettingsOpen((prev) => !prev)}
+                onToggleMirror={() => setIsMirrorCamera((prev) => !prev)}
+                isCameraOff={isCameraOff}
+                selectedAudioInputDeviceId={selectedAudioInputDeviceId}
+                selectedAudioOutputDeviceId={selectedAudioOutputDeviceId}
+                onAudioInputDeviceChange={handleAudioInputDeviceChange}
+                onAudioOutputDeviceChange={handleAudioOutputDeviceChange}
+              />
             </div>
           )}
         </div>
         <div className="flex items-center gap-3">
           {isScreenSharing && (
-            <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse">
-              SCREEN IS BEING SHARED
+            <span
+              className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs px-2 py-0.5 rounded-full animate-pulse tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
+            >
+              Screen is being shared
             </span>
           )}
           {connectionState === "reconnecting" && (
-            <span className="bg-yellow-600 text-xs px-2 py-1 rounded flex items-center gap-1">
+            <span
+              className="bg-yellow-600 text-xs px-2 py-1 rounded flex items-center gap-1 tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
+            >
               <RefreshCw className="w-3 h-3 animate-spin" />
               Reconnecting...
             </span>
@@ -1749,6 +1898,8 @@ export default function MeetsClient({
             isCameraOff={isCameraOff}
             participants={participants}
             userEmail={userEmail}
+            isMirrorCamera={isMirrorCamera}
+            audioOutputDeviceId={selectedAudioOutputDeviceId}
           />
         ) : (
           /* Grid Layout */
@@ -1758,6 +1909,8 @@ export default function MeetsClient({
             isMuted={isMuted}
             participants={participants}
             userEmail={userEmail}
+            isMirrorCamera={isMirrorCamera}
+            audioOutputDeviceId={selectedAudioOutputDeviceId}
           />
         )}
 
@@ -1839,7 +1992,7 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
   return (
     <div className="flex items-center gap-2">
       <span className={`w-1.5 h-1.5 rounded-full ${colors[state]}`} />
-      <span className="text-xs text-neutral-500 uppercase tracking-wider">
+      <span className="text-xs text-neutral-500 tracking-wider">
         {labels[state]}
       </span>
     </div>
@@ -1868,8 +2021,15 @@ function JoinScreen({
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
       <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold mb-2">Join a Meeting</h2>
-        <p className="text-gray-400">Logged in as: {userEmail}</p>
+        <h2
+          className="text-2xl font-bold mb-2 tracking-[0.5px]"
+          style={{ fontWeight: 700 }}
+        >
+          Join a meeting
+        </h2>
+        <p className="text-gray-400" style={{ fontWeight: 500 }}>
+          Logged in as: {userEmail}
+        </p>
       </div>
 
       <input
@@ -1878,13 +2038,14 @@ function JoinScreen({
         onChange={(e) => onRoomIdChange(e.target.value)}
         placeholder="Enter Room ID"
         disabled={isLoading || !isAdmin}
-        className="px-4 py-2 bg-[#111] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+        className="px-4 py-2 bg-[#252525] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
       />
 
       <button
         onClick={onJoin}
         disabled={isLoading || !roomId.trim()}
-        className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md font-medium transition-colors flex items-center gap-2 text-sm"
+        className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md transition-colors flex items-center gap-2 text-sm tracking-[0.5px]"
+        style={{ fontWeight: 500 }}
       >
         {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
         {connectionState === "reconnecting"
@@ -1904,6 +2065,8 @@ interface PresentationLayoutProps {
   isCameraOff: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
+  isMirrorCamera: boolean;
+  audioOutputDeviceId?: string;
 }
 
 function PresentationLayout({
@@ -1913,6 +2076,8 @@ function PresentationLayout({
   isCameraOff,
   participants,
   userEmail,
+  isMirrorCamera,
+  audioOutputDeviceId,
 }: PresentationLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -1932,7 +2097,7 @@ function PresentationLayout({
   return (
     <div className="flex flex-1 gap-4 overflow-hidden">
       {/* Main Presentation Area */}
-      <div className="flex-1 bg-[#111] border border-white/10 rounded-lg overflow-hidden relative flex items-center justify-center">
+      <div className="flex-1 bg-[#252525] border border-white/5 rounded-lg overflow-hidden relative flex items-center justify-center">
         <video
           ref={(el) => {
             if (el && presentationStream) el.srcObject = presentationStream;
@@ -1941,7 +2106,10 @@ function PresentationLayout({
           playsInline
           className="max-w-full max-h-full"
         />
-        <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-sm">
+        <div
+          className="absolute top-2 left-2 bg-black/40 px-2 py-1 rounded text-white text-sm tracking-[0.5px]"
+          style={{ fontWeight: 500 }}
+        >
           {presenterName} is presenting
         </div>
       </div>
@@ -1949,7 +2117,7 @@ function PresentationLayout({
       {/* Sidebar Participants - scrollable with fixed-height tiles */}
       <div className="w-64 flex flex-col gap-3 overflow-y-auto pr-1">
         {/* Local User */}
-        <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden h-36 shrink-0">
+        <div className="relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden h-36 shrink-0">
           <video
             ref={localVideoRef}
             autoPlay
@@ -1957,16 +2125,19 @@ function PresentationLayout({
             playsInline
             className={`w-full h-full object-cover ${
               isCameraOff ? "hidden" : ""
-            }`}
+            } ${isMirrorCamera ? "scale-x-[-1]" : ""}`}
           />
           {isCameraOff && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
-              <div className="w-10 h-10 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
+              <div className="w-10 h-10 rounded-full bg-[#333] border border-white/10 flex items-center justify-center text-lg">
                 {userEmail[0]?.toUpperCase() || "?"}
               </div>
             </div>
           )}
-          <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/80 border border-white/10 rounded text-xs">
+          <div
+            className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/60 border border-white/5 rounded text-xs"
+            style={{ fontWeight: 500 }}
+          >
             You
           </div>
         </div>
@@ -1977,6 +2148,7 @@ function PresentationLayout({
             key={participant.userId}
             participant={participant}
             compact
+            audioOutputDeviceId={audioOutputDeviceId}
           />
         ))}
       </div>
@@ -1990,6 +2162,8 @@ interface GridLayoutProps {
   isMuted: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
+  isMirrorCamera: boolean;
+  audioOutputDeviceId?: string;
 }
 
 function GridLayout({
@@ -1998,6 +2172,8 @@ function GridLayout({
   isMuted,
   participants,
   userEmail,
+  isMirrorCamera,
+  audioOutputDeviceId,
 }: GridLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -2017,7 +2193,7 @@ function GridLayout({
   return (
     <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-auto">
       {/* Local Video */}
-      <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden aspect-video">
+      <div className="relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden aspect-video">
         <video
           ref={localVideoRef}
           autoPlay
@@ -2025,23 +2201,30 @@ function GridLayout({
           playsInline
           className={`w-full h-full object-cover ${
             isCameraOff ? "hidden" : ""
-          }`}
+          } ${isMirrorCamera ? "scale-x-[-1]" : ""}`}
         />
         {isCameraOff && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
-            <div className="w-16 h-16 rounded-full bg-[#222] border border-white/10 flex items-center justify-center text-xl">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
+            <div className="w-16 h-16 rounded-full bg-[#333] border border-white/10 flex items-center justify-center text-xl">
               {userEmail[0]?.toUpperCase() || "?"}
             </div>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/80 border border-white/10 rounded text-sm flex items-center gap-2">
+        <div
+          className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 border border-white/5 rounded text-sm flex items-center gap-2"
+          style={{ fontWeight: 500 }}
+        >
           You {isMuted && <MicOff className="w-3 h-3 text-red-500" />}
         </div>
       </div>
 
       {/* Remote Participants */}
       {Array.from(participants.values()).map((participant) => (
-        <ParticipantVideo key={participant.userId} participant={participant} />
+        <ParticipantVideo
+          key={participant.userId}
+          participant={participant}
+          audioOutputDeviceId={audioOutputDeviceId}
+        />
       ))}
     </div>
   );
@@ -2083,14 +2266,14 @@ function ControlsBar({
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
 
   return (
-    <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-white/10 shrink-0">
+    <div className="flex justify-center gap-2 mt-4 shrink-0">
       {isAdmin && (
         <button
           onClick={onToggleParticipants}
-          className={`p-3 rounded-full transition-all border ${
+          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
             isParticipantsOpen
-              ? "bg-white text-black border-white"
-              : "bg-transparent text-white border-white/10 hover:bg-white/10"
+              ? "bg-white text-black hover:bg-neutral-200"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
           }`}
           title="Participants"
         >
@@ -2100,10 +2283,10 @@ function ControlsBar({
 
       <button
         onClick={onToggleMute}
-        className={`p-3 rounded-full transition-all border ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isMuted
-            ? "bg-red-500 text-white border-red-600"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={isMuted ? "Unmute" : "Mute"}
       >
@@ -2112,10 +2295,10 @@ function ControlsBar({
 
       <button
         onClick={onToggleCamera}
-        className={`p-3 rounded-full transition-all border ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isCameraOff
-            ? "bg-red-500 text-white border-red-600"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={isCameraOff ? "Turn on camera" : "Turn off camera"}
       >
@@ -2129,12 +2312,12 @@ function ControlsBar({
       <button
         onClick={onToggleScreenShare}
         disabled={!canStartScreenShare}
-        className={`p-3 rounded-full transition-all border ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isScreenSharing
-            ? "bg-white text-black border-white"
+            ? "bg-white text-black hover:bg-neutral-200"
             : !canStartScreenShare
-            ? "bg-transparent text-neutral-600 border-white/5 cursor-not-allowed"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={
           !canStartScreenShare
@@ -2149,16 +2332,19 @@ function ControlsBar({
 
       <button
         onClick={onToggleChat}
-        className={`p-3 rounded-full transition-all border relative ${
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center relative ${
           isChatOpen
-            ? "bg-white text-black border-white"
-            : "bg-transparent text-white border-white/10 hover:bg-white/10"
+            ? "bg-white text-black hover:bg-neutral-200"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title="Chat"
       >
         <MessageSquare className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center border border-black font-bold">
+          <span
+            className="absolute -top-1 -right-1 bg-white text-black text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center tabular-nums"
+            style={{ fontWeight: 500 }}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -2166,10 +2352,10 @@ function ControlsBar({
 
       <button
         onClick={onLeave}
-        className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all border border-red-500 hover:border-red-600"
+        className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all duration-200 flex items-center justify-center"
         title="Leave meeting"
       >
-        <Phone className="rotate-[135deg]" />
+        <Phone className="rotate-[135deg] w-5 h-5" />
       </button>
     </div>
   );
@@ -2215,10 +2401,15 @@ function ChatPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#111] rounded-lg shadow-2xl flex flex-col border border-white/10 z-10 font-[family-name:var(--font-geist-mono)]">
+    <div
+      className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10"
+      style={{ fontFamily: "'Roboto', sans-serif" }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-white/10">
-        <h3 className="font-bold text-sm">Chat</h3>
+      <div className="flex items-center justify-between p-3 border-b border-white/5">
+        <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
+          Chat
+        </h3>
         <button
           onClick={onClose}
           className="p-1 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white"
@@ -2245,7 +2436,7 @@ function ChatPanel({
                   className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                     isOwn
                       ? "bg-white text-black"
-                      : "bg-[#222] text-neutral-200 border border-white/10"
+                      : "bg-[#2a2a2a] text-neutral-200 border border-white/5"
                   }`}
                 >
                   {!isOwn && (
@@ -2255,7 +2446,7 @@ function ChatPanel({
                   )}
                   <p className="text-sm break-words">{msg.content}</p>
                 </div>
-                <span className="text-xs text-gray-500 mt-1">
+                <span className="text-xs text-gray-500 mt-1 tabular-nums">
                   {new Date(msg.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -2271,7 +2462,7 @@ function ChatPanel({
       {/* Input */}
       <form
         onSubmit={handleSubmit}
-        className="p-3 border-t border-white/10 bg-[#111]"
+        className="p-3 border-t border-white/5 bg-[#1f1f1f]"
       >
         <div className="flex gap-2">
           <input
@@ -2281,7 +2472,7 @@ function ChatPanel({
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             maxLength={1000}
-            className="flex-1 px-3 py-2 bg-[#222] border border-white/10 rounded-md text-sm focus:outline-none focus:border-white transition-colors placeholder:text-neutral-600"
+            className="flex-1 px-3 py-2 bg-[#2a2a2a] border border-white/5 rounded-md text-sm focus:outline-none focus:border-white/30 transition-colors placeholder:text-neutral-600"
           />
           <button
             type="submit"
@@ -2299,11 +2490,13 @@ function ChatPanel({
 interface ParticipantVideoProps {
   participant: Participant;
   compact?: boolean;
+  audioOutputDeviceId?: string;
 }
 
 function ParticipantVideo({
   participant,
   compact = false,
+  audioOutputDeviceId,
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -2332,18 +2525,44 @@ function ParticipantVideo({
             console.error("[Meets] Audio play error:", err);
           }
         });
+
+        // Set audio output device if specified
+        if (audioOutputDeviceId) {
+          const audioElement = node as HTMLAudioElement & {
+            setSinkId?: (sinkId: string) => Promise<void>;
+          };
+          if (audioElement.setSinkId) {
+            audioElement.setSinkId(audioOutputDeviceId).catch((err) => {
+              console.error("[Meets] Failed to set audio output:", err);
+            });
+          }
+        }
       }
       audioRef.current = node;
     },
-    [participant.audioStream]
+    [participant.audioStream, audioOutputDeviceId]
   );
+
+  // Update audio output when device changes
+  useEffect(() => {
+    if (audioRef.current && audioOutputDeviceId) {
+      const audioElement = audioRef.current as HTMLAudioElement & {
+        setSinkId?: (sinkId: string) => Promise<void>;
+      };
+      if (audioElement.setSinkId) {
+        audioElement.setSinkId(audioOutputDeviceId).catch((err) => {
+          console.error("[Meets] Failed to update audio output:", err);
+        });
+      }
+    }
+  }, [audioOutputDeviceId]);
 
   const displayName = getDisplayName(participant.userId);
   const showPlaceholder = !participant.videoStream || participant.isCameraOff;
 
   return (
     <div
-      className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden shrink-0 ${
+      className={`relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden shrink-0 ${
         compact ? "h-36" : "aspect-video"
       }`}
     >
@@ -2356,9 +2575,9 @@ function ParticipantVideo({
         }`}
       />
       {showPlaceholder && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
           <div
-            className={`rounded-full bg-[#222] border border-white/10 flex items-center justify-center ${
+            className={`rounded-full bg-[#333] border border-white/10 flex items-center justify-center ${
               compact ? "w-10 h-10 text-lg" : "w-16 h-16 text-2xl"
             }`}
           >
@@ -2368,11 +2587,11 @@ function ParticipantVideo({
       )}
       <audio ref={setAudioRef} autoPlay />
       <div
-        className={`absolute bottom-2 left-2 bg-black/80 border border-white/10 rounded px-2 py-0.5 flex items-center gap-2 ${
+        className={`absolute bottom-2 left-2 bg-black/60 border border-white/5 rounded px-2 py-0.5 flex items-center gap-2 ${
           compact ? "text-[10px]" : "text-xs"
         }`}
       >
-        <span className="font-medium">{displayName}</span>
+        <span style={{ fontWeight: 500 }}>{displayName}</span>
         {participant.isMuted && <MicOff className="w-3 h-3 text-red-500" />}
       </div>
     </div>
@@ -2439,12 +2658,16 @@ function ParticipantsPanel({
   };
 
   return (
-    <div className="absolute right-4 top-4 bottom-20 w-80 bg-[#111] rounded-lg shadow-2xl flex flex-col border border-white/10 z-10 font-[family-name:var(--font-geist-mono)]">
+    <div
+      className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10"
+      style={{ fontFamily: "'Roboto', sans-serif" }}
+    >
       {/* Header */}
-      <div className="flex flex-col border-b border-white/10">
+      <div className="flex flex-col border-b border-white/5">
         <div className="flex items-center justify-between p-3">
-          <h3 className="font-bold text-sm">
-            Participants ({participantsList.length})
+          <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
+            Participants (
+            <span className="tabular-nums">{participantsList.length}</span>)
           </h3>
           <button
             onClick={onClose}
@@ -2461,7 +2684,8 @@ function ParticipantsPanel({
                   console.log("Muted all:", res)
                 )
               }
-              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
+              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
             >
               <MicOff className="w-3 h-3" />
               Mute All
@@ -2472,7 +2696,8 @@ function ParticipantsPanel({
                   console.log("Stopped all video:", res)
                 )
               }
-              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20"
+              className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
+              style={{ fontWeight: 500 }}
             >
               <VideoOff className="w-3 h-3" />
               Stop Video
@@ -2543,10 +2768,13 @@ function ParticipantsPanel({
               }`}
             >
               <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs border border-white/10 shrink-0">
+                <div
+                  className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs border border-white/10 shrink-0"
+                  style={{ fontWeight: 500 }}
+                >
                   {displayName[0]?.toUpperCase() || "?"}
                 </div>
-                <span className="text-sm truncate">
+                <span className="text-sm truncate" style={{ fontWeight: 500 }}>
                   {displayName} {isMe && "(You)"}
                 </span>
               </div>
@@ -2570,33 +2798,32 @@ function ParticipantsPanel({
 
                 {p.isCameraOff ? (
                   <VideoOff className="w-3 h-3 text-red-500" />
-                ) : (
-                  <div className="flex items-center gap-1">
+                ) : isAdmin && !isMe && p.videoProducerId ? (
+                  <button
+                    onClick={() => handleCloseProducer(p.videoProducerId!)}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
+                    title="Force stop user's video"
+                  >
                     <Video className="w-3 h-3 text-green-500" />
-                    {isAdmin && !isMe && p.videoProducerId && (
-                      <button
-                        onClick={() => handleCloseProducer(p.videoProducerId!)}
-                        className="text-red-500 hover:text-red-400"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
+                    <X className="w-3 h-3" />
+                  </button>
+                ) : (
+                  <Video className="w-3 h-3 text-green-500" />
                 )}
+
                 {p.isMuted ? (
                   <MicOff className="w-3 h-3 text-red-500" />
-                ) : (
-                  <div className="flex items-center gap-1">
+                ) : isAdmin && !isMe && p.audioProducerId ? (
+                  <button
+                    onClick={() => handleCloseProducer(p.audioProducerId!)}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
+                    title="Force stop user's audio"
+                  >
                     <Mic className="w-3 h-3 text-green-500" />
-                    {isAdmin && !isMe && p.audioProducerId && (
-                      <button
-                        onClick={() => handleCloseProducer(p.audioProducerId!)}
-                        className="text-red-500 hover:text-red-400"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
+                    <X className="w-3 h-3" />
+                  </button>
+                ) : (
+                  <Mic className="w-3 h-3 text-green-500" />
                 )}
               </div>
 
@@ -2629,7 +2856,12 @@ function ParticipantsPanel({
       {showRedirectModal && (
         <div className="absolute inset-0 bg-black/95 z-20 flex flex-col p-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-            <h4 className="font-bold text-sm">Select Room</h4>
+            <h4
+              className="text-sm tracking-[0.5px]"
+              style={{ fontWeight: 700 }}
+            >
+              Select Room
+            </h4>
             <button
               onClick={() => setShowRedirectModal(false)}
               className="text-neutral-400 hover:text-white"
@@ -2649,11 +2881,15 @@ function ParticipantsPanel({
                   key={room.id}
                   onClick={() => handleRedirect(room.id)}
                   className="w-full text-left p-3 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex justify-between items-center"
+                  style={{ fontWeight: 500 }}
                 >
-                  <span className="font-medium text-sm truncate">
+                  <span
+                    className="text-sm truncate"
+                    style={{ fontWeight: 500 }}
+                  >
                     {room.id}
                   </span>
-                  <span className="text-xs text-neutral-400 flex items-center gap-1">
+                  <span className="text-xs text-neutral-400 flex items-center gap-1 tabular-nums">
                     <Users className="w-3 h-3" />
                     {room.userCount}
                   </span>
