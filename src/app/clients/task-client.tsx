@@ -20,6 +20,37 @@ type TaskClientProps = {
   initialRoundUsers: RoundUserWithRelations[];
 };
 
+const LinkifiedText = ({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) => {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+
+  return (
+    <p className={className}>
+      {parts.map((part, i) => {
+        if (part.match(/^(https?:\/\/[^\s]+)$/)) {
+          return (
+            <a
+              key={i}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline break-all"
+            >
+              {part}
+            </a>
+          );
+        }
+        return part;
+      })}
+    </p>
+  );
+};
+
 const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [allRoundUsers, setAllRoundUsers] =
