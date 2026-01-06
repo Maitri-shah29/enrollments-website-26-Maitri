@@ -150,12 +150,17 @@ export interface ChatMessageNotification extends ChatMessage {}
 // ============================================
 
 export interface SendReactionData {
-  emoji: string;
+  emoji?: string;
+  kind?: "emoji" | "asset";
+  value?: string;
+  label?: string;
 }
 
 export interface ReactionNotification {
   userId: string;
-  emoji: string;
+  kind: "emoji" | "asset";
+  value: string;
+  label?: string;
   timestamp: number;
 }
 
