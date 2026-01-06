@@ -70,21 +70,9 @@ export const config = {
       {
         // ip: "0.0.0.0",
         ip: "0.0.0.0",
-        announcedIp: "172.16.22.196", //replace with your public IP
+        announcedIp: process.env.ANNOUNCED_IP || "172.16.22.196",
       },
     ],
-    //for deployment
-    //this is not the actual deployment link dumbo
-    // webRtcTransport: {
-    //   listenIps: [
-    //     {
-    //       ip: "0.0.0.0", //anywhere
-    //       //announcedIp: 'sixseven.centralindia.cloudapp.azure.com',
-    //       //// replace by public IP address
-    //       announcedIp: "20.193.250.676",
-    //     },
-    //   ],
-    // Lower bitrate to prioritize low latency and audio stability
     // 1.5 Mbps is sufficient for decent video but prevents network congestion
     maxIncomingBitrate: 1500000, //need to think about these
     initialAvailableOutgoingBitrate: 1000000,
