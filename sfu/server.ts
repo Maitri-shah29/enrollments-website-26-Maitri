@@ -315,12 +315,13 @@ io.on("connection", (socket: Socket) => {
         socket.join(roomId);
 
         if (currentClient instanceof Admin) {
-          for (const pending of currentRoom.pendingClients.values()) {
-            socket.emit("userRequestedJoin", {
-              userId: pending.userKey,
-              displayName: pending.displayName || pending.userKey,
-            });
-          }
+          const pendingUsers = Array.from(
+            currentRoom.pendingClients.values(),
+          ).map((pending) => ({
+            userId: pending.userKey,
+            displayName: pending.displayName || pending.userKey,
+          }));
+          socket.emit("pendingUsersSnapshot", { users: pendingUsers });
         }
 
         // Notify others

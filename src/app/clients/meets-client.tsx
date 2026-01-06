@@ -806,6 +806,23 @@ export default function MeetsClient({
             }
           );
 
+          socket.on(
+            "pendingUsersSnapshot",
+            ({
+              users,
+            }: {
+              users: { userId: string; displayName?: string }[];
+            }) => {
+              const snapshot = new Map(
+                (users || []).map(({ userId, displayName }) => [
+                  userId,
+                  displayName || userId,
+                ])
+              );
+              setPendingUsers(snapshot);
+            }
+          );
+
           socket.on("userAdmitted", ({ userId }: { userId: string }) => {
             setPendingUsers((prev) => {
               const newMap = new Map(prev);
