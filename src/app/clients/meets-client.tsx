@@ -40,6 +40,7 @@ import {
 import { io, type Socket } from "socket.io-client";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
 import type { GetRoomsResponse, RoomInfo } from "../../lib/sfu-types";
+import { getSfuRooms } from "../actions/sfu-rooms";
 import { getSfuToken } from "../actions/sfu-token";
 import { useSessionContext } from "../components/session-provider";
 import SignupPage from "../components/sign-up";
@@ -60,6 +61,9 @@ const SFU_URL = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 const RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_ATTEMPTS = 8;
 const SOCKET_TIMEOUT_MS = 10000;
+const SPEAKER_CHECK_INTERVAL_MS = 250;
+const SPEAKER_THRESHOLD = 0.03;
+const ACTIVE_SPEAKER_HOLD_MS = 900;
 
 // ============================================
 // Types & Interfaces
@@ -100,6 +104,13 @@ interface Participant {
   isMuted: boolean;
   isCameraOff: boolean;
   isLeaving?: boolean;
+}
+
+interface AudioAnalyserEntry {
+  analyser: AnalyserNode;
+  data: Uint8Array<ArrayBuffer>;
+  source: MediaStreamAudioSourceNode;
+  streamId: string;
 }
 
 /** Producer info from server */
@@ -330,9 +341,29 @@ function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
+/** Format a readable display name from user identifiers or emails */
+function formatDisplayName(raw: string): string {
+  const base = raw.split("#")[0] || raw;
+  const handle = base.split("@")[0] || base;
+  const tokens = handle.split(/[^A-Za-z0-9]+/).filter(Boolean);
+  const words = tokens
+    .map((token) => token.match(/^[A-Za-z]+/)?.[0] || "")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() + word.slice(1).toLowerCase());
+
+  return words.length > 0 ? words.join(" ") : handle || raw;
+}
+
 /** Extract display name from user ID (email#sessionId format) */
 function getDisplayName(userId: string): string {
-  return userId.split("#")[0]?.split("@")[0] || userId;
+  return formatDisplayName(userId);
+}
+
+function getSpeakerHighlightClasses(isActive: boolean): string {
+  return isActive
+    ? "border-emerald-300/90 ring-4 ring-emerald-400/45 shadow-[0_0_26px_rgba(16,185,129,0.28)]"
+    : "";
 }
 
 // ============================================
@@ -364,6 +395,7 @@ export default function MeetsClient({
     new Map()
   );
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
   const [_mediaState, setMediaState] = useState<MediaState>({
     hasAudioPermission: false,
@@ -405,6 +437,7 @@ export default function MeetsClient({
   const screenProducerRef = useRef<Producer | null>(null);
   const consumersRef = useRef<Map<string, Consumer>>(new Map());
   const producerMapRef = useRef<Map<string, ProducerMapEntry>>(new Map());
+  const pendingProducersRef = useRef<Map<string, ProducerInfo>>(new Map());
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -415,6 +448,9 @@ export default function MeetsClient({
     async () => {}
   );
   const handleReconnectRef = useRef<() => void>(async () => {});
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioAnalyserMapRef = useRef<Map<string, AudioAnalyserEntry>>(new Map());
+  const lastActiveSpeakerRef = useRef<{ id: string; ts: number } | null>(null);
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
 
@@ -465,6 +501,7 @@ export default function MeetsClient({
       });
       consumersRef.current.clear();
       producerMapRef.current.clear();
+      pendingProducersRef.current.clear();
 
       // Close producers
       try {
@@ -878,6 +915,7 @@ export default function MeetsClient({
   }, [handleReconnect]);
 
   const handleProducerClosed = useCallback((producerId: string) => {
+    pendingProducersRef.current.delete(producerId);
     const consumer = consumersRef.current.get(producerId);
     if (consumer) {
       try {
@@ -1256,14 +1294,16 @@ export default function MeetsClient({
 
   const consumeProducer = useCallback(
     async (producerInfo: ProducerInfo): Promise<void> => {
+      if (consumersRef.current.has(producerInfo.producerId)) {
+        return;
+      }
+
       const socket = socketRef.current;
       const device = deviceRef.current;
       const transport = consumerTransportRef.current;
 
       if (!socket || !device || !transport) {
-        console.warn(
-          "[Meets] Cannot consume: missing socket, device, or transport"
-        );
+        pendingProducersRef.current.set(producerInfo.producerId, producerInfo);
         return;
       }
 
@@ -1345,6 +1385,15 @@ export default function MeetsClient({
     []
   );
 
+  const flushPendingProducers = useCallback(async () => {
+    if (!pendingProducersRef.current.size) return;
+    const pending = Array.from(pendingProducersRef.current.values());
+    pendingProducersRef.current.clear();
+    for (const producerInfo of pending) {
+      await consumeProducer(producerInfo);
+    }
+  }, [consumeProducer]);
+
   // ============================================
   // Room Join Flow
   // ============================================
@@ -1398,6 +1447,7 @@ export default function MeetsClient({
               for (const producer of response.existingProducers) {
                 await consumeProducer(producer);
               }
+              await flushPendingProducers();
 
               setConnectionState("joined");
               resolve();
@@ -1414,6 +1464,7 @@ export default function MeetsClient({
       createProducerTransport,
       createConsumerTransport,
       consumeProducer,
+      flushPendingProducers,
     ]
   );
 
@@ -1488,13 +1539,7 @@ export default function MeetsClient({
     setRoomsStatus("loading");
 
     try {
-      const response = await fetch("/api/sfu/rooms", { cache: "no-store" });
-      if (!response.ok) {
-        setRoomsStatus("error");
-        setAvailableRooms([]);
-        return;
-      }
-      const data = await response.json();
+      const data = await getSfuRooms();
       setAvailableRooms(Array.isArray(data.rooms) ? data.rooms : []);
       setRoomsStatus("idle");
     } catch (_error) {
@@ -1768,6 +1813,148 @@ export default function MeetsClient({
   useEffect(() => {
     localStreamRef.current = localStream;
   }, [localStream]);
+
+  useEffect(() => {
+    const sources = new Map<string, MediaStream>();
+    const localAudioTrack = localStream?.getAudioTracks()[0];
+
+    if (
+      localStream &&
+      localAudioTrack &&
+      localAudioTrack.enabled &&
+      localAudioTrack.readyState === "live" &&
+      !isMuted
+    ) {
+      sources.set(userId, localStream);
+    }
+
+    for (const participant of participants.values()) {
+      if (!participant.audioStream || participant.isMuted) continue;
+      const track = participant.audioStream.getAudioTracks()[0];
+      if (!track || !track.enabled || track.readyState !== "live") continue;
+      sources.set(participant.userId, participant.audioStream);
+    }
+
+    const analyserMap = audioAnalyserMapRef.current;
+
+    for (const [id, entry] of analyserMap) {
+      if (!sources.has(id)) {
+        entry.source.disconnect();
+        entry.analyser.disconnect();
+        analyserMap.delete(id);
+      }
+    }
+
+    if (!sources.size) {
+      analyserMap.forEach((entry) => {
+        entry.source.disconnect();
+        entry.analyser.disconnect();
+      });
+      analyserMap.clear();
+      lastActiveSpeakerRef.current = null;
+      setActiveSpeakerId((prev) => (prev ? null : prev));
+      return;
+    }
+
+    const AudioContextConstructor =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (!AudioContextConstructor) {
+      return;
+    }
+
+    const audioContext =
+      audioContextRef.current || new AudioContextConstructor();
+    audioContextRef.current = audioContext;
+
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+
+    for (const [id, stream] of sources) {
+      const streamId = stream.id;
+      const existing = analyserMap.get(id);
+      if (existing && existing.streamId === streamId) {
+        continue;
+      }
+
+      if (existing) {
+        existing.source.disconnect();
+        existing.analyser.disconnect();
+        analyserMap.delete(id);
+      }
+
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.7;
+      source.connect(analyser);
+
+      const data = new Uint8Array(analyser.fftSize);
+      analyserMap.set(id, { analyser, data, source, streamId });
+    }
+
+    const interval = window.setInterval(() => {
+      let loudestId: string | null = null;
+      let maxLevel = SPEAKER_THRESHOLD;
+
+      for (const [id, entry] of analyserMap) {
+        entry.analyser.getByteTimeDomainData(entry.data);
+        let sumSquares = 0;
+        for (let i = 0; i < entry.data.length; i += 1) {
+          const normalized = (entry.data[i] - 128) / 128;
+          sumSquares += normalized * normalized;
+        }
+        const rms = Math.sqrt(sumSquares / entry.data.length);
+        if (rms > maxLevel) {
+          maxLevel = rms;
+          loudestId = id;
+        }
+      }
+
+      const now = Date.now();
+
+      if (loudestId) {
+        lastActiveSpeakerRef.current = { id: loudestId, ts: now };
+        setActiveSpeakerId((prev) => (prev === loudestId ? prev : loudestId));
+        return;
+      }
+
+      if (
+        lastActiveSpeakerRef.current &&
+        now - lastActiveSpeakerRef.current.ts < ACTIVE_SPEAKER_HOLD_MS
+      ) {
+        const lingeringId = lastActiveSpeakerRef.current.id;
+        setActiveSpeakerId((prev) =>
+          prev === lingeringId ? prev : lingeringId
+        );
+        return;
+      }
+
+      if (lastActiveSpeakerRef.current) {
+        lastActiveSpeakerRef.current = null;
+      }
+      setActiveSpeakerId((prev) => (prev ? null : prev));
+    }, SPEAKER_CHECK_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [participants, localStream, isMuted, userId]);
+
+  useEffect(() => {
+    return () => {
+      audioAnalyserMapRef.current.forEach((entry) => {
+        entry.source.disconnect();
+        entry.analyser.disconnect();
+      });
+      audioAnalyserMapRef.current.clear();
+      audioContextRef.current?.close().catch(() => {});
+      audioContextRef.current = null;
+    };
+  }, []);
 
   const toggleScreenShare = useCallback(async () => {
     if (isScreenSharing) {
@@ -2057,6 +2244,8 @@ export default function MeetsClient({
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
+            activeSpeakerId={activeSpeakerId}
+            currentUserId={userId}
             audioOutputDeviceId={selectedAudioOutputDeviceId}
           />
         ) : (
@@ -2068,6 +2257,8 @@ export default function MeetsClient({
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
+            activeSpeakerId={activeSpeakerId}
+            currentUserId={userId}
             audioOutputDeviceId={selectedAudioOutputDeviceId}
           />
         )}
@@ -2299,6 +2490,8 @@ interface PresentationLayoutProps {
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
+  activeSpeakerId: string | null;
+  currentUserId: string;
   audioOutputDeviceId?: string;
 }
 
@@ -2310,9 +2503,12 @@ function PresentationLayout({
   participants,
   userEmail,
   isMirrorCamera,
+  activeSpeakerId,
+  currentUserId,
   audioOutputDeviceId,
 }: PresentationLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const isLocalActiveSpeaker = activeSpeakerId === currentUserId;
 
   // Sync localStream to video element when stream changes
   useEffect(() => {
@@ -2350,7 +2546,11 @@ function PresentationLayout({
       {/* Sidebar Participants - scrollable with fixed-height tiles */}
       <div className="w-64 flex flex-col gap-3 overflow-y-auto pr-1">
         {/* Local User */}
-        <div className="relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden h-36 shrink-0">
+        <div
+          className={`relative bg-[#252525] border border-white/5 rounded-lg overflow-hidden h-36 shrink-0 transition-all duration-200 ${getSpeakerHighlightClasses(
+            isLocalActiveSpeaker
+          )}`}
+        >
           <video
             ref={localVideoRef}
             autoPlay
@@ -2380,6 +2580,7 @@ function PresentationLayout({
           <ParticipantVideo
             key={participant.userId}
             participant={participant}
+            isActiveSpeaker={activeSpeakerId === participant.userId}
             compact
             audioOutputDeviceId={audioOutputDeviceId}
           />
@@ -2396,6 +2597,8 @@ interface GridLayoutProps {
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
+  activeSpeakerId: string | null;
+  currentUserId: string;
   audioOutputDeviceId?: string;
 }
 
@@ -2406,9 +2609,12 @@ function GridLayout({
   participants,
   userEmail,
   isMirrorCamera,
+  activeSpeakerId,
+  currentUserId,
   audioOutputDeviceId,
 }: GridLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const isLocalActiveSpeaker = activeSpeakerId === currentUserId;
 
   // Sync localStream to video element when stream changes
   useEffect(() => {
@@ -2442,7 +2648,11 @@ function GridLayout({
   return (
     <div className={`flex-1 grid ${gridClass} gap-3 overflow-auto p-2`}>
       {/* Local Video */}
-      <div className="relative bg-[#111] border border-white/10 rounded-lg overflow-hidden">
+      <div
+        className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden transition-all duration-200 ${getSpeakerHighlightClasses(
+          isLocalActiveSpeaker
+        )}`}
+      >
         <video
           ref={localVideoRef}
           autoPlay
@@ -2472,6 +2682,7 @@ function GridLayout({
         <ParticipantVideo
           key={participant.userId}
           participant={participant}
+          isActiveSpeaker={activeSpeakerId === participant.userId}
           audioOutputDeviceId={audioOutputDeviceId}
         />
       ))}
@@ -2674,6 +2885,7 @@ function ChatPanel({
         ) : (
           messages.map((msg) => {
             const isOwn = msg.userId === currentUserId;
+            const displayName = formatDisplayName(msg.displayName || msg.userId);
             return (
               <div
                 key={msg.id}
@@ -2690,7 +2902,7 @@ function ChatPanel({
                 >
                   {!isOwn && (
                     <p className="text-xs text-gray-400 mb-1">
-                      {msg.displayName}
+                      {displayName}
                     </p>
                   )}
                   <p className="text-sm break-words">{msg.content}</p>
@@ -2739,12 +2951,14 @@ function ChatPanel({
 interface ParticipantVideoProps {
   participant: Participant;
   compact?: boolean;
+  isActiveSpeaker?: boolean;
   audioOutputDeviceId?: string;
 }
 
 function ParticipantVideo({
   participant,
   compact = false,
+  isActiveSpeaker = false,
   audioOutputDeviceId,
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -2825,7 +3039,9 @@ function ParticipantVideo({
           : participant.isLeaving
           ? "animate-participant-leave"
           : ""
-      }`}
+      } transition-all duration-200 ${getSpeakerHighlightClasses(
+        isActiveSpeaker
+      )}`}
     >
       <video
         ref={setVideoRef}
@@ -2979,41 +3195,44 @@ function ParticipantsPanel({
             Pending Requests ({pendingList.length})
           </h4>
           <div className="space-y-2">
-            {pendingList.map(([userId, displayName]) => (
-              <div
-                key={userId}
-                className="flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
-              >
-                <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                  <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] border border-white/10 shrink-0">
-                    {displayName[0]?.toUpperCase() || "?"}
+            {pendingList.map(([userId, displayName]) => {
+              const pendingName = formatDisplayName(displayName || userId);
+              return (
+                <div
+                  key={userId}
+                  className="flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+                    <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] border border-white/10 shrink-0">
+                      {pendingName[0]?.toUpperCase() || "?"}
+                    </div>
+                    <span className="text-sm truncate text-white/80">
+                      {pendingName}
+                    </span>
                   </div>
-                  <span className="text-sm truncate text-white/80">
-                    {displayName}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() =>
+                        socket?.emit("admitUser", { userId }, () => {})
+                      }
+                      className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
+                      title="Admit"
+                    >
+                      Admit
+                    </button>
+                    <button
+                      onClick={() =>
+                        socket?.emit("rejectUser", { userId }, () => {})
+                      }
+                      className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
+                      title="Reject"
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() =>
-                      socket?.emit("admitUser", { userId }, () => {})
-                    }
-                    className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
-                    title="Admit"
-                  >
-                    Admit
-                  </button>
-                  <button
-                    onClick={() =>
-                      socket?.emit("rejectUser", { userId }, () => {})
-                    }
-                    className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
-                    title="Reject"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
