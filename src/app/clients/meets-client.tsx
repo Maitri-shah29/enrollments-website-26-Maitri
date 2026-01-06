@@ -250,19 +250,22 @@ function participantReducer(
 
   switch (action.type) {
     case "ADD_PARTICIPANT": {
-      if (!newState.has(action.userId)) {
-        newState.set(action.userId, {
-          userId: action.userId,
-          videoStream: null,
-          audioStream: null,
-          screenShareStream: null,
-          audioProducerId: null,
-          videoProducerId: null,
-          screenShareProducerId: null,
-          isMuted: false,
-          isCameraOff: false,
-        });
+      const existing = newState.get(action.userId);
+      if (existing) {
+        newState.set(action.userId, { ...existing, isLeaving: false });
+        return newState;
       }
+      newState.set(action.userId, {
+        userId: action.userId,
+        videoStream: null,
+        audioStream: null,
+        screenShareStream: null,
+        audioProducerId: null,
+        videoProducerId: null,
+        screenShareProducerId: null,
+        isMuted: false,
+        isCameraOff: false,
+      });
       return newState;
     }
     case "REMOVE_PARTICIPANT": {
@@ -525,6 +528,7 @@ export default function MeetsClient({
   const producerMapRef = useRef<Map<string, ProducerMapEntry>>(new Map());
   const pendingProducersRef = useRef<Map<string, ProducerInfo>>(new Map());
   const reactionTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const leaveTimeoutsRef = useRef<Map<string, number>>(new Map());
   const permissionHintTimeoutRef = useRef<number | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -613,7 +617,12 @@ export default function MeetsClient({
         window.clearTimeout(timeoutId);
       });
       reactionTimeoutsRef.current.clear();
+      leaveTimeoutsRef.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      leaveTimeoutsRef.current.clear();
       setReactions([]);
+      setPendingUsers(new Map());
 
       // Close producers
       try {
@@ -774,6 +783,24 @@ export default function MeetsClient({
     };
   }, []);
 
+  const scheduleParticipantRemoval = useCallback((leftUserId: string) => {
+    const existingTimeout = leaveTimeoutsRef.current.get(leftUserId);
+    if (existingTimeout) {
+      window.clearTimeout(existingTimeout);
+    }
+    const timeoutId = window.setTimeout(() => {
+      leaveTimeoutsRef.current.delete(leftUserId);
+      dispatchParticipants({ type: "REMOVE_PARTICIPANT", userId: leftUserId });
+    }, 200);
+    leaveTimeoutsRef.current.set(leftUserId, timeoutId);
+  }, []);
+
+  const isRoomEvent = useCallback((eventRoomId?: string) => {
+    if (!eventRoomId) return true;
+    if (!currentRoomIdRef.current) return true;
+    return eventRoomId === currentRoomIdRef.current;
+  }, []);
+
   // ============================================
   // Socket Connection with Reconnection
   // ============================================
@@ -893,6 +920,11 @@ export default function MeetsClient({
               if (joinedUserId !== userId) {
                 playNotificationSound("join");
               }
+              const leaveTimeout = leaveTimeoutsRef.current.get(joinedUserId);
+              if (leaveTimeout) {
+                window.clearTimeout(leaveTimeout);
+                leaveTimeoutsRef.current.delete(joinedUserId);
+              }
               dispatchParticipants({
                 type: "ADD_PARTICIPANT",
                 userId: joinedUserId,
@@ -923,12 +955,7 @@ export default function MeetsClient({
                 userId: leftUserId,
               });
 
-              setTimeout(() => {
-                dispatchParticipants({
-                  type: "REMOVE_PARTICIPANT",
-                  userId: leftUserId,
-                });
-              }, 100);
+              scheduleParticipantRemoval(leftUserId);
             }
           );
 
@@ -1030,10 +1057,13 @@ export default function MeetsClient({
             ({
               userId,
               displayName,
+              roomId: eventRoomId,
             }: {
               userId: string;
               displayName: string;
+              roomId?: string;
             }) => {
+              if (!isRoomEvent(eventRoomId)) return;
               console.log("[Meets] User requesting to join:", userId);
               setPendingUsers((prev) => {
                 const newMap = new Map(prev);
@@ -1047,9 +1077,12 @@ export default function MeetsClient({
             "pendingUsersSnapshot",
             ({
               users,
+              roomId: eventRoomId,
             }: {
               users: { userId: string; displayName?: string }[];
+              roomId?: string;
             }) => {
+              if (!isRoomEvent(eventRoomId)) return;
               const snapshot = new Map(
                 (users || []).map(({ userId, displayName }) => [
                   userId,
@@ -1060,29 +1093,41 @@ export default function MeetsClient({
             }
           );
 
-          socket.on("userAdmitted", ({ userId }: { userId: string }) => {
-            setPendingUsers((prev) => {
-              const newMap = new Map(prev);
-              newMap.delete(userId);
-              return newMap;
-            });
-          });
+          socket.on(
+            "userAdmitted",
+            ({ userId, roomId: eventRoomId }: { userId: string; roomId?: string }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              setPendingUsers((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(userId);
+                return newMap;
+              });
+            }
+          );
 
-          socket.on("userRejected", ({ userId }: { userId: string }) => {
-            setPendingUsers((prev) => {
-              const newMap = new Map(prev);
-              newMap.delete(userId);
-              return newMap;
-            });
-          });
+          socket.on(
+            "userRejected",
+            ({ userId, roomId: eventRoomId }: { userId: string; roomId?: string }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              setPendingUsers((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(userId);
+                return newMap;
+              });
+            }
+          );
 
-          socket.on("pendingUserLeft", ({ userId }: { userId: string }) => {
-            setPendingUsers((prev) => {
-              const newMap = new Map(prev);
-              newMap.delete(userId);
-              return newMap;
-            });
-          });
+          socket.on(
+            "pendingUserLeft",
+            ({ userId, roomId: eventRoomId }: { userId: string; roomId?: string }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              setPendingUsers((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(userId);
+                return newMap;
+              });
+            }
+          );
 
           socket.on("joinApproved", () => {
             console.log("[Meets] Join approved! Re-attempting join...");
@@ -1193,7 +1238,7 @@ export default function MeetsClient({
         producerId: producerId,
       });
 
-      if (info.kind === "video") {
+      if (info.kind === "video" && info.type === "webcam") {
         dispatchParticipants({
           type: "UPDATE_CAMERA_OFF",
           userId: info.userId,
@@ -1321,6 +1366,9 @@ export default function MeetsClient({
 
           const newAudioTrack = newStream.getAudioTracks()[0];
           if (newAudioTrack) {
+            newAudioTrack.onended = () => {
+              setIsMuted(true);
+            };
             newAudioTrack.enabled = !isMuted;
             const oldAudioTrack = localStream?.getAudioTracks()[0];
 
@@ -1604,6 +1652,48 @@ export default function MeetsClient({
                 type: producerInfo.type,
               });
 
+              const updateMutedState = (muted: boolean) => {
+                dispatchParticipants({
+                  type: "UPDATE_MUTED",
+                  userId: producerInfo.producerUserId,
+                  muted,
+                });
+              };
+
+              const updateCameraState = (cameraOff: boolean) => {
+                if (producerInfo.type !== "webcam") return;
+                dispatchParticipants({
+                  type: "UPDATE_CAMERA_OFF",
+                  userId: producerInfo.producerUserId,
+                  cameraOff,
+                });
+              };
+
+              const handleTrackMuted = () => {
+                if (response.kind === "audio") {
+                  updateMutedState(true);
+                } else {
+                  updateCameraState(true);
+                }
+              };
+
+              const handleTrackUnmuted = () => {
+                if (response.kind === "audio") {
+                  updateMutedState(false);
+                } else {
+                  updateCameraState(false);
+                }
+              };
+
+              consumer.on("trackended", () => {
+                handleProducerClosed(producerInfo.producerId);
+              });
+              consumer.track.onmute = handleTrackMuted;
+              consumer.track.onunmute = handleTrackUnmuted;
+              consumer.track.onended = () => {
+                handleProducerClosed(producerInfo.producerId);
+              };
+
               const stream = new MediaStream([consumer.track]);
               dispatchParticipants({
                 type: "UPDATE_STREAM",
@@ -1626,7 +1716,10 @@ export default function MeetsClient({
                     userId: producerInfo.producerUserId,
                     muted: true,
                   });
-                } else if (response.kind === "video") {
+                } else if (
+                  response.kind === "video" &&
+                  producerInfo.type === "webcam"
+                ) {
                   dispatchParticipants({
                     type: "UPDATE_CAMERA_OFF",
                     userId: producerInfo.producerUserId,
@@ -1650,7 +1743,7 @@ export default function MeetsClient({
         );
       });
     },
-    []
+    [handleProducerClosed]
   );
 
   const flushPendingProducers = useCallback(async () => {
@@ -1864,6 +1957,9 @@ export default function MeetsClient({
           video: constraints,
         });
         const newVideoTrack = newStream.getVideoTracks()[0];
+        newVideoTrack.onended = () => {
+          setIsCameraOff(true);
+        };
 
         // Replace track in local stream
         const oldVideoTrack = localStream.getVideoTracks()[0];
@@ -1904,70 +2000,94 @@ export default function MeetsClient({
   // ============================================
 
   const toggleMute = useCallback(async () => {
-    const producer = audioProducerRef.current;
+    let producer = audioProducerRef.current;
+    const nextMuted = !isMuted;
+
+    if (producer && producer.track?.readyState !== "live") {
+      socketRef.current?.emit(
+        "closeProducer",
+        { producerId: producer.id },
+        () => {}
+      );
+      try {
+        producer.close();
+      } catch {}
+      audioProducerRef.current = null;
+      producer = null;
+    }
 
     if (producer) {
-      const newMuted = !isMuted;
-      if (newMuted) {
+      if (nextMuted) {
         producer.pause();
       } else {
         producer.resume();
       }
-      setIsMuted(newMuted);
+      setIsMuted(nextMuted);
 
       socketRef.current?.emit(
         "toggleMute",
-        { producerId: producer.id, paused: newMuted },
+        { producerId: producer.id, paused: nextMuted },
         () => {}
       );
-    } else {
-      // Producer doesn't exist, try to create it (unmute)
-      if (isMuted) {
-        try {
-          setIsMuted(false); // Optimistic update
-          const transport = producerTransportRef.current;
-          if (!transport) return;
-
-          // Get new audio track
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          const audioTrack = stream.getAudioTracks()[0];
-
-          if (!audioTrack) throw new Error("No audio track obtained");
-
-          // Update local stream
-          setLocalStream((prev) => {
-            if (prev) {
-              const newStream = new MediaStream(prev.getTracks());
-              // Remove old audio tracks if any
-              newStream.getAudioTracks().forEach((t) => {
-                t.stop();
-                newStream.removeTrack(t);
-              });
-              newStream.addTrack(audioTrack);
-              return newStream;
-            }
-            return new MediaStream([audioTrack]);
-          });
-
-          const audioProducer = await transport.produce({
-            track: audioTrack,
-            appData: { type: "webcam" as ProducerType, paused: false },
-          });
-
-          audioProducerRef.current = audioProducer;
-          audioProducer.on("transportclose", () => {
-            audioProducerRef.current = null;
-          });
-        } catch (err) {
-          console.error("[Meets] Failed to restart audio:", err);
-          setIsMuted(true); // Revert
-          setMeetError(createMeetError(err, "MEDIA_ERROR"));
-        }
-      }
+      return;
     }
-  }, [isMuted]);
+
+    if (nextMuted) {
+      setIsMuted(true);
+      return;
+    }
+
+    try {
+      setIsMuted(false); // Optimistic update
+      const transport = producerTransportRef.current;
+      if (!transport) return;
+
+      const audioConstraints: boolean | MediaTrackConstraints =
+        selectedAudioInputDeviceId
+          ? { deviceId: { exact: selectedAudioInputDeviceId } }
+          : true;
+
+      // Get new audio track
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: audioConstraints,
+      });
+      const audioTrack = stream.getAudioTracks()[0];
+
+      if (!audioTrack) throw new Error("No audio track obtained");
+      audioTrack.onended = () => {
+        setIsMuted(true);
+      };
+
+      // Update local stream
+      setLocalStream((prev) => {
+        if (prev) {
+          const newStream = new MediaStream(prev.getTracks());
+          // Remove old audio tracks if any
+          newStream.getAudioTracks().forEach((t) => {
+            t.stop();
+            newStream.removeTrack(t);
+          });
+          newStream.addTrack(audioTrack);
+          return newStream;
+        }
+        return new MediaStream([audioTrack]);
+      });
+
+      const audioProducer = await transport.produce({
+        track: audioTrack,
+        appData: { type: "webcam" as ProducerType, paused: false },
+      });
+
+      audioProducerRef.current = audioProducer;
+      audioProducer.on("transportclose", () => {
+        audioProducerRef.current = null;
+      });
+    } catch (err) {
+      console.error("[Meets] Failed to restart audio:", err);
+      setIsMuted(true); // Revert
+      setMeetError(createMeetError(err, "MEDIA_ERROR"));
+    }
+  }, [isMuted, selectedAudioInputDeviceId]);
 
   const toggleCamera = useCallback(async () => {
     const producer = videoProducerRef.current;
@@ -2047,6 +2167,9 @@ export default function MeetsClient({
         const videoTrack = stream.getVideoTracks()[0];
 
         if (!videoTrack) throw new Error("No video track obtained");
+        videoTrack.onended = () => {
+          setIsCameraOff(true);
+        };
 
         // Update local stream
         setLocalStream((prev) => {
