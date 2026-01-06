@@ -68,7 +68,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       setNotification({ message, type });
       setTimeout(() => setNotification(null), 3000);
     },
-    []
+    [],
   );
 
   const getNotificationClasses = (type: "success" | "error") => {
@@ -142,7 +142,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       console.error("Error submitting task:", error);
       showNotification(
         error instanceof Error ? error.message : "Failed to submit task",
-        "error"
+        "error",
       );
     } finally {
       setSubmitting(false);
@@ -177,7 +177,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       console.error("Error submitting task:", error);
       showNotification(
         error instanceof Error ? error.message : "Failed to submit task",
-        "error"
+        "error",
       );
     } finally {
       setSubmitting(false);
@@ -213,7 +213,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
     )
       return true;
     return false;
-  }, [selectedRoundUser]);
+  }, [selectedRoundUser, isDeadlinePassed]);
 
   if (allRoundUsers.length === 0) {
     return (
@@ -242,7 +242,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       {notification && (
         <div
           className={`fixed top-35 right-10 z-50 p-4 rounded-lg border ${getNotificationClasses(
-            notification.type
+            notification.type,
           )}`}
         >
           {notification.message}
@@ -353,7 +353,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    role="img"
+                    aria-label="Success"
                   >
+                    <title>Success</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -368,25 +371,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                 <p className="text-gray-300 max-w-md">
                   You have been promoted to the next round. Keep up the great
                   work!
-            {/* Task Description */}
-            {selectedRoundUser.Task && (
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h2
-                    className="text-xl font-semibold"
-                    style={{ fontFamily: "PoppinsBlack" }}
-                  >
-                    Task Description
-                  </h2>
-                  <span
-                    className="text-sm text-gray-400"
-                    style={{ fontFamily: "PoppinsReg" }}
-                  ></span>
-                </div>
-                <LinkifiedText
-                  text={selectedRoundUser.Task.text}
-                  className="text-gray-300 whitespace-pre-wrap bg-zinc-900 rounded-lg border border-zinc-800 min-y-[3rem] p-4"
-                />
+                </p>
               </div>
             ) : selectedRoundUser.status === "rejected" ? (
               <div className="flex flex-col items-center justify-center p-12 text-center bg-zinc-900/50 rounded-xl border border-zinc-800">
@@ -396,7 +381,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    role="img"
+                    aria-label="Not selected"
                   >
+                    <title>Not selected</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -437,7 +425,9 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                           dateStyle: "medium",
                           timeStyle: "short",
                         }).format(
-                          new Date(selectedRoundUser.TaskSubmission.submittedAt)
+                          new Date(
+                            selectedRoundUser.TaskSubmission.submittedAt,
+                          ),
                         )}
                       </span>
                     )}
