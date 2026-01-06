@@ -670,6 +670,64 @@ export default function MeetsClient({
     reconnectAttemptsRef.current = 0;
   }, [localStream, cleanupRoomResources]);
 
+  const getAudioContext = useCallback(() => {
+    const AudioContextConstructor =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (!AudioContextConstructor) return null;
+
+    if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+      audioContextRef.current = new AudioContextConstructor();
+    }
+
+    return audioContextRef.current;
+  }, []);
+
+  const playNotificationSound = useCallback(
+    (type: "join" | "leave") => {
+      const audioContext = getAudioContext();
+      if (!audioContext) return;
+
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(() => {});
+      }
+
+      const now = audioContext.currentTime;
+      const frequencies =
+        type === "join" ? [523.25, 659.25] : [392.0, 261.63];
+      const duration = 0.12;
+      const gap = 0.03;
+
+      frequencies.forEach((frequency, index) => {
+        const start = now + index * (duration + gap);
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.16, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+      });
+    },
+    [getAudioContext]
+  );
+
+  const primeAudioOutput = useCallback(() => {
+    const audioContext = getAudioContext();
+    if (!audioContext) return;
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+  }, [getAudioContext]);
+
   const addReaction = useCallback((reaction: ReactionPayload) => {
     if (reaction.kind === "emoji" && !isReactionEmoji(reaction.value)) return;
 
@@ -824,6 +882,9 @@ export default function MeetsClient({
             "userJoined",
             ({ userId: joinedUserId }: { userId: string }) => {
               console.log("[Meets] User joined:", joinedUserId);
+              if (joinedUserId !== userId) {
+                playNotificationSound("join");
+              }
               dispatchParticipants({
                 type: "ADD_PARTICIPANT",
                 userId: joinedUserId,
@@ -835,6 +896,9 @@ export default function MeetsClient({
             "userLeft",
             ({ userId: leftUserId }: { userId: string }) => {
               console.log("[Meets] User left:", leftUserId);
+              if (leftUserId !== userId) {
+                playNotificationSound("leave");
+              }
 
               const producersToClose = Array.from(
                 producerMapRef.current.entries(),
@@ -1633,6 +1697,7 @@ export default function MeetsClient({
               await flushPendingProducers();
 
               setConnectionState("joined");
+              playNotificationSound("join");
               resolve();
             } catch (err) {
               reject(err);
@@ -1648,6 +1713,7 @@ export default function MeetsClient({
       createConsumerTransport,
       consumeProducer,
       flushPendingProducers,
+      playNotificationSound,
     ]
   );
 
@@ -1678,6 +1744,7 @@ export default function MeetsClient({
 
       setMeetError(null);
       setConnectionState("connecting");
+      primeAudioOutput();
       intentionalDisconnectRef.current = false;
       setRoomId(targetRoomId);
       let stream: MediaStream | null = null;
@@ -1703,7 +1770,7 @@ export default function MeetsClient({
         setConnectionState("error");
       }
     },
-    [connectSocket, requestMediaPermissions, joinRoomInternal]
+    [connectSocket, requestMediaPermissions, joinRoomInternal, primeAudioOutput]
   );
 
   const joinRoom = useCallback(async () => {
@@ -2214,8 +2281,9 @@ export default function MeetsClient({
   }, [isScreenSharing, activeScreenShareId]);
 
   const leaveRoom = useCallback(() => {
+    playNotificationSound("leave");
     cleanup();
-  }, [cleanup]);
+  }, [cleanup, playNotificationSound]);
 
   const sendChat = useCallback((content: string) => {
     const socket = socketRef.current;
