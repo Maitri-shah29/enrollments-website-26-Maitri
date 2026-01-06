@@ -1690,10 +1690,6 @@ export default function MeetsClient({
               });
               consumer.track.onmute = handleTrackMuted;
               consumer.track.onunmute = handleTrackUnmuted;
-              consumer.track.onended = () => {
-                handleProducerClosed(producerInfo.producerId);
-              };
-
               const stream = new MediaStream([consumer.track]);
               dispatchParticipants({
                 type: "UPDATE_STREAM",
@@ -2038,9 +2034,9 @@ export default function MeetsClient({
     }
 
     try {
-      setIsMuted(false); // Optimistic update
       const transport = producerTransportRef.current;
       if (!transport) return;
+      setIsMuted(false); // Optimistic update
 
       const audioConstraints: boolean | MediaTrackConstraints =
         selectedAudioInputDeviceId
@@ -2765,6 +2761,13 @@ export default function MeetsClient({
             isAdmin={isAdmin}
             pendingUsers={pendingUsers}
             roomId={roomId}
+            onPendingUserStale={(staleUserId) => {
+              setPendingUsers((prev) => {
+                const next = new Map(prev);
+                next.delete(staleUserId);
+                return next;
+              });
+            }}
           />
         )}
       </div>
@@ -3654,6 +3657,7 @@ interface ParticipantsPanelProps {
   onClose: () => void;
   pendingUsers?: Map<string, string>;
   roomId: string;
+  onPendingUserStale?: (userId: string) => void;
 }
 
 function ParticipantsPanel({
@@ -3664,6 +3668,7 @@ function ParticipantsPanel({
   isAdmin,
   pendingUsers,
   roomId,
+  onPendingUserStale,
 }: ParticipantsPanelProps & {
   socket: Socket | null;
   isAdmin?: boolean | null;
@@ -3786,7 +3791,19 @@ function ParticipantsPanel({
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() =>
-                        socket?.emit("admitUser", { userId }, () => {})
+                        socket?.emit(
+                          "admitUser",
+                          { userId },
+                          (res: { success?: boolean; error?: string }) => {
+                            if (res?.error) {
+                              console.error(
+                                "[Meets] Admit failed:",
+                                res.error
+                              );
+                              onPendingUserStale?.(userId);
+                            }
+                          }
+                        )
                       }
                       className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
                       title="Admit"
@@ -3795,7 +3812,19 @@ function ParticipantsPanel({
                     </button>
                     <button
                       onClick={() =>
-                        socket?.emit("rejectUser", { userId }, () => {})
+                        socket?.emit(
+                          "rejectUser",
+                          { userId },
+                          (res: { success?: boolean; error?: string }) => {
+                            if (res?.error) {
+                              console.error(
+                                "[Meets] Reject failed:",
+                                res.error
+                              );
+                              onPendingUserStale?.(userId);
+                            }
+                          }
+                        )
                       }
                       className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
                       title="Reject"
