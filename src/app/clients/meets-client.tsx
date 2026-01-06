@@ -1440,6 +1440,7 @@ export default function MeetsClient({
         setConnectionState("error");
         return;
       }
+      localStreamRef.current = stream;
       setLocalStream(stream);
 
       // Connect socket
