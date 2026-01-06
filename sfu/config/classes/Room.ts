@@ -1,13 +1,14 @@
 import type {
-  Router,
-  WebRtcTransport,
-  RtpCapabilities,
   MediaKind,
+  Router,
+  RtpCapabilities,
+  WebRtcTransport,
 } from "mediasoup/types";
-import { Client } from "./Client.js"; // Needed for types/Client class
-import { Admin } from "./Admin.js";
+import type { VideoQuality } from "../../types.js";
+import { Logger } from "../../utilities/Logger.js";
 import { config } from "../config.js";
-import { VideoQuality } from "../../types.js";
+import { Admin } from "./Admin.js";
+import type { Client } from "./Client.js"; // Needed for types/Client class
 
 export interface RoomOptions {
   id: string;
@@ -102,7 +103,7 @@ export class Room {
     // Set max incoming bitrate for 360p
     if (config.webRtcTransport.maxIncomingBitrate) {
       await transport.setMaxIncomingBitrate(
-        config.webRtcTransport.maxIncomingBitrate
+        config.webRtcTransport.maxIncomingBitrate,
       );
     }
 
@@ -257,20 +258,18 @@ export class Room {
   startCleanupTimer(callback: () => void) {
     if (this.cleanupTimer) return;
 
-    console.log(
-      `[SFU] Room ${this.id}: Cleanup timer started (${config.adminCleanupTimeout}ms)`
+    Logger.debug(
+      `Room ${this.id}: Cleanup timer started (${config.adminCleanupTimeout}ms)`,
     );
     this.cleanupTimer = setTimeout(() => {
-      console.log(
-        `[SFU] Room ${this.id}: Cleanup timer expired. Dissolving room.`
-      );
+      Logger.debug(`Room ${this.id}: Cleanup timer expired. Dissolving room.`);
       callback();
     }, config.adminCleanupTimeout);
   }
 
   stopCleanupTimer() {
     if (this.cleanupTimer) {
-      console.log(`[SFU] Room ${this.id}: Cleanup timer stopped.`);
+      Logger.debug(`Room ${this.id}: Cleanup timer stopped.`);
       clearTimeout(this.cleanupTimer);
       this.cleanupTimer = null;
     }

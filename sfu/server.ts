@@ -338,8 +338,8 @@ io.on("connection", (socket: Socket) => {
         // Get existing producers for the new client to consume
         const existingProducers = currentRoom.getAllProducers(userId);
 
-        console.log(
-          `[SFU] User ${userId} joined room ${roomId} as ${
+        Logger.debug(
+          `User ${userId} joined room ${roomId} as ${
             isAdmin ? "Admin" : "Client"
           }`,
         );
