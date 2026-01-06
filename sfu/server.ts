@@ -1,38 +1,37 @@
-import express from "express";
 import cors from "cors";
-import { createServer as createHttpsServer } from "https";
+import express from "express";
+import { readFileSync } from "fs";
 
 import { createServer as createHttpServer } from "http";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { Server as SocketIOServer, Socket } from "socket.io";
-import type { Worker } from "mediasoup/types";
+import { createServer as createHttpsServer } from "https";
 import jwt from "jsonwebtoken";
-
+import type { Worker } from "mediasoup/types";
+import { dirname, join } from "path";
+import { type Socket, Server as SocketIOServer } from "socket.io";
+import { fileURLToPath } from "url";
+import { Admin } from "./config/classes/Admin.js";
+import { Client } from "./config/classes/Client.js";
+import { Room } from "./config/classes/Room.js";
 import { config } from "./config/config.js";
+import type {
+  ChatMessage,
+  ConnectTransportData,
+  ConsumeData,
+  ConsumeResponse,
+  CreateTransportResponse,
+  GetRoomsResponse,
+  JoinRoomData,
+  JoinRoomResponse,
+  ProduceData,
+  ProduceResponse,
+  ProducerInfo,
+  RedirectData,
+  SendChatData,
+  ToggleMediaData,
+} from "./types.js";
 import createWorkers from "./utilities/createWorkers.js";
 import getWorker from "./utilities/getWorker.js";
 import { Logger } from "./utilities/Logger.js";
-import { Room } from "./config/classes/Room.js";
-import { Client } from "./config/classes/Client.js";
-import { Admin } from "./config/classes/Admin.js";
-import type {
-  JoinRoomData,
-  JoinRoomResponse,
-  CreateTransportResponse,
-  ConnectTransportData,
-  ProduceData,
-  ProduceResponse,
-  ConsumeData,
-  ConsumeResponse,
-  ToggleMediaData,
-  ProducerInfo,
-  SendChatData,
-  ChatMessage,
-  GetRoomsResponse,
-  RedirectData,
-} from "./types.js";
 
 // ============================================
 // Global State
@@ -67,12 +66,6 @@ app.get("/health", (req, res) => {
       healthy: healthyWorkers.length,
       closed: workers.length - healthyWorkers.length,
     },
-    activeRooms: rooms.size,
-    totalConnections: io.engine?.clientsCount ?? 0,
-    roomDetails: Array.from(rooms.values()).map((room) => ({
-      id: room.id,
-      clients: room.clientCount,
-    })),
   };
 
   if (!isHealthy) {
@@ -169,7 +162,7 @@ const cleanupRoom = (roomId: string): void => {
 const buildUserIdentity = (
   user: { email?: string; userId?: string; name?: string; sessionId?: string },
   sessionId: string | undefined,
-  socketId: string
+  socketId: string,
 ): { userId: string; displayName: string } | null => {
   const baseId = user?.email || user?.userId;
   if (!baseId) {
@@ -202,7 +195,7 @@ io.on("connection", (socket: Socket) => {
     "joinRoom",
     async (
       data: JoinRoomData,
-      callback: (response: JoinRoomResponse | { error: string }) => void
+      callback: (response: JoinRoomResponse | { error: string }) => void,
     ) => {
       try {
         const { roomId, sessionId } = data;
@@ -244,7 +237,7 @@ io.on("connection", (socket: Socket) => {
           // Check if cleanup timer is active
           if (isAdmin && room.cleanupTimer) {
             Logger.info(
-              `Admin returning to room ${roomId}, cleanup cancelled.`
+              `Admin returning to room ${roomId}, cleanup cancelled.`,
             );
             room.stopCleanupTimer();
           }
@@ -281,7 +274,7 @@ io.on("connection", (socket: Socket) => {
         // WITHOUT disconnecting the socket.
         if (currentRoom && currentRoom.id !== roomId && currentClient) {
           Logger.info(
-            `User ${userId} switching from ${currentRoom.id} to ${roomId}`
+            `User ${userId} switching from ${currentRoom.id} to ${roomId}`,
           );
 
           // Remove from old room
@@ -339,7 +332,7 @@ io.on("connection", (socket: Socket) => {
         console.log(
           `[SFU] User ${userId} joined room ${roomId} as ${
             isAdmin ? "Admin" : "Client"
-          }`
+          }`,
         );
 
         // Register Admin listeners
@@ -356,7 +349,7 @@ io.on("connection", (socket: Socket) => {
               } else {
                 cb({ error: "User not found" });
               }
-            }
+            },
           );
 
           socket.on("closeRemoteProducer", ({ producerId }, cb) => {
@@ -435,14 +428,14 @@ io.on("connection", (socket: Socket) => {
               const targetClient = currentRoom.getClient(targetId);
               if (targetClient) {
                 Logger.info(
-                  `Admin redirecting user ${targetId} to ${newRoomId}`
+                  `Admin redirecting user ${targetId} to ${newRoomId}`,
                 );
                 targetClient.socket.emit("redirect", { newRoomId });
                 cb({ success: true });
               } else {
                 cb({ error: "User not found" });
               }
-            }
+            },
           );
 
           socket.on("admitUser", ({ userId: targetId }, cb) => {
@@ -471,7 +464,7 @@ io.on("connection", (socket: Socket) => {
             const pending = currentRoom.pendingClients.get(targetId);
             if (pending) {
               Logger.info(
-                `Admin rejected user ${targetId} from room ${roomId}`
+                `Admin rejected user ${targetId} from room ${roomId}`,
               );
               currentRoom.removePendingClient(targetId);
               pending.socket.emit("joinRejected");
@@ -497,7 +490,7 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error joining room:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -506,7 +499,9 @@ io.on("connection", (socket: Socket) => {
   socket.on(
     "getRouterRtpCapabilities",
     (
-      callback: (response: { rtpCapabilities: any } | { error: string }) => void
+      callback: (
+        response: { rtpCapabilities: any } | { error: string },
+      ) => void,
     ) => {
       try {
         if (!currentRoom) {
@@ -517,7 +512,7 @@ io.on("connection", (socket: Socket) => {
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -526,7 +521,7 @@ io.on("connection", (socket: Socket) => {
   socket.on(
     "createProducerTransport",
     async (
-      callback: (response: CreateTransportResponse | { error: string }) => void
+      callback: (response: CreateTransportResponse | { error: string }) => void,
     ) => {
       try {
         if (!currentRoom || !currentClient) {
@@ -547,7 +542,7 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error creating producer transport:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -556,7 +551,7 @@ io.on("connection", (socket: Socket) => {
   socket.on(
     "createConsumerTransport",
     async (
-      callback: (response: CreateTransportResponse | { error: string }) => void
+      callback: (response: CreateTransportResponse | { error: string }) => void,
     ) => {
       try {
         if (!currentRoom || !currentClient) {
@@ -577,7 +572,7 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error creating consumer transport:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -587,7 +582,7 @@ io.on("connection", (socket: Socket) => {
     "connectProducerTransport",
     async (
       data: ConnectTransportData,
-      callback: (response: { success: boolean } | { error: string }) => void
+      callback: (response: { success: boolean } | { error: string }) => void,
     ) => {
       try {
         if (!currentClient?.producerTransport) {
@@ -604,14 +599,14 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error connecting producer transport:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   socket.on(
     "connectConsumerTransport",
     async (
       data: ConnectTransportData,
-      callback: (response: { success: boolean } | { error: string }) => void
+      callback: (response: { success: boolean } | { error: string }) => void,
     ) => {
       try {
         if (!currentClient?.consumerTransport) {
@@ -628,7 +623,7 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error connecting consumer transport:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -638,7 +633,7 @@ io.on("connection", (socket: Socket) => {
     "produce",
     async (
       data: ProduceData,
-      callback: (response: ProduceResponse | { error: string }) => void
+      callback: (response: ProduceResponse | { error: string }) => void,
     ) => {
       try {
         if (!currentRoom || !currentClient?.producerTransport) {
@@ -708,7 +703,7 @@ io.on("connection", (socket: Socket) => {
         producer.observer.on("close", notifyProducerClosed);
 
         Logger.info(
-          `User ${currentClient.id} started producing ${kind} (${type}): ${producer.id}`
+          `User ${currentClient.id} started producing ${kind} (${type}): ${producer.id}`,
         );
 
         callback({ producerId: producer.id });
@@ -716,7 +711,7 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error producing:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -726,7 +721,7 @@ io.on("connection", (socket: Socket) => {
     "consume",
     async (
       data: ConsumeData,
-      callback: (response: ConsumeResponse | { error: string }) => void
+      callback: (response: ConsumeResponse | { error: string }) => void,
     ) => {
       try {
         if (!currentRoom || !currentClient?.consumerTransport) {
@@ -769,7 +764,7 @@ io.on("connection", (socket: Socket) => {
         Logger.error("Error consuming:", error);
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -779,8 +774,8 @@ io.on("connection", (socket: Socket) => {
     "getProducers",
     (
       callback: (
-        response: { producers: ProducerInfo[] } | { error: string }
-      ) => void
+        response: { producers: ProducerInfo[] } | { error: string },
+      ) => void,
     ) => {
       try {
         if (!currentRoom || !currentClient) {
@@ -793,7 +788,7 @@ io.on("connection", (socket: Socket) => {
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -803,7 +798,7 @@ io.on("connection", (socket: Socket) => {
     "resumeConsumer",
     async (
       data: { consumerId: string },
-      callback: (response: { success: boolean } | { error: string }) => void
+      callback: (response: { success: boolean } | { error: string }) => void,
     ) => {
       try {
         if (!currentClient) {
@@ -824,7 +819,7 @@ io.on("connection", (socket: Socket) => {
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -834,7 +829,7 @@ io.on("connection", (socket: Socket) => {
     "toggleMute",
     async (
       data: ToggleMediaData,
-      callback: (response: { success: boolean } | { error: string }) => void
+      callback: (response: { success: boolean } | { error: string }) => void,
     ) => {
       try {
         if (!currentClient || !currentRoom) {
@@ -854,7 +849,7 @@ io.on("connection", (socket: Socket) => {
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -864,7 +859,7 @@ io.on("connection", (socket: Socket) => {
     "toggleCamera",
     async (
       data: ToggleMediaData,
-      callback: (response: { success: boolean } | { error: string }) => void
+      callback: (response: { success: boolean } | { error: string }) => void,
     ) => {
       try {
         if (!currentClient || !currentRoom) {
@@ -884,7 +879,7 @@ io.on("connection", (socket: Socket) => {
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -894,7 +889,7 @@ io.on("connection", (socket: Socket) => {
     "closeProducer",
     async (
       data: { producerId: string },
-      callback: (response: { success: boolean } | { error: string }) => void
+      callback: (response: { success: boolean } | { error: string }) => void,
     ) => {
       try {
         if (!currentClient || !currentRoom) {
@@ -924,7 +919,7 @@ io.on("connection", (socket: Socket) => {
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -937,8 +932,8 @@ io.on("connection", (socket: Socket) => {
       callback: (
         response:
           | { success: boolean; message?: ChatMessage }
-          | { error: string }
-      ) => void
+          | { error: string },
+      ) => void,
     ) => {
       try {
         if (!currentClient || !currentRoom) {
@@ -976,15 +971,15 @@ io.on("connection", (socket: Socket) => {
         Logger.info(
           `Chat in room ${currentRoom.id}: ${displayName}: ${content.substring(
             0,
-            50
-          )}`
+            50,
+          )}`,
         );
 
         callback({ success: true, message });
       } catch (error) {
         callback({ error: (error as Error).message });
       }
-    }
+    },
   );
 
   // ----------------------------------------
@@ -1001,11 +996,11 @@ io.on("connection", (socket: Socket) => {
 
       if (!activeClient) {
         Logger.info(
-          `Stale disconnect for ${userId} in room ${roomId}; client already removed.`
+          `Stale disconnect for ${userId} in room ${roomId}; client already removed.`,
         );
       } else if (activeClient !== currentClient) {
         Logger.info(
-          `Stale disconnect for ${userId} in room ${roomId}; active session exists.`
+          `Stale disconnect for ${userId} in room ${roomId}; active session exists.`,
         );
       } else {
         // Remove client from room
@@ -1015,13 +1010,15 @@ io.on("connection", (socket: Socket) => {
         // If Admin left, check if any other admins remain
         if (wasAdmin) {
           if (!currentRoom.hasActiveAdmin()) {
-            Logger.info(`Last admin left room ${roomId}. Scheduling cleanup...`);
+            Logger.info(
+              `Last admin left room ${roomId}. Scheduling cleanup...`,
+            );
             currentRoom.startCleanupTimer(() => {
               if (rooms.has(roomId)) {
                 const r = rooms.get(roomId);
                 if (r) {
                   Logger.info(
-                    `Cleanup executed for room ${roomId}. Dissolving...`
+                    `Cleanup executed for room ${roomId}. Dissolving...`,
                   );
                   for (const client of r.clients.values()) {
                     client.socket.emit("roomClosed", {
@@ -1053,7 +1050,9 @@ io.on("connection", (socket: Socket) => {
           if (room) {
             const newQuality = room.updateVideoQuality();
             if (newQuality) {
-              socket.to(roomId).emit("setVideoQuality", { quality: newQuality });
+              socket
+                .to(roomId)
+                .emit("setVideoQuality", { quality: newQuality });
             }
           }
         }
