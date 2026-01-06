@@ -20,9 +20,14 @@ export async function getSfuRooms(): Promise<GetRoomsResponse> {
 
   const sfuUrl = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 
+  const secret = process.env.SFU_SECRET || "development-secret";
+
   try {
-    const response = await fetch(`${sfuUrl}/health`, {
+    const response = await fetch(`${sfuUrl}/rooms`, {
       cache: "no-store",
+      headers: {
+        "x-sfu-secret": secret,
+      },
     });
 
     if (!response.ok) {
@@ -30,8 +35,8 @@ export async function getSfuRooms(): Promise<GetRoomsResponse> {
     }
 
     const data = await response.json();
-    const rooms = Array.isArray(data.roomDetails)
-      ? data.roomDetails.map((room: { id: string; clients?: number }) => ({
+    const rooms = Array.isArray(data.rooms)
+      ? data.rooms.map((room: { id: string; clients?: number }) => ({
           id: room.id,
           userCount: Number(room.clients ?? 0),
         }))
