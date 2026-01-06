@@ -57,9 +57,12 @@ export class Client {
 
     this.producers.set(key, producer);
 
-    producer.on("transportclose", () => {
+    const cleanup = () => {
       this.producers.delete(key);
-    });
+    };
+
+    producer.on("transportclose", cleanup);
+    producer.observer.on("close", cleanup);
   }
 
   /**
@@ -68,13 +71,13 @@ export class Client {
   addConsumer(consumer: Consumer): void {
     this.consumers.set(consumer.producerId, consumer);
 
-    consumer.on("transportclose", () => {
+    const cleanup = () => {
       this.consumers.delete(consumer.producerId);
-    });
+    };
 
-    consumer.on("producerclose", () => {
-      this.consumers.delete(consumer.producerId);
-    });
+    consumer.on("transportclose", cleanup);
+    consumer.on("producerclose", cleanup);
+    consumer.observer.on("close", cleanup);
   }
 
   /**

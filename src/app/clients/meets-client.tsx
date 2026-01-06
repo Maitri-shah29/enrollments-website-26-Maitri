@@ -420,8 +420,10 @@ export default function MeetsClient({
 
   // Generate stable session ID per component instance
   const sessionIdRef = useRef<string>(generateSessionId());
-  const userEmail = session?.data?.user?.name || "guest";
-  const userId = `${userEmail}#${sessionIdRef.current}`;
+  const userEmail =
+    session?.data?.user?.name || session?.data?.user?.email || "guest";
+  const userAccountEmail = session?.data?.user?.email || "guest";
+  const userId = `${userAccountEmail}#${sessionIdRef.current}`;
 
   // ============================================
   // Lifecycle & Cleanup
@@ -444,51 +446,57 @@ export default function MeetsClient({
     };
   }, []);
 
-  const cleanupRoomResources = useCallback(() => {
-    console.log("[Meets] Cleaning up room resources...");
+  const cleanupRoomResources = useCallback(
+    (options?: { resetRoomId?: boolean }) => {
+      const resetRoomId = options?.resetRoomId !== false;
+      console.log("[Meets] Cleaning up room resources...");
 
-    // Close all consumers
-    consumersRef.current.forEach((consumer) => {
+      // Close all consumers
+      consumersRef.current.forEach((consumer) => {
+        try {
+          consumer.close();
+        } catch {}
+      });
+      consumersRef.current.clear();
+      producerMapRef.current.clear();
+
+      // Close producers
       try {
-        consumer.close();
+        audioProducerRef.current?.close();
       } catch {}
-    });
-    consumersRef.current.clear();
-    producerMapRef.current.clear();
+      try {
+        videoProducerRef.current?.close();
+      } catch {}
+      try {
+        screenProducerRef.current?.close();
+      } catch {}
+      audioProducerRef.current = null;
+      videoProducerRef.current = null;
+      screenProducerRef.current = null;
 
-    // Close producers
-    try {
-      audioProducerRef.current?.close();
-    } catch {}
-    try {
-      videoProducerRef.current?.close();
-    } catch {}
-    try {
-      screenProducerRef.current?.close();
-    } catch {}
-    audioProducerRef.current = null;
-    videoProducerRef.current = null;
-    screenProducerRef.current = null;
+      // Close transports
+      try {
+        producerTransportRef.current?.close();
+      } catch {}
+      try {
+        consumerTransportRef.current?.close();
+      } catch {}
+      producerTransportRef.current = null;
+      consumerTransportRef.current = null;
 
-    // Close transports
-    try {
-      producerTransportRef.current?.close();
-    } catch {}
-    try {
-      consumerTransportRef.current?.close();
-    } catch {}
-    producerTransportRef.current = null;
-    consumerTransportRef.current = null;
+      // Note: We DO NOT stop local stream tracks here, as we might reuse them for redirect
 
-    // Note: We DO NOT stop local stream tracks here, as we might reuse them for redirect
-
-    // Reset specific room state
-    dispatchParticipants({ type: "CLEAR_ALL" });
-    setIsScreenSharing(false);
-    setActiveScreenShareId(null);
-    // currentRoomIdRef.current = null; // Don't null this yet if redirecting? Actually better to null it.
-    currentRoomIdRef.current = null;
-  }, []);
+      // Reset specific room state
+      dispatchParticipants({ type: "CLEAR_ALL" });
+      setIsScreenSharing(false);
+      setActiveScreenShareId(null);
+      // currentRoomIdRef.current = null; // Don't null this yet if redirecting? Actually better to null it.
+      if (resetRoomId) {
+        currentRoomIdRef.current = null;
+      }
+    },
+    []
+  );
 
   const cleanup = useCallback(() => {
     console.log("[Meets] Running full cleanup...");
@@ -528,7 +536,7 @@ export default function MeetsClient({
 
           setConnectionState("connecting");
 
-          const token = await getSfuToken();
+          const token = await getSfuToken(sessionIdRef.current);
 
           const socket = io(SFU_URL, {
             transports: ["websocket", "polling"],
@@ -610,6 +618,9 @@ export default function MeetsClient({
                   track.enabled = false;
                 }
               } else if (screenProducerRef.current?.id === producerId) {
+                if (screenProducerRef.current.track) {
+                  screenProducerRef.current.track.stop();
+                }
                 setIsScreenSharing(false);
                 screenProducerRef.current.close();
                 screenProducerRef.current = null;
@@ -635,6 +646,16 @@ export default function MeetsClient({
             ({ userId: leftUserId }: { userId: string }) => {
               console.log("[Meets] User left:", leftUserId);
 
+              const producersToClose = Array.from(
+                producerMapRef.current.entries(),
+              )
+                .filter(([, info]) => info.userId === leftUserId)
+                .map(([producerId]) => producerId);
+
+              for (const producerId of producersToClose) {
+                handleProducerClosed(producerId);
+              }
+
               dispatchParticipants({
                 type: "MARK_LEAVING",
                 userId: leftUserId,
@@ -646,14 +667,6 @@ export default function MeetsClient({
                   userId: leftUserId,
                 });
               }, 100);
-
-              // Clear screen share if the presenter left
-              for (const [producerId, info] of producerMapRef.current) {
-                if (info.userId === leftUserId && info.type === "screen") {
-                  setActiveScreenShareId(null);
-                  producerMapRef.current.delete(producerId);
-                }
-              }
             }
           );
 
@@ -762,6 +775,14 @@ export default function MeetsClient({
             });
           });
 
+          socket.on("pendingUserLeft", ({ userId }: { userId: string }) => {
+            setPendingUsers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(userId);
+              return newMap;
+            });
+          });
+
           socket.on("joinApproved", () => {
             console.log("[Meets] Join approved! Re-attempting join...");
             if (currentRoomIdRef.current && localStreamRef.current) {
@@ -827,18 +848,21 @@ export default function MeetsClient({
     await new Promise((r) => setTimeout(r, delay));
 
     try {
+      const roomId = currentRoomIdRef.current;
+      cleanupRoomResources({ resetRoomId: false });
       socketRef.current?.disconnect();
       socketRef.current = null;
       await connectSocket();
 
       // Rejoin room if we were in one
-      if (currentRoomIdRef.current && localStream) {
-        await joinRoomInternal(currentRoomIdRef.current, localStream);
+      const stream = localStreamRef.current || localStream;
+      if (roomId && stream) {
+        await joinRoomInternal(roomId, stream);
       }
     } catch (_err) {
       handleReconnect();
     }
-  }, [connectSocket, localStream]);
+  }, [connectSocket, localStream, cleanupRoomResources]);
 
   const handleProducerClosed = useCallback((producerId: string) => {
     const consumer = consumersRef.current.get(producerId);
@@ -929,6 +953,10 @@ export default function MeetsClient({
       } catch (err) {
         const meetErr = createMeetError(err, "PERMISSION_DENIED");
         setMeetError(meetErr);
+        setIsCameraOff(true);
+        if (meetErr.code === "PERMISSION_DENIED") {
+          setIsMuted(true);
+        }
 
         // Try audio-only if video fails
         if (
@@ -1318,7 +1346,7 @@ export default function MeetsClient({
       return new Promise<void>((resolve, reject) => {
         socket.emit(
           "joinRoom",
-          { roomId: targetRoomId, userId },
+          { roomId: targetRoomId, sessionId: sessionIdRef.current },
           async (response: JoinRoomResponse | { error: string }) => {
             if ("error" in response) {
               reject(new Error(response.error));
@@ -1402,11 +1430,12 @@ export default function MeetsClient({
 
     setMeetError(null);
     setConnectionState("connecting");
+    let stream: MediaStream | null = null;
 
     try {
       const _socket = await connectSocket();
       // Get media first
-      const stream = await requestMediaPermissions();
+      stream = await requestMediaPermissions();
       if (!stream) {
         setConnectionState("error");
         return;
@@ -1419,6 +1448,10 @@ export default function MeetsClient({
       await joinRoomInternal(roomId, stream);
     } catch (err) {
       console.error("[Meets] Error joining room:", err);
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        setLocalStream(null);
+      }
       setMeetError(createMeetError(err));
       setConnectionState("error");
     }
@@ -1983,6 +2016,7 @@ export default function MeetsClient({
             socket={socketRef.current}
             isAdmin={isAdmin}
             pendingUsers={pendingUsers}
+            roomId={roomId}
           />
         )}
       </div>
@@ -2659,6 +2693,7 @@ interface ParticipantsPanelProps {
   currentUserId: string;
   onClose: () => void;
   pendingUsers?: Map<string, string>;
+  roomId: string;
 }
 
 function ParticipantsPanel({
@@ -2668,6 +2703,7 @@ function ParticipantsPanel({
   socket,
   isAdmin,
   pendingUsers,
+  roomId,
 }: ParticipantsPanelProps & {
   socket: Socket | null;
   isAdmin?: boolean | null;
@@ -2679,6 +2715,7 @@ function ParticipantsPanel({
   const [selectedUserForRedirect, setSelectedUserForRedirect] = useState<
     string | null
   >(null);
+  const filteredRooms = availableRooms.filter((room) => room.id !== roomId);
 
   const handleCloseProducer = (producerId: string) => {
     if (!socket || !isAdmin) return;
@@ -2723,7 +2760,7 @@ function ParticipantsPanel({
         <div className="flex items-center justify-between p-3">
           <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
             Participants (
-            <span className="tabular-nums">{participantsList.length}</span>)
+            <span className="tabular-nums">{participantsList.length + 1}</span>)
           </h3>
           <button
             onClick={onClose}
@@ -2742,6 +2779,7 @@ function ParticipantsPanel({
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
               style={{ fontWeight: 500 }}
+              title="Mute all participants"
             >
               <MicOff className="w-3 h-3" />
               Mute All
@@ -2754,6 +2792,7 @@ function ParticipantsPanel({
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
               style={{ fontWeight: 500 }}
+              title="Stop video for all participants"
             >
               <VideoOff className="w-3 h-3" />
               Stop Video
@@ -2846,6 +2885,7 @@ function ParticipantsPanel({
                             handleCloseProducer(p.screenShareProducerId);
                         }}
                         className="text-red-500 hover:text-red-400"
+                        title="Stop screen share"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -2862,7 +2902,7 @@ function ParticipantsPanel({
                         handleCloseProducer(p.videoProducerId);
                     }}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
-                    title="Force stop user's video"
+                    title="Stop video"
                   >
                     <Video className="w-3 h-3 text-green-500" />
                     <X className="w-3 h-3" />
@@ -2880,7 +2920,7 @@ function ParticipantsPanel({
                         handleCloseProducer(p.audioProducerId);
                     }}
                     className="flex items-center gap-1 text-red-500 hover:text-red-400 p-1 hover:bg-white/5 rounded transition-colors"
-                    title="Force stop user's audio"
+                    title="Stop audio"
                   >
                     <Mic className="w-3 h-3 text-green-500" />
                     <X className="w-3 h-3" />
@@ -2917,45 +2957,58 @@ function ParticipantsPanel({
 
       {/* Redirect Modal Overlay */}
       {showRedirectModal && (
-        <div className="absolute inset-0 bg-black/95 z-20 flex flex-col p-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-            <h4
-              className="text-sm tracking-[0.5px]"
-              style={{ fontWeight: 700 }}
-            >
-              Select Room
-            </h4>
+        <div className="absolute inset-0 bg-[#1a1a1a] z-20 flex flex-col pt-4 pb-2 px-2 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-3 px-2">
+            <div>
+              <h4
+                className="text-sm tracking-[0.5px] text-white"
+                style={{ fontWeight: 700 }}
+              >
+                Select Room
+              </h4>
+              <p className="text-[10px] text-neutral-400 mt-0.5">
+                Redirect user to another room
+              </p>
+            </div>
             <button
               onClick={() => setShowRedirectModal(false)}
-              className="text-neutral-400 hover:text-white"
+              className="text-neutral-400 hover:text-white p-1 hover:bg-white/5 rounded transition-all"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-2">
-            {availableRooms.length === 0 ? (
-              <p className="text-sm text-neutral-500 text-center mt-4">
-                No other active rooms
-              </p>
+          <div className="flex-1 overflow-y-auto space-y-2 px-1 custom-scrollbar">
+            {filteredRooms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-neutral-500 gap-2">
+                <AlertCircle className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No other active rooms</p>
+              </div>
             ) : (
-              availableRooms.map((room) => (
+              filteredRooms.map((room) => (
                 <button
                   key={room.id}
                   onClick={() => handleRedirect(room.id)}
-                  className="w-full text-left p-3 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex justify-between items-center"
-                  style={{ fontWeight: 500 }}
+                  className="w-full text-left p-3 rounded-lg bg-[#252525] hover:bg-[#333] border border-white/5 hover:border-white/10 transition-all flex justify-between items-center group relative overflow-hidden"
                 >
-                  <span
-                    className="text-sm truncate"
-                    style={{ fontWeight: 500 }}
-                  >
-                    {room.id}
-                  </span>
-                  <span className="text-xs text-neutral-400 flex items-center gap-1 tabular-nums">
-                    <Users className="w-3 h-3" />
-                    {room.userCount}
-                  </span>
+                  <div className="flex flex-col z-10">
+                    <span
+                      className="text-sm text-white group-hover:text-blue-400 transition-colors"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {room.id}
+                    </span>
+                    <span className="text-[10px] text-neutral-500 group-hover:text-neutral-400">
+                      ID: {room.id.substring(0, 8)}...
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 z-10">
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-400 bg-black/20 px-2 py-1 rounded">
+                      <Users className="w-3 h-3" />
+                      <span className="tabular-nums">{room.userCount}</span>
+                    </div>
+                    <ArrowRight className="w-3 h-3 text-blue-400 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                  </div>
                 </button>
               ))
             )}

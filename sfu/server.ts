@@ -166,6 +166,23 @@ const cleanupRoom = (roomId: string): void => {
   }
 };
 
+const buildUserIdentity = (
+  user: { email?: string; userId?: string; name?: string; sessionId?: string },
+  sessionId: string | undefined,
+  socketId: string
+): { userId: string; displayName: string } | null => {
+  const baseId = user?.email || user?.userId;
+  if (!baseId) {
+    return null;
+  }
+
+  const effectiveSessionId = user?.sessionId || sessionId || socketId;
+  return {
+    userId: `${baseId}#${effectiveSessionId}`,
+    displayName: user?.name || baseId,
+  };
+};
+
 // ============================================
 // Socket.io Connection Handler
 // ============================================
@@ -175,6 +192,8 @@ io.on("connection", (socket: Socket) => {
 
   let currentRoom: Room | null = null;
   let currentClient: Client | null = null;
+  let pendingRoomId: string | null = null;
+  let pendingUserId: string | null = null;
 
   // ----------------------------------------
   // Join Room
@@ -186,9 +205,19 @@ io.on("connection", (socket: Socket) => {
       callback: (response: JoinRoomResponse | { error: string }) => void
     ) => {
       try {
-        const { roomId, userId } = data;
+        const { roomId, sessionId } = data;
         const user = (socket as any).user;
         const isAdmin = user?.isAdmin;
+        const identity = buildUserIdentity(user, sessionId, socket.id);
+        if (!identity) {
+          callback({ error: "Authentication error: Invalid token payload" });
+          return;
+        }
+        if (user?.sessionId && sessionId && user.sessionId !== sessionId) {
+          callback({ error: "Session mismatch" });
+          return;
+        }
+        const { userId, displayName } = identity;
 
         // Get or create room
         let room = rooms.get(roomId);
@@ -209,6 +238,7 @@ io.on("connection", (socket: Socket) => {
             // We technically don't need to do anything special here as the client object will be replaced.
             // But let's log it.
             Logger.warn(`User ${userId} re-joining room ${roomId}`);
+            room.removeClient(userId);
           }
 
           // Check if cleanup timer is active
@@ -226,13 +256,15 @@ io.on("connection", (socket: Socket) => {
         if (!isAdmin && !room.isAllowed(userId)) {
           Logger.info(`User ${userId} added to waiting room ${roomId}`);
           room.addPendingClient(userId, socket);
+          pendingRoomId = roomId;
+          pendingUserId = userId;
 
           // Notify all admins in the room
           const admins = room.getAdmins();
           for (const admin of admins) {
             admin.socket.emit("userRequestedJoin", {
               userId,
-              displayName: user?.name || userId, // Assuming user object has name, fallback to ID
+              displayName,
             });
           }
 
@@ -272,6 +304,8 @@ io.on("connection", (socket: Socket) => {
         }
 
         currentRoom = room;
+        pendingRoomId = null;
+        pendingUserId = null;
 
         // Create client based on role
         if (isAdmin) {
@@ -651,41 +685,27 @@ io.on("connection", (socket: Socket) => {
         const roomId = currentRoom.id;
         const clientId = currentClient.id;
 
-        producer.on("transportclose", () => {
-          Logger.info(`Producer transport closed: ${producer.id}`);
-          if (type === "screen") {
-            const room = rooms.get(roomId);
-            if (room) {
-              room.clearScreenShareProducer(producer.id);
-            }
-          }
-          // Notify others
-          const room = rooms.get(roomId);
-          if (room) {
-            socket.to(roomId).emit("producerClosed", {
-              producerId: producer.id,
-              producerUserId: clientId,
-            });
-          }
-        });
+        let producerClosed = false;
+        const notifyProducerClosed = () => {
+          if (producerClosed) return;
+          producerClosed = true;
 
-        producer.on("@close", () => {
           Logger.info(`Producer closed: ${producer.id}`);
-          if (type === "screen") {
-            const room = rooms.get(roomId);
-            if (room) {
-              room.clearScreenShareProducer(producer.id);
-            }
-          }
-          // Notify others
           const room = rooms.get(roomId);
-          if (room) {
-            socket.to(roomId).emit("producerClosed", {
-              producerId: producer.id,
-              producerUserId: clientId,
-            });
+          if (!room) return;
+
+          if (type === "screen") {
+            room.clearScreenShareProducer(producer.id);
           }
-        });
+
+          socket.to(roomId).emit("producerClosed", {
+            producerId: producer.id,
+            producerUserId: clientId,
+          });
+        };
+
+        producer.on("transportclose", notifyProducerClosed);
+        producer.observer.on("close", notifyProducerClosed);
 
         Logger.info(
           `User ${currentClient.id} started producing ${kind} (${type}): ${producer.id}`
@@ -977,60 +997,83 @@ io.on("connection", (socket: Socket) => {
       const userId = currentClient.id;
       const roomId = currentRoom.id;
       const wasAdmin = currentClient instanceof Admin;
+      const activeClient = currentRoom.getClient(userId);
 
-      // Remove client from room
-      currentRoom.removeClient(userId);
-      socket.to(roomId).emit("userLeft", { userId });
+      if (!activeClient) {
+        Logger.info(
+          `Stale disconnect for ${userId} in room ${roomId}; client already removed.`
+        );
+      } else if (activeClient !== currentClient) {
+        Logger.info(
+          `Stale disconnect for ${userId} in room ${roomId}; active session exists.`
+        );
+      } else {
+        // Remove client from room
+        currentRoom.removeClient(userId);
+        socket.to(roomId).emit("userLeft", { userId });
 
-      // If Admin left, check if any other admins remain
-      if (wasAdmin) {
-        if (!currentRoom.hasActiveAdmin()) {
-          Logger.info(`Last admin left room ${roomId}. Scheduling cleanup...`);
-          currentRoom.startCleanupTimer(() => {
-            if (rooms.has(roomId)) {
-              const r = rooms.get(roomId);
-              if (r) {
-                Logger.info(
-                  `Cleanup executed for room ${roomId}. Dissolving...`
-                );
-                for (const client of r.clients.values()) {
-                  client.socket.emit("roomClosed", {
-                    reason: "Admin did not return. Room closed.",
-                  });
-                  client.socket.disconnect(true);
+        // If Admin left, check if any other admins remain
+        if (wasAdmin) {
+          if (!currentRoom.hasActiveAdmin()) {
+            Logger.info(`Last admin left room ${roomId}. Scheduling cleanup...`);
+            currentRoom.startCleanupTimer(() => {
+              if (rooms.has(roomId)) {
+                const r = rooms.get(roomId);
+                if (r) {
+                  Logger.info(
+                    `Cleanup executed for room ${roomId}. Dissolving...`
+                  );
+                  for (const client of r.clients.values()) {
+                    client.socket.emit("roomClosed", {
+                      reason: "Admin did not return. Room closed.",
+                    });
+                    client.socket.disconnect(true);
+                  }
+                  cleanupRoom(roomId);
                 }
-                cleanupRoom(roomId);
               }
+            });
+          } else {
+            // Admin left but others remain
+            Logger.info(`Admin left room ${roomId}, but other admins remain.`);
+          }
+        }
+
+        // Always cleanup if empty (handled by cleanupRoom check internally if we didn't already)
+        if (rooms.has(roomId)) {
+          cleanupRoom(roomId);
+        }
+
+        Logger.info(`User ${userId} left room ${roomId}`);
+
+        // Check for video quality update (e.g. dropped below threshold)
+        if (rooms.has(roomId)) {
+          // Room might have been cleaned up if empty, check presence
+          const room = rooms.get(roomId);
+          if (room) {
+            const newQuality = room.updateVideoQuality();
+            if (newQuality) {
+              socket.to(roomId).emit("setVideoQuality", { quality: newQuality });
             }
-          });
-        } else {
-          // Admin left but others remain
-          Logger.info(`Admin left room ${roomId}, but other admins remain.`);
+          }
         }
       }
+    }
 
-      // Always cleanup if empty (handled by cleanupRoom check internally if we didn't already)
-      if (rooms.has(roomId)) {
-        cleanupRoom(roomId);
-      }
-
-      Logger.info(`User ${userId} left room ${roomId}`);
-
-      // Check for video quality update (e.g. dropped below threshold)
-      if (rooms.has(roomId)) {
-        // Room might have been cleaned up if empty, check presence
-        const room = rooms.get(roomId);
-        if (room) {
-          const newQuality = room.updateVideoQuality();
-          if (newQuality) {
-            socket.to(roomId).emit("setVideoQuality", { quality: newQuality });
-          }
+    if (!currentClient && pendingRoomId && pendingUserId) {
+      const pendingRoom = rooms.get(pendingRoomId);
+      if (pendingRoom) {
+        pendingRoom.removePendingClient(pendingUserId);
+        for (const admin of pendingRoom.getAdmins()) {
+          admin.socket.emit("pendingUserLeft", { userId: pendingUserId });
         }
       }
     }
 
     currentRoom = null;
     currentClient = null;
+    pendingRoomId = null;
+    pendingUserId = null;
   });
 });
 
