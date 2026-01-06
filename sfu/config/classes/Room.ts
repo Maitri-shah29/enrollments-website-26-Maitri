@@ -21,7 +21,7 @@ export class Room {
   public clients: Map<string, Client> = new Map();
   public pendingClients: Map<
     string,
-    { userId: string; socket: any; displayName?: string }
+    { userKey: string; userId: string; socket: any; displayName?: string }
   > = new Map();
   public allowedUsers: Set<string> = new Set();
   public currentScreenShareProducerId: string | null = null;
@@ -55,8 +55,6 @@ export class Room {
       client.close();
       this.clients.delete(clientId);
     }
-    // Also remove from pending if present
-    this.pendingClients.delete(clientId);
     return client;
   }
 
@@ -279,21 +277,26 @@ export class Room {
   // Waiting Room Methods
   // ============================================
 
-  addPendingClient(userId: string, socket: any, displayName?: string) {
-    this.pendingClients.set(userId, { userId, socket, displayName });
+  addPendingClient(
+    userKey: string,
+    userId: string,
+    socket: any,
+    displayName?: string
+  ) {
+    this.pendingClients.set(userKey, { userKey, userId, socket, displayName });
   }
 
-  removePendingClient(userId: string) {
-    this.pendingClients.delete(userId);
+  removePendingClient(userKey: string) {
+    this.pendingClients.delete(userKey);
   }
 
-  allowUser(userId: string) {
-    this.allowedUsers.add(userId);
-    this.pendingClients.delete(userId);
+  allowUser(userKey: string) {
+    this.allowedUsers.add(userKey);
+    this.pendingClients.delete(userKey);
   }
 
-  isAllowed(userId: string): boolean {
-    return this.allowedUsers.has(userId);
+  isAllowed(userKey: string): boolean {
+    return this.allowedUsers.has(userKey);
   }
 }
 

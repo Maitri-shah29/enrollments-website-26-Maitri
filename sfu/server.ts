@@ -163,7 +163,7 @@ const buildUserIdentity = (
   user: { email?: string; userId?: string; name?: string; sessionId?: string },
   sessionId: string | undefined,
   socketId: string,
-): { userId: string; displayName: string } | null => {
+): { userKey: string; userId: string; displayName: string } | null => {
   const baseId = user?.email || user?.userId;
   if (!baseId) {
     return null;
@@ -171,6 +171,7 @@ const buildUserIdentity = (
 
   const effectiveSessionId = user?.sessionId || sessionId || socketId;
   return {
+    userKey: baseId,
     userId: `${baseId}#${effectiveSessionId}`,
     displayName: user?.name || baseId,
   };
@@ -186,7 +187,7 @@ io.on("connection", (socket: Socket) => {
   let currentRoom: Room | null = null;
   let currentClient: Client | null = null;
   let pendingRoomId: string | null = null;
-  let pendingUserId: string | null = null;
+  let pendingUserKey: string | null = null;
 
   // ----------------------------------------
   // Join Room
@@ -210,7 +211,7 @@ io.on("connection", (socket: Socket) => {
           callback({ error: "Session mismatch" });
           return;
         }
-        const { userId, displayName } = identity;
+        const { userKey, userId, displayName } = identity;
 
         // Get or create room
         let room = rooms.get(roomId);
@@ -246,17 +247,17 @@ io.on("connection", (socket: Socket) => {
         // ============================================
         // WAITING ROOM LOGIC
         // ============================================
-        if (!isAdmin && !room.isAllowed(userId)) {
-          Logger.info(`User ${userId} added to waiting room ${roomId}`);
-          room.addPendingClient(userId, socket, displayName);
+        if (!isAdmin && !room.isAllowed(userKey)) {
+          Logger.info(`User ${userKey} added to waiting room ${roomId}`);
+          room.addPendingClient(userKey, userId, socket, displayName);
           pendingRoomId = roomId;
-          pendingUserId = userId;
+          pendingUserKey = userKey;
 
           // Notify all admins in the room
           const admins = room.getAdmins();
           for (const admin of admins) {
             admin.socket.emit("userRequestedJoin", {
-              userId,
+              userId: userKey,
               displayName,
             });
           }
@@ -298,7 +299,7 @@ io.on("connection", (socket: Socket) => {
 
         currentRoom = room;
         pendingRoomId = null;
-        pendingUserId = null;
+        pendingUserKey = null;
 
         // Create client based on role
         if (isAdmin) {
@@ -316,8 +317,8 @@ io.on("connection", (socket: Socket) => {
         if (currentClient instanceof Admin) {
           for (const pending of currentRoom.pendingClients.values()) {
             socket.emit("userRequestedJoin", {
-              userId: pending.userId,
-              displayName: pending.displayName || pending.userId,
+              userId: pending.userKey,
+              displayName: pending.displayName || pending.userKey,
             });
           }
         }
@@ -452,13 +453,15 @@ io.on("connection", (socket: Socket) => {
 
             const pending = currentRoom.pendingClients.get(targetId);
             if (pending) {
-              Logger.info(`Admin admitted user ${targetId} to room ${roomId}`);
-              currentRoom.allowUser(targetId);
+              Logger.info(
+                `Admin admitted user ${pending.userKey} to room ${roomId}`,
+              );
+              currentRoom.allowUser(pending.userKey);
               pending.socket.emit("joinApproved");
 
               // Notify all admins so they can remove from list
               for (const admin of currentRoom.getAdmins()) {
-                admin.socket.emit("userAdmitted", { userId: targetId });
+                admin.socket.emit("userAdmitted", { userId: pending.userKey });
               }
 
               cb({ success: true });
@@ -473,14 +476,14 @@ io.on("connection", (socket: Socket) => {
             const pending = currentRoom.pendingClients.get(targetId);
             if (pending) {
               Logger.info(
-                `Admin rejected user ${targetId} from room ${roomId}`,
+                `Admin rejected user ${pending.userKey} from room ${roomId}`,
               );
-              currentRoom.removePendingClient(targetId);
+              currentRoom.removePendingClient(pending.userKey);
               pending.socket.emit("joinRejected");
 
               // Notify all admins so they can remove from list
               for (const admin of currentRoom.getAdmins()) {
-                admin.socket.emit("userRejected", { userId: targetId });
+                admin.socket.emit("userRejected", { userId: pending.userKey });
               }
 
               cb({ success: true });
@@ -1068,12 +1071,15 @@ io.on("connection", (socket: Socket) => {
       }
     }
 
-    if (!currentClient && pendingRoomId && pendingUserId) {
+    if (!currentClient && pendingRoomId && pendingUserKey) {
       const pendingRoom = rooms.get(pendingRoomId);
       if (pendingRoom) {
-        pendingRoom.removePendingClient(pendingUserId);
-        for (const admin of pendingRoom.getAdmins()) {
-          admin.socket.emit("pendingUserLeft", { userId: pendingUserId });
+        const pending = pendingRoom.pendingClients.get(pendingUserKey);
+        if (pending?.socket?.id === socket.id) {
+          pendingRoom.removePendingClient(pendingUserKey);
+          for (const admin of pendingRoom.getAdmins()) {
+            admin.socket.emit("pendingUserLeft", { userId: pendingUserKey });
+          }
         }
       }
     }
@@ -1081,7 +1087,7 @@ io.on("connection", (socket: Socket) => {
     currentRoom = null;
     currentClient = null;
     pendingRoomId = null;
-    pendingUserId = null;
+    pendingUserKey = null;
   });
 });
 

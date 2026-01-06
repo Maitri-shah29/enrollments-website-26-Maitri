@@ -1,19 +1,21 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { ADMIN_EMAILS } from "@/lib/admin-config";
+"use server";
 
-export async function GET() {
+import { auth } from "@/lib/auth";
+import { ADMIN_EMAILS } from "@/lib/admin-config";
+import type { GetRoomsResponse } from "@/lib/sfu-types";
+import { headers } from "next/headers";
+
+export async function getSfuRooms(): Promise<GetRoomsResponse> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    throw new Error("Unauthorized");
   }
 
   if (!ADMIN_EMAILS.includes(session.user.email)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    throw new Error("Forbidden");
   }
 
   const sfuUrl = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
@@ -24,7 +26,7 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ rooms: [] }, { status: 200 });
+      return { rooms: [] };
     }
 
     const data = await response.json();
@@ -35,8 +37,8 @@ export async function GET() {
         }))
       : [];
 
-    return NextResponse.json({ rooms });
+    return { rooms };
   } catch (_error) {
-    return NextResponse.json({ rooms: [] }, { status: 200 });
+    return { rooms: [] };
   }
 }
