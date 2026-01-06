@@ -942,7 +942,7 @@ export default function MeetsClient({
 
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: audioConstraints,
-          video: videoConstraints,
+          video: isCameraOff ? false : videoConstraints,
         });
 
         setMediaState({
@@ -998,7 +998,7 @@ export default function MeetsClient({
         }
         return null;
       }
-    }, [videoQuality, selectedAudioInputDeviceId]);
+    }, [videoQuality, selectedAudioInputDeviceId, isCameraOff]);
 
   // Device Change Handlers
 
@@ -1659,66 +1659,107 @@ export default function MeetsClient({
     if (producer) {
       const newCameraOff = !isCameraOff;
       if (newCameraOff) {
-        producer.pause();
-      } else {
-        producer.resume();
+        setIsCameraOff(true);
+        socketRef.current?.emit(
+          "closeProducer",
+          { producerId: producer.id },
+          (response: { success: boolean } | { error: string }) => {
+            if ("error" in response) {
+              console.error("[Meets] Failed to close video producer:", response);
+            }
+          }
+        );
+        try {
+          producer.close();
+        } catch {}
+        videoProducerRef.current = null;
+
+        setLocalStream((prev) => {
+          if (!prev) return prev;
+          prev.getVideoTracks().forEach((track) => {
+            track.stop();
+          });
+          const remainingTracks = prev
+            .getTracks()
+            .filter((track) => track.kind !== "video");
+          return new MediaStream(remainingTracks);
+        });
+        return;
       }
-      setIsCameraOff(newCameraOff);
+
+      // Turning camera on with existing producer (resume only if track is live)
+      if (producer.track?.readyState === "live") {
+        producer.resume();
+        setIsCameraOff(false);
+        socketRef.current?.emit(
+          "toggleCamera",
+          { producerId: producer.id, paused: false },
+          () => {}
+        );
+        return;
+      }
 
       socketRef.current?.emit(
-        "toggleCamera",
-        { producerId: producer.id, paused: newCameraOff },
-        () => {}
-      );
-    } else {
-      // Producer doesn't exist, try to create it (turn camera on)
-      if (isCameraOff) {
-        try {
-          setIsCameraOff(false); // Optimistic
-          const transport = producerTransportRef.current;
-          if (!transport) return;
-
-          // Get new video track
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video:
-              videoQualityRef.current === "low"
-                ? LOW_QUALITY_CONSTRAINTS
-                : STANDARD_QUALITY_CONSTRAINTS,
-          });
-          const videoTrack = stream.getVideoTracks()[0];
-
-          if (!videoTrack) throw new Error("No video track obtained");
-
-          // Update local stream
-          setLocalStream((prev) => {
-            if (prev) {
-              const newStream = new MediaStream(prev.getTracks());
-              // Remove old video tracks
-              newStream.getVideoTracks().forEach((t) => {
-                t.stop();
-                newStream.removeTrack(t);
-              });
-              newStream.addTrack(videoTrack);
-              return newStream;
-            }
-            return new MediaStream([videoTrack]);
-          });
-
-          const videoProducer = await transport.produce({
-            track: videoTrack,
-            encodings: [{ maxBitrate: 500000 }],
-            appData: { type: "webcam" as ProducerType, paused: false },
-          });
-
-          videoProducerRef.current = videoProducer;
-          videoProducer.on("transportclose", () => {
-            videoProducerRef.current = null;
-          });
-        } catch (err) {
-          console.error("[Meets] Failed to restart video:", err);
-          setIsCameraOff(true); // Revert
-          setMeetError(createMeetError(err, "MEDIA_ERROR"));
+        "closeProducer",
+        { producerId: producer.id },
+        (response: { success: boolean } | { error: string }) => {
+          if ("error" in response) {
+            console.error("[Meets] Failed to close stale video producer:", response);
+          }
         }
+      );
+      try {
+        producer.close();
+      } catch {}
+      videoProducerRef.current = null;
+    }
+
+    // Producer doesn't exist, try to create it (turn camera on)
+    if (isCameraOff) {
+      try {
+        setIsCameraOff(false); // Optimistic
+        const transport = producerTransportRef.current;
+        if (!transport) return;
+
+        // Get new video track
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video:
+            videoQualityRef.current === "low"
+              ? LOW_QUALITY_CONSTRAINTS
+              : STANDARD_QUALITY_CONSTRAINTS,
+        });
+        const videoTrack = stream.getVideoTracks()[0];
+
+        if (!videoTrack) throw new Error("No video track obtained");
+
+        // Update local stream
+        setLocalStream((prev) => {
+          if (prev) {
+            prev.getVideoTracks().forEach((track) => {
+              track.stop();
+            });
+            const remainingTracks = prev
+              .getTracks()
+              .filter((track) => track.kind !== "video");
+            return new MediaStream([...remainingTracks, videoTrack]);
+          }
+          return new MediaStream([videoTrack]);
+        });
+
+        const videoProducer = await transport.produce({
+          track: videoTrack,
+          encodings: [{ maxBitrate: 500000 }],
+          appData: { type: "webcam" as ProducerType, paused: false },
+        });
+
+        videoProducerRef.current = videoProducer;
+        videoProducer.on("transportclose", () => {
+          videoProducerRef.current = null;
+        });
+      } catch (err) {
+        console.error("[Meets] Failed to restart video:", err);
+        setIsCameraOff(true); // Revert
+        setMeetError(createMeetError(err, "MEDIA_ERROR"));
       }
     }
   }, [isCameraOff]);
