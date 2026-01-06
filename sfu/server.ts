@@ -25,8 +25,10 @@ import type {
   ProduceData,
   ProduceResponse,
   ProducerInfo,
+  ReactionNotification,
   RedirectData,
   SendChatData,
+  SendReactionData,
   ToggleMediaData,
 } from "./types.js";
 import createWorkers from "./utilities/createWorkers.js";
@@ -39,6 +41,7 @@ import { Logger } from "./utilities/Logger.js";
 
 let workers: Worker[] = [];
 const rooms: Map<string, Room> = new Map();
+const allowedReactions = new Set(["👍", "👏", "😂", "❤️", "🎉", "😮"]);
 
 // ============================================
 // Server Setup (HTTPS for WebRTC)
@@ -315,12 +318,13 @@ io.on("connection", (socket: Socket) => {
         socket.join(roomId);
 
         if (currentClient instanceof Admin) {
-          for (const pending of currentRoom.pendingClients.values()) {
-            socket.emit("userRequestedJoin", {
-              userId: pending.userKey,
-              displayName: pending.displayName || pending.userKey,
-            });
-          }
+          const pendingUsers = Array.from(
+            currentRoom.pendingClients.values(),
+          ).map((pending) => ({
+            userId: pending.userKey,
+            displayName: pending.displayName || pending.userKey,
+          }));
+          socket.emit("pendingUsersSnapshot", { users: pendingUsers });
         }
 
         // Notify others
@@ -988,6 +992,41 @@ io.on("connection", (socket: Socket) => {
         );
 
         callback({ success: true, message });
+      } catch (error) {
+        callback({ error: (error as Error).message });
+      }
+    },
+  );
+
+  // ----------------------------------------
+  // Send Reaction
+  // ----------------------------------------
+  socket.on(
+    "sendReaction",
+    (
+      data: SendReactionData,
+      callback: (response: { success: boolean } | { error: string }) => void,
+    ) => {
+      try {
+        if (!currentClient || !currentRoom) {
+          callback({ error: "Not in a room" });
+          return;
+        }
+
+        const emoji = data.emoji?.trim();
+        if (!emoji || !allowedReactions.has(emoji)) {
+          callback({ error: "Invalid reaction" });
+          return;
+        }
+
+        const reaction: ReactionNotification = {
+          userId: currentClient.id,
+          emoji,
+          timestamp: Date.now(),
+        };
+
+        io.to(currentRoom.id).emit("reaction", reaction);
+        callback({ success: true });
       } catch (error) {
         callback({ error: (error as Error).message });
       }

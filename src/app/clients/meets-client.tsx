@@ -11,6 +11,7 @@ import {
   Phone,
   RefreshCw,
   Send,
+  Smile,
   UserMinus,
   Users,
   Video,
@@ -40,6 +41,7 @@ import {
 import { io, type Socket } from "socket.io-client";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
 import type { GetRoomsResponse, RoomInfo } from "../../lib/sfu-types";
+import { getReactionFiles } from "../actions/reactions";
 import { getSfuRooms } from "../actions/sfu-rooms";
 import { getSfuToken } from "../actions/sfu-token";
 import { useSessionContext } from "../components/session-provider";
@@ -64,6 +66,12 @@ const SOCKET_TIMEOUT_MS = 10000;
 const SPEAKER_CHECK_INTERVAL_MS = 250;
 const SPEAKER_THRESHOLD = 0.03;
 const ACTIVE_SPEAKER_HOLD_MS = 900;
+const REACTION_LIFETIME_MS = 3800;
+const MAX_REACTIONS = 30;
+const EMOJI_REACTIONS = ["👍", "👏", "😂", "❤️", "🎉", "😮"] as const;
+
+type ReactionEmoji = (typeof EMOJI_REACTIONS)[number];
+type ReactionKind = "emoji" | "asset";
 
 // ============================================
 // Types & Interfaces
@@ -90,6 +98,33 @@ interface ChatMessage {
   displayName: string;
   content: string;
   timestamp: number;
+}
+
+interface ReactionNotification {
+  userId: string;
+  emoji: string;
+  timestamp: number;
+}
+
+interface ReactionPayload {
+  userId: string;
+  kind: ReactionKind;
+  value: string;
+  label?: string;
+  timestamp?: number;
+}
+
+interface ReactionEvent extends ReactionPayload {
+  id: string;
+  timestamp: number;
+  lane: number;
+}
+
+interface ReactionOption {
+  id: string;
+  kind: ReactionKind;
+  value: string;
+  label: string;
 }
 
 /** Participant in the meeting */
@@ -360,6 +395,29 @@ function getDisplayName(userId: string): string {
   return formatDisplayName(userId);
 }
 
+function isReactionEmoji(value: string): value is ReactionEmoji {
+  return EMOJI_REACTIONS.includes(value as ReactionEmoji);
+}
+
+function formatReactionLabel(fileName: string): string {
+  const baseName = fileName.replace(/\.[^/.]+$/, "");
+  const words = baseName
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase() + word.slice(1).toLowerCase());
+
+  return words.length ? words.slice(0, 2).join(" ") : baseName || "Reaction";
+}
+
+function buildAssetReaction(fileName: string): ReactionOption {
+  return {
+    id: `asset-${fileName}`,
+    kind: "asset",
+    value: `/reactions/${encodeURIComponent(fileName)}`,
+    label: formatReactionLabel(fileName),
+  };
+}
+
 function getSpeakerHighlightClasses(isActive: boolean): string {
   return isActive
     ? "border-emerald-300/90 ring-4 ring-emerald-400/45 shadow-[0_0_26px_rgba(16,185,129,0.28)]"
@@ -415,6 +473,27 @@ export default function MeetsClient({
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatInput, setChatInput] = useState("");
 
+  // Reactions state
+  const [reactions, setReactions] = useState<ReactionEvent[]>([]);
+  const baseReactionOptions = useMemo<ReactionOption[]>(
+    () =>
+      EMOJI_REACTIONS.map((emoji) => ({
+        id: `emoji-${emoji}`,
+        kind: "emoji",
+        value: emoji,
+        label: emoji,
+      })),
+    []
+  );
+  const [customReactionOptions, setCustomReactionOptions] = useState<
+    ReactionOption[]
+  >([]);
+  const reactionOptions = useMemo(
+    () => [...baseReactionOptions, ...customReactionOptions],
+    [baseReactionOptions, customReactionOptions]
+  );
+  const [showPermissionHint, setShowPermissionHint] = useState(false);
+
   // Admin state
   const isAdmin = useMemo(() => {
     return (
@@ -438,6 +517,8 @@ export default function MeetsClient({
   const consumersRef = useRef<Map<string, Consumer>>(new Map());
   const producerMapRef = useRef<Map<string, ProducerMapEntry>>(new Map());
   const pendingProducersRef = useRef<Map<string, ProducerInfo>>(new Map());
+  const reactionTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const permissionHintTimeoutRef = useRef<number | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -488,6 +569,25 @@ export default function MeetsClient({
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadReactions = async () => {
+      try {
+        const files = await getReactionFiles();
+        if (!isActive) return;
+        setCustomReactionOptions(files.map(buildAssetReaction));
+      } catch (error) {
+        console.warn("[Meets] Failed to load reactions:", error);
+      }
+    };
+
+    loadReactions();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const cleanupRoomResources = useCallback(
     (options?: { resetRoomId?: boolean }) => {
       const resetRoomId = options?.resetRoomId !== false;
@@ -502,6 +602,11 @@ export default function MeetsClient({
       consumersRef.current.clear();
       producerMapRef.current.clear();
       pendingProducersRef.current.clear();
+      reactionTimeoutsRef.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      reactionTimeoutsRef.current.clear();
+      setReactions([]);
 
       // Close producers
       try {
@@ -564,6 +669,102 @@ export default function MeetsClient({
     setLocalStream(null);
     reconnectAttemptsRef.current = 0;
   }, [localStream, cleanupRoomResources]);
+
+  const getAudioContext = useCallback(() => {
+    const AudioContextConstructor =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (!AudioContextConstructor) return null;
+
+    if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+      audioContextRef.current = new AudioContextConstructor();
+    }
+
+    return audioContextRef.current;
+  }, []);
+
+  const playNotificationSound = useCallback(
+    (type: "join" | "leave") => {
+      const audioContext = getAudioContext();
+      if (!audioContext) return;
+
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(() => {});
+      }
+
+      const now = audioContext.currentTime;
+      const frequencies =
+        type === "join" ? [523.25, 659.25] : [392.0, 261.63];
+      const duration = 0.12;
+      const gap = 0.03;
+
+      frequencies.forEach((frequency, index) => {
+        const start = now + index * (duration + gap);
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.16, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+      });
+    },
+    [getAudioContext]
+  );
+
+  const primeAudioOutput = useCallback(() => {
+    const audioContext = getAudioContext();
+    if (!audioContext) return;
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+  }, [getAudioContext]);
+
+  const addReaction = useCallback((reaction: ReactionPayload) => {
+    if (reaction.kind === "emoji" && !isReactionEmoji(reaction.value)) return;
+
+    const reactionId = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}`;
+    const lane = 12 + Math.random() * 76;
+    const event: ReactionEvent = {
+      id: reactionId,
+      userId: reaction.userId,
+      kind: reaction.kind,
+      value: reaction.value,
+      label: reaction.label,
+      timestamp: reaction.timestamp || Date.now(),
+      lane,
+    };
+
+    setReactions((prev) => {
+      const next = [...prev, event];
+      return next.length > MAX_REACTIONS ? next.slice(-MAX_REACTIONS) : next;
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      setReactions((prev) => prev.filter((item) => item.id !== reactionId));
+      reactionTimeoutsRef.current.delete(reactionId);
+    }, REACTION_LIFETIME_MS);
+    reactionTimeoutsRef.current.set(reactionId, timeoutId);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      reactionTimeoutsRef.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      reactionTimeoutsRef.current.clear();
+    };
+  }, []);
 
   // ============================================
   // Socket Connection with Reconnection
@@ -681,6 +882,9 @@ export default function MeetsClient({
             "userJoined",
             ({ userId: joinedUserId }: { userId: string }) => {
               console.log("[Meets] User joined:", joinedUserId);
+              if (joinedUserId !== userId) {
+                playNotificationSound("join");
+              }
               dispatchParticipants({
                 type: "ADD_PARTICIPANT",
                 userId: joinedUserId,
@@ -692,6 +896,9 @@ export default function MeetsClient({
             "userLeft",
             ({ userId: leftUserId }: { userId: string }) => {
               console.log("[Meets] User left:", leftUserId);
+              if (leftUserId !== userId) {
+                playNotificationSound("leave");
+              }
 
               const producersToClose = Array.from(
                 producerMapRef.current.entries(),
@@ -766,6 +973,15 @@ export default function MeetsClient({
             }
           });
 
+          socket.on("reaction", (reaction: ReactionNotification) => {
+            addReaction({
+              userId: reaction.userId,
+              kind: "emoji",
+              value: reaction.emoji,
+              timestamp: reaction.timestamp,
+            });
+          });
+
           // Kicked event
           socket.on("kicked", () => {
             cleanup();
@@ -803,6 +1019,23 @@ export default function MeetsClient({
                 newMap.set(userId, displayName);
                 return newMap;
               });
+            }
+          );
+
+          socket.on(
+            "pendingUsersSnapshot",
+            ({
+              users,
+            }: {
+              users: { userId: string; displayName?: string }[];
+            }) => {
+              const snapshot = new Map(
+                (users || []).map(({ userId, displayName }) => [
+                  userId,
+                  displayName || userId,
+                ])
+              );
+              setPendingUsers(snapshot);
             }
           );
 
@@ -967,6 +1200,14 @@ export default function MeetsClient({
 
   const requestMediaPermissions =
     useCallback(async (): Promise<MediaStream | null> => {
+      if (permissionHintTimeoutRef.current) {
+        window.clearTimeout(permissionHintTimeoutRef.current);
+      }
+      setShowPermissionHint(false);
+      permissionHintTimeoutRef.current = window.setTimeout(() => {
+        setShowPermissionHint(true);
+      }, 450);
+
       try {
         const videoConstraints =
           videoQuality === "low"
@@ -1035,6 +1276,12 @@ export default function MeetsClient({
           }
         }
         return null;
+      } finally {
+        if (permissionHintTimeoutRef.current) {
+          window.clearTimeout(permissionHintTimeoutRef.current);
+          permissionHintTimeoutRef.current = null;
+        }
+        setShowPermissionHint(false);
       }
     }, [videoQuality, selectedAudioInputDeviceId, isCameraOff]);
 
@@ -1450,6 +1697,7 @@ export default function MeetsClient({
               await flushPendingProducers();
 
               setConnectionState("joined");
+              playNotificationSound("join");
               resolve();
             } catch (err) {
               reject(err);
@@ -1465,6 +1713,7 @@ export default function MeetsClient({
       createConsumerTransport,
       consumeProducer,
       flushPendingProducers,
+      playNotificationSound,
     ]
   );
 
@@ -1495,6 +1744,7 @@ export default function MeetsClient({
 
       setMeetError(null);
       setConnectionState("connecting");
+      primeAudioOutput();
       intentionalDisconnectRef.current = false;
       setRoomId(targetRoomId);
       let stream: MediaStream | null = null;
@@ -1520,7 +1770,7 @@ export default function MeetsClient({
         setConnectionState("error");
       }
     },
-    [connectSocket, requestMediaPermissions, joinRoomInternal]
+    [connectSocket, requestMediaPermissions, joinRoomInternal, primeAudioOutput]
   );
 
   const joinRoom = useCallback(async () => {
@@ -2031,8 +2281,9 @@ export default function MeetsClient({
   }, [isScreenSharing, activeScreenShareId]);
 
   const leaveRoom = useCallback(() => {
+    playNotificationSound("leave");
     cleanup();
-  }, [cleanup]);
+  }, [cleanup, playNotificationSound]);
 
   const sendChat = useCallback((content: string) => {
     const socket = socketRef.current;
@@ -2058,6 +2309,33 @@ export default function MeetsClient({
       }
     );
   }, []);
+
+  const sendReaction = useCallback(
+    (reaction: ReactionOption) => {
+      addReaction({
+        userId,
+        kind: reaction.kind,
+        value: reaction.value,
+        label: reaction.label,
+        timestamp: Date.now(),
+      });
+
+      if (reaction.kind !== "emoji" || !isReactionEmoji(reaction.value)) return;
+      const socket = socketRef.current;
+      if (!socket) return;
+
+      socket.emit(
+        "sendReaction",
+        { emoji: reaction.value },
+        (response: { success: boolean } | { error: string }) => {
+          if ("error" in response) {
+            console.error("[Meets] Reaction error:", response.error);
+          }
+        }
+      );
+    },
+    [addReaction, userId]
+  );
 
   const toggleChat = useCallback(() => {
     setIsChatOpen((prev) => {
@@ -2131,7 +2409,21 @@ export default function MeetsClient({
       <div className="flex flex-col h-full w-full bg-[#252525] items-center justify-center text-white">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
         <h2 className="text-2xl font-bold mb-2">Waiting for host...</h2>
-        <p className="text-white/60">Using room ID: {roomId}</p>
+        <p className="text-white/70 text-center max-w-lg px-4">
+          Please wait to be let in. If you are facing issues or have questions,
+          please feel free to ask away on the ACM Community Informal WhatsApp
+          Group{" "}
+          <a
+            href="https://chat.whatsapp.com/Lj6GFN4bLggBJmQWBwUSTz"
+            className="text-blue-300 hover:text-blue-200 underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            here
+          </a>
+          .
+        </p>
+        {isAdmin && <p className="text-white/60">Using room ID: {roomId}</p>}
       </div>
     );
   }
@@ -2152,18 +2444,20 @@ export default function MeetsClient({
           </h1>
           {isJoined && (
             <div className="flex items-stretch gap-2 ml-2 hidden sm:flex h-8">
-              <div
-                className="flex items-center bg-white/5 px-3 rounded-md text-sm text-white/80 border border-white/10"
-                style={{ fontWeight: 500 }}
-              >
-                <span className="text-white/40 mr-2">Room:</span>
-                <span
-                  className="font-bold tabular-nums"
-                  style={{ fontWeight: 700 }}
+              {isAdmin && (
+                <div
+                  className="flex items-center bg-white/5 px-3 rounded-md text-sm text-white/80 border border-white/10"
+                  style={{ fontWeight: 500 }}
                 >
-                  {roomId}
-                </span>
-              </div>
+                  <span className="text-white/40 mr-2">Room:</span>
+                  <span
+                    className="font-bold tabular-nums"
+                    style={{ fontWeight: 700 }}
+                  >
+                    {roomId}
+                  </span>
+                </div>
+              )}
               <VideoSettings
                 isMirrorCamera={isMirrorCamera}
                 isOpen={isVideoSettingsOpen}
@@ -2219,6 +2513,9 @@ export default function MeetsClient({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-4 overflow-hidden relative">
+        {isJoined && reactions.length > 0 && (
+          <ReactionOverlay reactions={reactions} />
+        )}
         {!isJoined ? (
           /* Join Screen */
           <JoinScreen
@@ -2229,6 +2526,7 @@ export default function MeetsClient({
             userEmail={userEmail}
             connectionState={connectionState}
             isAdmin={!!isAdmin}
+            showPermissionHint={showPermissionHint}
             rooms={availableRooms}
             roomsStatus={roomsStatus}
             onRefreshRooms={refreshRooms}
@@ -2272,10 +2570,12 @@ export default function MeetsClient({
             activeScreenShareId={activeScreenShareId}
             isChatOpen={isChatOpen}
             unreadCount={unreadCount}
+            reactionOptions={reactionOptions}
             onToggleMute={toggleMute}
             onToggleCamera={toggleCamera}
             onToggleScreenShare={toggleScreenShare}
             onToggleChat={toggleChat}
+            onSendReaction={sendReaction}
             onLeave={leaveRoom}
             isAdmin={isAdmin}
             isParticipantsOpen={isParticipantsOpen}
@@ -2358,6 +2658,7 @@ interface JoinScreenProps {
   userEmail: string;
   connectionState: ConnectionState;
   isAdmin: boolean;
+  showPermissionHint: boolean;
   rooms: RoomInfo[];
   roomsStatus: "idle" | "loading" | "error";
   onRefreshRooms: () => void;
@@ -2372,6 +2673,7 @@ function JoinScreen({
   userEmail,
   connectionState,
   isAdmin,
+  showPermissionHint,
   rooms,
   roomsStatus,
   onRefreshRooms,
@@ -2390,14 +2692,16 @@ function JoinScreen({
         </p>
       </div>
 
-      <input
-        type="text"
-        value={roomId}
-        onChange={(e) => onRoomIdChange(e.target.value)}
-        placeholder="Enter Room ID"
-        disabled={isLoading || !isAdmin}
-        className="px-4 py-2 bg-[#252525] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
-      />
+        {isAdmin && (
+          <input
+            type="text"
+            value={roomId}
+            onChange={(e) => onRoomIdChange(e.target.value)}
+            placeholder="Enter Room ID"
+            disabled={isLoading}
+            className="px-4 py-2 bg-[#252525] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+          />
+        )}
 
       <button
         onClick={onJoin}
@@ -2412,6 +2716,16 @@ function JoinScreen({
           ? "Joining..."
           : "Join Room"}
       </button>
+
+      {showPermissionHint && (
+        <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
+          <AlertCircle className="w-3.5 h-3.5 text-blue-300" />
+          <span>
+            Please allow camera/microphone permissions to connect to the
+            meeting.
+          </span>
+        </div>
+      )}
 
       {isAdmin && (
         <div className="w-full max-w-2xl mt-6">
@@ -2697,10 +3011,12 @@ interface ControlsBarProps {
   activeScreenShareId: string | null;
   isChatOpen: boolean;
   unreadCount: number;
+  reactionOptions: ReactionOption[];
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onToggleScreenShare: () => void;
   onToggleChat: () => void;
+  onSendReaction: (reaction: ReactionOption) => void;
   onLeave: () => void;
   isAdmin?: boolean | null;
   isParticipantsOpen?: boolean;
@@ -2714,16 +3030,36 @@ function ControlsBar({
   activeScreenShareId,
   isChatOpen,
   unreadCount,
+  reactionOptions,
   onToggleMute,
   onToggleCamera,
   onToggleScreenShare,
   onToggleChat,
+  onSendReaction,
   onLeave,
   isAdmin,
   isParticipantsOpen,
   onToggleParticipants,
 }: ControlsBarProps) {
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
+  const [isReactionMenuOpen, setIsReactionMenuOpen] = useState(false);
+  const reactionMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isReactionMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        reactionMenuRef.current &&
+        !reactionMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsReactionMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isReactionMenuOpen]);
 
   return (
     <div className="flex justify-center gap-2 mt-4 shrink-0">
@@ -2790,6 +3126,45 @@ function ControlsBar({
         <Monitor className="w-5 h-5" />
       </button>
 
+      <div ref={reactionMenuRef} className="relative">
+        <button
+          onClick={() => setIsReactionMenuOpen((prev) => !prev)}
+          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
+            isReactionMenuOpen
+              ? "bg-white text-black hover:bg-neutral-200"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+          }`}
+          title="Reactions"
+        >
+          <Smile className="w-5 h-5" />
+        </button>
+
+        {isReactionMenuOpen && (
+          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full border border-white/10 bg-[#1f1f1f] px-2 py-1 shadow-lg max-w-[320px] overflow-x-auto no-scrollbar">
+            {reactionOptions.map((reaction) => (
+              <button
+                key={reaction.id}
+                onClick={() => {
+                  onSendReaction(reaction);
+                }}
+                className="w-9 h-9 shrink-0 rounded-full text-xl hover:bg-white/10 transition-colors flex items-center justify-center"
+                title={`React ${reaction.label}`}
+              >
+                {reaction.kind === "emoji" ? (
+                  reaction.value
+                ) : (
+                  <img
+                    src={reaction.value}
+                    alt={reaction.label}
+                    className="w-6 h-6 object-contain"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <button
         onClick={onToggleChat}
         className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center relative ${
@@ -2817,6 +3192,44 @@ function ControlsBar({
       >
         <Phone className="rotate-[135deg] w-5 h-5" />
       </button>
+    </div>
+  );
+}
+
+interface ReactionOverlayProps {
+  reactions: ReactionEvent[];
+}
+
+function ReactionOverlay({ reactions }: ReactionOverlayProps) {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20">
+      {reactions.map((reaction) => {
+        const displayName = getDisplayName(reaction.userId);
+        return (
+          <div
+            key={reaction.id}
+            className="absolute bottom-20 animate-reaction-float"
+            style={{ left: `${reaction.lane}%` }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-16 h-16 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-3xl shadow-xl">
+                {reaction.kind === "emoji" ? (
+                  reaction.value
+                ) : (
+                  <img
+                    src={reaction.value}
+                    alt={reaction.label || "Reaction"}
+                    className="w-10 h-10 object-contain"
+                  />
+                )}
+              </div>
+              <span className="text-[10px] text-white/70 bg-black/40 border border-white/5 px-2 py-0.5 rounded-full">
+                {displayName}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
