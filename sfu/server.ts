@@ -79,6 +79,20 @@ app.get("/health", (req, res) => {
   res.json(healthData);
 });
 
+app.get("/rooms", (req, res) => {
+  const secret = req.header("x-sfu-secret");
+  if (!secret || secret !== config.sfuSecret) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const roomDetails = Array.from(rooms.values()).map((room) => ({
+    id: room.id,
+    clients: room.clientCount,
+  }));
+
+  return res.json({ rooms: roomDetails });
+});
+
 // Load SSL certificates
 // const httpsOptions = {
 //   key: readFileSync(join(__dirname, "certs", "cert.key")),
