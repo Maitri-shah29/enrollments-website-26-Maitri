@@ -11,7 +11,16 @@ const Instructions: React.FC = () => {
           <li>Round 2 is a CC contest round.</li>
           <li>
             Register for the HackerRank contest on January 10th, 2026 at 9:30 PM
-            IST at https://www.hackerrank.com/acm-cc-contest.
+            IST at{" "}
+            <a
+              href="https://www.hackerrank.com/acm-cc-contest"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#c9eb3e] underline underline-offset-4"
+            >
+              https://www.hackerrank.com/acm-cc-contest
+            </a>
+            .
           </li>
           <li>The contest will continue for 2 hours.</li>
           <li>
