@@ -300,6 +300,7 @@ io.on("connection", (socket: Socket) => {
             admin.socket.emit("userRequestedJoin", {
               userId: userKey,
               displayName,
+              roomId,
             });
           }
 
@@ -362,7 +363,10 @@ io.on("connection", (socket: Socket) => {
             userId: pending.userKey,
             displayName: pending.displayName || pending.userKey,
           }));
-          socket.emit("pendingUsersSnapshot", { users: pendingUsers });
+          socket.emit("pendingUsersSnapshot", {
+            users: pendingUsers,
+            roomId: currentRoom.id,
+          });
         }
 
         // Notify others
@@ -503,7 +507,10 @@ io.on("connection", (socket: Socket) => {
 
               // Notify all admins so they can remove from list
               for (const admin of currentRoom.getAdmins()) {
-                admin.socket.emit("userAdmitted", { userId: pending.userKey });
+                admin.socket.emit("userAdmitted", {
+                  userId: pending.userKey,
+                  roomId: currentRoom.id,
+                });
               }
 
               cb({ success: true });
@@ -525,7 +532,10 @@ io.on("connection", (socket: Socket) => {
 
               // Notify all admins so they can remove from list
               for (const admin of currentRoom.getAdmins()) {
-                admin.socket.emit("userRejected", { userId: pending.userKey });
+                admin.socket.emit("userRejected", {
+                  userId: pending.userKey,
+                  roomId: currentRoom.id,
+                });
               }
 
               cb({ success: true });
@@ -1180,7 +1190,10 @@ io.on("connection", (socket: Socket) => {
         if (pending?.socket?.id === socket.id) {
           pendingRoom.removePendingClient(pendingUserKey);
           for (const admin of pendingRoom.getAdmins()) {
-            admin.socket.emit("pendingUserLeft", { userId: pendingUserKey });
+            admin.socket.emit("pendingUserLeft", {
+              userId: pendingUserKey,
+              roomId: pendingRoomId,
+            });
           }
         }
       }
