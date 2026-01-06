@@ -355,6 +355,10 @@ export default function MeetsClient({
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
     null
   );
+  const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
+  const [roomsStatus, setRoomsStatus] = useState<"idle" | "loading" | "error">(
+    "idle"
+  );
   const [participants, dispatchParticipants] = useReducer(
     participantReducer,
     new Map()
@@ -1434,39 +1438,76 @@ export default function MeetsClient({
     handleRedirectRef.current = handleRedirectCallback;
   }, [handleRedirectCallback]);
 
-  const joinRoom = useCallback(async () => {
-    if (abortControllerRef.current?.signal.aborted) return;
+  const startJoin = useCallback(
+    async (targetRoomId: string) => {
+      if (abortControllerRef.current?.signal.aborted) return;
 
-    setMeetError(null);
-    setConnectionState("connecting");
-    intentionalDisconnectRef.current = false;
-    let stream: MediaStream | null = null;
+      setMeetError(null);
+      setConnectionState("connecting");
+      intentionalDisconnectRef.current = false;
+      setRoomId(targetRoomId);
+      let stream: MediaStream | null = null;
+
+      try {
+        const _socket = await connectSocket();
+        stream = await requestMediaPermissions();
+        if (!stream) {
+          setConnectionState("error");
+          return;
+        }
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+
+        await joinRoomInternal(targetRoomId, stream);
+      } catch (err) {
+        console.error("[Meets] Error joining room:", err);
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+          setLocalStream(null);
+        }
+        setMeetError(createMeetError(err));
+        setConnectionState("error");
+      }
+    },
+    [connectSocket, requestMediaPermissions, joinRoomInternal]
+  );
+
+  const joinRoom = useCallback(async () => {
+    await startJoin(roomId);
+  }, [roomId, startJoin]);
+
+  const joinRoomById = useCallback(
+    async (targetRoomId: string) => {
+      await startJoin(targetRoomId);
+    },
+    [startJoin]
+  );
+
+  const refreshRooms = useCallback(async () => {
+    if (!isAdmin) return;
+    setRoomsStatus("loading");
 
     try {
-      const _socket = await connectSocket();
-      // Get media first
-      stream = await requestMediaPermissions();
-      if (!stream) {
-        setConnectionState("error");
+      const response = await fetch("/api/sfu/rooms", { cache: "no-store" });
+      if (!response.ok) {
+        setRoomsStatus("error");
+        setAvailableRooms([]);
         return;
       }
-      localStreamRef.current = stream;
-      setLocalStream(stream);
-
-      // Connect socket
-
-      // Join room
-      await joinRoomInternal(roomId, stream);
-    } catch (err) {
-      console.error("[Meets] Error joining room:", err);
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-        setLocalStream(null);
-      }
-      setMeetError(createMeetError(err));
-      setConnectionState("error");
+      const data = await response.json();
+      setAvailableRooms(Array.isArray(data.rooms) ? data.rooms : []);
+      setRoomsStatus("idle");
+    } catch (_error) {
+      setRoomsStatus("error");
+      setAvailableRooms([]);
     }
-  }, [roomId, connectSocket]);
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin && connectionState !== "joined") {
+      refreshRooms();
+    }
+  }, [isAdmin, connectionState, refreshRooms]);
 
   // Effect to trigger auto-join after redirect updates roomId
   useEffect(() => {
@@ -1960,6 +2001,10 @@ export default function MeetsClient({
             userEmail={userEmail}
             connectionState={connectionState}
             isAdmin={!!isAdmin}
+            rooms={availableRooms}
+            roomsStatus={roomsStatus}
+            onRefreshRooms={refreshRooms}
+            onJoinRoom={joinRoomById}
           />
         ) : presentationStream ? (
           /* Presentation Layout */
@@ -2076,20 +2121,28 @@ interface JoinScreenProps {
   roomId: string;
   onRoomIdChange: (id: string) => void;
   onJoin: () => void;
+  onJoinRoom: (roomId: string) => void;
   isLoading: boolean;
   userEmail: string;
   connectionState: ConnectionState;
   isAdmin: boolean;
+  rooms: RoomInfo[];
+  roomsStatus: "idle" | "loading" | "error";
+  onRefreshRooms: () => void;
 }
 
 function JoinScreen({
   roomId,
   onRoomIdChange,
   onJoin,
+  onJoinRoom,
   isLoading,
   userEmail,
   connectionState,
   isAdmin,
+  rooms,
+  roomsStatus,
+  onRefreshRooms,
 }: JoinScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
@@ -2127,6 +2180,72 @@ function JoinScreen({
           ? "Joining..."
           : "Join Room"}
       </button>
+
+      {isAdmin && (
+        <div className="w-full max-w-2xl mt-6">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
+              Active meetings
+            </h3>
+            <button
+              onClick={onRefreshRooms}
+              disabled={roomsStatus === "loading"}
+              className="text-xs px-3 py-1 rounded bg-white/5 border border-white/10 text-neutral-300 hover:bg-white/10 disabled:opacity-50 transition-colors"
+              style={{ fontWeight: 500 }}
+            >
+              {roomsStatus === "loading" ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+
+          {roomsStatus === "loading" ? (
+            <div className="flex items-center justify-center gap-2 py-6 text-neutral-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Loading rooms...</span>
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="text-sm text-neutral-500 text-center py-6">
+              {roomsStatus === "error"
+                ? "Unable to load rooms. Try again."
+                : "No active rooms right now."}
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {rooms.map((room) => (
+                  <div
+                    key={room.id}
+                    className="flex items-center justify-between gap-4 p-3 rounded-lg bg-[#252525] border border-white/5"
+                  >
+                    <div className="min-w-0">
+                      <div
+                        className="text-sm text-white truncate"
+                        style={{ fontWeight: 600 }}
+                      >
+                        {room.id}
+                      </div>
+                      <div className="text-xs text-neutral-500 flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        <span className="tabular-nums">
+                          {room.userCount} participant
+                          {room.userCount === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onJoinRoom(room.id)}
+                      disabled={isLoading}
+                      className="px-3 py-1 text-xs rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 disabled:opacity-50 transition-colors"
+                      style={{ fontWeight: 500 }}
+                    >
+                      Join
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
