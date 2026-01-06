@@ -10,8 +10,17 @@ const Instructions: React.FC = () => {
         <ul className="list-disc pl-6 sm:pl-8 space-y-3 text-white text-sm md:text-base leading-relaxed marker:text-[#c9eb3e]">
           <li>Round 2 is a CC contest round.</li>
           <li>
-            Register for the HackerRank contest on January 10t2h, 2026 at 9:30 PM
-            IST at https://www.hackerrank.com/acm-cc-contest.
+            Register for the HackerRank contest on January 10th, 2026 at 9:30 PM
+            IST at{" "}
+            <a
+              href="https://www.hackerrank.com/acm-cc-contest"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#c9eb3e] underline underline-offset-4"
+            >
+              https://www.hackerrank.com/acm-cc-contest
+            </a>
+            .
           </li>
           <li>The contest will continue for 2 hours.</li>
           <li>
