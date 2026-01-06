@@ -1,7 +1,8 @@
-import os from "os";
 import * as mediasoup from "mediasoup";
 import type { Worker } from "mediasoup/types";
+import os from "os";
 import { config } from "../config/config.js";
+import { Logger } from "./Logger.js";
 
 const totalThreads = os.cpus().length;
 
@@ -17,12 +18,12 @@ const createWorkers = async (): Promise<Worker[]> => {
     });
 
     worker.on("died", () => {
-      console.error(`[SFU] Worker ${i} has died`);
+      Logger.error(`Worker ${i} has died`);
       process.exit(1);
     });
 
     workers.push(worker);
-    console.log(`[SFU] Worker ${i} created`);
+    Logger.info(`Worker ${i} created`);
   }
 
   return workers;

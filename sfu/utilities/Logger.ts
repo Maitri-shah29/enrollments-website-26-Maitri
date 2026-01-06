@@ -37,50 +37,81 @@ const getTimestamp = () => {
 // [SFU] prefix in Magenta
 const PREFIX = `${colors.fg.magenta}[SFU]${colors.reset}`;
 
+type LogLevel = "error" | "warn" | "info" | "debug";
+
+const levelOrder: Record<LogLevel, number> = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  debug: 3,
+};
+
+const resolveLogLevel = (): LogLevel => {
+  const envLevel = (
+    process.env.SFU_LOG_LEVEL ||
+    process.env.LOG_LEVEL ||
+    ""
+  ).toLowerCase();
+  if (envLevel in levelOrder) {
+    return envLevel as LogLevel;
+  }
+  return process.env.NODE_ENV === "production" ? "warn" : "info";
+};
+
+const activeLogLevel = resolveLogLevel();
+
+const shouldLog = (level: LogLevel) => {
+  return levelOrder[level] <= levelOrder[activeLogLevel];
+};
+
 export const Logger = {
   info: (message: string, ...args: any[]) => {
+    if (!shouldLog("info")) return;
     console.log(
       `${colors.dim}${getTimestamp()}${colors.reset} ${PREFIX} ${
         colors.fg.cyan
       }INFO${colors.reset}  ${message}`,
-      ...args
+      ...args,
     );
   },
 
   success: (message: string, ...args: any[]) => {
+    if (!shouldLog("info")) return;
     console.log(
       `${colors.dim}${getTimestamp()}${colors.reset} ${PREFIX} ${
         colors.fg.green
       }SUCCESS${colors.reset}  ${message}`,
-      ...args
+      ...args,
     );
   },
 
   warn: (message: string, ...args: any[]) => {
+    if (!shouldLog("warn")) return;
     console.warn(
       `${colors.dim}${getTimestamp()}${colors.reset} ${PREFIX} ${
         colors.fg.yellow
       }WARN${colors.reset}  ${message}`,
-      ...args
+      ...args,
     );
   },
 
   error: (message: string, ...args: any[]) => {
+    if (!shouldLog("error")) return;
     console.error(
       `${colors.dim}${getTimestamp()}${colors.reset} ${PREFIX} ${
         colors.fg.red
       }ERROR${colors.reset}  ${message}`,
-      ...args
+      ...args,
     );
   },
 
   debug: (message: string, ...args: any[]) => {
-    // Only log debug if needed, or maybe just use gray
+    if (!shouldLog("debug")) return;
     console.log(
       `${colors.dim}${getTimestamp()}${colors.reset} ${PREFIX} ${
         colors.fg.gray
       }DEBUG${colors.reset}  ${message}`,
-      ...args
+      ...args,
     );
   },
 };
