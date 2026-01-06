@@ -8,7 +8,11 @@ const SFU_SECRET = process.env.SFU_SECRET || "development-secret";
 
 import { ADMIN_EMAILS } from "@/lib/admin-config";
 
-export async function getSfuToken() {
+export async function getSfuToken(sessionId: string) {
+  if (!sessionId) {
+    throw new Error("Missing session ID");
+  }
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -25,6 +29,7 @@ export async function getSfuToken() {
       email: session.user.email,
       name: session.user.name,
       isAdmin,
+      sessionId,
     },
     SFU_SECRET,
     { expiresIn: "1h" }
