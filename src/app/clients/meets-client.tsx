@@ -102,7 +102,10 @@ interface ChatMessage {
 
 interface ReactionNotification {
   userId: string;
-  emoji: string;
+  emoji?: string;
+  kind?: ReactionKind;
+  value?: string;
+  label?: string;
   timestamp: number;
 }
 
@@ -418,6 +421,10 @@ function buildAssetReaction(fileName: string): ReactionOption {
   };
 }
 
+function isValidAssetPath(value: string): boolean {
+  return value.startsWith("/reactions/") && !value.includes("..");
+}
+
 function getSpeakerHighlightClasses(isActive: boolean): string {
   return isActive
     ? "border-emerald-300/90 ring-4 ring-emerald-400/45 shadow-[0_0_26px_rgba(16,185,129,0.28)]"
@@ -730,6 +737,7 @@ export default function MeetsClient({
 
   const addReaction = useCallback((reaction: ReactionPayload) => {
     if (reaction.kind === "emoji" && !isReactionEmoji(reaction.value)) return;
+    if (reaction.kind === "asset" && !isValidAssetPath(reaction.value)) return;
 
     const reactionId = `${Date.now()}-${Math.random()
       .toString(36)
@@ -974,12 +982,25 @@ export default function MeetsClient({
           });
 
           socket.on("reaction", (reaction: ReactionNotification) => {
-            addReaction({
-              userId: reaction.userId,
-              kind: "emoji",
-              value: reaction.emoji,
-              timestamp: reaction.timestamp,
-            });
+            if (reaction.kind && reaction.value) {
+              addReaction({
+                userId: reaction.userId,
+                kind: reaction.kind,
+                value: reaction.value,
+                label: reaction.label,
+                timestamp: reaction.timestamp,
+              });
+              return;
+            }
+
+            if (reaction.emoji) {
+              addReaction({
+                userId: reaction.userId,
+                kind: "emoji",
+                value: reaction.emoji,
+                timestamp: reaction.timestamp,
+              });
+            }
           });
 
           // Kicked event
@@ -2320,13 +2341,29 @@ export default function MeetsClient({
         timestamp: Date.now(),
       });
 
-      if (reaction.kind !== "emoji" || !isReactionEmoji(reaction.value)) return;
+      if (reaction.kind === "emoji" && !isReactionEmoji(reaction.value)) return;
+      if (reaction.kind === "asset" && !isValidAssetPath(reaction.value))
+        return;
       const socket = socketRef.current;
       if (!socket) return;
 
+      const payload =
+        reaction.kind === "emoji"
+          ? {
+              kind: "emoji" as const,
+              value: reaction.value,
+              emoji: reaction.value,
+              label: reaction.label,
+            }
+          : {
+              kind: "asset" as const,
+              value: reaction.value,
+              label: reaction.label,
+            };
+
       socket.emit(
         "sendReaction",
-        { emoji: reaction.value },
+        payload,
         (response: { success: boolean } | { error: string }) => {
           if ("error" in response) {
             console.error("[Meets] Reaction error:", response.error);

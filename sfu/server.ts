@@ -6,7 +6,7 @@ import { createServer as createHttpServer } from "http";
 import { createServer as createHttpsServer } from "https";
 import jwt from "jsonwebtoken";
 import type { Worker } from "mediasoup/types";
-import { dirname, join } from "path";
+import { dirname, extname, join } from "path";
 import { type Socket, Server as SocketIOServer } from "socket.io";
 import { fileURLToPath } from "url";
 import { Admin } from "./config/classes/Admin.js";
@@ -41,7 +41,15 @@ import { Logger } from "./utilities/Logger.js";
 
 let workers: Worker[] = [];
 const rooms: Map<string, Room> = new Map();
-const allowedReactions = new Set(["👍", "👏", "😂", "❤️", "🎉", "😮"]);
+const allowedEmojiReactions = new Set(["👍", "👏", "😂", "❤️", "🎉", "😮"]);
+const allowedAssetExtensions = new Set([
+  ".gif",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+  ".svg",
+]);
 
 // ============================================
 // Server Setup (HTTPS for WebRTC)
@@ -92,6 +100,22 @@ app.get("/rooms", (req, res) => {
 
   return res.json({ rooms: roomDetails });
 });
+
+const isValidReactionAssetPath = (value: string): boolean => {
+  if (!value.startsWith("/reactions/") || value.includes("..")) {
+    return false;
+  }
+
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch (_error) {
+    return false;
+  }
+
+  const extension = extname(decoded).toLowerCase();
+  return allowedAssetExtensions.has(extension);
+};
 
 // Load SSL certificates
 // const httpsOptions = {
@@ -1027,15 +1051,40 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        const emoji = data.emoji?.trim();
-        if (!emoji || !allowedReactions.has(emoji)) {
+        if (data.kind === "asset" && typeof data.value === "string") {
+          if (!isValidReactionAssetPath(data.value)) {
+            callback({ error: "Invalid reaction asset" });
+            return;
+          }
+
+          const reaction: ReactionNotification = {
+            userId: currentClient.id,
+            kind: "asset",
+            value: data.value,
+            label: data.label,
+            timestamp: Date.now(),
+          };
+
+          io.to(currentRoom.id).emit("reaction", reaction);
+          callback({ success: true });
+          return;
+        }
+
+        const emoji =
+          data.kind === "emoji" && typeof data.value === "string"
+            ? data.value.trim()
+            : data.emoji?.trim();
+
+        if (!emoji || !allowedEmojiReactions.has(emoji)) {
           callback({ error: "Invalid reaction" });
           return;
         }
 
         const reaction: ReactionNotification = {
           userId: currentClient.id,
-          emoji,
+          kind: "emoji",
+          value: emoji,
+          label: data.label,
           timestamp: Date.now(),
         };
 
