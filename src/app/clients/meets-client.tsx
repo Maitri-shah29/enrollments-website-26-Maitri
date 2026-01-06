@@ -3144,14 +3144,14 @@ function ReactionOverlay({ reactions }: ReactionOverlayProps) {
             style={{ left: `${reaction.lane}%` }}
           >
             <div className="flex flex-col items-center gap-1">
-              <div className="w-12 h-12 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-2xl shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-3xl shadow-xl">
                 {reaction.kind === "emoji" ? (
                   reaction.value
                 ) : (
                   <img
                     src={reaction.value}
                     alt={reaction.label || "Reaction"}
-                    className="w-8 h-8 object-contain"
+                    className="w-10 h-10 object-contain"
                   />
                 )}
               </div>
