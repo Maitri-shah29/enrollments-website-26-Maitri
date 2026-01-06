@@ -20,8 +20,12 @@ import {
 import { Device } from "mediasoup-client";
 import type {
   Consumer,
+  DtlsParameters,
+  IceCandidate,
+  IceParameters,
   Producer,
   RtpCapabilities,
+  RtpParameters,
   Transport,
 } from "mediasoup-client/types";
 import { Roboto } from "next/font/google";
@@ -130,16 +134,16 @@ interface JoinRoomResponse {
 
 interface TransportResponse {
   id: string;
-  iceParameters: unknown;
-  iceCandidates: unknown[];
-  dtlsParameters: unknown;
+  iceParameters: IceParameters;
+  iceCandidates: IceCandidate[];
+  dtlsParameters: DtlsParameters;
 }
 
 interface ConsumeResponse {
   id: string;
   producerId: string;
   kind: "audio" | "video";
-  rtpParameters: unknown;
+  rtpParameters: RtpParameters;
 }
 
 /** Producer ownership tracking */
@@ -191,7 +195,7 @@ type ParticipantAction =
 
 function participantReducer(
   state: Map<string, Participant>,
-  action: ParticipantAction,
+  action: ParticipantAction
 ): Map<string, Participant> {
   const newState = new Map(state);
 
@@ -286,7 +290,7 @@ function participantReducer(
 /** Create a meet error with proper categorization */
 function createMeetError(
   error: unknown,
-  defaultCode: MeetError["code"] = "UNKNOWN",
+  defaultCode: MeetError["code"] = "UNKNOWN"
 ): MeetError {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -349,11 +353,11 @@ export default function MeetsClient({
   const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
-    null,
+    null
   );
   const [participants, dispatchParticipants] = useReducer(
     participantReducer,
-    new Map(),
+    new Map()
   );
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
@@ -384,7 +388,7 @@ export default function MeetsClient({
   }, [session?.data?.user?.email]);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<Map<string, string>>(
-    new Map(),
+    new Map()
   ); // userId -> displayName
 
   // Refs for WebRTC objects
@@ -403,7 +407,7 @@ export default function MeetsClient({
   const videoQualityRef = useRef<VideoQuality>("standard");
   const currentRoomIdRef = useRef<string | null>(null);
   const handleRedirectRef = useRef<(roomId: string) => Promise<void>>(
-    async () => {},
+    async () => {}
   );
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
@@ -611,7 +615,7 @@ export default function MeetsClient({
                 screenProducerRef.current = null;
                 setActiveScreenShareId(null);
               }
-            },
+            }
           );
 
           // User events
@@ -623,7 +627,7 @@ export default function MeetsClient({
                 type: "ADD_PARTICIPANT",
                 userId: joinedUserId,
               });
-            },
+            }
           );
 
           socket.on(
@@ -650,7 +654,7 @@ export default function MeetsClient({
                   producerMapRef.current.delete(producerId);
                 }
               }
-            },
+            }
           );
 
           // Media state events
@@ -662,7 +666,7 @@ export default function MeetsClient({
                 userId,
                 muted,
               });
-            },
+            }
           );
 
           socket.on(
@@ -679,7 +683,7 @@ export default function MeetsClient({
                 userId: camUserId,
                 cameraOff,
               });
-            },
+            }
           );
 
           socket.on(
@@ -689,7 +693,7 @@ export default function MeetsClient({
               setVideoQuality(quality);
               // Trigger the quality update effect/function
               await updateVideoQualityRef.current(quality);
-            },
+            }
           );
 
           // Chat message event
@@ -717,10 +721,10 @@ export default function MeetsClient({
             "redirect",
             async ({ newRoomId }: { newRoomId: string }) => {
               console.log(
-                `[Meets] Redirect received. Initiating full switch to ${newRoomId}`,
+                `[Meets] Redirect received. Initiating full switch to ${newRoomId}`
               );
               handleRedirectRef.current(newRoomId);
-            },
+            }
           );
 
           // Waiting Room Events
@@ -739,7 +743,7 @@ export default function MeetsClient({
                 newMap.set(userId, displayName);
                 return newMap;
               });
-            },
+            }
           );
 
           socket.on("userAdmitted", ({ userId }: { userId: string }) => {
@@ -763,7 +767,7 @@ export default function MeetsClient({
             if (currentRoomIdRef.current && localStreamRef.current) {
               joinRoomInternal(
                 currentRoomIdRef.current,
-                localStreamRef.current,
+                localStreamRef.current
               ).catch(console.error);
             } else {
               console.error(
@@ -771,7 +775,7 @@ export default function MeetsClient({
                 {
                   roomId: currentRoomIdRef.current,
                   hasStream: !!localStreamRef.current,
-                },
+                }
               );
             }
           });
@@ -818,7 +822,7 @@ export default function MeetsClient({
     const delay = RECONNECT_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
 
     console.log(
-      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
+      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`
     );
     await new Promise((r) => setTimeout(r, delay));
 
@@ -1003,7 +1007,7 @@ export default function MeetsClient({
         }
       }
     },
-    [connectionState, isMuted, localStream],
+    [connectionState, isMuted, localStream]
   );
 
   const handleAudioOutputDeviceChange = useCallback(
@@ -1040,7 +1044,7 @@ export default function MeetsClient({
         }
       }
     },
-    [],
+    []
   );
 
   // ============================================
@@ -1071,7 +1075,7 @@ export default function MeetsClient({
                 (res: { success: boolean } | { error: string }) => {
                   if ("error" in res) errback(new Error(res.error));
                   else callback();
-                },
+                }
               );
             });
 
@@ -1084,9 +1088,9 @@ export default function MeetsClient({
                   (res: { producerId: string } | { error: string }) => {
                     if ("error" in res) errback(new Error(res.error));
                     else callback({ id: res.producerId });
-                  },
+                  }
                 );
-              },
+              }
             );
 
             transport.on("connectionstatechange", (state) => {
@@ -1102,11 +1106,11 @@ export default function MeetsClient({
 
             producerTransportRef.current = transport;
             resolve();
-          },
+          }
         );
       });
     },
-    [],
+    []
   );
 
   const createConsumerTransport = useCallback(
@@ -1129,7 +1133,7 @@ export default function MeetsClient({
                 (res: { success: boolean } | { error: string }) => {
                   if ("error" in res) errback(new Error(res.error));
                   else callback();
-                },
+                }
               );
             });
 
@@ -1139,11 +1143,11 @@ export default function MeetsClient({
 
             consumerTransportRef.current = transport;
             resolve();
-          },
+          }
         );
       });
     },
-    [],
+    []
   );
 
   // ============================================
@@ -1202,7 +1206,7 @@ export default function MeetsClient({
         }
       }
     },
-    [isMuted, isCameraOff],
+    [isMuted, isCameraOff]
   );
 
   // ============================================
@@ -1217,7 +1221,7 @@ export default function MeetsClient({
 
       if (!socket || !device || !transport) {
         console.warn(
-          "[Meets] Cannot consume: missing socket, device, or transport",
+          "[Meets] Cannot consume: missing socket, device, or transport"
         );
         return;
       }
@@ -1286,18 +1290,18 @@ export default function MeetsClient({
               socket.emit(
                 "resumeConsumer",
                 { consumerId: consumer.id },
-                () => {},
+                () => {}
               );
               resolve();
             } catch (err) {
               console.error("[Meets] Failed to create consumer:", err);
               resolve();
             }
-          },
+          }
         );
       });
     },
-    [],
+    []
   );
 
   // ============================================
@@ -1331,7 +1335,7 @@ export default function MeetsClient({
             try {
               console.log(
                 "[Meets] Joined room, existing producers:",
-                response.existingProducers,
+                response.existingProducers
               );
               currentRoomIdRef.current = targetRoomId;
 
@@ -1359,7 +1363,7 @@ export default function MeetsClient({
             } catch (err) {
               reject(err);
             }
-          },
+          }
         );
       });
     },
@@ -1369,7 +1373,7 @@ export default function MeetsClient({
       createProducerTransport,
       createConsumerTransport,
       consumeProducer,
-    ],
+    ]
   );
 
   const handleRedirectCallback = useCallback(
@@ -1386,7 +1390,7 @@ export default function MeetsClient({
       // We need to wait for the state (roomId) to update and joinRoom to be recreated.
       shouldAutoJoinRef.current = true;
     },
-    [cleanup],
+    [cleanup]
   );
 
   useEffect(() => {
@@ -1451,7 +1455,7 @@ export default function MeetsClient({
 
         console.log(
           `[Meets] Switching to ${quality} quality`,
-          JSON.stringify(constraints),
+          JSON.stringify(constraints)
         );
 
         // create new video track
@@ -1481,7 +1485,7 @@ export default function MeetsClient({
         console.error("[Meets] Failed to update video quality:", err);
       }
     },
-    [isCameraOff, localStream],
+    [isCameraOff, localStream]
   );
 
   // Keep ref up to date for socket listener
@@ -1513,7 +1517,7 @@ export default function MeetsClient({
       socketRef.current?.emit(
         "toggleMute",
         { producerId: producer.id, paused: newMuted },
-        () => {},
+        () => {}
       );
     } else {
       // Producer doesn't exist, try to create it (unmute)
@@ -1579,7 +1583,7 @@ export default function MeetsClient({
       socketRef.current?.emit(
         "toggleCamera",
         { producerId: producer.id, paused: newCameraOff },
-        () => {},
+        () => {}
       );
     } else {
       // Producer doesn't exist, try to create it (turn camera on)
@@ -1647,7 +1651,7 @@ export default function MeetsClient({
         socketRef.current?.emit(
           "closeProducer",
           { producerId: producer.id },
-          () => {},
+          () => {}
         );
         try {
           producer.close();
@@ -1694,7 +1698,7 @@ export default function MeetsClient({
         socketRef.current?.emit(
           "closeProducer",
           { producerId: producer.id },
-          () => {},
+          () => {}
         );
         try {
           producer.close();
@@ -1727,7 +1731,7 @@ export default function MeetsClient({
       (
         response:
           | { success: boolean; message?: ChatMessage }
-          | { error: string },
+          | { error: string }
       ) => {
         if ("error" in response) {
           console.error("[Meets] Chat error:", response.error);
@@ -1735,9 +1739,10 @@ export default function MeetsClient({
         }
         if (response.message) {
           // Add our own message to the list
-          setChatMessages((prev) => [...prev, response.message]);
+          const newMessage = response.message;
+          setChatMessages((prev) => [...prev, newMessage]);
         }
-      },
+      }
     );
   }, []);
 
@@ -1769,7 +1774,7 @@ export default function MeetsClient({
       }
       localVideoRef.current = node;
     },
-    [localStream],
+    [localStream]
   );
 
   // ============================================
@@ -1912,7 +1917,7 @@ export default function MeetsClient({
             connectionState={connectionState}
             isAdmin={!!isAdmin}
           />
-        ) : isPresentationMode ? (
+        ) : presentationStream ? (
           /* Presentation Layout */
           <PresentationLayout
             presentationStream={presentationStream}
@@ -2074,8 +2079,8 @@ function JoinScreen({
         {connectionState === "reconnecting"
           ? "Reconnecting..."
           : isLoading
-            ? "Joining..."
-            : "Join Room"}
+          ? "Joining..."
+          : "Join Room"}
       </button>
     </div>
   );
@@ -2355,15 +2360,15 @@ function ControlsBar({
           isScreenSharing
             ? "bg-white text-black hover:bg-neutral-200"
             : !canStartScreenShare
-              ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
-              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+            ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={
           !canStartScreenShare
             ? "Someone else is presenting"
             : isScreenSharing
-              ? "Stop sharing"
-              : "Share screen"
+            ? "Stop sharing"
+            : "Share screen"
         }
       >
         <Monitor className="w-5 h-5" />
@@ -2558,7 +2563,7 @@ function ParticipantVideo({
       }
       videoRef.current = node;
     },
-    [participant.videoStream],
+    [participant.videoStream]
   );
 
   const setAudioRef = useCallback(
@@ -2585,7 +2590,7 @@ function ParticipantVideo({
       }
       audioRef.current = node;
     },
-    [participant.audioStream, audioOutputDeviceId],
+    [participant.audioStream, audioOutputDeviceId]
   );
 
   // Update audio output when device changes
@@ -2613,8 +2618,8 @@ function ParticipantVideo({
         isNew
           ? "animate-participant-join"
           : participant.isLeaving
-            ? "animate-participant-leave"
-            : ""
+          ? "animate-participant-leave"
+          : ""
       }`}
     >
       <video
@@ -2704,7 +2709,7 @@ function ParticipantsPanel({
           setShowRedirectModal(false);
           setSelectedUserForRedirect(null);
         }
-      },
+      }
     );
   };
 
@@ -2732,7 +2737,7 @@ function ParticipantsPanel({
             <button
               onClick={() =>
                 socket?.emit("muteAll", (res: unknown) =>
-                  console.log("Muted all:", res),
+                  console.log("Muted all:", res)
                 )
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
@@ -2744,7 +2749,7 @@ function ParticipantsPanel({
             <button
               onClick={() =>
                 socket?.emit("closeAllVideo", (res: unknown) =>
-                  console.log("Stopped all video:", res),
+                  console.log("Stopped all video:", res)
                 )
               }
               className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-1.5 rounded flex items-center justify-center gap-1.5 transition-colors border border-red-500/20 tracking-[0.5px]"
