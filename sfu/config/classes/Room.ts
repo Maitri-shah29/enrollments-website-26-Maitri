@@ -18,8 +18,10 @@ export class Room {
   public readonly id: string;
   public readonly router: Router;
   public clients: Map<string, Client> = new Map();
-  public pendingClients: Map<string, { userId: string; socket: any }> =
-    new Map();
+  public pendingClients: Map<
+    string,
+    { userId: string; socket: any; displayName?: string }
+  > = new Map();
   public allowedUsers: Set<string> = new Set();
   public currentScreenShareProducerId: string | null = null;
   public currentQuality: VideoQuality = "standard";
@@ -278,8 +280,8 @@ export class Room {
   // Waiting Room Methods
   // ============================================
 
-  addPendingClient(userId: string, socket: any) {
-    this.pendingClients.set(userId, { userId, socket });
+  addPendingClient(userId: string, socket: any, displayName?: string) {
+    this.pendingClients.set(userId, { userId, socket, displayName });
   }
 
   removePendingClient(userId: string) {

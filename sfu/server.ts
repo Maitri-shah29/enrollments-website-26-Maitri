@@ -248,7 +248,7 @@ io.on("connection", (socket: Socket) => {
         // ============================================
         if (!isAdmin && !room.isAllowed(userId)) {
           Logger.info(`User ${userId} added to waiting room ${roomId}`);
-          room.addPendingClient(userId, socket);
+          room.addPendingClient(userId, socket, displayName);
           pendingRoomId = roomId;
           pendingUserId = userId;
 
@@ -312,6 +312,15 @@ io.on("connection", (socket: Socket) => {
 
         // Join socket room for broadcasting
         socket.join(roomId);
+
+        if (currentClient instanceof Admin) {
+          for (const pending of currentRoom.pendingClients.values()) {
+            socket.emit("userRequestedJoin", {
+              userId: pending.userId,
+              displayName: pending.displayName || pending.userId,
+            });
+          }
+        }
 
         // Notify others
         socket.to(roomId).emit("userJoined", { userId });

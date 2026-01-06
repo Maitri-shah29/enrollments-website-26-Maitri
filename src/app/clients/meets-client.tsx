@@ -58,7 +58,7 @@ const roboto = Roboto({
 
 const SFU_URL = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 const RECONNECT_DELAY_MS = 1000;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 8;
 const SOCKET_TIMEOUT_MS = 10000;
 
 // ============================================
@@ -404,11 +404,13 @@ export default function MeetsClient({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const intentionalDisconnectRef = useRef(false);
   const videoQualityRef = useRef<VideoQuality>("standard");
   const currentRoomIdRef = useRef<string | null>(null);
   const handleRedirectRef = useRef<(roomId: string) => Promise<void>>(
     async () => {}
   );
+  const handleReconnectRef = useRef<() => void>(async () => {});
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
 
@@ -501,6 +503,7 @@ export default function MeetsClient({
   const cleanup = useCallback(() => {
     console.log("[Meets] Running full cleanup...");
 
+    intentionalDisconnectRef.current = true;
     cleanupRoomResources();
 
     // Stop local stream tracks
@@ -556,19 +559,22 @@ export default function MeetsClient({
             setConnectionState("connected");
             setMeetError(null);
             reconnectAttemptsRef.current = 0;
+            intentionalDisconnectRef.current = false;
             resolve(socket);
           });
 
           socket.on("disconnect", (reason) => {
             console.log("[Meets] Disconnected:", reason);
-            if (
-              reason === "io server disconnect" ||
-              reason === "io client disconnect"
-            ) {
+            if (intentionalDisconnectRef.current) {
               setConnectionState("disconnected");
-            } else if (currentRoomIdRef.current) {
-              // Unexpected disconnect during active session
-              handleReconnect();
+              return;
+            }
+
+            if (currentRoomIdRef.current) {
+              // Unexpected disconnect during active session (including server restart)
+              handleReconnectRef.current();
+            } else {
+              setConnectionState("disconnected");
             }
           });
 
@@ -863,6 +869,9 @@ export default function MeetsClient({
       handleReconnect();
     }
   }, [connectSocket, localStream, cleanupRoomResources]);
+  useEffect(() => {
+    handleReconnectRef.current = handleReconnect;
+  }, [handleReconnect]);
 
   const handleProducerClosed = useCallback((producerId: string) => {
     const consumer = consumersRef.current.get(producerId);
@@ -1430,6 +1439,7 @@ export default function MeetsClient({
 
     setMeetError(null);
     setConnectionState("connecting");
+    intentionalDisconnectRef.current = false;
     let stream: MediaStream | null = null;
 
     try {
@@ -1440,6 +1450,7 @@ export default function MeetsClient({
         setConnectionState("error");
         return;
       }
+      localStreamRef.current = stream;
       setLocalStream(stream);
 
       // Connect socket
