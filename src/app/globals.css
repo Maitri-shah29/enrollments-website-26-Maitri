@@ -372,6 +372,25 @@
   .animate-participant-leave {
     animation: participantLeave 0.1s cubic-bezier(0.4, 0, 1, 1) both;
   }
+
+  @keyframes reactionFloat {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, 10px) scale(0.9);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -160px) scale(1.05);
+    }
+  }
+
+  .animate-reaction-float {
+    animation: reactionFloat 3.6s ease-out both;
+  }
 }
 
 /* Scrollbar styling with CSS variable support */
@@ -391,6 +410,15 @@
 
 ::-webkit-scrollbar-track {
   background-color: var(--scrollbar-track, transparent);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Firefox scrollbar */

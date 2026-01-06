@@ -46,6 +46,7 @@ const SchedulerClient = ({
   initialRounds,
   initialSfuHealth,
 }: SchedulerClientProps) => {
+  const SLOT_VISIBILITY_GRACE_MS = 3 * 60 * 60 * 1000;
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
@@ -190,10 +191,9 @@ const SchedulerClient = ({
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
     );
 
-    // Filter out past slots
-    const now = new Date().getTime();
+    const now = Date.now();
     const futureSlots = sortedSlots.filter(
-      (s) => new Date(s.from).getTime() > now
+      (s) => new Date(s.to).getTime() + SLOT_VISIBILITY_GRACE_MS > now
     );
 
     setSlots(futureSlots);
@@ -205,6 +205,39 @@ const SchedulerClient = ({
     new Set(slots.map((s) => new Date(s.from).toDateString()))
   ).map((dateString) => new Date(dateString));
 
+  useEffect(() => {
+    if (!selectedRound) return;
+
+    const storageKey = `scheduler-selected-date:${selectedRound.id}`;
+
+    if (selectedDate) {
+      sessionStorage.setItem(storageKey, selectedDate.toDateString());
+      return;
+    }
+
+    if (availableDates.length === 0) {
+      return;
+    }
+
+    const storedDate = sessionStorage.getItem(storageKey);
+    if (!storedDate) return;
+
+    const restoredDate = new Date(storedDate);
+    const isAvailable = availableDates.some(
+      (date) => date.toDateString() === restoredDate.toDateString()
+    );
+
+    if (isAvailable) {
+      setSelectedDate(restoredDate);
+    } else {
+      sessionStorage.removeItem(storageKey);
+      showNotification(
+        "Previously selected date is no longer available.",
+        "error"
+      );
+    }
+  }, [availableDates, selectedDate, selectedRound, showNotification]);
+
   const slotsForSelectedDate = selectedDate
     ? slots.filter(
         (s) => new Date(s.from).toDateString() === selectedDate.toDateString()
@@ -212,6 +245,10 @@ const SchedulerClient = ({
     : [];
 
   const selectedSlot = slots.find((s) => s.id === selectedSlotId) || null;
+  const selectedSlotBookable = selectedSlot
+    ? selectedSlot.capacity > 0 &&
+      new Date(selectedSlot.from).getTime() > Date.now()
+    : false;
 
   const formatDate = (date: Date) => {
     const d = date.getDate();
@@ -250,7 +287,7 @@ const SchedulerClient = ({
   const activeLink = isSfuHealthy ? meetLink : schedulingLink;
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-[var(--font-poppins)]">
+    <div className="flex min-h-[100dvh] overflow-x-hidden bg-black text-white font-[var(--font-poppins)]">
       {notification && (
         <div
           className={`fixed top-35 right-10 z-[1000] p-2 rounded-md shadow-xl text-white transition-opacity duration-300 ${getNotificationClasses(
@@ -265,12 +302,33 @@ const SchedulerClient = ({
         onSelectDomain={setSelectedDomain}
         availableDomains={availableDomains}
       />
-      <div className="flex-1 p-8 md:p-12 lg:p-16">
-        <h1 className="text-2xl font-medium mb-8">
+      <div className="flex-1 p-4 sm:p-6 md:p-10 lg:p-12 xl:p-14">
+        <h1 className="text-xl sm:text-2xl font-medium mb-6 sm:mb-8">
           {bookedSlot
             ? "Your scheduled interaction:"
             : "Choose your preferred date and slot:"}
         </h1>
+        <div className="md:hidden mb-6">
+          <label className="block text-sm text-gray-400 font-semibold mb-2">
+            Select Domain
+          </label>
+          <select
+            value={selectedDomain}
+            onChange={(event) => setSelectedDomain(event.target.value)}
+            className="w-full bg-[#1c1c1c] border border-[#2b2b2b] rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#5CAFFF] transition-colors"
+          >
+            {availableDomains.map(({ name, roundNumber }) => {
+              const label = roundNumber
+                ? `${name} Round ${roundNumber}`
+                : name;
+              return (
+                <option key={name} value={name}>
+                  {label}
+                </option>
+              );
+            })}
+          </select>
+        </div>
         {bookedSlot ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] h-auto bg-[#111] border border-gray-800 rounded-xl p-8 max-w-2xl mx-auto">
             <div className="text-gray-400 mb-2">
@@ -289,7 +347,6 @@ const SchedulerClient = ({
             <div className="text-gray-500 text-sm mb-4">
               Link will be shared 15 min prior to the scheduled time.
             </div>
-            {/* {canJoin && activeLink && ( */}
             {canJoin && activeLink && (
               <div className="bg-gray-800/50 p-4 rounded-lg mb-6 border border-gray-700 max-w-md w-full">
                 <div className="text-sm text-gray-400 mb-2">
@@ -313,7 +370,6 @@ const SchedulerClient = ({
                 </div>
               </div>
             )}
-            {/* {canJoin && activeLink && isSfuHealthy && ( */}
             {canJoin && activeLink && isSfuHealthy && (
               <button
                 onClick={() => {
@@ -343,7 +399,7 @@ const SchedulerClient = ({
             )}
           </div>
         ) : selectedRound ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-8 max-w-6xl">
+          <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_1fr] gap-6 md:gap-8 w-full max-w-5xl xl:max-w-6xl mx-auto">
             <Calendar
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
@@ -354,12 +410,14 @@ const SchedulerClient = ({
                 selectedSlot={selectedSlotId}
                 onSelectSlot={setSelectedSlotId}
                 slots={slotsForSelectedDate}
+                hasSelectedDate={!!selectedDate}
               />
               <SelectedSlot
                 slot={selectedSlot}
                 selectedDate={selectedDate}
                 onConfirm={handleBookSlot}
                 loading={bookingLoading}
+                isBookable={selectedSlotBookable}
               />
             </div>
           </div>

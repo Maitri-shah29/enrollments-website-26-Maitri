@@ -146,6 +146,20 @@ export interface SendChatData {
 export interface ChatMessageNotification extends ChatMessage {}
 
 // ============================================
+// Reactions
+// ============================================
+
+export interface SendReactionData {
+  emoji: string;
+}
+
+export interface ReactionNotification {
+  userId: string;
+  emoji: string;
+  timestamp: number;
+}
+
+// ============================================
 // Media Constraints
 // ============================================
 

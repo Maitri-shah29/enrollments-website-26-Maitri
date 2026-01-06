@@ -59,7 +59,12 @@ const Calendar = ({
     const firstDay = getFirstDayOfMonth(currentMonth);
 
     for (let i = 0; i < firstDay; i++) {
-      grid.push(<div key={`empty-${i}`} className="w-10 h-10" />);
+      grid.push(
+        <div
+          key={`empty-${i}`}
+          className="w-8 h-8 sm:w-10 sm:h-10"
+        />,
+      );
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -87,7 +92,7 @@ const Calendar = ({
           onClick={() => isAvailable && onSelectDate(date)}
           disabled={!isAvailable}
           className={clsx(
-            "w-10 h-10 rounded-full flex items-center justify-center text-lg transition-colors",
+            "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-lg transition-colors",
             isSelected && selectedStyles,
             !isSelected && !isUnavailable && baseAvailable,
             isUnavailable && baseUnavailable,
@@ -102,12 +107,12 @@ const Calendar = ({
   };
 
   return (
-    <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-8">
-      <div className="text-center mb-8 text-gray-200 text-lg font-semibold">
+    <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-5 sm:p-8">
+      <div className="text-center mb-6 sm:mb-8 text-gray-200 text-base sm:text-lg font-semibold">
         Available Dates
       </div>
 
-      <div className="flex items-center justify-between mb-8 px-4">
+      <div className="flex items-center justify-between mb-6 sm:mb-8 px-2 sm:px-4">
         <button
           type="button"
           onClick={handlePrevMonth}
@@ -125,18 +130,18 @@ const Calendar = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-y-4 justify-items-center mb-4">
+      <div className="grid grid-cols-7 gap-y-2 sm:gap-y-4 justify-items-center mb-3 sm:mb-4">
         {days.map((day) => (
           <div
             key={day}
-            className="text-gray-400 text-xs font-medium tracking-wider"
+            className="text-gray-400 text-[10px] sm:text-xs font-medium tracking-wider"
           >
             {day}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-y-4 justify-items-center">
+      <div className="grid grid-cols-7 gap-y-2 sm:gap-y-4 justify-items-center">
         {renderDays()}
       </div>
     </div>

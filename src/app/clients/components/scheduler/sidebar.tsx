@@ -18,7 +18,7 @@ const Sidebar = ({
   availableDomains,
 }: SidebarProps) => {
   return (
-    <div className="w-64 bg-[#1c1c1c] p-8 flex flex-col border-r border-[#2b2b2b] hidden md:flex">
+    <div className="w-56 lg:w-64 bg-[#1c1c1c] p-6 lg:p-8 flex flex-col border-r border-[#2b2b2b] hidden md:flex">
       <div className="flex items-center gap-2 mb-12 text-white">
         <CalendarIcon className="w-5 h-5" />
         <span className="font-medium">Scheduler</span>

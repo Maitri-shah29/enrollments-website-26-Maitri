@@ -5,6 +5,7 @@ type SelectedSlotProps = {
   selectedDate: Date | null;
   onConfirm: () => void;
   loading?: boolean;
+  isBookable?: boolean;
 };
 
 const SelectedSlot = ({
@@ -12,6 +13,7 @@ const SelectedSlot = ({
   selectedDate,
   onConfirm,
   loading,
+  isBookable = true,
 }: SelectedSlotProps) => {
   const formatDate = (date: Date) => {
     const d = date.getDate();
@@ -40,18 +42,22 @@ const SelectedSlot = ({
     : "";
 
   return (
-    <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-6 flex flex-col items-center justify-between min-h-[150px]">
+    <div className="bg-[#1c1c1c] border border-[#2b2b2b] rounded-xl p-4 sm:p-6 flex flex-col items-center justify-between min-h-[150px]">
       <div className="text-gray-200 mb-4">Selected Slot</div>
 
       <div className="text-gray-400 text-sm mb-6 text-center">
         {selectedDate && slot
-          ? `${displayDate} • ${displayTime}`
+          ? isBookable
+            ? `${displayDate} • ${displayTime}`
+            : `${displayDate} • ${displayTime} (booking closed)`
+          : selectedDate
+          ? `Select a slot for ${displayDate}`
           : "Please select a date and slot"}
       </div>
 
       <button
         type="button"
-        disabled={!slot || loading}
+        disabled={!slot || loading || !isBookable}
         onClick={onConfirm}
         className="bg-white text-[#0f1a2a] font-medium py-2 px-8 rounded border border-[#5CAFFF] hover:bg-[#e8f4ff] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
