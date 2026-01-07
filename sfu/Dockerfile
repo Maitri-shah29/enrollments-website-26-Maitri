@@ -2,7 +2,7 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache python3 make g++ py3-setuptools
+RUN apk add --no-cache python3 py3-pip make g++ py3-setuptools
 
 ENV PYTHON=/usr/bin/python3
 
