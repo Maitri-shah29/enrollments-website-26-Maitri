@@ -44,7 +44,7 @@ scripts/deploy-sfu.sh
 This script:
 
 - runs `git pull`
-- installs app deps
+- installs SFU deps (`sfu/`)
 - brings up Redis
 - builds the inactive SFU
 - drains the active SFU
