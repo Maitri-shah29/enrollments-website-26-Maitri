@@ -123,8 +123,12 @@ const SchedulerClient = ({
   useEffect(() => {
     const checkSfuHealth = async () => {
       try {
-        const response = await fetch("/api/sfu/health");
-        if (response.ok) {
+        const sfuUrl =
+          process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
+
+        const response = await fetch(`${sfuUrl}/health`, { cache: "no-store" });
+        console.log(response);
+        if (response.status === 200) {
           const data = await response.json();
           setIsSfuHealthy(data.status === "healthy");
         } else {
@@ -132,9 +136,11 @@ const SchedulerClient = ({
         }
       } catch (error) {
         setIsSfuHealthy(false);
+        console.log(error);
       }
     };
 
+    checkSfuHealth();
     const interval = setInterval(checkSfuHealth, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -318,9 +324,7 @@ const SchedulerClient = ({
             className="w-full bg-[#1c1c1c] border border-[#2b2b2b] rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#5CAFFF] transition-colors"
           >
             {availableDomains.map(({ name, roundNumber }) => {
-              const label = roundNumber
-                ? `${name} Round ${roundNumber}`
-                : name;
+              const label = roundNumber ? `${name} Round ${roundNumber}` : name;
               return (
                 <option key={name} value={name}>
                   {label}
