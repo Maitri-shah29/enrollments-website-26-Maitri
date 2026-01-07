@@ -74,6 +74,7 @@ app.get("/health", (req, res) => {
     status: isHealthy ? "healthy" : "unhealthy",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    port: config.port,
     workers: {
       total: workers.length,
       healthy: healthyWorkers.length,
@@ -292,7 +293,9 @@ io.on("connection", (socket: Socket) => {
 
         if (!room) {
           if (isDraining) {
-            callback({ error: "Meeting server is draining. Try again shortly." });
+            callback({
+              error: "Meeting server is draining. Try again shortly.",
+            });
             return;
           }
           if (!isAdmin && !config.allowNonAdminRoomCreation) {
