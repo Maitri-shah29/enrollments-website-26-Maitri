@@ -3,8 +3,18 @@ import { createClient, type RedisClientType } from "redis";
 let redisClient: RedisClientType | null = null;
 let connectPromise: Promise<RedisClientType> | null = null;
 
-const getRedisUrl = (): string =>
-  process.env.REDIS_URL || "redis://127.0.0.1:6379";
+const getRedisUrl = (): string => {
+  if (process.env.REDIS_URL) {
+    return process.env.REDIS_URL;
+  }
+
+  const password = process.env.REDIS_PASSWORD;
+  if (password) {
+    return `redis://:${password}@127.0.0.1:6379`;
+  }
+
+  return "redis://127.0.0.1:6379";
+};
 
 export const getRedisClient = async (): Promise<RedisClientType> => {
   if (redisClient?.isOpen) return redisClient;
