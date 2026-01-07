@@ -74,8 +74,8 @@ echo "Using SFU B: ${SFU_B_URL}"
 echo "Pulling latest code..."
 git -C "$ROOT_DIR" pull
 
-echo "Installing app dependencies..."
-npm -C "$ROOT_DIR" install
+echo "Installing SFU dependencies..."
+npm -C "${ROOT_DIR}/sfu" install
 
 echo "Ensuring Redis is running..."
 "${COMPOSE[@]}" up -d redis
