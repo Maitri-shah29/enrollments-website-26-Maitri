@@ -488,6 +488,7 @@ export default function MeetsClient({
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
+  const [waitingMessage, setWaitingMessage] = useState<string | null>(null);
   const [_mediaState, setMediaState] = useState<MediaState>({
     hasAudioPermission: false,
     hasVideoPermission: false,
@@ -774,6 +775,7 @@ export default function MeetsClient({
     // Reset state
     setConnectionState("disconnected");
     setLocalStream(null);
+    setWaitingMessage(null);
     reconnectAttemptsRef.current = 0;
   }, [localStream, cleanupRoomResources, stopLocalTrack]);
 
@@ -953,6 +955,7 @@ export default function MeetsClient({
               message: `Room closed: ${reason}`,
               recoverable: false,
             });
+            setWaitingMessage(null);
             cleanup();
           });
 
@@ -1259,8 +1262,23 @@ export default function MeetsClient({
               recoverable: false,
             });
             setConnectionState("error");
+            setWaitingMessage(null);
             cleanup();
           });
+
+          socket.on(
+            "waitingRoomStatus",
+            ({
+              message,
+              roomId: eventRoomId,
+            }: {
+              message: string;
+              roomId?: string;
+            }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              setWaitingMessage(message);
+            }
+          );
 
           socketRef.current = socket;
         } catch (err) {
@@ -1878,6 +1896,7 @@ export default function MeetsClient({
       const socket = socketRef.current;
       if (!socket) throw new Error("Socket not connected");
 
+      setWaitingMessage(null);
       setConnectionState("joining");
 
       return new Promise<void>((resolve, reject) => {
@@ -2725,14 +2744,17 @@ export default function MeetsClient({
     connectionState === "waiting"; // Waiting is a kind of loading state visually, or handled separately
 
   if (connectionState === "waiting") {
+    const waitingTitle = waitingMessage ?? "Waiting for host...";
+    const waitingIntro = waitingMessage
+      ? "The host left the room, so there is no one available to admit you right now."
+      : "Please wait to be let in.";
     return (
       <div className="flex flex-col h-full w-full bg-[#252525] items-center justify-center text-white">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Waiting for host...</h2>
+        <h2 className="text-2xl font-bold mb-2">{waitingTitle}</h2>
         <p className="text-white/70 text-center max-w-lg px-4">
-          Please wait to be let in. If you are facing issues or have questions,
-          please feel free to ask away on the ACM Community Informal WhatsApp
-          Group{" "}
+          {waitingIntro} If you are facing issues or have questions, please feel
+          free to ask away on the ACM Community Informal WhatsApp Group{" "}
           <a
             href="https://chat.whatsapp.com/Lj6GFN4bLggBJmQWBwUSTz"
             className="text-blue-300 hover:text-blue-200 underline"

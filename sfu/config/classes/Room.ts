@@ -170,10 +170,10 @@ export class Room {
   }
 
   /**
-   * Check if room is empty
+   * Check if room has no active or pending clients
    */
   isEmpty(): boolean {
-    return this.clients.size === 0;
+    return this.clients.size === 0 && this.pendingClients.size === 0;
   }
 
   /**

@@ -294,6 +294,13 @@ io.on("connection", (socket: Socket) => {
           pendingRoomId = roomId;
           pendingUserKey = userKey;
 
+          if (!room.hasActiveAdmin()) {
+            socket.emit("waitingRoomStatus", {
+              message: "No one to let you in.",
+              roomId,
+            });
+          }
+
           // Notify all admins in the room
           const admins = room.getAdmins();
           for (const admin of admins) {
@@ -1137,6 +1144,17 @@ io.on("connection", (socket: Socket) => {
             Logger.info(
               `Last admin left room ${roomId}. Scheduling cleanup...`,
             );
+            if (currentRoom.pendingClients.size > 0) {
+              Logger.info(
+                `Room ${roomId} has pending users but no admins. Notifying waiting clients.`,
+              );
+              for (const pending of currentRoom.pendingClients.values()) {
+                pending.socket.emit("waitingRoomStatus", {
+                  message: "No one to let you in.",
+                  roomId,
+                });
+              }
+            }
             currentRoom.startCleanupTimer(() => {
               if (rooms.has(roomId)) {
                 const r = rooms.get(roomId);
@@ -1194,6 +1212,9 @@ io.on("connection", (socket: Socket) => {
               userId: pendingUserKey,
               roomId: pendingRoomId,
             });
+          }
+          if (pendingRoom.isEmpty()) {
+            cleanupRoom(pendingRoomId);
           }
         }
       }
