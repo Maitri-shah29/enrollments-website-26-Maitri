@@ -64,7 +64,7 @@ import {
 } from "../actions/meeting-admin-actions";
 import { getReactionFiles } from "../actions/reactions";
 import { getSfuRooms } from "../actions/sfu-rooms";
-import { getSfuToken } from "../actions/sfu-token";
+import { getSfuJoinInfo } from "../actions/sfu-join";
 import { useSessionContext } from "../components/session-provider";
 import SignupPage from "../components/sign-up";
 import VideoSettings from "./components/meets/video-settings";
@@ -80,7 +80,6 @@ const roboto = Roboto({
 // Configuration
 // ============================================
 
-const SFU_URL = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 const RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_ATTEMPTS = 8;
 const SOCKET_TIMEOUT_MS = 10000;
@@ -898,7 +897,7 @@ export default function MeetsClient({
   // Socket Connection with Reconnection
   // ============================================
 
-  const connectSocket = useCallback((): Promise<Socket> => {
+  const connectSocket = useCallback((targetRoomId: string): Promise<Socket> => {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
@@ -909,9 +908,18 @@ export default function MeetsClient({
 
           setConnectionState("connecting");
 
-          const token = await getSfuToken(sessionIdRef.current);
+          const roomIdForJoin =
+            targetRoomId || currentRoomIdRef.current || "";
+          if (!roomIdForJoin) {
+            throw new Error("Missing room ID");
+          }
 
-          const socket = io(SFU_URL, {
+          const { token, sfuUrl } = await getSfuJoinInfo(
+            roomIdForJoin,
+            sessionIdRef.current,
+          );
+
+          const socket = io(sfuUrl, {
             transports: ["websocket", "polling"],
             timeout: SOCKET_TIMEOUT_MS,
             reconnection: false, // We handle reconnection manually
@@ -1282,7 +1290,7 @@ export default function MeetsClient({
 
           socketRef.current = socket;
         } catch (err) {
-          console.error("Failed to get auth token:", err);
+          console.error("Failed to get join info:", err);
           setMeetError({
             code: "CONNECTION_FAILED",
             message: "Authentication failed",
@@ -1316,7 +1324,10 @@ export default function MeetsClient({
           cleanupRoomResources({ resetRoomId: false });
           socketRef.current?.disconnect();
           socketRef.current = null;
-          await connectSocket();
+          if (!roomId) {
+            throw new Error("Missing room ID for reconnect");
+          }
+          await connectSocket(roomId);
 
           const stream = localStreamRef.current || localStream;
           if (roomId && stream) {
@@ -1997,7 +2008,7 @@ export default function MeetsClient({
       let stream: MediaStream | null = null;
 
       try {
-        const _socket = await connectSocket();
+        const _socket = await connectSocket(targetRoomId);
         stream = await requestMediaPermissions();
         if (!stream) {
           setConnectionState("error");

@@ -261,6 +261,7 @@ export class Room {
     );
     this.cleanupTimer = setTimeout(() => {
       Logger.debug(`Room ${this.id}: Cleanup timer expired. Dissolving room.`);
+      this.cleanupTimer = null;
       callback();
     }, config.adminCleanupTimeout);
   }

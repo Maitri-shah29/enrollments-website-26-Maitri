@@ -41,6 +41,7 @@ import { Logger } from "./utilities/Logger.js";
 
 let workers: Worker[] = [];
 const rooms: Map<string, Room> = new Map();
+let isDraining = config.draining;
 const allowedEmojiReactions = new Set(["👍", "👏", "😂", "❤️", "🎉", "😮"]);
 const allowedAssetExtensions = new Set([
   ".gif",
@@ -60,6 +61,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 // ============================================
 // Health Check Endpoint
@@ -99,6 +101,37 @@ app.get("/rooms", (req, res) => {
   }));
 
   return res.json({ rooms: roomDetails });
+});
+
+app.get("/status", (req, res) => {
+  const secret = req.header("x-sfu-secret");
+  if (!secret || secret !== config.sfuSecret) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  return res.json({
+    instanceId: config.instanceId,
+    version: config.version,
+    draining: isDraining,
+    rooms: rooms.size,
+    uptime: process.uptime(),
+  });
+});
+
+app.post("/drain", (req, res) => {
+  const secret = req.header("x-sfu-secret");
+  if (!secret || secret !== config.sfuSecret) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { draining } = req.body ?? {};
+  if (typeof draining !== "boolean") {
+    return res.status(400).json({ error: "Invalid draining flag" });
+  }
+
+  isDraining = draining;
+  Logger.info(`Draining mode ${isDraining ? "enabled" : "disabled"}`);
+  return res.json({ draining: isDraining });
 });
 
 const isValidReactionAssetPath = (value: string): boolean => {
@@ -258,6 +291,10 @@ io.on("connection", (socket: Socket) => {
         let room = rooms.get(roomId);
 
         if (!room) {
+          if (isDraining) {
+            callback({ error: "Meeting server is draining. Try again shortly." });
+            return;
+          }
           if (!isAdmin && !config.allowNonAdminRoomCreation) {
             callback({ error: "This meeting hasn't started." });
             return;
@@ -1142,7 +1179,7 @@ io.on("connection", (socket: Socket) => {
         if (wasAdmin) {
           if (!currentRoom.hasActiveAdmin()) {
             Logger.info(
-              `Last admin left room ${roomId}. Scheduling cleanup...`,
+              `Last admin left room ${roomId}. Room remains open without an admin.`,
             );
             if (currentRoom.pendingClients.size > 0) {
               Logger.info(
@@ -1159,16 +1196,23 @@ io.on("connection", (socket: Socket) => {
               if (rooms.has(roomId)) {
                 const r = rooms.get(roomId);
                 if (r) {
-                  Logger.info(
-                    `Cleanup executed for room ${roomId}. Dissolving...`,
-                  );
-                  for (const client of r.clients.values()) {
-                    client.socket.emit("roomClosed", {
-                      reason: "Admin did not return. Room closed.",
-                    });
-                    client.socket.disconnect(true);
+                  if (r.hasActiveAdmin()) {
+                    return;
                   }
-                  cleanupRoom(roomId);
+                  if (r.pendingClients.size > 0) {
+                    for (const pending of r.pendingClients.values()) {
+                      pending.socket.emit("waitingRoomStatus", {
+                        message: "No one to let you in.",
+                        roomId,
+                      });
+                    }
+                  }
+                  if (r.isEmpty()) {
+                    Logger.info(
+                      `Cleanup executed for room ${roomId}. Room is empty.`,
+                    );
+                    cleanupRoom(roomId);
+                  }
                 }
               }
             });
@@ -1235,7 +1279,7 @@ const startServer = async (): Promise<void> => {
   await initMediaSoup();
 
   httpServer.listen(config.port, () => {
-    Logger.success(`HTTPS Server running on port ${config.port}`);
+    Logger.success(`Server running on port ${config.port}`);
   });
 };
 
