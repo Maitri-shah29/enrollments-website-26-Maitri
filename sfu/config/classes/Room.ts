@@ -170,10 +170,10 @@ export class Room {
   }
 
   /**
-   * Check if room is empty
+   * Check if room has no active or pending clients
    */
   isEmpty(): boolean {
-    return this.clients.size === 0;
+    return this.clients.size === 0 && this.pendingClients.size === 0;
   }
 
   /**
@@ -261,6 +261,7 @@ export class Room {
     );
     this.cleanupTimer = setTimeout(() => {
       Logger.debug(`Room ${this.id}: Cleanup timer expired. Dissolving room.`);
+      this.cleanupTimer = null;
       callback();
     }, config.adminCleanupTimeout);
   }

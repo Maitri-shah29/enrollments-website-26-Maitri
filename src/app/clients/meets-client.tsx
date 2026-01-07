@@ -3,6 +3,12 @@
 import {
   AlertCircle,
   ArrowRight,
+  Calendar,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ClipboardList,
+  Info,
   Loader2,
   MessageSquare,
   Mic,
@@ -12,11 +18,14 @@ import {
   RefreshCw,
   Send,
   Smile,
+  UserCheck,
   UserMinus,
+  UserX,
   Users,
   Video,
   VideoOff,
   X,
+  XCircle,
 } from "lucide-react";
 import { Device } from "mediasoup-client";
 import type {
@@ -41,9 +50,21 @@ import {
 import { io, type Socket } from "socket.io-client";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
 import type { GetRoomsResponse, RoomInfo } from "../../lib/sfu-types";
+import {
+  getMeetingUserFullData,
+  verifyMeetingAttendance,
+  promoteMeetingUser,
+  rejectMeetingUser,
+  addMeetingComment,
+  assignMeetingTask,
+  updateMeetingTask,
+  type MeetingUserDetails,
+  type MeetingRoundUser,
+  type UserFormSubmission,
+} from "../actions/meeting-admin-actions";
 import { getReactionFiles } from "../actions/reactions";
 import { getSfuRooms } from "../actions/sfu-rooms";
-import { getSfuToken } from "../actions/sfu-token";
+import { getSfuJoinInfo } from "../actions/sfu-join";
 import { useSessionContext } from "../components/session-provider";
 import SignupPage from "../components/sign-up";
 import VideoSettings from "./components/meets/video-settings";
@@ -59,7 +80,6 @@ const roboto = Roboto({
 // Configuration
 // ============================================
 
-const SFU_URL = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 const RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_ATTEMPTS = 8;
 const SOCKET_TIMEOUT_MS = 10000;
@@ -292,22 +312,24 @@ function participantReducer(
         screenShareProducerId: null,
       };
 
+      const updated = { ...participant };
+
       if (action.streamType === "screen") {
-        participant.screenShareStream = action.stream;
-        participant.screenShareProducerId = action.stream
+        updated.screenShareStream = action.stream;
+        updated.screenShareProducerId = action.stream
           ? action.producerId
           : null;
       } else if (action.kind === "video") {
-        participant.videoStream = action.stream;
-        participant.videoProducerId = action.stream ? action.producerId : null;
-        if (action.stream) participant.isCameraOff = false;
+        updated.videoStream = action.stream;
+        updated.videoProducerId = action.stream ? action.producerId : null;
+        if (action.stream) updated.isCameraOff = false;
       } else if (action.kind === "audio") {
-        participant.audioStream = action.stream;
-        participant.audioProducerId = action.stream ? action.producerId : null;
-        if (action.stream) participant.isMuted = false;
+        updated.audioStream = action.stream;
+        updated.audioProducerId = action.stream ? action.producerId : null;
+        if (action.stream) updated.isMuted = false;
       }
 
-      newState.set(action.userId, { ...participant });
+      newState.set(action.userId, updated);
       return newState;
     }
     case "UPDATE_MUTED": {
@@ -465,6 +487,7 @@ export default function MeetsClient({
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
+  const [waitingMessage, setWaitingMessage] = useState<string | null>(null);
   const [_mediaState, setMediaState] = useState<MediaState>({
     hasAudioPermission: false,
     hasVideoPermission: false,
@@ -515,6 +538,8 @@ export default function MeetsClient({
   const [pendingUsers, setPendingUsers] = useState<Map<string, string>>(
     new Map()
   ); // userId -> displayName
+  const [selectedParticipantForActions, setSelectedParticipantForActions] =
+    useState<string | null>(null); // userId of participant to show actions for
 
   // Refs for WebRTC objects
   const socketRef = useRef<Socket | null>(null);
@@ -528,11 +553,16 @@ export default function MeetsClient({
   const producerMapRef = useRef<Map<string, ProducerMapEntry>>(new Map());
   const pendingProducersRef = useRef<Map<string, ProducerInfo>>(new Map());
   const reactionTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const lastReactionSentRef = useRef<number>(0);
   const leaveTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const intentionalTrackStopsRef = useRef<WeakSet<MediaStreamTrack>>(
+    new WeakSet()
+  );
   const permissionHintTimeoutRef = useRef<number | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const reconnectInFlightRef = useRef(false);
   const intentionalDisconnectRef = useRef(false);
   const videoQualityRef = useRef<VideoQuality>("standard");
   const currentRoomIdRef = useRef<string | null>(null);
@@ -558,6 +588,69 @@ export default function MeetsClient({
     session?.data?.user?.name || session?.data?.user?.email || "guest";
   const userAccountEmail = session?.data?.user?.email || "guest";
   const userId = `${userAccountEmail}#${sessionIdRef.current}`;
+
+  const stopLocalTrack = useCallback((track?: MediaStreamTrack | null) => {
+    if (!track) return;
+    intentionalTrackStopsRef.current.add(track);
+    try {
+      track.stop();
+    } catch {}
+  }, []);
+
+  const consumeIntentionalStop = useCallback(
+    (track?: MediaStreamTrack | null) => {
+      if (!track) return false;
+      const marked = intentionalTrackStopsRef.current.has(track);
+      if (marked) {
+        intentionalTrackStopsRef.current.delete(track);
+      }
+      return marked;
+    },
+    []
+  );
+
+  const handleLocalTrackEnded = useCallback(
+    (kind: "audio" | "video", track: MediaStreamTrack) => {
+      if (consumeIntentionalStop(track)) return;
+
+      if (kind === "audio") {
+        setIsMuted(true);
+        const producer = audioProducerRef.current;
+        if (producer) {
+          socketRef.current?.emit(
+            "closeProducer",
+            { producerId: producer.id },
+            () => {}
+          );
+          try {
+            producer.close();
+          } catch {}
+          audioProducerRef.current = null;
+        }
+      } else {
+        setIsCameraOff(true);
+        const producer = videoProducerRef.current;
+        if (producer) {
+          socketRef.current?.emit(
+            "closeProducer",
+            { producerId: producer.id },
+            () => {}
+          );
+          try {
+            producer.close();
+          } catch {}
+          videoProducerRef.current = null;
+        }
+      }
+
+      setLocalStream((prev) => {
+        if (!prev) return prev;
+        const remaining = prev.getTracks().filter((t) => t.kind !== kind);
+        return new MediaStream(remaining);
+      });
+    },
+    [consumeIntentionalStop]
+  );
 
   // ============================================
   // Lifecycle & Cleanup
@@ -670,9 +763,7 @@ export default function MeetsClient({
 
     // Stop local stream tracks
     localStream?.getTracks().forEach((track) => {
-      try {
-        track.stop();
-      } catch {}
+      stopLocalTrack(track);
     });
 
     // Disconnect socket
@@ -683,8 +774,9 @@ export default function MeetsClient({
     // Reset state
     setConnectionState("disconnected");
     setLocalStream(null);
+    setWaitingMessage(null);
     reconnectAttemptsRef.current = 0;
-  }, [localStream, cleanupRoomResources]);
+  }, [localStream, cleanupRoomResources, stopLocalTrack]);
 
   const getAudioContext = useCallback(() => {
     const AudioContextConstructor =
@@ -805,7 +897,7 @@ export default function MeetsClient({
   // Socket Connection with Reconnection
   // ============================================
 
-  const connectSocket = useCallback((): Promise<Socket> => {
+  const connectSocket = useCallback((targetRoomId: string): Promise<Socket> => {
     return new Promise((resolve, reject) => {
       (async () => {
         try {
@@ -816,9 +908,18 @@ export default function MeetsClient({
 
           setConnectionState("connecting");
 
-          const token = await getSfuToken(sessionIdRef.current);
+          const roomIdForJoin =
+            targetRoomId || currentRoomIdRef.current || "";
+          if (!roomIdForJoin) {
+            throw new Error("Missing room ID");
+          }
 
-          const socket = io(SFU_URL, {
+          const { token, sfuUrl } = await getSfuJoinInfo(
+            roomIdForJoin,
+            sessionIdRef.current,
+          );
+
+          const socket = io(sfuUrl, {
             transports: ["websocket", "polling"],
             timeout: SOCKET_TIMEOUT_MS,
             reconnection: false, // We handle reconnection manually
@@ -862,6 +963,7 @@ export default function MeetsClient({
               message: `Room closed: ${reason}`,
               recoverable: false,
             });
+            setWaitingMessage(null);
             cleanup();
           });
 
@@ -897,9 +999,16 @@ export default function MeetsClient({
                 // Also stop local stream track
                 const track = localStream?.getVideoTracks()[0];
                 if (track) {
-                  track.stop();
+                  stopLocalTrack(track);
                   track.enabled = false;
                 }
+                setLocalStream((prev) => {
+                  if (!prev) return prev;
+                  const remaining = prev
+                    .getTracks()
+                    .filter((item) => item.kind !== "video");
+                  return new MediaStream(remaining);
+                });
               } else if (screenProducerRef.current?.id === producerId) {
                 if (screenProducerRef.current.track) {
                   screenProducerRef.current.track.stop();
@@ -945,6 +1054,12 @@ export default function MeetsClient({
               )
                 .filter(([, info]) => info.userId === leftUserId)
                 .map(([producerId]) => producerId);
+
+              for (const [producerId, info] of pendingProducersRef.current) {
+                if (info.producerUserId === leftUserId) {
+                  pendingProducersRef.current.delete(producerId);
+                }
+              }
 
               for (const producerId of producersToClose) {
                 handleProducerClosed(producerId);
@@ -1155,12 +1270,27 @@ export default function MeetsClient({
               recoverable: false,
             });
             setConnectionState("error");
+            setWaitingMessage(null);
             cleanup();
           });
 
+          socket.on(
+            "waitingRoomStatus",
+            ({
+              message,
+              roomId: eventRoomId,
+            }: {
+              message: string;
+              roomId?: string;
+            }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              setWaitingMessage(message);
+            }
+          );
+
           socketRef.current = socket;
         } catch (err) {
-          console.error("Failed to get auth token:", err);
+          console.error("Failed to get join info:", err);
           setMeetError({
             code: "CONNECTION_FAILED",
             message: "Authentication failed",
@@ -1174,39 +1304,49 @@ export default function MeetsClient({
   }, []);
 
   const handleReconnect = useCallback(async () => {
-    if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+    if (reconnectInFlightRef.current) return;
+    reconnectInFlightRef.current = true;
+
+    try {
+      while (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+        setConnectionState("reconnecting");
+        reconnectAttemptsRef.current++;
+        const delay =
+          RECONNECT_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
+
+        console.log(
+          `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`
+        );
+        await new Promise((r) => setTimeout(r, delay));
+
+        try {
+          const roomId = currentRoomIdRef.current;
+          cleanupRoomResources({ resetRoomId: false });
+          socketRef.current?.disconnect();
+          socketRef.current = null;
+          if (!roomId) {
+            throw new Error("Missing room ID for reconnect");
+          }
+          await connectSocket(roomId);
+
+          const stream = localStreamRef.current || localStream;
+          if (roomId && stream) {
+            await joinRoomInternal(roomId, stream);
+          }
+          return;
+        } catch (_err) {
+          // Continue retry loop.
+        }
+      }
+
       setMeetError({
         code: "CONNECTION_FAILED",
         message: "Failed to reconnect after multiple attempts",
         recoverable: false,
       });
       setConnectionState("error");
-      return;
-    }
-
-    setConnectionState("reconnecting");
-    reconnectAttemptsRef.current++;
-    const delay = RECONNECT_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
-
-    console.log(
-      `[Meets] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`
-    );
-    await new Promise((r) => setTimeout(r, delay));
-
-    try {
-      const roomId = currentRoomIdRef.current;
-      cleanupRoomResources({ resetRoomId: false });
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-      await connectSocket();
-
-      // Rejoin room if we were in one
-      const stream = localStreamRef.current || localStream;
-      if (roomId && stream) {
-        await joinRoomInternal(roomId, stream);
-      }
-    } catch (_err) {
-      handleReconnect();
+    } finally {
+      reconnectInFlightRef.current = false;
     }
   }, [connectSocket, localStream, cleanupRoomResources]);
   useEffect(() => {
@@ -1299,10 +1439,11 @@ export default function MeetsClient({
         stream.getTracks().forEach((track) => {
           track.onended = () => {
             console.log(`[Meets] Track ended: ${track.kind}`);
-            if (track.kind === "video") {
-              setIsCameraOff(true);
-            } else if (track.kind === "audio") {
-              setIsMuted(true);
+            if (track.kind === "audio" || track.kind === "video") {
+              handleLocalTrackEnded(
+                track.kind as "audio" | "video",
+                track
+              );
             }
           };
         });
@@ -1330,6 +1471,12 @@ export default function MeetsClient({
             const audioStream = await navigator.mediaDevices.getUserMedia({
               audio: audioOnlyConstraints,
             });
+            const audioTrack = audioStream.getAudioTracks()[0];
+            if (audioTrack) {
+              audioTrack.onended = () => {
+                handleLocalTrackEnded("audio", audioTrack);
+              };
+            }
             setMediaState({
               hasAudioPermission: true,
               hasVideoPermission: false,
@@ -1349,7 +1496,7 @@ export default function MeetsClient({
         }
         setShowPermissionHint(false);
       }
-    }, [videoQuality, selectedAudioInputDeviceId, isCameraOff]);
+    }, [videoQuality, selectedAudioInputDeviceId, isCameraOff, handleLocalTrackEnded]);
 
   // Device Change Handlers
 
@@ -1367,7 +1514,7 @@ export default function MeetsClient({
           const newAudioTrack = newStream.getAudioTracks()[0];
           if (newAudioTrack) {
             newAudioTrack.onended = () => {
-              setIsMuted(true);
+              handleLocalTrackEnded("audio", newAudioTrack);
             };
             newAudioTrack.enabled = !isMuted;
             const oldAudioTrack = localStream?.getAudioTracks()[0];
@@ -1389,7 +1536,7 @@ export default function MeetsClient({
                 prev.addTrack(newAudioTrack);
                 // Now stop the old track after it's been replaced
                 if (oldAudioTrack) {
-                  oldAudioTrack.stop();
+                  stopLocalTrack(oldAudioTrack);
                 }
                 // Return new MediaStream to trigger re-render
                 return new MediaStream(prev.getTracks());
@@ -1402,7 +1549,7 @@ export default function MeetsClient({
         }
       }
     },
-    [connectionState, isMuted, localStream]
+    [connectionState, isMuted, localStream, handleLocalTrackEnded, stopLocalTrack]
   );
 
   const handleAudioOutputDeviceChange = useCallback(
@@ -1690,10 +1837,6 @@ export default function MeetsClient({
               });
               consumer.track.onmute = handleTrackMuted;
               consumer.track.onunmute = handleTrackUnmuted;
-              consumer.track.onended = () => {
-                handleProducerClosed(producerInfo.producerId);
-              };
-
               const stream = new MediaStream([consumer.track]);
               dispatchParticipants({
                 type: "UPDATE_STREAM",
@@ -1764,6 +1907,7 @@ export default function MeetsClient({
       const socket = socketRef.current;
       if (!socket) throw new Error("Socket not connected");
 
+      setWaitingMessage(null);
       setConnectionState("joining");
 
       return new Promise<void>((resolve, reject) => {
@@ -1864,7 +2008,7 @@ export default function MeetsClient({
       let stream: MediaStream | null = null;
 
       try {
-        const _socket = await connectSocket();
+        const _socket = await connectSocket(targetRoomId);
         stream = await requestMediaPermissions();
         if (!stream) {
           setConnectionState("error");
@@ -1877,14 +2021,14 @@ export default function MeetsClient({
       } catch (err) {
         console.error("[Meets] Error joining room:", err);
         if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
+          stream.getTracks().forEach((track) => stopLocalTrack(track));
           setLocalStream(null);
         }
         setMeetError(createMeetError(err));
         setConnectionState("error");
       }
     },
-    [connectSocket, requestMediaPermissions, joinRoomInternal, primeAudioOutput]
+    [connectSocket, requestMediaPermissions, joinRoomInternal, primeAudioOutput, stopLocalTrack]
   );
 
   const joinRoom = useCallback(async () => {
@@ -1952,37 +2096,48 @@ export default function MeetsClient({
           JSON.stringify(constraints)
         );
 
-        // create new video track
+        const currentTrack = localStream.getVideoTracks()[0];
+        if (currentTrack && currentTrack.readyState === "live") {
+          currentTrack.onended = () => {
+            handleLocalTrackEnded("video", currentTrack);
+          };
+          try {
+            await currentTrack.applyConstraints(constraints);
+            return;
+          } catch (err) {
+            console.warn(
+              "[Meets] applyConstraints failed, reopening camera:",
+              err
+            );
+          }
+        }
+
+        // Fall back to reopening camera if constraints cannot be applied
         const newStream = await navigator.mediaDevices.getUserMedia({
           video: constraints,
         });
         const newVideoTrack = newStream.getVideoTracks()[0];
         newVideoTrack.onended = () => {
-          setIsCameraOff(true);
+          handleLocalTrackEnded("video", newVideoTrack);
         };
 
-        // Replace track in local stream
         const oldVideoTrack = localStream.getVideoTracks()[0];
         if (oldVideoTrack) {
-          oldVideoTrack.stop();
+          stopLocalTrack(oldVideoTrack);
           localStream.removeTrack(oldVideoTrack);
         }
         localStream.addTrack(newVideoTrack);
         setLocalStream(new MediaStream(localStream.getTracks())); // Trigger re-render if needed
 
-        // Replace track in producer
         const producer = videoProducerRef.current;
         if (producer) {
           await producer.replaceTrack({ track: newVideoTrack });
         }
-
-        // Clean up new stream shell (tracks already moved/used)
-        // actually we used newVideoTrack from newStream, so we don't stop it.
       } catch (err) {
         console.error("[Meets] Failed to update video quality:", err);
       }
     },
-    [isCameraOff, localStream]
+    [isCameraOff, localStream, handleLocalTrackEnded, stopLocalTrack]
   );
 
   // Keep ref up to date for socket listener
@@ -2016,29 +2171,41 @@ export default function MeetsClient({
       producer = null;
     }
 
-    if (producer) {
-      if (nextMuted) {
-        producer.pause();
-      } else {
-        producer.resume();
-      }
-      setIsMuted(nextMuted);
-
-      socketRef.current?.emit(
-        "toggleMute",
-        { producerId: producer.id, paused: nextMuted },
-        () => {}
-      );
-      return;
-    }
-
     if (nextMuted) {
+      const currentTrack = localStreamRef.current?.getAudioTracks()[0];
+      if (currentTrack) {
+        stopLocalTrack(currentTrack);
+      }
+
+      setLocalStream((prev) => {
+        if (!prev) return prev;
+        const remaining = prev
+          .getTracks()
+          .filter((track) => track.kind !== "audio");
+        return new MediaStream(remaining);
+      });
+
+      if (producer) {
+        try {
+          await producer.replaceTrack({ track: null });
+        } catch (err) {
+          console.warn("[Meets] Failed to detach audio track:", err);
+        }
+        try {
+          producer.pause();
+        } catch {}
+        socketRef.current?.emit(
+          "toggleMute",
+          { producerId: producer.id, paused: true },
+          () => {}
+        );
+      }
+
       setIsMuted(true);
       return;
     }
 
     try {
-      setIsMuted(false); // Optimistic update
       const transport = producerTransportRef.current;
       if (!transport) return;
 
@@ -2047,7 +2214,6 @@ export default function MeetsClient({
           ? { deviceId: { exact: selectedAudioInputDeviceId } }
           : true;
 
-      // Get new audio track
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: audioConstraints,
       });
@@ -2055,16 +2221,14 @@ export default function MeetsClient({
 
       if (!audioTrack) throw new Error("No audio track obtained");
       audioTrack.onended = () => {
-        setIsMuted(true);
+        handleLocalTrackEnded("audio", audioTrack);
       };
 
-      // Update local stream
       setLocalStream((prev) => {
         if (prev) {
           const newStream = new MediaStream(prev.getTracks());
-          // Remove old audio tracks if any
           newStream.getAudioTracks().forEach((t) => {
-            t.stop();
+            stopLocalTrack(t);
             newStream.removeTrack(t);
           });
           newStream.addTrack(audioTrack);
@@ -2073,21 +2237,40 @@ export default function MeetsClient({
         return new MediaStream([audioTrack]);
       });
 
-      const audioProducer = await transport.produce({
-        track: audioTrack,
-        appData: { type: "webcam" as ProducerType, paused: false },
-      });
+      if (producer) {
+        await producer.replaceTrack({ track: audioTrack });
+        try {
+          producer.resume();
+        } catch {}
+        socketRef.current?.emit(
+          "toggleMute",
+          { producerId: producer.id, paused: false },
+          () => {}
+        );
+      } else {
+        const audioProducer = await transport.produce({
+          track: audioTrack,
+          appData: { type: "webcam" as ProducerType, paused: false },
+        });
 
-      audioProducerRef.current = audioProducer;
-      audioProducer.on("transportclose", () => {
-        audioProducerRef.current = null;
-      });
+        audioProducerRef.current = audioProducer;
+        audioProducer.on("transportclose", () => {
+          audioProducerRef.current = null;
+        });
+      }
+
+      setIsMuted(false);
     } catch (err) {
       console.error("[Meets] Failed to restart audio:", err);
-      setIsMuted(true); // Revert
+      setIsMuted(true);
       setMeetError(createMeetError(err, "MEDIA_ERROR"));
     }
-  }, [isMuted, selectedAudioInputDeviceId]);
+  }, [
+    isMuted,
+    selectedAudioInputDeviceId,
+    handleLocalTrackEnded,
+    stopLocalTrack,
+  ]);
 
   const toggleCamera = useCallback(async () => {
     const producer = videoProducerRef.current;
@@ -2113,7 +2296,7 @@ export default function MeetsClient({
         setLocalStream((prev) => {
           if (!prev) return prev;
           prev.getVideoTracks().forEach((track) => {
-            track.stop();
+            stopLocalTrack(track);
           });
           const remainingTracks = prev
             .getTracks()
@@ -2168,14 +2351,14 @@ export default function MeetsClient({
 
         if (!videoTrack) throw new Error("No video track obtained");
         videoTrack.onended = () => {
-          setIsCameraOff(true);
+          handleLocalTrackEnded("video", videoTrack);
         };
 
         // Update local stream
         setLocalStream((prev) => {
           if (prev) {
             prev.getVideoTracks().forEach((track) => {
-              track.stop();
+              stopLocalTrack(track);
             });
             const remainingTracks = prev
               .getTracks()
@@ -2201,7 +2384,7 @@ export default function MeetsClient({
         setMeetError(createMeetError(err, "MEDIA_ERROR"));
       }
     }
-  }, [isCameraOff]);
+  }, [isCameraOff, handleLocalTrackEnded, stopLocalTrack]);
 
   // Sync localStream to ref
   useEffect(() => {
@@ -2456,12 +2639,19 @@ export default function MeetsClient({
 
   const sendReaction = useCallback(
     (reaction: ReactionOption) => {
+      // Throttle to prevent duplicate sends
+      const now = Date.now();
+      if (now - lastReactionSentRef.current < 100) {
+        return;
+      }
+      lastReactionSentRef.current = now;
+
       addReaction({
         userId,
         kind: reaction.kind,
         value: reaction.value,
         label: reaction.label,
-        timestamp: Date.now(),
+        timestamp: now,
       });
 
       if (reaction.kind === "emoji" && !isReactionEmoji(reaction.value)) return;
@@ -2565,14 +2755,17 @@ export default function MeetsClient({
     connectionState === "waiting"; // Waiting is a kind of loading state visually, or handled separately
 
   if (connectionState === "waiting") {
+    const waitingTitle = waitingMessage ?? "Waiting for host...";
+    const waitingIntro = waitingMessage
+      ? "The host left the room, so there is no one available to admit you right now."
+      : "Please wait to be let in.";
     return (
       <div className="flex flex-col h-full w-full bg-[#252525] items-center justify-center text-white">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Waiting for host...</h2>
+        <h2 className="text-2xl font-bold mb-2">{waitingTitle}</h2>
         <p className="text-white/70 text-center max-w-lg px-4">
-          Please wait to be let in. If you are facing issues or have questions,
-          please feel free to ask away on the ACM Community Informal WhatsApp
-          Group{" "}
+          {waitingIntro} If you are facing issues or have questions, please feel
+          free to ask away on the ACM Community Informal WhatsApp Group{" "}
           <a
             href="https://chat.whatsapp.com/Lj6GFN4bLggBJmQWBwUSTz"
             className="text-blue-300 hover:text-blue-200 underline"
@@ -2718,6 +2911,13 @@ export default function MeetsClient({
             activeSpeakerId={activeSpeakerId}
             currentUserId={userId}
             audioOutputDeviceId={selectedAudioOutputDeviceId}
+            isAdmin={isAdmin ?? false}
+            selectedParticipantId={selectedParticipantForActions}
+            onParticipantClick={(userId) =>
+              setSelectedParticipantForActions(
+                selectedParticipantForActions === userId ? null : userId
+              )
+            }
           />
         )}
 
@@ -2765,6 +2965,22 @@ export default function MeetsClient({
             isAdmin={isAdmin}
             pendingUsers={pendingUsers}
             roomId={roomId}
+            onPendingUserStale={(staleUserId) => {
+              setPendingUsers((prev) => {
+                const next = new Map(prev);
+                next.delete(staleUserId);
+                return next;
+              });
+            }}
+          />
+        )}
+
+        {/* Admin Actions Sidebar - Opens when clicking participant video */}
+        {isJoined && isAdmin && selectedParticipantForActions && (
+          <AdminActionsSidebar
+            participantUserId={selectedParticipantForActions}
+            participants={participants}
+            onClose={() => setSelectedParticipantForActions(null)}
           />
         )}
       </div>
@@ -3074,6 +3290,9 @@ interface GridLayoutProps {
   activeSpeakerId: string | null;
   currentUserId: string;
   audioOutputDeviceId?: string;
+  isAdmin?: boolean;
+  selectedParticipantId?: string | null;
+  onParticipantClick?: (userId: string) => void;
 }
 
 function GridLayout({
@@ -3086,6 +3305,9 @@ function GridLayout({
   activeSpeakerId,
   currentUserId,
   audioOutputDeviceId,
+  isAdmin = false,
+  selectedParticipantId,
+  onParticipantClick,
 }: GridLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const isLocalActiveSpeaker = activeSpeakerId === currentUserId;
@@ -3158,6 +3380,9 @@ function GridLayout({
           participant={participant}
           isActiveSpeaker={activeSpeakerId === participant.userId}
           audioOutputDeviceId={audioOutputDeviceId}
+          isAdmin={isAdmin}
+          isSelected={selectedParticipantId === participant.userId}
+          onAdminClick={onParticipantClick}
         />
       ))}
     </div>
@@ -3204,6 +3429,8 @@ function ControlsBar({
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
   const [isReactionMenuOpen, setIsReactionMenuOpen] = useState(false);
   const reactionMenuRef = useRef<HTMLDivElement>(null);
+  const lastReactionTimeRef = useRef<number>(0);
+  const REACTION_COOLDOWN_MS = 150; // Prevent rapid-fire reactions
 
   useEffect(() => {
     if (!isReactionMenuOpen) return;
@@ -3220,6 +3447,18 @@ function ControlsBar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isReactionMenuOpen]);
+
+  const handleReactionClick = useCallback(
+    (reaction: ReactionOption) => {
+      const now = Date.now();
+      if (now - lastReactionTimeRef.current < REACTION_COOLDOWN_MS) {
+        return; // Throttle rapid clicks
+      }
+      lastReactionTimeRef.current = now;
+      onSendReaction(reaction);
+    },
+    [onSendReaction]
+  );
 
   return (
     <div className="flex justify-center gap-2 mt-4 shrink-0">
@@ -3304,9 +3543,7 @@ function ControlsBar({
             {reactionOptions.map((reaction) => (
               <button
                 key={reaction.id}
-                onClick={() => {
-                  onSendReaction(reaction);
-                }}
+                onClick={() => handleReactionClick(reaction)}
                 className="w-9 h-9 shrink-0 rounded-full text-xl hover:bg-white/10 transition-colors flex items-center justify-center"
                 title={`React ${reaction.label}`}
               >
@@ -3317,6 +3554,7 @@ function ControlsBar({
                     src={reaction.value}
                     alt={reaction.label}
                     className="w-6 h-6 object-contain"
+                    loading="lazy"
                   />
                 )}
               </button>
@@ -3412,11 +3650,24 @@ function ChatPanel({
   currentUserId,
 }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+    if (shouldAutoScrollRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 64;
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldAutoScrollRef.current = distanceFromBottom <= threshold;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -3452,7 +3703,11 @@ function ChatPanel({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-3 space-y-3"
+      >
         {messages.length === 0 ? (
           <p className="text-gray-500 text-center text-sm">No messages yet</p>
         ) : (
@@ -3526,6 +3781,9 @@ interface ParticipantVideoProps {
   compact?: boolean;
   isActiveSpeaker?: boolean;
   audioOutputDeviceId?: string;
+  isAdmin?: boolean;
+  isSelected?: boolean;
+  onAdminClick?: (userId: string) => void;
 }
 
 function ParticipantVideo({
@@ -3533,6 +3791,9 @@ function ParticipantVideo({
   compact = false,
   isActiveSpeaker = false,
   audioOutputDeviceId,
+  isAdmin = false,
+  isSelected = false,
+  onAdminClick,
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -3602,9 +3863,16 @@ function ParticipantVideo({
   const displayName = getDisplayName(participant.userId);
   const showPlaceholder = !participant.videoStream || participant.isCameraOff;
 
+  const handleClick = () => {
+    if (isAdmin && onAdminClick) {
+      onAdminClick(participant.userId);
+    }
+  };
+
   return (
     <div
-      className={`relative bg-[#111] border border-white/10 rounded-lg overflow-hidden ${
+      onClick={handleClick}
+      className={`relative bg-[#111] border rounded-lg overflow-hidden ${
         compact ? "h-36 shrink-0" : "w-full h-full"
       } ${
         isNew
@@ -3614,7 +3882,7 @@ function ParticipantVideo({
           : ""
       } transition-all duration-200 ${getSpeakerHighlightClasses(
         isActiveSpeaker
-      )}`}
+      )} border-white/10 ${isAdmin && onAdminClick ? "cursor-pointer hover:border-white/20" : ""}`}
     >
       <video
         ref={setVideoRef}
@@ -3644,6 +3912,12 @@ function ParticipantVideo({
         <span style={{ fontWeight: 500 }}>{displayName}</span>
         {participant.isMuted && <MicOff className="w-3 h-3 text-red-500" />}
       </div>
+      {/* Admin indicator */}
+      {isAdmin && onAdminClick && (
+        <div className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full transition-opacity">
+          <Info className="w-4 h-4 text-white/70" />
+        </div>
+      )}
     </div>
   );
 }
@@ -3654,6 +3928,7 @@ interface ParticipantsPanelProps {
   onClose: () => void;
   pendingUsers?: Map<string, string>;
   roomId: string;
+  onPendingUserStale?: (userId: string) => void;
 }
 
 function ParticipantsPanel({
@@ -3664,6 +3939,7 @@ function ParticipantsPanel({
   isAdmin,
   pendingUsers,
   roomId,
+  onPendingUserStale,
 }: ParticipantsPanelProps & {
   socket: Socket | null;
   isAdmin?: boolean | null;
@@ -3676,6 +3952,11 @@ function ParticipantsPanel({
     string | null
   >(null);
   const filteredRooms = availableRooms.filter((room) => room.id !== roomId);
+
+  // Helper to extract email from userId (email#sessionId format)
+  const getEmailFromUserId = (userId: string): string => {
+    return userId.split("#")[0] || userId;
+  };
 
   const handleCloseProducer = (producerId: string) => {
     if (!socket || !isAdmin) return;
@@ -3770,10 +4051,11 @@ function ParticipantsPanel({
           <div className="space-y-2">
             {pendingList.map(([userId, displayName]) => {
               const pendingName = formatDisplayName(displayName || userId);
+              const pendingEmail = getEmailFromUserId(userId);
               return (
                 <div
                   key={userId}
-                  className="flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
+                  className="relative flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
                 >
                   <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
                     <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] border border-white/10 shrink-0">
@@ -3786,7 +4068,19 @@ function ParticipantsPanel({
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() =>
-                        socket?.emit("admitUser", { userId }, () => {})
+                        socket?.emit(
+                          "admitUser",
+                          { userId },
+                          (res: { success?: boolean; error?: string }) => {
+                            if (res?.error) {
+                              console.error(
+                                "[Meets] Admit failed:",
+                                res.error
+                              );
+                              onPendingUserStale?.(userId);
+                            }
+                          }
+                        )
                       }
                       className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
                       title="Admit"
@@ -3795,7 +4089,19 @@ function ParticipantsPanel({
                     </button>
                     <button
                       onClick={() =>
-                        socket?.emit("rejectUser", { userId }, () => {})
+                        socket?.emit(
+                          "rejectUser",
+                          { userId },
+                          (res: { success?: boolean; error?: string }) => {
+                            if (res?.error) {
+                              console.error(
+                                "[Meets] Reject failed:",
+                                res.error
+                              );
+                              onPendingUserStale?.(userId);
+                            }
+                          }
+                        )
                       }
                       className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
                       title="Reject"
@@ -3815,11 +4121,12 @@ function ParticipantsPanel({
         {participantsList.map((p) => {
           const isMe = p.userId === currentUserId;
           const displayName = getDisplayName(p.userId);
+          const userEmail = getEmailFromUserId(p.userId);
 
           return (
             <div
               key={p.userId}
-              className={`flex items-center justify-between p-2 rounded-lg border ${
+              className={`relative flex items-center justify-between p-2 rounded-lg border ${
                 isMe
                   ? "bg-white/5 border-white/20"
                   : "bg-transparent border-white/5"
@@ -3979,5 +4286,863 @@ function ParticipantsPanel({
         </div>
       )}
     </div>
+  );
+}
+
+// ============================================
+// Admin Actions Sidebar (Main UI Integration)
+// ============================================
+
+interface AdminActionsSidebarProps {
+  participantUserId: string;
+  participants: Map<string, Participant>;
+  onClose: () => void;
+}
+
+function AdminActionsSidebar({
+  participantUserId,
+  participants,
+  onClose,
+}: AdminActionsSidebarProps) {
+  const [userDetails, setUserDetails] = useState<MeetingUserDetails | null>(
+    null
+  );
+  const [comments, setComments] = useState<
+    { id: string; comment: string; by: string; time: Date }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"info" | "actions" | "comments" | "form">(
+    "actions"
+  );
+
+  // Action states
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // Task modal states
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [taskRoundUserId, setTaskRoundUserId] = useState<string | null>(null);
+  const [taskDomain, setTaskDomain] = useState<string | null>(null);
+  const [taskText, setTaskText] = useState("");
+  const [taskDeadline, setTaskDeadline] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    d.setHours(23, 59, 0, 0); // Default to end of day
+    // Format as local datetime for datetime-local input
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  });
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null); // For editing existing tasks
+
+  // Comment modal states
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentDomain, setCommentDomain] = useState<string>("");
+
+  // Form submissions state
+  const [formSubmissions, setFormSubmissions] = useState<UserFormSubmission[]>([]);
+  const [selectedFormSubmission, setSelectedFormSubmission] = useState<UserFormSubmission | null>(null);
+
+  // Extract email from userId
+  const email = participantUserId.split("#")[0] || participantUserId;
+  const participant = participants.get(participantUserId);
+  const displayName = participant
+    ? getDisplayName(participant.userId)
+    : email.split("@")[0];
+
+  // Load user details - single optimized query
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await getMeetingUserFullData(email);
+
+        if (cancelled) return;
+
+        if (data) {
+          setUserDetails(data.userDetails);
+          setComments(data.comments);
+          setFormSubmissions(data.formSubmissions);
+          
+          if (data.userDetails.roundUsers.length > 0) {
+            setCommentDomain(data.userDetails.roundUsers[0].round.domain);
+          }
+        } else {
+          setError("User not found in system");
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setError("Failed to load details");
+        console.error("[AdminActionsSidebar] Error:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [email]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showTaskModal) {
+          setShowTaskModal(false);
+        } else if (showCommentModal) {
+          setShowCommentModal(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onClose, showTaskModal, showCommentModal]);
+
+  useEffect(() => {
+    if (actionSuccess || actionError) {
+      const timer = setTimeout(() => {
+        setActionSuccess(null);
+        setActionError(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [actionSuccess, actionError]);
+
+  const refreshUserDetails = async () => {
+    if (!userDetails) return;
+    
+    try {
+      const data = await getMeetingUserFullData(email);
+      if (data) {
+        setUserDetails(data.userDetails);
+        setComments(data.comments);
+        setFormSubmissions(data.formSubmissions);
+      }
+    } catch (err) {
+      console.error("[AdminActionsSidebar] Refresh error:", err);
+    }
+  };
+
+  const handleVerifyAttendance = async (roundUser: MeetingRoundUser) => {
+    setActionLoading(`verify-${roundUser.id}`);
+    setActionError(null);
+
+    const result = await verifyMeetingAttendance(roundUser.id);
+
+    setActionLoading(null);
+    if (result.success) {
+      setActionSuccess(`Attendance verified for ${roundUser.round.domain}`);
+      await refreshUserDetails();
+    } else {
+      setActionError(result.error || "Failed to verify attendance");
+    }
+  };
+
+  const handlePromote = async (roundUser: MeetingRoundUser) => {
+    setActionLoading(`promote-${roundUser.id}`);
+    setActionError(null);
+
+    const result = await promoteMeetingUser(roundUser.id);
+
+    setActionLoading(null);
+    if (result.success) {
+      setActionSuccess(`Promoted in ${roundUser.round.domain}`);
+      await refreshUserDetails();
+    } else {
+      setActionError(result.error || "Failed to promote user");
+    }
+  };
+
+  const handleReject = async (roundUser: MeetingRoundUser) => {
+    setActionLoading(`reject-${roundUser.id}`);
+    setActionError(null);
+
+    const result = await rejectMeetingUser(roundUser.id);
+
+    setActionLoading(null);
+    if (result.success) {
+      setActionSuccess(`Rejected from ${roundUser.round.domain}`);
+      await refreshUserDetails();
+    } else {
+      setActionError(result.error || "Failed to reject user");
+    }
+  };
+
+  const openTaskModal = (roundUserId: string, domain: string, existingTask?: { id: string; text: string; deadline: Date }) => {
+    setTaskRoundUserId(roundUserId);
+    setTaskDomain(domain);
+    if (existingTask) {
+      // Editing existing task
+      setEditingTaskId(existingTask.id);
+      setTaskText(existingTask.text);
+      // Format existing deadline for datetime-local input
+      const d = new Date(existingTask.deadline);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      setTaskDeadline(`${year}-${month}-${day}T${hours}:${minutes}`);
+    } else {
+      // New task
+      setEditingTaskId(null);
+      setTaskText("");
+      // Reset to default deadline (4 days from now)
+      const d = new Date();
+      d.setDate(d.getDate() + 4);
+      d.setHours(23, 59, 0, 0);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      setTaskDeadline(`${year}-${month}-${day}T${hours}:${minutes}`);
+    }
+    setShowTaskModal(true);
+  };
+
+  const handleAssignTask = async () => {
+    if (!taskRoundUserId || !taskText.trim()) return;
+
+    setActionLoading("task");
+    setActionError(null);
+
+    const result = await assignMeetingTask(
+      taskRoundUserId,
+      taskText.trim(),
+      new Date(taskDeadline)
+    );
+
+    setActionLoading(null);
+    if (result.success) {
+      setActionSuccess("Task assigned & promoted");
+      setShowTaskModal(false);
+      setTaskRoundUserId(null);
+      setTaskDomain(null);
+      setTaskText("");
+      setEditingTaskId(null);
+      await refreshUserDetails();
+    } else {
+      setActionError(result.error || "Failed to assign task");
+    }
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editingTaskId || !taskText.trim()) return;
+
+    setActionLoading("task");
+    setActionError(null);
+
+    const result = await updateMeetingTask(
+      editingTaskId,
+      taskText.trim(),
+      new Date(taskDeadline)
+    );
+
+    setActionLoading(null);
+    if (result.success) {
+      setActionSuccess("Task updated");
+      setShowTaskModal(false);
+      setTaskRoundUserId(null);
+      setTaskDomain(null);
+      setTaskText("");
+      setEditingTaskId(null);
+      await refreshUserDetails();
+    } else {
+      setActionError(result.error || "Failed to update task");
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!userDetails || !commentText.trim() || !commentDomain) return;
+
+    setActionLoading("comment");
+    setActionError(null);
+
+    const result = await addMeetingComment(
+      userDetails.id,
+      commentDomain,
+      commentText.trim()
+    );
+
+    setActionLoading(null);
+    if (result.success) {
+      setActionSuccess("Comment added");
+      setShowCommentModal(false);
+      setCommentText("");
+      await refreshUserDetails();
+    } else {
+      setActionError(result.error || "Failed to add comment");
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "promoted":
+        return "text-green-400 bg-green-500/10 border-green-500/20";
+      case "rejected":
+        return "text-red-400 bg-red-500/10 border-red-500/20";
+      case "evaluate":
+        return "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
+      case "pending":
+      default:
+        return "text-neutral-400 bg-neutral-500/10 border-neutral-500/20";
+    }
+  };
+
+  const getDomainColor = (domain: string) => {
+    switch (domain.toLowerCase()) {
+      case "tech":
+        return "text-blue-400";
+      case "design":
+        return "text-pink-400";
+      case "management":
+        return "text-amber-400";
+      case "research":
+        return "text-purple-400";
+      case "cc":
+        return "text-cyan-400";
+      default:
+        return "text-neutral-400";
+    }
+  };
+
+  const formatDomain = (domain: string) => {
+    if (domain.toLowerCase() === "cc") return "CC";
+    return domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
+  };
+
+  const uniqueDomains = useMemo(() => {
+    if (!userDetails?.roundUsers) return [];
+    return [...new Set(userDetails.roundUsers.map((ru) => ru.round.domain))];
+  }, [userDetails?.roundUsers]);
+
+  // Get interview and task rounds (actionable rounds)
+  const actionableRounds = useMemo(() => {
+    if (!userDetails?.roundUsers) return [];
+    return userDetails.roundUsers.filter(
+      (ru) => ru.round.type === "interview" || ru.round.type === "task"
+    );
+  }, [userDetails?.roundUsers]);
+
+  return (
+    <>
+      <div
+        className="absolute right-2 sm:right-4 top-2 sm:top-4 bottom-16 sm:bottom-20 w-[calc(100%-1rem)] sm:w-80 md:w-96 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-20 animate-in slide-in-from-right-4 duration-200"
+        style={{ fontFamily: "'Roboto', sans-serif" }}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-2 sm:gap-3 p-3 border-b border-white/5 shrink-0">
+          <div className="w-10 h-10 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-sm font-medium shrink-0">
+            {displayName[0]?.toUpperCase() || "?"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-white truncate">
+              {userDetails?.name || displayName}
+            </h3>
+            <p className="text-[10px] text-neutral-500 truncate">{email}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Action feedback */}
+        {(actionSuccess || actionError) && (
+          <div
+            className={`mx-3 mt-2 px-2.5 py-1.5 rounded text-[11px] flex items-center gap-1.5 ${
+              actionSuccess
+                ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                : "bg-red-500/10 text-red-400 border border-red-500/20"
+            }`}
+          >
+            {actionSuccess ? (
+              <CheckCircle className="w-3 h-3" />
+            ) : (
+              <XCircle className="w-3 h-3" />
+            )}
+            <span className="truncate">{actionSuccess || actionError}</span>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="flex border-b border-white/5 shrink-0">
+          {(["actions", "form", "info", "comments"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2.5 text-[10px] font-medium transition-colors capitalize ${
+                activeTab === tab
+                  ? "text-white border-b-2 border-blue-500"
+                  : "text-neutral-500 hover:text-neutral-300"
+              }`}
+            >
+              {tab === "form" ? "Form" : tab}
+              {tab === "comments" && ` (${comments.length})`}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 text-neutral-500 animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-8 text-neutral-500">
+              <AlertCircle className="w-6 h-6 mb-2 opacity-50" />
+              <p className="text-xs">{error}</p>
+            </div>
+          ) : activeTab === "actions" ? (
+            // Actions tab - Quick actions for interview/task rounds
+            <div className="space-y-2">
+              {actionableRounds.length === 0 ? (
+                <div className="text-center py-6 text-neutral-500">
+                  <Users className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">No enrollments found</p>
+                </div>
+              ) : (
+                actionableRounds.map((ru) => (
+                  <div
+                    key={ru.id}
+                    className="p-3 bg-[#252525] rounded-lg border border-white/5"
+                  >
+                    {/* Domain header */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-xs font-semibold ${getDomainColor(ru.round.domain)}`}
+                        >
+                          {formatDomain(ru.round.domain)}
+                        </span>
+                        <span className="text-[10px] text-neutral-500">
+                          R{ru.round.number} • {ru.round.type === "task" ? "Task" : "Interview"}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[9px] px-2 py-0.5 rounded-full border capitalize ${getStatusColor(ru.status)}`}
+                      >
+                        {ru.status}
+                      </span>
+                    </div>
+
+                    {/* Meeting slot info */}
+                    {ru.Meet_User && (
+                      <div className="flex items-center gap-1 text-[10px] text-blue-400 mb-2">
+                        <Calendar className="w-3 h-3" />
+                        Meeting slot booked
+                      </div>
+                    )}
+
+                    {/* Task info - clickable to edit */}
+                    {ru.Task && (
+                      <button
+                        onClick={() => openTaskModal(ru.id, ru.round.domain, {
+                          id: ru.Task!.id,
+                          text: ru.Task!.text,
+                          deadline: ru.Task!.deadline,
+                        })}
+                        className="w-full text-left mb-2 p-2 bg-green-500/10 hover:bg-green-500/20 rounded border border-green-500/20 hover:border-green-500/30 transition-colors group"
+                      >
+                        <div className="flex items-center justify-between text-green-400 text-[10px] mb-1">
+                          <div className="flex items-center gap-1">
+                            <ClipboardList className="w-3 h-3" />
+                            <span className="font-medium">Task Assigned</span>
+                          </div>
+                          <span className="text-[9px] text-neutral-500 group-hover:text-green-400 transition-colors">Edit</span>
+                        </div>
+                        <p className="text-[10px] text-neutral-300 line-clamp-2">
+                          {ru.Task.text}
+                        </p>
+                        <p className="text-[9px] text-neutral-500 mt-1">
+                          Due: {new Date(ru.Task.deadline).toLocaleString()}
+                        </p>
+                      </button>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {/* Verify Attendance - interview rounds only */}
+                      {ru.round.type === "interview" && ru.status === "pending" && (
+                        <button
+                          onClick={() => handleVerifyAttendance(ru)}
+                          disabled={!!actionLoading}
+                          className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500/20 transition-colors disabled:opacity-50 font-medium"
+                        >
+                          {actionLoading === `verify-${ru.id}` ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <UserCheck className="w-3 h-3" />
+                          )}
+                          Verify Attendance
+                        </button>
+                      )}
+
+                      {/* Assign Task & Promote - interview rounds only, not for management */}
+                      {ru.round.type === "interview" && ru.status === "evaluate" && !ru.Task && ru.round.domain !== "management" && (
+                        <button
+                          onClick={() => openTaskModal(ru.id, ru.round.domain)}
+                          disabled={!!actionLoading}
+                          className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded border border-green-500/30 transition-colors disabled:opacity-50 font-medium"
+                        >
+                          <ClipboardList className="w-3 h-3" />
+                          Assign Task & Promote
+                        </button>
+                      )}
+
+                      {/* Reject - interview rounds only */}
+                      {ru.round.type === "interview" && (ru.status === "pending" || ru.status === "evaluate") && (
+                        <button
+                          onClick={() => handleReject(ru)}
+                          disabled={!!actionLoading}
+                          className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 transition-colors disabled:opacity-50 font-medium"
+                        >
+                          {actionLoading === `reject-${ru.id}` ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <UserX className="w-3 h-3" />
+                          )}
+                          Reject
+                        </button>
+                      )}
+
+                      {/* Already promoted - interview rounds */}
+                      {ru.round.type === "interview" && ru.status === "promoted" && (
+                        <div className="flex items-center gap-1 text-[10px] text-green-400">
+                          <Check className="w-3 h-3" />
+                          Promoted
+                        </div>
+                      )}
+
+                      {/* Already rejected - interview rounds */}
+                      {ru.round.type === "interview" && ru.status === "rejected" && (
+                        <div className="flex items-center gap-1 text-[10px] text-red-400">
+                          <X className="w-3 h-3" />
+                          Rejected
+                        </div>
+                      )}
+
+                      {/* Task round status */}
+                      {ru.round.type === "task" && (
+                        <div className={`flex items-center gap-1 text-[10px] ${
+                          ru.status === "pending" ? "text-yellow-400" : 
+                          ru.status === "promoted" ? "text-green-400" : 
+                          ru.status === "rejected" ? "text-red-400" : "text-neutral-400"
+                        }`}>
+                          {ru.status === "pending" ? (
+                            <>
+                              <ClipboardList className="w-3 h-3" />
+                              Task Pending
+                            </>
+                          ) : ru.status === "promoted" ? (
+                            <>
+                              <Check className="w-3 h-3" />
+                              Task Completed
+                            </>
+                          ) : ru.status === "rejected" ? (
+                            <>
+                              <X className="w-3 h-3" />
+                              Task Failed
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : activeTab === "info" ? (
+            // Info tab - All domain enrollments
+            <div className="space-y-2">
+              {userDetails?.phone && (
+                <div className="flex items-center gap-2 text-xs text-neutral-400 p-2 bg-[#252525] rounded border border-white/5">
+                  <Phone className="w-3.5 h-3.5" />
+                  {userDetails.phone}
+                </div>
+              )}
+              {userDetails?.roundUsers.length === 0 ? (
+                <div className="text-center py-6 text-neutral-500">
+                  <p className="text-xs">No domain enrollments</p>
+                </div>
+              ) : (
+                userDetails?.roundUsers.map((ru) => (
+                  <div
+                    key={ru.id}
+                    className="flex items-center justify-between p-2 bg-[#252525] rounded border border-white/5"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-xs font-medium ${getDomainColor(ru.round.domain)}`}
+                      >
+                        {formatDomain(ru.round.domain)}
+                      </span>
+                      <span className="text-[10px] text-neutral-500">
+                        R{ru.round.number} · {ru.round.type}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full border capitalize ${getStatusColor(ru.status)}`}
+                    >
+                      {ru.status}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : activeTab === "form" ? (
+            // Form Submissions tab - inline expandable
+            <div className="space-y-2">
+              {formSubmissions.length === 0 ? (
+                <div className="text-center py-6 text-neutral-500">
+                  <ClipboardList className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">No form submissions</p>
+                </div>
+              ) : (
+                formSubmissions.map((fs) => (
+                  <div key={fs.id} className="bg-[#252525] rounded border border-white/5 overflow-hidden">
+                    <button
+                      className="w-full p-2 flex items-center justify-between hover:bg-[#2a2a2a] transition-colors text-left"
+                      onClick={() => {
+                        setSelectedFormSubmission(selectedFormSubmission?.id === fs.id ? null : fs);
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-medium ${getDomainColor(fs.round.domain)}`}>
+                          {formatDomain(fs.round.domain)}
+                        </span>
+                        <span className="text-[9px] text-neutral-500">
+                          R{fs.round.number} · {fs.responses.length} Q&A
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${
+                        selectedFormSubmission?.id === fs.id ? "rotate-180" : ""
+                      }`} />
+                    </button>
+                    {selectedFormSubmission?.id === fs.id && (
+                      <div className="border-t border-white/5 p-2 space-y-2 max-h-[300px] overflow-y-auto">
+                        {fs.responses.length === 0 ? (
+                          <p className="text-[10px] text-neutral-500 text-center py-2">No responses</p>
+                        ) : (
+                          fs.responses.map((response, idx) => (
+                            <div key={response.id} className="p-2 bg-[#1f1f1f] rounded border border-white/5">
+                              <p className="text-[10px] font-medium text-neutral-400 mb-1">
+                                Q{idx + 1}: {response.question?.question || 'Unknown question'}
+                              </p>
+                              <p className="text-[11px] text-white whitespace-pre-wrap">
+                                {response.response || <span className="text-neutral-500 italic">No response</span>}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            // Comments tab
+            <div className="space-y-2">
+              {comments.length === 0 ? (
+                <div className="text-center py-6 text-neutral-500">
+                  <MessageSquare className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">No comments yet</p>
+                </div>
+              ) : (
+                comments.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-2 bg-[#252525] rounded border border-white/5"
+                  >
+                    <p className="text-xs text-neutral-300">{c.comment}</p>
+                    <p className="text-[9px] text-neutral-500 mt-1.5">
+                      {c.by} ·{" "}
+                      {new Date(c.time).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Add Comment Button */}
+        <div className="p-3 border-t border-white/5 shrink-0">
+          <button
+            onClick={() => setShowCommentModal(true)}
+            className="w-full flex items-center justify-center gap-1.5 text-xs py-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded border border-white/5 transition-colors font-medium"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Add Comment
+          </button>
+        </div>
+      </div>
+
+      {/* Task Assignment Modal */}
+      {showTaskModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div
+            className="bg-[#1f1f1f] border border-white/10 rounded-lg w-full max-w-sm shadow-xl animate-in fade-in zoom-in-95 duration-200"
+            style={{ fontFamily: "'Roboto', sans-serif" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-white/5">
+              <h3 className="text-xs font-semibold text-white">
+                {editingTaskId ? "Edit Task" : "Assign Task & Promote"}
+              </h3>
+              <button
+                onClick={() => setShowTaskModal(false)}
+                className="p-1 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 space-y-3">
+              <div>
+                <label className="text-[10px] text-neutral-400 block mb-1">
+                  Task Description
+                </label>
+                <textarea
+                  value={taskText}
+                  onChange={(e) => setTaskText(e.target.value)}
+                  placeholder="Describe the task..."
+                  className="w-full bg-[#252525] border border-white/5 rounded px-2.5 py-2 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-blue-500/50 resize-none"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-neutral-400 block mb-1">
+                  Deadline (your local time)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={taskDeadline}
+                  onChange={(e) => setTaskDeadline(e.target.value)}
+                  className="w-full bg-[#252525] border border-white/5 rounded px-2.5 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50 [color-scheme:dark]"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 p-3 border-t border-white/5">
+              <button
+                onClick={() => setShowTaskModal(false)}
+                className="flex-1 py-2 text-xs text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={editingTaskId ? handleUpdateTask : handleAssignTask}
+                disabled={!taskText.trim() || actionLoading === "task"}
+                className="flex-1 py-2 text-xs text-white bg-green-600 hover:bg-green-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              >
+                {actionLoading === "task" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <ClipboardList className="w-3 h-3" />
+                )}
+                {editingTaskId ? "Update Task" : "Assign & Promote"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Comment Modal */}
+      {showCommentModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div
+            className="bg-[#1f1f1f] border border-white/10 rounded-lg w-full max-w-sm shadow-xl animate-in fade-in zoom-in-95 duration-200"
+            style={{ fontFamily: "'Roboto', sans-serif" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-white/5">
+              <h3 className="text-xs font-semibold text-white">Add Comment</h3>
+              <button
+                onClick={() => setShowCommentModal(false)}
+                className="p-1 hover:bg-white/10 rounded transition-colors text-neutral-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 space-y-3">
+              <div>
+                <label className="text-[10px] text-neutral-400 block mb-1">
+                  Domain
+                </label>
+                <select
+                  value={commentDomain}
+                  onChange={(e) => setCommentDomain(e.target.value)}
+                  className="w-full bg-[#252525] border border-white/5 rounded px-2.5 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50"
+                >
+                  {uniqueDomains.map((d) => (
+                    <option key={d} value={d} className="bg-[#1f1f1f]">
+                      {formatDomain(d)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-neutral-400 block mb-1">
+                  Comment
+                </label>
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Write your comment..."
+                  className="w-full bg-[#252525] border border-white/5 rounded px-2.5 py-2 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-blue-500/50 resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 p-3 border-t border-white/5">
+              <button
+                onClick={() => setShowCommentModal(false)}
+                className="flex-1 py-2 text-xs text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddComment}
+                disabled={
+                  !commentText.trim() ||
+                  !commentDomain ||
+                  actionLoading === "comment"
+                }
+                className="flex-1 py-2 text-xs text-white bg-blue-600 hover:bg-blue-500 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              >
+                {actionLoading === "comment" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <MessageSquare className="w-3 h-3" />
+                )}
+                Add Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

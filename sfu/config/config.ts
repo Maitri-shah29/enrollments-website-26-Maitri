@@ -5,6 +5,17 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
+const toNumber = (value: string | undefined, fallback: number): number => {
+  if (!value) return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const toBoolean = (value: string | undefined): boolean => {
+  if (!value) return false;
+  return value === "1" || value.toLowerCase() === "true";
+};
+
 type WorkerLogLevel = "debug" | "warn" | "error" | "none";
 
 type WorkerLogTag =
@@ -23,15 +34,18 @@ type WorkerLogTag =
   | "message";
 
 export const config = {
-  port: 3031,
+  port: toNumber(process.env.SFU_PORT || process.env.PORT, 3031),
+  instanceId: process.env.SFU_INSTANCE_ID || `sfu-${process.pid}`,
+  version: process.env.SFU_VERSION || "dev",
+  draining: toBoolean(process.env.SFU_DRAINING),
   sfuSecret: process.env.SFU_SECRET || "development-secret",
   //generate something using openssl before deploying to production
   //openssl rand -base64 32
   workerSettings: {
     //rtcMinPort and max are just arbitray ports for our traffic
     //useful for firewall or networking rules
-    rtcMinPort: 40000,
-    rtcMaxPort: 41000,
+    rtcMinPort: toNumber(process.env.RTC_MIN_PORT, 40000),
+    rtcMaxPort: toNumber(process.env.RTC_MAX_PORT, 41000),
     //log levels you want to set
     logLevel: "warn" as WorkerLogLevel,
     logTags: ["info", "ice", "dtls", "rtp", "srtp", "rtcp"] as WorkerLogTag[],
