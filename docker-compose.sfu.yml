@@ -1,21 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    command:
-      [
-        "redis-server",
-        "--appendonly",
-        "yes",
-        "--requirepass",
-        "${REDIS_PASSWORD}",
-        "--bind",
-        "127.0.0.1",
-      ]
-    network_mode: "host"
-    volumes:
-      - redis-data:/data
-    restart: unless-stopped
-
   sfu-a:
     build:
       context: ./sfu
@@ -45,6 +28,3 @@ services:
       ANNOUNCED_IP: ${ANNOUNCED_IP}
       SFU_VERSION: "v2"
     restart: unless-stopped
-
-volumes:
-  redis-data:
