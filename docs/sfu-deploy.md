@@ -16,7 +16,8 @@ on the old one until they end.
 Add these to your app environment (for the Next server):
 
 ```
-REDIS_URL=redis://127.0.0.1:6379
+REDIS_PASSWORD=<strong password>
+REDIS_URL=redis://:${REDIS_PASSWORD}@127.0.0.1:6379
 SFU_POOL=sfu-a=http://127.0.0.1:3031,sfu-b=http://127.0.0.1:3032
 ```
 

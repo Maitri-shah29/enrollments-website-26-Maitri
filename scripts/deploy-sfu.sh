@@ -25,6 +25,11 @@ if [[ -z "${SFU_SECRET:-}" ]]; then
   exit 1
 fi
 
+if [[ -z "${REDIS_PASSWORD:-}" ]]; then
+  echo "REDIS_PASSWORD is required in .env" >&2
+  exit 1
+fi
+
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
 trim() {
