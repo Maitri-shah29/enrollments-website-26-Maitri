@@ -87,13 +87,17 @@ ROOMS_A="0"
 ROOMS_B="0"
 DRAINING_A="unknown"
 DRAINING_B="unknown"
+HAS_STATUS_A="false"
+HAS_STATUS_B="false"
 
 if [[ -n "$STATUS_A" ]]; then
+  HAS_STATUS_A="true"
   ROOMS_A="$(printf "%s" "$STATUS_A" | json_field rooms || echo "0")"
   DRAINING_A="$(printf "%s" "$STATUS_A" | json_field draining || echo "unknown")"
 fi
 
 if [[ -n "$STATUS_B" ]]; then
+  HAS_STATUS_B="true"
   ROOMS_B="$(printf "%s" "$STATUS_B" | json_field rooms || echo "0")"
   DRAINING_B="$(printf "%s" "$STATUS_B" | json_field draining || echo "unknown")"
 fi
@@ -101,7 +105,7 @@ fi
 ACTIVE_SERVICE=""
 ACTIVE_URL=""
 
-if [[ -n "$STATUS_A" && -n "$STATUS_B" ]]; then
+if [[ "$HAS_STATUS_A" == "true" && "$HAS_STATUS_B" == "true" ]]; then
   if (( ROOMS_A > 0 && ROOMS_B == 0 )); then
     ACTIVE_SERVICE="sfu-a"
     ACTIVE_URL="$SFU_A_URL"
@@ -118,10 +122,10 @@ if [[ -n "$STATUS_A" && -n "$STATUS_B" ]]; then
     ACTIVE_SERVICE="sfu-a"
     ACTIVE_URL="$SFU_A_URL"
   fi
-elif [[ -n "$STATUS_A" ]]; then
+elif [[ "$HAS_STATUS_A" == "true" ]]; then
   ACTIVE_SERVICE="sfu-a"
   ACTIVE_URL="$SFU_A_URL"
-elif [[ -n "$STATUS_B" ]]; then
+elif [[ "$HAS_STATUS_B" == "true" ]]; then
   ACTIVE_SERVICE="sfu-b"
   ACTIVE_URL="$SFU_B_URL"
 else
@@ -143,18 +147,25 @@ echo "Inactive service: ${INACTIVE_SERVICE}"
 echo "Building and starting ${INACTIVE_SERVICE}..."
 "${COMPOSE[@]}" up -d --build "$INACTIVE_SERVICE"
 
-if [[ -n "$ACTIVE_URL" ]]; then
+if [[ "$ACTIVE_SERVICE" == "sfu-a" && "$HAS_STATUS_A" != "true" ]]; then
+  echo "Active SFU not reachable; skipping drain."
+elif [[ "$ACTIVE_SERVICE" == "sfu-b" && "$HAS_STATUS_B" != "true" ]]; then
+  echo "Active SFU not reachable; skipping drain."
+elif [[ -n "$ACTIVE_URL" ]]; then
   echo "Draining ${ACTIVE_SERVICE}..."
-  curl -fsS -X POST "${ACTIVE_URL}/drain" \
+  if ! curl -sS -X POST "${ACTIVE_URL}/drain" \
     -H "x-sfu-secret: ${SFU_SECRET}" \
     -H "content-type: application/json" \
-    -d '{"draining": true}' >/dev/null
+    -d '{"draining": true}' >/dev/null; then
+    echo "Failed to drain ${ACTIVE_SERVICE}; continuing." >&2
+  fi
 fi
 
 DRAIN_TIMEOUT_SECONDS="${DRAIN_TIMEOUT_SECONDS:-3600}"
 DRAIN_POLL_SECONDS="${DRAIN_POLL_SECONDS:-10}"
 
-if [[ -n "$ACTIVE_URL" ]]; then
+if [[ -n "$ACTIVE_URL" && "$HAS_STATUS_A" == "true" && "$ACTIVE_SERVICE" == "sfu-a" ]] || \
+   [[ -n "$ACTIVE_URL" && "$HAS_STATUS_B" == "true" && "$ACTIVE_SERVICE" == "sfu-b" ]]; then
   echo "Waiting for ${ACTIVE_SERVICE} rooms to drain..."
   start_ts="$(date +%s)"
   while true; do
