@@ -3951,6 +3951,7 @@ function ParticipantsPanel({
   const [selectedUserForRedirect, setSelectedUserForRedirect] = useState<
     string | null
   >(null);
+  const [isPendingExpanded, setIsPendingExpanded] = useState(true);
   const filteredRooms = availableRooms.filter((room) => room.id !== roomId);
 
   // Helper to extract email from userId (email#sessionId format)
@@ -3993,7 +3994,7 @@ function ParticipantsPanel({
 
   return (
     <div
-      className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10"
+      className="absolute right-4 top-4 bottom-20 w-80 bg-[#1f1f1f] rounded-lg shadow-2xl flex flex-col border border-white/5 z-10 overflow-hidden"
       style={{ fontFamily: "'Roboto', sans-serif" }}
     >
       {/* Header */}
@@ -4044,80 +4045,100 @@ function ParticipantsPanel({
 
       {/* Pending Requests */}
       {isAdmin && pendingList.length > 0 && (
-        <div className="p-3 border-b border-white/10 bg-blue-500/10">
-          <h4 className="font-bold text-xs text-blue-400 mb-2 uppercase tracking-wide">
-            Pending Requests ({pendingList.length})
-          </h4>
-          <div className="space-y-2">
-            {pendingList.map(([userId, displayName]) => {
-              const pendingName = formatDisplayName(displayName || userId);
-              const pendingEmail = getEmailFromUserId(userId);
-              return (
-                <div
-                  key={userId}
-                  className="relative flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                    <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] border border-white/10 shrink-0">
-                      {pendingName[0]?.toUpperCase() || "?"}
+        <div className="border-b border-white/10 bg-blue-500/10">
+          <button
+            type="button"
+            onClick={() => setIsPendingExpanded((prev) => !prev)}
+            className="w-full px-3 py-2 flex items-center justify-between hover:bg-blue-500/5 transition-colors"
+            aria-expanded={isPendingExpanded}
+          >
+            <div className="flex items-center gap-2">
+              <h4 className="font-bold text-xs text-blue-400 uppercase tracking-wide">
+                Pending Requests
+              </h4>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-200 tabular-nums">
+                {pendingList.length}
+              </span>
+            </div>
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-blue-200 transition-transform ${
+                isPendingExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {isPendingExpanded && (
+            <div className="px-3 pb-3">
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {pendingList.map(([userId, displayName]) => {
+                  const pendingName = formatDisplayName(displayName || userId);
+                  return (
+                    <div
+                      key={userId}
+                      className="relative flex items-center justify-between p-2 rounded bg-black/40 border border-white/10"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+                        <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] border border-white/10 shrink-0">
+                          {pendingName[0]?.toUpperCase() || "?"}
+                        </div>
+                        <span className="text-sm truncate text-white/80">
+                          {pendingName}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() =>
+                            socket?.emit(
+                              "admitUser",
+                              { userId },
+                              (res: { success?: boolean; error?: string }) => {
+                                if (res?.error) {
+                                  console.error(
+                                    "[Meets] Admit failed:",
+                                    res.error
+                                  );
+                                  onPendingUserStale?.(userId);
+                                }
+                              }
+                            )
+                          }
+                          className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
+                          title="Admit"
+                        >
+                          Admit
+                        </button>
+                        <button
+                          onClick={() =>
+                            socket?.emit(
+                              "rejectUser",
+                              { userId },
+                              (res: { success?: boolean; error?: string }) => {
+                                if (res?.error) {
+                                  console.error(
+                                    "[Meets] Reject failed:",
+                                    res.error
+                                  );
+                                  onPendingUserStale?.(userId);
+                                }
+                              }
+                            )
+                          }
+                          className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
+                          title="Reject"
+                        >
+                          Reject
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-sm truncate text-white/80">
-                      {pendingName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() =>
-                        socket?.emit(
-                          "admitUser",
-                          { userId },
-                          (res: { success?: boolean; error?: string }) => {
-                            if (res?.error) {
-                              console.error(
-                                "[Meets] Admit failed:",
-                                res.error
-                              );
-                              onPendingUserStale?.(userId);
-                            }
-                          }
-                        )
-                      }
-                      className="p-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-500 rounded transition-colors text-xs font-medium"
-                      title="Admit"
-                    >
-                      Admit
-                    </button>
-                    <button
-                      onClick={() =>
-                        socket?.emit(
-                          "rejectUser",
-                          { userId },
-                          (res: { success?: boolean; error?: string }) => {
-                            if (res?.error) {
-                              console.error(
-                                "[Meets] Reject failed:",
-                                res.error
-                              );
-                              onPendingUserStale?.(userId);
-                            }
-                          }
-                        )
-                      }
-                      className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded transition-colors text-xs font-medium"
-                      title="Reject"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {participantsList.map((p) => {
           const isMe = p.userId === currentUserId;
           const displayName = getDisplayName(p.userId);
