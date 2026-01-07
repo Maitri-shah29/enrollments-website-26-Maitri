@@ -25,8 +25,13 @@ if [[ -z "${SFU_SECRET:-}" ]]; then
   exit 1
 fi
 
-if [[ -z "${REDIS_PASSWORD:-}" ]]; then
-  echo "REDIS_PASSWORD is required in .env" >&2
+HAS_UPSTASH="false"
+if [[ -n "${UPSTASH_REDIS_REST_URL:-}" && -n "${UPSTASH_REDIS_REST_TOKEN:-}" ]]; then
+  HAS_UPSTASH="true"
+fi
+
+if [[ "$HAS_UPSTASH" != "true" && -z "${REDIS_PASSWORD:-}" ]]; then
+  echo "REDIS_PASSWORD is required in .env when not using Upstash" >&2
   exit 1
 fi
 
@@ -82,8 +87,12 @@ git -C "$ROOT_DIR" pull
 echo "Installing SFU dependencies..."
 npm -C "${ROOT_DIR}/sfu" install
 
-echo "Ensuring Redis is running..."
-"${COMPOSE[@]}" up -d redis
+if [[ "$HAS_UPSTASH" == "true" ]]; then
+  echo "Using Upstash Redis; skipping local Redis container."
+else
+  echo "Ensuring Redis is running..."
+  "${COMPOSE[@]}" up -d redis
+fi
 
 STATUS_A="$(status_json "$SFU_A_URL")"
 STATUS_B="$(status_json "$SFU_B_URL")"

@@ -13,6 +13,18 @@ on the old one until they end.
 
 ## Environment
 
+### Option A: Upstash (recommended for Vercel)
+
+```
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+SFU_POOL=sfu-a=http://127.0.0.1:3031,sfu-b=http://127.0.0.1:3032
+```
+
+Skip the Redis container and any Nginx TCP proxy setup when using Upstash.
+
+### Option B: Local Redis
+
 Add these to your app environment (for the Next server):
 
 ```
