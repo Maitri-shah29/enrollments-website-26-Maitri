@@ -1,3 +1,22 @@
-npx --no -- lint-staged
+# Determine if there are any staged changes outside of sfu/ and .husky/
+# Only in that case should we run lint and build.
+STAGED_FILES="$(git diff --cached --name-only --diff-filter=ACM)"
 
-npm run build --silent
+# If there are no staged files, run lint and build as usual
+if [ -z "$STAGED_FILES" ]; then
+  npx --no -- lint-staged
+  npm run build --silent
+  exit 0
+fi
+
+# Filter out files that are under sfu/ or .husky/
+NON_SFU_HUSKY_FILE="$(printf '%s\n' "$STAGED_FILES" | grep -vE '^(sfu/|\.husky/)' || true)"
+
+if [ -n "$NON_SFU_HUSKY_FILE" ]; then
+  # At least one file is outside sfu/ and .husky/, run lint and build
+  npx --no -- lint-staged
+  npm run build --silent
+else
+  # All staged files are under sfu/ or .husky/, skip lint and build
+  echo "Skipping lint and build: all staged changes are under sfu/ or .husky/"
+fi

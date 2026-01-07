@@ -35,7 +35,7 @@ const LinkifiedText = ({
         if (part.match(/^(https?:\/\/[^\s]+)$/)) {
           return (
             <a
-              key={i}
+              key={`${part}-${i}`}
               href={part}
               target="_blank"
               rel="noopener noreferrer"
@@ -45,7 +45,7 @@ const LinkifiedText = ({
             </a>
           );
         }
-        return part;
+        return <span key={`text-${i}`}>{part}</span>;
       })}
     </p>
   );
@@ -116,39 +116,6 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
     }
   }, [selectedRoundUser]);
 
-  const handleSubmit = async () => {
-    if (!selectedRoundUser || !submissionText.trim()) {
-      showNotification("Please enter your submission", "error");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      await submitTask(selectedRoundUser.id, submissionText);
-
-      // Refresh data
-      const refreshResult = await fetchTaskRoundUsers();
-      if (
-        refreshResult &&
-        "roundusers" in refreshResult &&
-        refreshResult.roundusers
-      ) {
-        setAllRoundUsers(refreshResult.roundusers);
-      }
-
-      showNotification("Task submitted successfully!", "success");
-    } catch (error) {
-      console.error("Error submitting task:", error);
-      showNotification(
-        error instanceof Error ? error.message : "Failed to submit task",
-        "error",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleConfirmSubmit = async () => {
     setShowConfirmModal(false);
     await executeSubmit();
@@ -200,9 +167,9 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
     }).format(d);
   };
 
-  const isDeadlinePassed = (deadline: Date) => {
+  const isDeadlinePassed = useCallback((deadline: Date) => {
     return new Date(deadline) < new Date();
-  };
+  }, []);
 
   const isReadOnly = useMemo(() => {
     if (!selectedRoundUser) return true;
@@ -444,8 +411,8 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                           timeStyle: "short",
                         }).format(
                           new Date(
-                            selectedRoundUser.TaskSubmission.submittedAt
-                          )
+                            selectedRoundUser.TaskSubmission.submittedAt,
+                          ),
                         )}
                       </span>
                     )}
@@ -465,7 +432,9 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     type="button"
                     style={{ fontFamily: "PoppinsReg" }}
                     onClick={handleSubmitClick}
-                    disabled={submitting || !submissionText.trim() || isReadOnly}
+                    disabled={
+                      submitting || !submissionText.trim() || isReadOnly
+                    }
                     className="px-6 py-3 bg-sky-50 hover:bg-blue-700 text-gray-900 hover:text-sky-50 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors hover:border-white hover:border-1"
                   >
                     {submitting ? "Submitting..." : "Submit Task"}
@@ -482,75 +451,6 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                       : "Submissions are no longer accepted for this task."}
                   </p>
                 )}
-
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-3">
-                    <h2
-                      className="text-xl font-semibold"
-                      style={{ fontFamily: "PoppinsBlack" }}
-                    >
-                      Your Submission
-                    </h2>
-                    {selectedRoundUser.TaskSubmission && (
-                      <span
-                        className="text-sm text-gray-400"
-                        style={{ fontFamily: "PoppinsReg" }}
-                      >
-                        Last submitted:{" "}
-                        {new Intl.DateTimeFormat("en-US", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        }).format(
-                          new Date(
-                            selectedRoundUser.TaskSubmission.submittedAt,
-                          ),
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <textarea
-                    value={submissionText}
-                    onChange={(e) => setSubmissionText(e.target.value)}
-                    style={{ fontFamily: "PoppinsReg" }}
-                    placeholder="Enter your submission here..."
-                    className="w-full h-64 p-4 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    disabled={
-                      submitting ||
-                      Boolean(
-                        selectedRoundUser.Task &&
-                          isDeadlinePassed(selectedRoundUser.Task.deadline)
-                      )
-                    }
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  style={{ fontFamily: "PoppinsReg" }}
-                  onClick={handleSubmit}
-                  disabled={
-                    submitting ||
-                    !submissionText.trim() ||
-                    Boolean(
-                      selectedRoundUser.Task &&
-                        isDeadlinePassed(selectedRoundUser.Task.deadline)
-                    )
-                  }
-                  className="px-6 py-3 bg-sky-50 hover:bg-blue-700 text-gray-900 hover:text-sky-50 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors hover:border-white hover:border-1"
-                >
-                  {submitting ? "Submitting..." : "Submit Task"}
-                </button>
-
-                {selectedRoundUser.Task &&
-                  isDeadlinePassed(selectedRoundUser.Task.deadline) && (
-                    <p
-                      className="mt-4 text-red-400 text-sm"
-                      style={{ fontFamily: "PoppinsReg" }}
-                    >
-                      The deadline for this task has passed. Submissions are no
-                      longer accepted.
-                    </p>
-                  )}
               </>
             )}
           </div>
