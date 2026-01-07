@@ -1119,7 +1119,7 @@ io.on("connection", (socket: Socket) => {
             timestamp: Date.now(),
           };
 
-          io.to(currentRoom.id).emit("reaction", reaction);
+          socket.to(currentRoom.id).emit("reaction", reaction);
           callback({ success: true });
           return;
         }
@@ -1142,7 +1142,7 @@ io.on("connection", (socket: Socket) => {
           timestamp: Date.now(),
         };
 
-        io.to(currentRoom.id).emit("reaction", reaction);
+        socket.to(currentRoom.id).emit("reaction", reaction);
         callback({ success: true });
       } catch (error) {
         callback({ error: (error as Error).message });
