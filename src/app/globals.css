@@ -188,7 +188,10 @@
   display: block;
 }
 
-@media (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+@media (max-width: 1024px) and (pointer: coarse),
+  (max-width: 1024px) and (any-pointer: coarse),
+  (max-width: 1024px) and (hover: none),
+  (max-width: 1024px) and (any-hover: none) {
   .mobile-blocker {
     display: block;
   }
