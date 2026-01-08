@@ -18,7 +18,6 @@ const redis =
 
 let saveResponseLimiter: Ratelimit | null = null;
 let actionProxyLimiter: Ratelimit | null = null;
-let proxyRequestLimiter: Ratelimit | null = null;
 
 function getSaveResponseLimiter(): Ratelimit | null {
   if (!redis) return null;
@@ -44,19 +43,6 @@ function getActionProxyLimiter(): Ratelimit | null {
     });
   }
   return actionProxyLimiter;
-}
-
-function getProxyRequestLimiter(): Ratelimit | null {
-  if (!redis) return null;
-  if (!proxyRequestLimiter) {
-    proxyRequestLimiter = new Ratelimit({
-      redis,
-      prefix: "ratelimit:proxy-requests",
-      limiter: Ratelimit.slidingWindow(600, "1 m"),
-      analytics: true,
-    });
-  }
-  return proxyRequestLimiter;
 }
 
 export function getClientIpFromHeaders(headers: Headers): string | null {
@@ -98,28 +84,6 @@ export async function enforceActionProxyRateLimit(
   key: string,
 ): Promise<RatelimitResult> {
   const limiter = getActionProxyLimiter();
-  if (!limiter) {
-    return {
-      success: true,
-      limit: Number.POSITIVE_INFINITY,
-      remaining: Number.POSITIVE_INFINITY,
-      reset: Date.now(),
-    };
-  }
-
-  const result = await limiter.limit(key);
-  return {
-    success: result.success,
-    limit: result.limit,
-    remaining: result.remaining,
-    reset: result.reset,
-  };
-}
-
-export async function enforceProxyRequestRateLimit(
-  key: string,
-): Promise<RatelimitResult> {
-  const limiter = getProxyRequestLimiter();
   if (!limiter) {
     return {
       success: true,
