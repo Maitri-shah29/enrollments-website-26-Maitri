@@ -119,11 +119,14 @@ const SchedulerClient = ({
   const schedulingLink = bookedSlot?.meet?.schedulingLink;
   const [canJoin, setCanJoin] = useState(false);
   const [isSfuHealthy, setIsSfuHealthy] = useState(initialSfuHealth);
+  const [healthCheckCompleted, setHealthCheckCompleted] = useState(false);
 
   useEffect(() => {
+    const sfuUrl = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
+
     const checkSfuHealth = async () => {
       try {
-        const response = await fetch("/api/sfu/health");
+        const response = await fetch(`${sfuUrl}/health`);
         if (response.ok) {
           const data = await response.json();
           setIsSfuHealthy(data.status === "healthy");
@@ -132,8 +135,12 @@ const SchedulerClient = ({
         }
       } catch (error) {
         setIsSfuHealthy(false);
+        console.log(error);
       }
+      setHealthCheckCompleted(true);
     };
+
+    checkSfuHealth();
 
     const interval = setInterval(checkSfuHealth, 30000);
     return () => clearInterval(interval);
@@ -284,7 +291,11 @@ const SchedulerClient = ({
     );
   }
 
-  const activeLink = isSfuHealthy ? meetLink : schedulingLink;
+  const activeLink = healthCheckCompleted
+    ? isSfuHealthy
+      ? meetLink
+      : schedulingLink
+    : null;
 
   return (
     <div className="flex min-h-[100dvh] overflow-x-hidden bg-black text-white font-[var(--font-poppins)]">
@@ -318,9 +329,7 @@ const SchedulerClient = ({
             className="w-full bg-[#1c1c1c] border border-[#2b2b2b] rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#5CAFFF] transition-colors"
           >
             {availableDomains.map(({ name, roundNumber }) => {
-              const label = roundNumber
-                ? `${name} Round ${roundNumber}`
-                : name;
+              const label = roundNumber ? `${name} Round ${roundNumber}` : name;
               return (
                 <option key={name} value={name}>
                   {label}
@@ -347,6 +356,11 @@ const SchedulerClient = ({
             <div className="text-gray-500 text-sm mb-4">
               Link will be shared 15 min prior to the scheduled time.
             </div>
+            {canJoin && !healthCheckCompleted && (
+              <div className="text-gray-400 text-sm mb-4">
+                Checking meeting service availability...
+              </div>
+            )}
             {canJoin && activeLink && (
               <div className="bg-gray-800/50 p-4 rounded-lg mb-6 border border-gray-700 max-w-md w-full">
                 <div className="text-sm text-gray-400 mb-2">

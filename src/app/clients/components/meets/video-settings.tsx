@@ -8,6 +8,7 @@ import {
   Volume2,
   ChevronDown,
   Check,
+  UserCheck,
 } from "lucide-react";
 
 interface MediaDeviceOption {
@@ -21,6 +22,13 @@ interface VideoSettingsProps {
   onToggleOpen: () => void;
   onToggleMirror: () => void;
   isCameraOff: boolean;
+  isAdmin?: boolean;
+  displayNameInput?: string;
+  displayNameStatus?: { type: "success" | "error"; message: string } | null;
+  isDisplayNameUpdating?: boolean;
+  canUpdateDisplayName?: boolean;
+  onDisplayNameInputChange?: (value: string) => void;
+  onDisplayNameSubmit?: () => void;
   selectedAudioInputDeviceId?: string;
   selectedAudioOutputDeviceId?: string;
   onAudioInputDeviceChange?: (deviceId: string) => void;
@@ -113,6 +121,13 @@ export default function VideoSettings({
   onToggleOpen,
   onToggleMirror,
   isCameraOff,
+  isAdmin,
+  displayNameInput,
+  displayNameStatus,
+  isDisplayNameUpdating,
+  canUpdateDisplayName,
+  onDisplayNameInputChange,
+  onDisplayNameSubmit,
   selectedAudioInputDeviceId,
   selectedAudioOutputDeviceId,
   onAudioInputDeviceChange,
@@ -125,6 +140,8 @@ export default function VideoSettings({
   const [audioOutputDevices, setAudioOutputDevices] = useState<
     MediaDeviceOption[]
   >([]);
+  const showDisplayNameSettings =
+    !!isAdmin && !!onDisplayNameInputChange && !!onDisplayNameSubmit;
 
   // Fetch available devices
   const fetchDevices = useCallback(async () => {
@@ -215,6 +232,52 @@ export default function VideoSettings({
               </div>
             </div>
           </button>
+
+          {showDisplayNameSettings && (
+            <div className="px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-white/50 mb-2">
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Display name</span>
+              </div>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  onDisplayNameSubmit?.();
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  type="text"
+                  value={displayNameInput ?? ""}
+                  onChange={(event) =>
+                    onDisplayNameInputChange?.(event.target.value)
+                  }
+                  maxLength={40}
+                  className="flex-1 px-2 py-1.5 bg-[#222] border border-white/10 rounded text-xs focus:outline-none focus:border-white/30 transition-colors placeholder:text-neutral-600"
+                  placeholder="Enter display name"
+                  disabled={isDisplayNameUpdating}
+                />
+                <button
+                  type="submit"
+                  disabled={!canUpdateDisplayName || isDisplayNameUpdating}
+                  className="px-3 py-1.5 text-xs rounded bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isDisplayNameUpdating ? "Saving..." : "Save"}
+                </button>
+              </form>
+              {displayNameStatus && (
+                <div
+                  className={`mt-1 text-[10px] ${
+                    displayNameStatus.type === "success"
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {displayNameStatus.message}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="border-t border-white/10 my-2" />
 

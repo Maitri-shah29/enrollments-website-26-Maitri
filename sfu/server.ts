@@ -51,6 +51,7 @@ const allowedAssetExtensions = new Set([
   ".webp",
   ".svg",
 ]);
+const MAX_DISPLAY_NAME_LENGTH = 40;
 
 // ============================================
 // Server Setup (HTTPS for WebRTC)
@@ -263,6 +264,7 @@ io.on("connection", (socket: Socket) => {
   let currentClient: Client | null = null;
   let pendingRoomId: string | null = null;
   let pendingUserKey: string | null = null;
+  let currentUserKey: string | null = null;
 
   // ----------------------------------------
   // Join Room
@@ -287,6 +289,7 @@ io.on("connection", (socket: Socket) => {
           return;
         }
         const { userKey, userId, displayName } = identity;
+        currentUserKey = userKey;
 
         // Get or create room
         let room = rooms.get(roomId);
@@ -398,6 +401,7 @@ io.on("connection", (socket: Socket) => {
           currentClient = new Client({ id: userId, socket });
         }
 
+        currentRoom.setUserIdentity(userId, userKey, displayName);
         currentRoom.addClient(currentClient);
 
         // Join socket room for broadcasting
@@ -417,7 +421,15 @@ io.on("connection", (socket: Socket) => {
         }
 
         // Notify others
-        socket.to(roomId).emit("userJoined", { userId });
+        socket.to(roomId).emit("userJoined", {
+          userId,
+          displayName: currentRoom.getDisplayNameForUser(userId) || displayName,
+        });
+
+        socket.emit("displayNameSnapshot", {
+          users: currentRoom.getDisplayNameSnapshot(),
+          roomId: currentRoom.id,
+        });
 
         // Check for video quality update
         const newQuality = currentRoom.updateVideoQuality();
@@ -1034,6 +1046,66 @@ io.on("connection", (socket: Socket) => {
   );
 
   // ----------------------------------------
+  // Update Display Name (Admins only)
+  // ----------------------------------------
+  socket.on(
+    "updateDisplayName",
+    (
+      data: { displayName?: string },
+      callback: (
+        response:
+          | { success: boolean; displayName: string }
+          | { error: string },
+      ) => void,
+    ) => {
+      try {
+        if (!currentClient || !currentRoom) {
+          callback({ error: "Not in a room" });
+          return;
+        }
+
+        if (!(currentClient instanceof Admin)) {
+          callback({ error: "Only admins can update display name" });
+          return;
+        }
+
+        const displayName = data.displayName?.trim() || "";
+        if (!displayName) {
+          callback({ error: "Display name cannot be empty" });
+          return;
+        }
+
+        if (displayName.length > MAX_DISPLAY_NAME_LENGTH) {
+          callback({ error: "Display name too long" });
+          return;
+        }
+
+        if (!currentUserKey) {
+          callback({ error: "Missing user identity" });
+          return;
+        }
+
+        const updatedUserIds = currentRoom.updateDisplayName(
+          currentUserKey,
+          displayName,
+        );
+
+        for (const userId of updatedUserIds) {
+          io.to(currentRoom.id).emit("displayNameUpdated", {
+            userId,
+            displayName,
+            roomId: currentRoom.id,
+          });
+        }
+
+        callback({ success: true, displayName });
+      } catch (error) {
+        callback({ error: (error as Error).message });
+      }
+    },
+  );
+
+  // ----------------------------------------
   // Send Chat Message
   // ----------------------------------------
   socket.on(
@@ -1064,9 +1136,10 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        // Extract display name from userId (format: email#sessionId)
         const displayName =
-          currentClient.id.split("#")[0]?.split("@")[0] || "Anonymous";
+          currentRoom.getDisplayNameForUser(currentClient.id) ||
+          currentClient.id.split("#")[0]?.split("@")[0] ||
+          "Anonymous";
 
         // Create chat message
         const message: ChatMessage = {
@@ -1271,6 +1344,7 @@ io.on("connection", (socket: Socket) => {
     currentClient = null;
     pendingRoomId = null;
     pendingUserKey = null;
+    currentUserKey = null;
   });
 });
 

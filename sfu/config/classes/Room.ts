@@ -26,6 +26,8 @@ export class Room {
   public allowedUsers: Set<string> = new Set();
   public currentScreenShareProducerId: string | null = null;
   public currentQuality: VideoQuality = "standard";
+  public userKeysById: Map<string, string> = new Map();
+  public displayNamesByKey: Map<string, string> = new Map();
 
   constructor(options: RoomOptions) {
     this.id = options.id;
@@ -47,6 +49,51 @@ export class Room {
   }
 
   /**
+   * Register or update identity mapping for a connected user.
+   */
+  setUserIdentity(userId: string, userKey: string, displayName: string): void {
+    this.userKeysById.set(userId, userKey);
+    if (!this.displayNamesByKey.has(userKey)) {
+      this.displayNamesByKey.set(userKey, displayName);
+    }
+  }
+
+  /**
+   * Get the display name for a given user id.
+   */
+  getDisplayNameForUser(userId: string): string | undefined {
+    const userKey = this.userKeysById.get(userId);
+    if (!userKey) return undefined;
+    return this.displayNamesByKey.get(userKey);
+  }
+
+  /**
+   * Snapshot display names for all connected clients.
+   */
+  getDisplayNameSnapshot(): { userId: string; displayName: string }[] {
+    const snapshot: { userId: string; displayName: string }[] = [];
+    for (const userId of this.clients.keys()) {
+      const displayName = this.getDisplayNameForUser(userId) || userId;
+      snapshot.push({ userId, displayName });
+    }
+    return snapshot;
+  }
+
+  /**
+   * Update display name for a user key and return affected user ids.
+   */
+  updateDisplayName(userKey: string, displayName: string): string[] {
+    this.displayNamesByKey.set(userKey, displayName);
+    const userIds: string[] = [];
+    for (const [userId, key] of this.userKeysById.entries()) {
+      if (key === userKey) {
+        userIds.push(userId);
+      }
+    }
+    return userIds;
+  }
+
+  /**
    * Remove a client from the room and clean up
    */
   removeClient(clientId: string): Client | undefined {
@@ -55,6 +102,7 @@ export class Room {
       client.close();
       this.clients.delete(clientId);
     }
+    this.userKeysById.delete(clientId);
     return client;
   }
 
@@ -246,6 +294,8 @@ export class Room {
 
     // Close the router
     this.router.close();
+    this.userKeysById.clear();
+    this.displayNamesByKey.clear();
   }
 
   // ============================================
