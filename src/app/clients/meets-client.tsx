@@ -65,6 +65,7 @@ import {
 import { getReactionFiles } from "../actions/reactions";
 import { getSfuRooms } from "../actions/sfu-rooms";
 import { getSfuJoinInfo } from "../actions/sfu-join";
+import fetchMeetUser from "../actions/fetch-meet-user";
 import { useSessionContext } from "../components/session-provider";
 import SignupPage from "../components/sign-up";
 import VideoSettings from "./components/meets/video-settings";
@@ -418,11 +419,6 @@ function formatDisplayName(raw: string): string {
   return words.length > 0 ? words.join(" ") : handle || raw;
 }
 
-/** Extract display name from user ID (email#sessionId format) */
-function getDisplayName(userId: string): string {
-  return formatDisplayName(userId);
-}
-
 function isReactionEmoji(value: string): value is ReactionEmoji {
   return EMOJI_REACTIONS.includes(value as ReactionEmoji);
 }
@@ -484,6 +480,9 @@ export default function MeetsClient({
     participantReducer,
     new Map()
   );
+  const [displayNames, setDisplayNames] = useState<Map<string, string>>(
+    new Map()
+  );
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [meetError, setMeetError] = useState<MeetError | null>(null);
@@ -499,6 +498,12 @@ export default function MeetsClient({
     useState<string>();
   const [selectedAudioOutputDeviceId, setSelectedAudioOutputDeviceId] =
     useState<string>();
+  const [displayNameInput, setDisplayNameInput] = useState("");
+  const [displayNameStatus, setDisplayNameStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [isDisplayNameUpdating, setIsDisplayNameUpdating] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -535,6 +540,16 @@ export default function MeetsClient({
     );
   }, [session?.data?.user?.email]);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
+
+  // User slot booking info (for non-admins)
+  const [userSlotInfo, setUserSlotInfo] = useState<{
+    domain: string;
+    from: Date;
+    to: Date;
+  } | null>(null);
+  const [userMeetingStatus, setUserMeetingStatus] = useState<
+    "loading" | "has-slot" | "needs-booking" | "not-enrolled"
+  >("loading");
   const [pendingUsers, setPendingUsers] = useState<Map<string, string>>(
     new Map()
   ); // userId -> displayName
@@ -588,6 +603,73 @@ export default function MeetsClient({
     session?.data?.user?.name || session?.data?.user?.email || "guest";
   const userAccountEmail = session?.data?.user?.email || "guest";
   const userId = `${userAccountEmail}#${sessionIdRef.current}`;
+  const resolveDisplayName = useCallback(
+    (targetUserId: string) => {
+      const storedName = displayNames.get(targetUserId);
+      if (storedName && storedName.trim()) {
+        return storedName.trim();
+      }
+      return formatDisplayName(targetUserId);
+    },
+    [displayNames]
+  );
+  const currentUserDisplayName = resolveDisplayName(userId);
+  const canUpdateDisplayName =
+    displayNameInput.trim().length > 0 &&
+    displayNameInput.trim() !== currentUserDisplayName.trim();
+
+  useEffect(() => {
+    const baseName = session?.data?.user?.name || session?.data?.user?.email;
+    if (!baseName) return;
+    setDisplayNames((prev) => {
+      if (prev.get(userId) === baseName) return prev;
+      const next = new Map(prev);
+      next.set(userId, baseName);
+      return next;
+    });
+  }, [session?.data?.user?.name, session?.data?.user?.email, userId]);
+
+  useEffect(() => {
+    setDisplayNameInput(currentUserDisplayName);
+  }, [currentUserDisplayName]);
+
+  useEffect(() => {
+    if (!displayNameStatus) return;
+    const timer = setTimeout(() => setDisplayNameStatus(null), 3000);
+    return () => clearTimeout(timer);
+  }, [displayNameStatus]);
+
+  const handleDisplayNameSubmit = useCallback(() => {
+    if (!isAdmin || !canUpdateDisplayName) return;
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const nextName = displayNameInput.trim();
+    if (!nextName) {
+      setDisplayNameStatus({
+        type: "error",
+        message: "Display name cannot be empty.",
+      });
+      return;
+    }
+
+    setIsDisplayNameUpdating(true);
+    socket.emit(
+      "updateDisplayName",
+      { displayName: nextName },
+      (res: { success?: boolean; error?: string }) => {
+        setIsDisplayNameUpdating(false);
+        if (res?.error) {
+          setDisplayNameStatus({ type: "error", message: res.error });
+          return;
+        }
+        setDisplayNameStatus({
+          type: "success",
+          message: "Display name updated.",
+        });
+      }
+    );
+  }, [isAdmin, canUpdateDisplayName, displayNameInput]);
 
   const stopLocalTrack = useCallback((track?: MediaStreamTrack | null) => {
     if (!track) return;
@@ -673,6 +755,58 @@ export default function MeetsClient({
     };
   }, []);
 
+  // Fetch user's slot booking info for non-admins
+  const [slotInfoLoaded, setSlotInfoLoaded] = useState(false);
+  useEffect(() => {
+    // Wait until we know for sure if user is admin or not
+    if (session === null || isAdmin === undefined) return;
+    if (isAdmin) {
+      setUserMeetingStatus("has-slot"); // Admins can always join
+      return;
+    }
+    if (slotInfoLoaded) return;
+
+    const loadSlotInfo = async () => {
+      try {
+        const result = await fetchMeetUser();
+        if ("success" in result && result.success) {
+          // Find any slot the user has booked
+          const bookedSlot = result.meetLinks.find((ml) => ml.slot);
+          if (bookedSlot?.slot) {
+            const domainName =
+              bookedSlot.domain === "cc"
+                ? "Competitive Coding"
+                : bookedSlot.domain.charAt(0).toUpperCase() +
+                  bookedSlot.domain.slice(1);
+            setUserSlotInfo({
+              domain: domainName,
+              from: bookedSlot.slot.from,
+              to: bookedSlot.slot.to,
+            });
+            // Set the roomId to the meetLink for this slot
+            setRoomId(bookedSlot.meetLink);
+            setUserMeetingStatus("has-slot");
+          } else if (result.meetLinks.length > 0) {
+            // User is enrolled but hasn't booked a slot
+            setUserMeetingStatus("needs-booking");
+          } else {
+            // User is not enrolled in any interview rounds
+            setUserMeetingStatus("not-enrolled");
+          }
+        } else {
+          setUserMeetingStatus("not-enrolled");
+        }
+      } catch (error) {
+        console.warn("[Meets] Failed to load slot info:", error);
+        setUserMeetingStatus("not-enrolled");
+      } finally {
+        setSlotInfoLoaded(true);
+      }
+    };
+
+    loadSlotInfo();
+  }, [isAdmin, session, slotInfoLoaded]);
+
   useEffect(() => {
     let isActive = true;
 
@@ -716,6 +850,7 @@ export default function MeetsClient({
       leaveTimeoutsRef.current.clear();
       setReactions([]);
       setPendingUsers(new Map());
+      setDisplayNames(new Map());
 
       // Close producers
       try {
@@ -1024,10 +1159,23 @@ export default function MeetsClient({
           // User events
           socket.on(
             "userJoined",
-            ({ userId: joinedUserId }: { userId: string }) => {
+            ({
+              userId: joinedUserId,
+              displayName,
+            }: {
+              userId: string;
+              displayName?: string;
+            }) => {
               console.log("[Meets] User joined:", joinedUserId);
               if (joinedUserId !== userId) {
                 playNotificationSound("join");
+              }
+              if (displayName) {
+                setDisplayNames((prev) => {
+                  const next = new Map(prev);
+                  next.set(joinedUserId, displayName);
+                  return next;
+                });
               }
               const leaveTimeout = leaveTimeoutsRef.current.get(joinedUserId);
               if (leaveTimeout) {
@@ -1048,6 +1196,12 @@ export default function MeetsClient({
               if (leftUserId !== userId) {
                 playNotificationSound("leave");
               }
+              setDisplayNames((prev) => {
+                if (!prev.has(leftUserId)) return prev;
+                const next = new Map(prev);
+                next.delete(leftUserId);
+                return next;
+              });
 
               const producersToClose = Array.from(
                 producerMapRef.current.entries(),
@@ -1071,6 +1225,46 @@ export default function MeetsClient({
               });
 
               scheduleParticipantRemoval(leftUserId);
+            }
+          );
+
+          socket.on(
+            "displayNameSnapshot",
+            ({
+              users,
+              roomId: eventRoomId,
+            }: {
+              users: { userId: string; displayName?: string }[];
+              roomId?: string;
+            }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              const snapshot = new Map<string, string>();
+              (users || []).forEach(({ userId, displayName }) => {
+                if (displayName) {
+                  snapshot.set(userId, displayName);
+                }
+              });
+              setDisplayNames(snapshot);
+            }
+          );
+
+          socket.on(
+            "displayNameUpdated",
+            ({
+              userId: updatedUserId,
+              displayName,
+              roomId: eventRoomId,
+            }: {
+              userId: string;
+              displayName: string;
+              roomId?: string;
+            }) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              setDisplayNames((prev) => {
+                const next = new Map(prev);
+                next.set(updatedUserId, displayName);
+                return next;
+              });
             }
           );
 
@@ -2740,7 +2934,7 @@ export default function MeetsClient({
     for (const p of participants.values()) {
       if (p.screenShareStream) {
         presentationStream = p.screenShareStream;
-        presenterName = getDisplayName(p.userId);
+        presenterName = resolveDisplayName(p.userId);
         break;
       }
     }
@@ -2817,6 +3011,13 @@ export default function MeetsClient({
                 onToggleOpen={() => setIsVideoSettingsOpen((prev) => !prev)}
                 onToggleMirror={() => setIsMirrorCamera((prev) => !prev)}
                 isCameraOff={isCameraOff}
+                isAdmin={!!isAdmin}
+                displayNameInput={displayNameInput}
+                displayNameStatus={displayNameStatus}
+                isDisplayNameUpdating={isDisplayNameUpdating}
+                canUpdateDisplayName={canUpdateDisplayName}
+                onDisplayNameInputChange={setDisplayNameInput}
+                onDisplayNameSubmit={handleDisplayNameSubmit}
                 selectedAudioInputDeviceId={selectedAudioInputDeviceId}
                 selectedAudioOutputDeviceId={selectedAudioOutputDeviceId}
                 onAudioInputDeviceChange={handleAudioInputDeviceChange}
@@ -2867,7 +3068,7 @@ export default function MeetsClient({
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-4 overflow-hidden relative">
         {isJoined && reactions.length > 0 && (
-          <ReactionOverlay reactions={reactions} />
+          <ReactionOverlay reactions={reactions} getDisplayName={resolveDisplayName} />
         )}
         {!isJoined ? (
           /* Join Screen */
@@ -2884,6 +3085,8 @@ export default function MeetsClient({
             roomsStatus={roomsStatus}
             onRefreshRooms={refreshRooms}
             onJoinRoom={joinRoomById}
+            slotInfo={userSlotInfo}
+            meetingStatus={userMeetingStatus}
           />
         ) : presentationStream ? (
           /* Presentation Layout */
@@ -2898,6 +3101,7 @@ export default function MeetsClient({
             activeSpeakerId={activeSpeakerId}
             currentUserId={userId}
             audioOutputDeviceId={selectedAudioOutputDeviceId}
+            getDisplayName={resolveDisplayName}
           />
         ) : (
           /* Grid Layout */
@@ -2918,6 +3122,7 @@ export default function MeetsClient({
                 selectedParticipantForActions === userId ? null : userId
               )
             }
+            getDisplayName={resolveDisplayName}
           />
         )}
 
@@ -2965,6 +3170,7 @@ export default function MeetsClient({
             isAdmin={isAdmin}
             pendingUsers={pendingUsers}
             roomId={roomId}
+            getDisplayName={resolveDisplayName}
             onPendingUserStale={(staleUserId) => {
               setPendingUsers((prev) => {
                 const next = new Map(prev);
@@ -2981,6 +3187,7 @@ export default function MeetsClient({
             participantUserId={selectedParticipantForActions}
             participants={participants}
             onClose={() => setSelectedParticipantForActions(null)}
+            getDisplayName={resolveDisplayName}
           />
         )}
       </div>
@@ -3038,6 +3245,12 @@ interface JoinScreenProps {
   rooms: RoomInfo[];
   roomsStatus: "idle" | "loading" | "error";
   onRefreshRooms: () => void;
+  slotInfo: {
+    domain: string;
+    from: Date;
+    to: Date;
+  } | null;
+  meetingStatus: "loading" | "has-slot" | "needs-booking" | "not-enrolled";
 }
 
 function JoinScreen({
@@ -3053,6 +3266,8 @@ function JoinScreen({
   rooms,
   roomsStatus,
   onRefreshRooms,
+  slotInfo,
+  meetingStatus,
 }: JoinScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
@@ -3068,6 +3283,75 @@ function JoinScreen({
         </p>
       </div>
 
+        {/* Loading state for non-admins */}
+        {!isAdmin && meetingStatus === "loading" && (
+          <div className="flex items-center gap-2 text-white/60">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Checking your meeting schedule...</span>
+          </div>
+        )}
+
+        {/* Needs to book a slot */}
+        {!isAdmin && meetingStatus === "needs-booking" && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-2 text-center max-w-sm">
+            <div className="text-yellow-400 font-medium mb-2">No slot booked</div>
+            <div className="text-sm text-white/70 mb-3">
+              You are enrolled in an interview round but haven&apos;t booked a slot yet.
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                window.postMessage(
+                  { type: "NAVIGATE_TO", url: "scheduler.com" },
+                  "*"
+                );
+              }}
+              className="inline-flex items-center justify-center px-4 py-2 bg-[#5CAFFF] text-black rounded-md font-medium text-sm hover:bg-[#7fc1ff] transition-colors"
+            >
+              Go to Scheduler
+            </button>
+          </div>
+        )}
+
+        {/* Not enrolled in any rounds */}
+        {!isAdmin && meetingStatus === "not-enrolled" && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-2 text-center max-w-sm">
+            <div className="text-red-400 font-medium mb-2">No meeting scheduled</div>
+            <div className="text-sm text-white/70">
+              You are not currently enrolled in any interview rounds.
+            </div>
+          </div>
+        )}
+
+        {/* Slot booking info for non-admins */}
+        {!isAdmin && slotInfo && meetingStatus === "has-slot" && (
+          <div className="bg-[#252525] border border-white/10 rounded-lg p-4 mb-2 text-center max-w-sm">
+            <div className="text-sm text-white/60 mb-1">Your scheduled slot</div>
+            <div className="text-lg font-semibold text-[#5CAFFF] mb-2">
+              {slotInfo.domain} Interaction
+            </div>
+            <div className="text-sm text-white/80">
+              {new Date(slotInfo.from).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+            <div className="text-lg font-medium text-white mt-1">
+              {new Date(slotInfo.from).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}{" "}
+              -{" "}
+              {new Date(slotInfo.to).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          </div>
+        )}
+
         {isAdmin && (
           <input
             type="text"
@@ -3081,7 +3365,7 @@ function JoinScreen({
 
       <button
         onClick={onJoin}
-        disabled={isLoading || !roomId.trim()}
+        disabled={isLoading || !roomId.trim() || (!isAdmin && meetingStatus !== "has-slot")}
         className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md transition-colors flex items-center gap-2 text-sm tracking-[0.5px]"
         style={{ fontWeight: 500 }}
       >
@@ -3183,6 +3467,7 @@ interface PresentationLayoutProps {
   activeSpeakerId: string | null;
   currentUserId: string;
   audioOutputDeviceId?: string;
+  getDisplayName: (userId: string) => string;
 }
 
 function PresentationLayout({
@@ -3196,6 +3481,7 @@ function PresentationLayout({
   activeSpeakerId,
   currentUserId,
   audioOutputDeviceId,
+  getDisplayName,
 }: PresentationLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const isLocalActiveSpeaker = activeSpeakerId === currentUserId;
@@ -3270,6 +3556,7 @@ function PresentationLayout({
           <ParticipantVideo
             key={participant.userId}
             participant={participant}
+            displayName={getDisplayName(participant.userId)}
             isActiveSpeaker={activeSpeakerId === participant.userId}
             compact
             audioOutputDeviceId={audioOutputDeviceId}
@@ -3293,6 +3580,7 @@ interface GridLayoutProps {
   isAdmin?: boolean;
   selectedParticipantId?: string | null;
   onParticipantClick?: (userId: string) => void;
+  getDisplayName: (userId: string) => string;
 }
 
 function GridLayout({
@@ -3308,6 +3596,7 @@ function GridLayout({
   isAdmin = false,
   selectedParticipantId,
   onParticipantClick,
+  getDisplayName,
 }: GridLayoutProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const isLocalActiveSpeaker = activeSpeakerId === currentUserId;
@@ -3378,6 +3667,7 @@ function GridLayout({
         <ParticipantVideo
           key={participant.userId}
           participant={participant}
+          displayName={getDisplayName(participant.userId)}
           isActiveSpeaker={activeSpeakerId === participant.userId}
           audioOutputDeviceId={audioOutputDeviceId}
           isAdmin={isAdmin}
@@ -3596,9 +3886,10 @@ function ControlsBar({
 
 interface ReactionOverlayProps {
   reactions: ReactionEvent[];
+  getDisplayName: (userId: string) => string;
 }
 
-function ReactionOverlay({ reactions }: ReactionOverlayProps) {
+function ReactionOverlay({ reactions, getDisplayName }: ReactionOverlayProps) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       {reactions.map((reaction) => {
@@ -3778,6 +4069,7 @@ function ChatPanel({
 
 interface ParticipantVideoProps {
   participant: Participant;
+  displayName: string;
   compact?: boolean;
   isActiveSpeaker?: boolean;
   audioOutputDeviceId?: string;
@@ -3788,6 +4080,7 @@ interface ParticipantVideoProps {
 
 function ParticipantVideo({
   participant,
+  displayName,
   compact = false,
   isActiveSpeaker = false,
   audioOutputDeviceId,
@@ -3860,7 +4153,6 @@ function ParticipantVideo({
     }
   }, [audioOutputDeviceId]);
 
-  const displayName = getDisplayName(participant.userId);
   const showPlaceholder = !participant.videoStream || participant.isCameraOff;
 
   const handleClick = () => {
@@ -3929,12 +4221,14 @@ interface ParticipantsPanelProps {
   pendingUsers?: Map<string, string>;
   roomId: string;
   onPendingUserStale?: (userId: string) => void;
+  getDisplayName: (userId: string) => string;
 }
 
 function ParticipantsPanel({
   participants,
   currentUserId,
   onClose,
+  getDisplayName,
   socket,
   isAdmin,
   pendingUsers,
@@ -4041,6 +4335,7 @@ function ParticipantsPanel({
             </button>
           </div>
         )}
+
       </div>
 
       {/* Pending Requests */}
@@ -4318,12 +4613,14 @@ interface AdminActionsSidebarProps {
   participantUserId: string;
   participants: Map<string, Participant>;
   onClose: () => void;
+  getDisplayName: (userId: string) => string;
 }
 
 function AdminActionsSidebar({
   participantUserId,
   participants,
   onClose,
+  getDisplayName,
 }: AdminActionsSidebarProps) {
   const [userDetails, setUserDetails] = useState<MeetingUserDetails | null>(
     null
@@ -4375,7 +4672,7 @@ function AdminActionsSidebar({
   const participant = participants.get(participantUserId);
   const displayName = participant
     ? getDisplayName(participant.userId)
-    : email.split("@")[0];
+    : formatDisplayName(email);
 
   // Load user details - single optimized query
   useEffect(() => {

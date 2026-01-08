@@ -74,13 +74,15 @@ export default async function fetchMeetUser() {
             },
           });
 
-          const slot = roundUser?.Meet_User?.slot ?? null;
+          if (roundUser) {
+            const slot = roundUser.Meet_User?.slot ?? null;
 
-          meetLinks.push({
-            domain,
-            meetLink: meetLinkFetch.meetLink,
-            slot: slot,
-          });
+            meetLinks.push({
+              domain,
+              meetLink: meetLinkFetch.meetLink,
+              slot: slot,
+            });
+          }
         }
       }
     }

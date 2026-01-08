@@ -1,5 +1,5 @@
 "use client";
-import { createContext, type ReactNode, useContext } from "react";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
 import { useSession } from "@/hooks/use-session";
 
 type InitialSession = Parameters<typeof useSession>[0];
@@ -19,8 +19,13 @@ export const SessionProvider = ({
 }) => {
   const { data: session, isPending } = useSession(initialSession);
 
+  const contextValue = useMemo(
+    () => ({ session, isPending }),
+    [session, isPending]
+  );
+
   return (
-    <SessionContext.Provider value={{ session, isPending }}>
+    <SessionContext.Provider value={contextValue}>
       {children}
     </SessionContext.Provider>
   );
