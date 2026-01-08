@@ -427,7 +427,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     </span>
                     {!isDeadlinePassed(selectedRoundUser.Task.deadline) && (
                       <span
-                        className="text-green-400 text-xs md:text-sm animate-pulse"
+                        className="text-green-400 text-xs md:text-sm"
                         style={{ fontFamily: "PoppinsReg" }}
                       >
                         ⏱ {getTimeRemaining(selectedRoundUser.Task.deadline)}
@@ -599,11 +599,11 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                         </>
                       )}
                     </button>
-                    {!isReadOnly && submissionText.trim() && (
+                    {/* {!isReadOnly && submissionText.trim() && (
                       <span className="text-xs text-gray-500" style={{ fontFamily: "PoppinsReg" }}>
                         You can resubmit until the deadline
                       </span>
-                    )}
+                    )} */}
                   </div>
                 )}
 
