@@ -8,6 +8,7 @@ import {
   CheckCircle,
   ChevronDown,
   ClipboardList,
+  Hand,
   Info,
   Loader2,
   MessageSquare,
@@ -157,6 +158,17 @@ interface ReactionNotification {
   timestamp: number;
 }
 
+interface HandRaisedNotification {
+  userId: string;
+  raised: boolean;
+  timestamp: number;
+}
+
+interface HandRaisedSnapshot {
+  users: { userId: string; raised: boolean }[];
+  roomId?: string;
+}
+
 interface ReactionPayload {
   userId: string;
   kind: ReactionKind;
@@ -213,6 +225,7 @@ interface Participant {
   screenShareProducerId: string | null;
   isMuted: boolean;
   isCameraOff: boolean;
+  isHandRaised: boolean;
   isLeaving?: boolean;
 }
 
@@ -312,6 +325,7 @@ type ParticipantAction =
     }
   | { type: "UPDATE_MUTED"; userId: string; muted: boolean }
   | { type: "UPDATE_CAMERA_OFF"; userId: string; cameraOff: boolean }
+  | { type: "UPDATE_HAND_RAISED"; userId: string; raised: boolean }
   | { type: "CLEAR_ALL" };
 
 function participantReducer(
@@ -337,6 +351,7 @@ function participantReducer(
         screenShareProducerId: null,
         isMuted: false,
         isCameraOff: false,
+        isHandRaised: false,
       });
       return newState;
     }
@@ -359,6 +374,7 @@ function participantReducer(
         screenShareStream: null,
         isMuted: false,
         isCameraOff: false,
+        isHandRaised: false,
         audioProducerId: null,
         videoProducerId: null,
         screenShareProducerId: null,
@@ -399,6 +415,25 @@ function participantReducer(
           isCameraOff: action.cameraOff,
         });
       }
+      return newState;
+    }
+    case "UPDATE_HAND_RAISED": {
+      const participant = newState.get(action.userId) || {
+        userId: action.userId,
+        videoStream: null,
+        audioStream: null,
+        screenShareStream: null,
+        isMuted: false,
+        isCameraOff: false,
+        isHandRaised: false,
+        audioProducerId: null,
+        videoProducerId: null,
+        screenShareProducerId: null,
+      };
+      newState.set(action.userId, {
+        ...participant,
+        isHandRaised: action.raised,
+      });
       return newState;
     }
     case "CLEAR_ALL": {
@@ -520,6 +555,7 @@ export default function MeetsClient({
   const [isMuted, setIsMuted] = useState(true);
   const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isHandRaised, setIsHandRaised] = useState(false);
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
     null
   );
@@ -628,6 +664,7 @@ export default function MeetsClient({
   const pendingProducersRef = useRef<Map<string, ProducerInfo>>(new Map());
   const reactionTimeoutsRef = useRef<Map<string, number>>(new Map());
   const lastReactionSentRef = useRef<number>(0);
+  const isHandRaisedRef = useRef(false);
   const leaveTimeoutsRef = useRef<Map<string, number>>(new Map());
   const intentionalTrackStopsRef = useRef<WeakSet<MediaStreamTrack>>(
     new WeakSet()
@@ -993,6 +1030,7 @@ export default function MeetsClient({
       dispatchParticipants({ type: "CLEAR_ALL" });
       setIsScreenSharing(false);
       setActiveScreenShareId(null);
+      setIsHandRaised(false);
       // currentRoomIdRef.current = null; // Don't null this yet if redirecting? Actually better to null it.
       if (resetRoomId) {
         currentRoomIdRef.current = null;
@@ -1368,6 +1406,24 @@ export default function MeetsClient({
           );
 
           socket.on(
+            "handRaisedSnapshot",
+            ({ users, roomId: eventRoomId }: HandRaisedSnapshot) => {
+              if (!isRoomEvent(eventRoomId)) return;
+              (users || []).forEach(({ userId: raisedUserId, raised }) => {
+                if (raisedUserId === userId) {
+                  setIsHandRaised(raised);
+                  return;
+                }
+                dispatchParticipants({
+                  type: "UPDATE_HAND_RAISED",
+                  userId: raisedUserId,
+                  raised,
+                });
+              });
+            }
+          );
+
+          socket.on(
             "displayNameUpdated",
             ({
               userId: updatedUserId,
@@ -1457,6 +1513,21 @@ export default function MeetsClient({
               });
             }
           });
+
+          socket.on(
+            "handRaised",
+            ({ userId: raisedUserId, raised }: HandRaisedNotification) => {
+              if (raisedUserId === userId) {
+                setIsHandRaised(raised);
+                return;
+              }
+              dispatchParticipants({
+                type: "UPDATE_HAND_RAISED",
+                userId: raisedUserId,
+                raised,
+              });
+            }
+          );
 
           // Kicked event
           socket.on("kicked", () => {
@@ -2731,6 +2802,10 @@ export default function MeetsClient({
   }, [localStream]);
 
   useEffect(() => {
+    isHandRaisedRef.current = isHandRaised;
+  }, [isHandRaised]);
+
+  useEffect(() => {
     const sources = new Map<string, MediaStream>();
     const localAudioTrack = localStream?.getAudioTracks()[0];
 
@@ -3026,6 +3101,28 @@ export default function MeetsClient({
     [addReaction, userId]
   );
 
+  const setHandRaisedState = useCallback((raised: boolean) => {
+    const socket = socketRef.current;
+    setIsHandRaised(raised);
+
+    if (!socket) return;
+
+    socket.emit(
+      "setHandRaised",
+      { raised },
+      (response: { success: boolean } | { error: string }) => {
+        if ("error" in response) {
+          console.error("[Meets] Raise hand error:", response.error);
+          setIsHandRaised(!raised);
+        }
+      }
+    );
+  }, []);
+
+  const toggleHandRaised = useCallback(() => {
+    setHandRaisedState(!isHandRaisedRef.current);
+  }, [setHandRaisedState]);
+
   const toggleChat = useCallback(() => {
     setIsChatOpen((prev) => {
       const newValue = !prev;
@@ -3244,6 +3341,7 @@ export default function MeetsClient({
             presenterName={presenterName}
             localStream={localStream}
             isCameraOff={isCameraOff}
+            isHandRaised={isHandRaised}
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
@@ -3258,6 +3356,7 @@ export default function MeetsClient({
             localStream={localStream}
             isCameraOff={isCameraOff}
             isMuted={isMuted}
+            isHandRaised={isHandRaised}
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
@@ -3284,11 +3383,13 @@ export default function MeetsClient({
             activeScreenShareId={activeScreenShareId}
             isChatOpen={isChatOpen}
             unreadCount={unreadCount}
+            isHandRaised={isHandRaised}
             reactionOptions={reactionOptions}
             onToggleMute={toggleMute}
             onToggleCamera={toggleCamera}
             onToggleScreenShare={toggleScreenShare}
             onToggleChat={toggleChat}
+            onToggleHandRaised={toggleHandRaised}
             onSendReaction={sendReaction}
             onLeave={leaveRoom}
             isAdmin={isAdmin}
@@ -3758,6 +3859,7 @@ interface PresentationLayoutProps {
   presenterName: string;
   localStream: MediaStream | null;
   isCameraOff: boolean;
+  isHandRaised: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
@@ -3772,6 +3874,7 @@ function PresentationLayout({
   presenterName,
   localStream,
   isCameraOff,
+  isHandRaised,
   participants,
   userEmail,
   isMirrorCamera,
@@ -3840,6 +3943,14 @@ function PresentationLayout({
               </div>
             </div>
           )}
+          {isHandRaised && (
+            <div
+              className="absolute top-2 left-2 p-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300"
+              title="Hand raised"
+            >
+              <Hand className="w-4 h-4" />
+            </div>
+          )}
           <div
             className="absolute bottom-1 left-1 px-1 py-0.5 bg-black/60 border border-white/5 rounded text-xs"
             style={{ fontWeight: 500 }}
@@ -3868,6 +3979,7 @@ interface GridLayoutProps {
   localStream: MediaStream | null;
   isCameraOff: boolean;
   isMuted: boolean;
+  isHandRaised: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
@@ -3884,6 +3996,7 @@ function GridLayout({
   localStream,
   isCameraOff,
   isMuted,
+  isHandRaised,
   participants,
   userEmail,
   isMirrorCamera,
@@ -3951,6 +4064,14 @@ function GridLayout({
             </div>
           </div>
         )}
+        {isHandRaised && (
+          <div
+            className="absolute top-2 left-2 p-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300"
+            title="Hand raised"
+          >
+            <Hand className="w-4 h-4" />
+          </div>
+        )}
         <div
           className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 border border-white/5 rounded text-sm flex items-center gap-2"
           style={{ fontWeight: 500 }}
@@ -3983,11 +4104,13 @@ interface ControlsBarProps {
   activeScreenShareId: string | null;
   isChatOpen: boolean;
   unreadCount: number;
+  isHandRaised: boolean;
   reactionOptions: ReactionOption[];
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onToggleScreenShare: () => void;
   onToggleChat: () => void;
+  onToggleHandRaised: () => void;
   onSendReaction: (reaction: ReactionOption) => void;
   onLeave: () => void;
   isAdmin?: boolean | null;
@@ -4003,11 +4126,13 @@ function ControlsBar({
   activeScreenShareId,
   isChatOpen,
   unreadCount,
+  isHandRaised,
   reactionOptions,
   onToggleMute,
   onToggleCamera,
   onToggleScreenShare,
   onToggleChat,
+  onToggleHandRaised,
   onSendReaction,
   onLeave,
   isAdmin,
@@ -4117,6 +4242,18 @@ function ControlsBar({
         }
       >
         <Monitor className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={onToggleHandRaised}
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
+          isHandRaised
+            ? "bg-amber-400 text-black hover:bg-amber-300"
+            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+        }`}
+        title={isHandRaised ? "Lower hand" : "Raise hand"}
+      >
+        <Hand className="w-5 h-5" />
       </button>
 
       <div ref={reactionMenuRef} className="relative">
@@ -4500,6 +4637,16 @@ function ParticipantVideo({
         </div>
       )}
       <audio ref={setAudioRef} autoPlay />
+      {participant.isHandRaised && (
+        <div
+          className={`absolute top-2 left-2 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 ${
+            compact ? "p-1" : "p-1.5"
+          }`}
+          title="Hand raised"
+        >
+          <Hand className={compact ? "w-3 h-3" : "w-4 h-4"} />
+        </div>
+      )}
       <div
         className={`absolute bottom-2 left-2 bg-black/60 border border-white/5 rounded px-2 py-0.5 flex items-center gap-2 ${
           compact ? "text-[10px]" : "text-xs"
@@ -4765,6 +4912,14 @@ function ParticipantsPanel({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {p.isHandRaised && (
+                  <div
+                    className="flex items-center text-amber-300"
+                    title="Hand raised"
+                  >
+                    <Hand className="w-3 h-3" />
+                  </div>
+                )}
                 {p.screenShareStream && (
                   <div className="flex items-center gap-1">
                     <Monitor className="w-3 h-3 text-green-500" />

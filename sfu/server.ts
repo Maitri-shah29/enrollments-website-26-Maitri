@@ -20,6 +20,8 @@ import type {
   ConsumeResponse,
   CreateTransportResponse,
   GetRoomsResponse,
+  HandRaisedNotification,
+  HandRaisedSnapshot,
   JoinRoomData,
   JoinRoomResponse,
   ProduceData,
@@ -28,6 +30,7 @@ import type {
   ReactionNotification,
   RedirectData,
   SendChatData,
+  SetHandRaisedData,
   SendReactionData,
   ToggleMediaData,
 } from "./types.js";
@@ -430,6 +433,11 @@ io.on("connection", (socket: Socket) => {
           users: currentRoom.getDisplayNameSnapshot(),
           roomId: currentRoom.id,
         });
+
+        socket.emit("handRaisedSnapshot", {
+          users: currentRoom.getHandRaisedSnapshot(),
+          roomId: currentRoom.id,
+        } satisfies HandRaisedSnapshot & { roomId: string });
 
         // Check for video quality update
         const newQuality = currentRoom.updateVideoQuality();
@@ -1219,6 +1227,38 @@ io.on("connection", (socket: Socket) => {
         };
 
         socket.to(currentRoom.id).emit("reaction", reaction);
+        callback({ success: true });
+      } catch (error) {
+        callback({ error: (error as Error).message });
+      }
+    },
+  );
+
+  // ----------------------------------------
+  // Raise Hand
+  // ----------------------------------------
+  socket.on(
+    "setHandRaised",
+    (
+      data: SetHandRaisedData,
+      callback: (response: { success: boolean } | { error: string }) => void,
+    ) => {
+      try {
+        if (!currentClient || !currentRoom) {
+          callback({ error: "Not in a room" });
+          return;
+        }
+
+        const raised = Boolean(data?.raised);
+        currentRoom.setHandRaised(currentClient.id, raised);
+
+        const notification: HandRaisedNotification = {
+          userId: currentClient.id,
+          raised,
+          timestamp: Date.now(),
+        };
+
+        io.to(currentRoom.id).emit("handRaised", notification);
         callback({ success: true });
       } catch (error) {
         callback({ error: (error as Error).message });

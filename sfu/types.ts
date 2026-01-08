@@ -165,6 +165,24 @@ export interface ReactionNotification {
 }
 
 // ============================================
+// Raise Hand
+// ============================================
+
+export interface SetHandRaisedData {
+  raised: boolean;
+}
+
+export interface HandRaisedNotification {
+  userId: string;
+  raised: boolean;
+  timestamp: number;
+}
+
+export interface HandRaisedSnapshot {
+  users: { userId: string; raised: boolean }[];
+}
+
+// ============================================
 // Media Constraints
 // ============================================
 

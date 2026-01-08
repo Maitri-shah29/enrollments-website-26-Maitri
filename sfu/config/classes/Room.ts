@@ -28,6 +28,7 @@ export class Room {
   public currentQuality: VideoQuality = "standard";
   public userKeysById: Map<string, string> = new Map();
   public displayNamesByKey: Map<string, string> = new Map();
+  public handRaisedByUserId: Set<string> = new Set();
 
   constructor(options: RoomOptions) {
     this.id = options.id;
@@ -103,7 +104,30 @@ export class Room {
       this.clients.delete(clientId);
     }
     this.userKeysById.delete(clientId);
+    this.handRaisedByUserId.delete(clientId);
     return client;
+  }
+
+  /**
+   * Update raise-hand status for a user.
+   */
+  setHandRaised(userId: string, raised: boolean): void {
+    if (raised) {
+      this.handRaisedByUserId.add(userId);
+    } else {
+      this.handRaisedByUserId.delete(userId);
+    }
+  }
+
+  /**
+   * Snapshot raised hands for connected users.
+   */
+  getHandRaisedSnapshot(): { userId: string; raised: boolean }[] {
+    const snapshot: { userId: string; raised: boolean }[] = [];
+    for (const userId of this.handRaisedByUserId) {
+      snapshot.push({ userId, raised: true });
+    }
+    return snapshot;
   }
 
   /**
