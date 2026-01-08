@@ -176,6 +176,30 @@ interface ReactionOption {
   label: string;
 }
 
+interface MeetingSlotOption {
+  id: string;
+  domain: string;
+  from: Date;
+  to: Date;
+  meetLink: string;
+}
+
+function pickDefaultSlot(
+  options: MeetingSlotOption[],
+  preferredMeetLink?: string | null
+): MeetingSlotOption | null {
+  if (options.length === 0) return null;
+
+  const preferred = preferredMeetLink
+    ? options.find((slot) => slot.meetLink === preferredMeetLink) ?? null
+    : null;
+  const now = Date.now();
+  const upcoming =
+    options.find((slot) => slot.from.getTime() >= now) ?? null;
+
+  return preferred ?? upcoming ?? options[0] ?? null;
+}
+
 /** Participant in the meeting */
 interface Participant {
   userId: string;
@@ -576,11 +600,10 @@ export default function MeetsClient({
   });
 
   // User slot booking info (for non-admins)
-  const [userSlotInfo, setUserSlotInfo] = useState<{
-    domain: string;
-    from: Date;
-    to: Date;
-  } | null>(null);
+  const [userSlotOptions, setUserSlotOptions] = useState<MeetingSlotOption[]>(
+    []
+  );
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [userMeetingStatus, setUserMeetingStatus] = useState<
     "loading" | "has-slot" | "needs-booking" | "not-enrolled"
   >("loading");
@@ -804,34 +827,60 @@ export default function MeetsClient({
       try {
         const result = await fetchMeetUser();
         if ("success" in result && result.success) {
-          // Find any slot the user has booked
-          const bookedSlot = result.meetLinks.find((ml) => ml.slot);
-          if (bookedSlot?.slot) {
-            const domainName =
-              bookedSlot.domain === "cc"
-                ? "Competitive Coding"
-                : bookedSlot.domain.charAt(0).toUpperCase() +
-                  bookedSlot.domain.slice(1);
-            setUserSlotInfo({
-              domain: domainName,
-              from: bookedSlot.slot.from,
-              to: bookedSlot.slot.to,
-            });
-            // Set the roomId to the meetLink for this slot
-            setRoomId(bookedSlot.meetLink);
+          const slots = result.meetLinks
+            .filter((meetLink) => meetLink.slot)
+            .map((meetLink) => {
+              const domainName =
+                meetLink.domain === "cc"
+                  ? "Competitive Coding"
+                  : meetLink.domain.charAt(0).toUpperCase() +
+                    meetLink.domain.slice(1);
+              const from = new Date(meetLink.slot!.from);
+              const to = new Date(meetLink.slot!.to);
+              const fromKey = Number.isNaN(from.getTime())
+                ? String(meetLink.slot!.from)
+                : String(from.getTime());
+
+              return {
+                id: `${meetLink.domain}-${fromKey}`,
+                domain: domainName,
+                from,
+                to,
+                meetLink: meetLink.meetLink,
+              };
+            })
+            .sort((a, b) => a.from.getTime() - b.from.getTime());
+
+          if (slots.length > 0) {
+            setUserSlotOptions(slots);
+            const defaultSlot = pickDefaultSlot(slots, initialRoomId);
+            if (defaultSlot) {
+              setSelectedSlotId(defaultSlot.id);
+              setRoomId(defaultSlot.meetLink);
+            } else {
+              setSelectedSlotId(null);
+            }
             setUserMeetingStatus("has-slot");
           } else if (result.meetLinks.length > 0) {
+            setUserSlotOptions([]);
+            setSelectedSlotId(null);
             // User is enrolled but hasn't booked a slot
             setUserMeetingStatus("needs-booking");
           } else {
+            setUserSlotOptions([]);
+            setSelectedSlotId(null);
             // User is not enrolled in any interview rounds
             setUserMeetingStatus("not-enrolled");
           }
         } else {
+          setUserSlotOptions([]);
+          setSelectedSlotId(null);
           setUserMeetingStatus("not-enrolled");
         }
       } catch (error) {
         console.warn("[Meets] Failed to load slot info:", error);
+        setUserSlotOptions([]);
+        setSelectedSlotId(null);
         setUserMeetingStatus("not-enrolled");
       } finally {
         setSlotInfoLoaded(true);
@@ -839,7 +888,33 @@ export default function MeetsClient({
     };
 
     loadSlotInfo();
-  }, [isAdmin, session, slotInfoLoaded]);
+  }, [initialRoomId, isAdmin, session, slotInfoLoaded]);
+
+  useEffect(() => {
+    if (isAdmin) return;
+    if (userSlotOptions.length === 0) return;
+    if (
+      selectedSlotId &&
+      userSlotOptions.some((slot) => slot.id === selectedSlotId)
+    ) {
+      return;
+    }
+    const fallbackSlot = pickDefaultSlot(userSlotOptions, initialRoomId);
+    if (!fallbackSlot) return;
+    setSelectedSlotId(fallbackSlot.id);
+    setRoomId(fallbackSlot.meetLink);
+  }, [initialRoomId, isAdmin, selectedSlotId, userSlotOptions]);
+
+  const handleSlotSelect = useCallback(
+    (slotId: string) => {
+      setSelectedSlotId(slotId);
+      const selected = userSlotOptions.find((slot) => slot.id === slotId);
+      if (selected) {
+        setRoomId(selected.meetLink);
+      }
+    },
+    [userSlotOptions]
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -3138,7 +3213,9 @@ export default function MeetsClient({
             roomsStatus={roomsStatus}
             onRefreshRooms={refreshRooms}
             onJoinRoom={joinRoomById}
-            slotInfo={userSlotInfo}
+            slotOptions={userSlotOptions}
+            selectedSlotId={selectedSlotId}
+            onSelectSlot={handleSlotSelect}
             meetingStatus={userMeetingStatus}
           />
         ) : presentationStream ? (
@@ -3362,11 +3439,9 @@ interface JoinScreenProps {
   rooms: RoomInfo[];
   roomsStatus: "idle" | "loading" | "error";
   onRefreshRooms: () => void;
-  slotInfo: {
-    domain: string;
-    from: Date;
-    to: Date;
-  } | null;
+  slotOptions: MeetingSlotOption[];
+  selectedSlotId: string | null;
+  onSelectSlot: (slotId: string) => void;
   meetingStatus: "loading" | "has-slot" | "needs-booking" | "not-enrolled";
 }
 
@@ -3383,9 +3458,22 @@ function JoinScreen({
   rooms,
   roomsStatus,
   onRefreshRooms,
-  slotInfo,
+  slotOptions,
+  selectedSlotId,
+  onSelectSlot,
   meetingStatus,
 }: JoinScreenProps) {
+  const selectedSlot = selectedSlotId
+    ? slotOptions.find((slot) => slot.id === selectedSlotId) ?? null
+    : null;
+  const activeSlot = selectedSlot ?? slotOptions[0] ?? null;
+  const canJoin =
+    isAdmin
+      ? roomId.trim().length > 0
+      : meetingStatus === "has-slot" &&
+        !!activeSlot &&
+        roomId.trim().length > 0;
+
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
       <div className="text-center mb-4">
@@ -3441,31 +3529,77 @@ function JoinScreen({
         )}
 
         {/* Slot booking info for non-admins */}
-        {!isAdmin && slotInfo && meetingStatus === "has-slot" && (
+        {!isAdmin && slotOptions.length > 0 && meetingStatus === "has-slot" && (
           <div className="bg-[#252525] border border-white/10 rounded-lg p-4 mb-2 text-center max-w-sm">
-            <div className="text-sm text-white/60 mb-1">Your scheduled slot</div>
-            <div className="text-lg font-semibold text-[#5CAFFF] mb-2">
-              {slotInfo.domain} Interaction
+            <div className="text-sm text-white/60 mb-1">
+              Your scheduled slot{slotOptions.length > 1 ? "s" : ""}
             </div>
-            <div className="text-sm text-white/80">
-              {new Date(slotInfo.from).toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </div>
-            <div className="text-lg font-medium text-white mt-1">
-              {new Date(slotInfo.from).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              -{" "}
-              {new Date(slotInfo.to).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
+            {slotOptions.length > 1 && (
+              <div className="mt-2 text-left">
+                <label
+                  htmlFor="meeting-slot"
+                  className="text-xs text-white/60"
+                >
+                  Choose interaction
+                </label>
+                <div className="relative mt-1">
+                  <select
+                    id="meeting-slot"
+                    value={activeSlot ? activeSlot.id : ""}
+                    onChange={(event) => onSelectSlot(event.target.value)}
+                    className="w-full appearance-none rounded-md bg-[#1d1d1d] border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-white/40"
+                  >
+                    {slotOptions.map((slot) => (
+                      <option key={slot.id} value={slot.id}>
+                        {slot.domain} -{" "}
+                        {new Date(slot.from).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {new Date(slot.from).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        -{" "}
+                        {new Date(slot.to).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+                </div>
+              </div>
+            )}
+            {activeSlot && (
+              <>
+                <div className="text-lg font-semibold text-[#5CAFFF] mt-3">
+                  {activeSlot.domain} Interaction
+                </div>
+                <div className="text-sm text-white/80">
+                  {new Date(activeSlot.from).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </div>
+                <div className="text-lg font-medium text-white mt-1">
+                  {new Date(activeSlot.from).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {new Date(activeSlot.to).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -3482,7 +3616,7 @@ function JoinScreen({
 
       <button
         onClick={onJoin}
-        disabled={isLoading || !roomId.trim() || (!isAdmin && meetingStatus !== "has-slot")}
+        disabled={!canJoin || isLoading}
         className="px-6 py-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md transition-colors flex items-center gap-2 text-sm tracking-[0.5px]"
         style={{ fontWeight: 500 }}
       >
