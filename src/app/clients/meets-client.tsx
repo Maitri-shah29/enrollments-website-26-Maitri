@@ -184,6 +184,22 @@ interface MeetingSlotOption {
   meetLink: string;
 }
 
+function pickDefaultSlot(
+  options: MeetingSlotOption[],
+  preferredMeetLink?: string | null
+): MeetingSlotOption | null {
+  if (options.length === 0) return null;
+
+  const preferred = preferredMeetLink
+    ? options.find((slot) => slot.meetLink === preferredMeetLink) ?? null
+    : null;
+  const now = Date.now();
+  const upcoming =
+    options.find((slot) => slot.from.getTime() >= now) ?? null;
+
+  return preferred ?? upcoming ?? options[0] ?? null;
+}
+
 /** Participant in the meeting */
 interface Participant {
   userId: string;
@@ -837,12 +853,13 @@ export default function MeetsClient({
 
           if (slots.length > 0) {
             setUserSlotOptions(slots);
-            const preferredSlot = initialRoomId
-              ? slots.find((slot) => slot.meetLink === initialRoomId)
-              : null;
-            const defaultSlot = preferredSlot ?? slots[0];
-            setSelectedSlotId(defaultSlot.id);
-            setRoomId(defaultSlot.meetLink);
+            const defaultSlot = pickDefaultSlot(slots, initialRoomId);
+            if (defaultSlot) {
+              setSelectedSlotId(defaultSlot.id);
+              setRoomId(defaultSlot.meetLink);
+            } else {
+              setSelectedSlotId(null);
+            }
             setUserMeetingStatus("has-slot");
           } else if (result.meetLinks.length > 0) {
             setUserSlotOptions([]);
@@ -882,10 +899,11 @@ export default function MeetsClient({
     ) {
       return;
     }
-    const fallbackSlot = userSlotOptions[0];
+    const fallbackSlot = pickDefaultSlot(userSlotOptions, initialRoomId);
+    if (!fallbackSlot) return;
     setSelectedSlotId(fallbackSlot.id);
     setRoomId(fallbackSlot.meetLink);
-  }, [isAdmin, selectedSlotId, userSlotOptions]);
+  }, [initialRoomId, isAdmin, selectedSlotId, userSlotOptions]);
 
   const handleSlotSelect = useCallback(
     (slotId: string) => {
