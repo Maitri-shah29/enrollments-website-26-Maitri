@@ -121,9 +121,11 @@ const SchedulerClient = ({
   const [isSfuHealthy, setIsSfuHealthy] = useState(initialSfuHealth);
 
   useEffect(() => {
+    const sfuUrl = process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
+
     const checkSfuHealth = async () => {
       try {
-        const response = await fetch("/api/sfu/health");
+        const response = await fetch(`${sfuUrl}/health`);
         if (response.ok) {
           const data = await response.json();
           setIsSfuHealthy(data.status === "healthy");
