@@ -3,7 +3,7 @@
 export default function MobileBlocker() {
   return (
     <div
-      className="font-doppio lg:hidden fixed inset-0 z-[9999]"
+      className="mobile-blocker font-doppio fixed inset-0 z-[9999]"
       style={{
         backgroundImage: `url(/images/acm-guy.png)`,
         backgroundSize: "auto 80%",

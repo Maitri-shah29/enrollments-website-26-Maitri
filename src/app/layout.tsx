@@ -71,7 +71,7 @@ export default function RootLayout({
         style={{ fontFamily: "var(--font-poppins), sans-serif" }}
       >
         <MobileBlocker />
-        <div className="hidden lg:block w-full h-full">{children}</div>
+        <div className="mobile-content w-full h-full">{children}</div>
       </body>
     </html>
   );

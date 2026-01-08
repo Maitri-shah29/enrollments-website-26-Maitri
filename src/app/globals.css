@@ -180,6 +180,24 @@
   font-family: "MonopolyRegular", monospace;
 }
 
+.mobile-blocker {
+  display: none;
+}
+
+.mobile-content {
+  display: block;
+}
+
+@media (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .mobile-blocker {
+    display: block;
+  }
+
+  .mobile-content {
+    display: none;
+  }
+}
+
 /* Container for the checkbox and text */
 .custom-checkbox {
   display: block; /* Makes the entire label a block element */
