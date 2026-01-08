@@ -10,7 +10,6 @@ import { Loader } from "@/components/loader";
 import { useSearchHistory } from "@/hooks/use-search-history";
 import BrickGame404 from "../brick-game-404";
 import Instructions from "../instructions";
-import PhoneNumberModal from "../phone-number-modal";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
@@ -373,8 +372,6 @@ const Tab: React.FC<TabProps> = ({
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Phone Number Modal - shows automatically when user is logged in without phone */}
-      <PhoneNumberModal />
       <TabHeader
         canGoBack={tabData.pointer > 0}
         canGoForward={tabData.pointer < tabData.history.length - 1}
