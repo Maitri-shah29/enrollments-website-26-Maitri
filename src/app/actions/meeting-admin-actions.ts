@@ -734,77 +734,72 @@ export interface UserFormSubmission {
 }
 
 export async function getMeetingUserFormSubmissions(
-  userEmail: string
+  userId: string
 ): Promise<UserFormSubmission[]> {
   const adminEmail = await verifyAdmin();
   if (!adminEmail) {
     return [];
   }
+  if (!userId) {
+    return [];
+  }
 
   try {
-    const normalizedEmail = userEmail.toLowerCase().trim();
-
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    const roundUsers = await prisma.roundUser.findMany({
+      where: {
+        userId,
+        round: {
+          type: "form",
+        },
+      },
       select: {
-        RoundUser: {
-          where: {
-            round: {
-              type: "form",
-            },
-          },
+        id: true,
+        round: {
           select: {
             id: true,
-            round: {
+            domain: true,
+            number: true,
+            type: true,
+          },
+        },
+        formSubmission: {
+          select: {
+            id: true,
+            formSubmittedAt: true,
+            valid: true,
+            roundUserId: true,
+            responses: {
               select: {
                 id: true,
-                domain: true,
-                number: true,
-                type: true,
-              },
-            },
-            formSubmission: {
-              select: {
-                id: true,
-                formSubmittedAt: true,
-                valid: true,
-                roundUserId: true,
-                responses: {
+                questionId: true,
+                response: true,
+                question: {
                   select: {
-                    id: true,
-                    questionId: true,
-                    response: true,
-                    question: {
-                      select: {
-                        serial: true,
-                        question: true,
-                        type: true,
-                        varName: true,
-                      },
-                    },
+                    serial: true,
+                    question: true,
+                    type: true,
+                    varName: true,
                   },
-                  orderBy: {
-                    question: {
-                      serial: "asc",
-                    },
-                  },
+                },
+              },
+              orderBy: {
+                question: {
+                  serial: "asc",
                 },
               },
             },
           },
-          orderBy: [
-            { round: { domain: "asc" } },
-            { round: { number: "asc" } },
-          ],
         },
       },
+      orderBy: [
+        { round: { domain: "asc" } },
+        { round: { number: "asc" } },
+      ],
     });
-
-    if (!user) return [];
 
     const submissions: UserFormSubmission[] = [];
 
-    for (const ru of user.RoundUser) {
+    for (const ru of roundUsers) {
       if (ru.formSubmission) {
         submissions.push({
           id: ru.formSubmission.id,

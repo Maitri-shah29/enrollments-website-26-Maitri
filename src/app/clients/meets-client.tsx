@@ -51,7 +51,9 @@ import { io, type Socket } from "socket.io-client";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
 import type { GetRoomsResponse, RoomInfo } from "../../lib/sfu-types";
 import {
-  getMeetingUserFullData,
+  getMeetingUserComments,
+  getMeetingUserDetails,
+  getMeetingUserFormSubmissions,
   verifyMeetingAttendance,
   promoteMeetingUser,
   rejectMeetingUser,
@@ -4931,6 +4933,9 @@ function AdminActionsSidebar({
     { id: string; comment: string; by: string; time: Date }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "actions" | "comments" | "form">(
     "actions"
@@ -4968,6 +4973,9 @@ function AdminActionsSidebar({
   // Form submissions state
   const [formSubmissions, setFormSubmissions] = useState<UserFormSubmission[]>([]);
   const [selectedFormSubmission, setSelectedFormSubmission] = useState<UserFormSubmission | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formLoaded, setFormLoaded] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Extract email from userId
   const email = participantUserId.split("#")[0] || participantUserId;
@@ -4984,18 +4992,25 @@ function AdminActionsSidebar({
       try {
         setLoading(true);
         setError(null);
+        setComments([]);
+        setFormSubmissions([]);
+        setSelectedFormSubmission(null);
+        setCommentsLoaded(false);
+        setFormLoaded(false);
+        setCommentsError(null);
+        setFormError(null);
+        setCommentsLoading(false);
+        setFormLoading(false);
 
-        const data = await getMeetingUserFullData(email);
+        const data = await getMeetingUserDetails(email);
 
         if (cancelled) return;
 
         if (data) {
-          setUserDetails(data.userDetails);
-          setComments(data.comments);
-          setFormSubmissions(data.formSubmissions);
-          
-          if (data.userDetails.roundUsers.length > 0) {
-            setCommentDomain(data.userDetails.roundUsers[0].round.domain);
+          setUserDetails(data);
+
+          if (data.roundUsers.length > 0) {
+            setCommentDomain(data.roundUsers[0].round.domain);
           }
         } else {
           setError("User not found in system");
@@ -5014,6 +5029,60 @@ function AdminActionsSidebar({
       cancelled = true;
     };
   }, [email]);
+
+  const loadComments = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!userDetails?.id) return;
+      if (commentsLoaded && !options?.force) return;
+
+      setCommentsLoading(true);
+      setCommentsError(null);
+      try {
+        const data = await getMeetingUserComments(userDetails.id);
+        setComments(data);
+        setCommentsLoaded(true);
+      } catch (err) {
+        console.error("[AdminActionsSidebar] Comment load error:", err);
+        setCommentsError("Failed to load comments");
+      } finally {
+        setCommentsLoading(false);
+      }
+    },
+    [userDetails?.id, commentsLoaded]
+  );
+
+  const loadFormSubmissions = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!userDetails?.id) return;
+      if (formLoaded && !options?.force) return;
+
+      setFormLoading(true);
+      setFormError(null);
+      try {
+        const data = await getMeetingUserFormSubmissions(userDetails.id);
+        setFormSubmissions(data);
+        setFormLoaded(true);
+      } catch (err) {
+        console.error("[AdminActionsSidebar] Form load error:", err);
+        setFormError("Failed to load form submissions");
+      } finally {
+        setFormLoading(false);
+      }
+    },
+    [userDetails?.id, formLoaded]
+  );
+
+  useEffect(() => {
+    if (activeTab !== "comments") return;
+    if (commentsLoaded || commentsLoading) return;
+    loadComments();
+  }, [activeTab, commentsLoaded, commentsLoading, loadComments]);
+
+  useEffect(() => {
+    if (activeTab !== "form") return;
+    if (formLoaded || formLoading) return;
+    loadFormSubmissions();
+  }, [activeTab, formLoaded, formLoading, loadFormSubmissions]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -5042,18 +5111,20 @@ function AdminActionsSidebar({
   }, [actionSuccess, actionError]);
 
   const refreshUserDetails = async () => {
-    if (!userDetails) return;
-    
+    if (!email) return;
+
     try {
-      const data = await getMeetingUserFullData(email);
+      const data = await getMeetingUserDetails(email);
       if (data) {
-        setUserDetails(data.userDetails);
-        setComments(data.comments);
-        setFormSubmissions(data.formSubmissions);
+        setUserDetails(data);
       }
     } catch (err) {
       console.error("[AdminActionsSidebar] Refresh error:", err);
     }
+  };
+
+  const refreshComments = async () => {
+    await loadComments({ force: true });
   };
 
   const handleVerifyAttendance = async (roundUser: MeetingRoundUser) => {
@@ -5203,7 +5274,7 @@ function AdminActionsSidebar({
       setActionSuccess("Comment added");
       setShowCommentModal(false);
       setCommentText("");
-      await refreshUserDetails();
+      await refreshComments();
     } else {
       setActionError(result.error || "Failed to add comment");
     }
@@ -5530,7 +5601,16 @@ function AdminActionsSidebar({
           ) : activeTab === "form" ? (
             // Form Submissions tab - inline expandable
             <div className="space-y-2">
-              {formSubmissions.length === 0 ? (
+              {formLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 text-neutral-500 animate-spin" />
+                </div>
+              ) : formError ? (
+                <div className="flex flex-col items-center justify-center py-8 text-neutral-500">
+                  <AlertCircle className="w-6 h-6 mb-2 opacity-50" />
+                  <p className="text-xs">{formError}</p>
+                </div>
+              ) : formSubmissions.length === 0 ? (
                 <div className="text-center py-6 text-neutral-500">
                   <ClipboardList className="w-6 h-6 mx-auto mb-2 opacity-50" />
                   <p className="text-xs">No form submissions</p>
@@ -5581,7 +5661,16 @@ function AdminActionsSidebar({
           ) : (
             // Comments tab
             <div className="space-y-2">
-              {comments.length === 0 ? (
+              {commentsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 text-neutral-500 animate-spin" />
+                </div>
+              ) : commentsError ? (
+                <div className="flex flex-col items-center justify-center py-8 text-neutral-500">
+                  <AlertCircle className="w-6 h-6 mb-2 opacity-50" />
+                  <p className="text-xs">{commentsError}</p>
+                </div>
+              ) : comments.length === 0 ? (
                 <div className="text-center py-6 text-neutral-500">
                   <MessageSquare className="w-6 h-6 mx-auto mb-2 opacity-50" />
                   <p className="text-xs">No comments yet</p>
