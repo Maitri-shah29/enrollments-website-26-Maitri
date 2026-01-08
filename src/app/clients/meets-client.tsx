@@ -2225,14 +2225,17 @@ export default function MeetsClient({
   // ============================================
 
   const joinRoomInternal = useCallback(
-    async (targetRoomId: string, stream: MediaStream) => {
+    async (
+      targetRoomId: string,
+      stream: MediaStream
+    ): Promise<"joined" | "waiting"> => {
       const socket = socketRef.current;
       if (!socket) throw new Error("Socket not connected");
 
       setWaitingMessage(null);
       setConnectionState("joining");
 
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<"joined" | "waiting">((resolve, reject) => {
         socket.emit(
           "joinRoom",
           { roomId: targetRoomId, sessionId: sessionIdRef.current },
@@ -2245,7 +2248,7 @@ export default function MeetsClient({
             if (response.status === "waiting") {
               setConnectionState("waiting");
               currentRoomIdRef.current = targetRoomId; // Keep track of attempted room
-              resolve();
+              resolve("waiting");
               return;
             }
 
@@ -2278,7 +2281,7 @@ export default function MeetsClient({
 
               setConnectionState("joined");
               playNotificationSound("join");
-              resolve();
+              resolve("joined");
             } catch (err) {
               reject(err);
             }
@@ -2339,7 +2342,10 @@ export default function MeetsClient({
         localStreamRef.current = stream;
         setLocalStream(stream);
 
-        await joinRoomInternal(targetRoomId, stream);
+        const joinStatus = await joinRoomInternal(targetRoomId, stream);
+        if (joinStatus === "joined" && isAdmin && canUpdateDisplayName) {
+          handleDisplayNameSubmit();
+        }
       } catch (err) {
         console.error("[Meets] Error joining room:", err);
         if (stream) {
@@ -2350,7 +2356,16 @@ export default function MeetsClient({
         setConnectionState("error");
       }
     },
-    [connectSocket, requestMediaPermissions, joinRoomInternal, primeAudioOutput, stopLocalTrack]
+    [
+      connectSocket,
+      requestMediaPermissions,
+      joinRoomInternal,
+      primeAudioOutput,
+      stopLocalTrack,
+      isAdmin,
+      canUpdateDisplayName,
+      handleDisplayNameSubmit,
+    ]
   );
 
   const joinRoom = useCallback(async () => {
@@ -3216,6 +3231,8 @@ export default function MeetsClient({
             slotOptions={userSlotOptions}
             selectedSlotId={selectedSlotId}
             onSelectSlot={handleSlotSelect}
+            displayNameInput={displayNameInput}
+            onDisplayNameInputChange={setDisplayNameInput}
             meetingStatus={userMeetingStatus}
           />
         ) : presentationStream ? (
@@ -3442,6 +3459,8 @@ interface JoinScreenProps {
   slotOptions: MeetingSlotOption[];
   selectedSlotId: string | null;
   onSelectSlot: (slotId: string) => void;
+  displayNameInput: string;
+  onDisplayNameInputChange: (value: string) => void;
   meetingStatus: "loading" | "has-slot" | "needs-booking" | "not-enrolled";
 }
 
@@ -3461,6 +3480,8 @@ function JoinScreen({
   slotOptions,
   selectedSlotId,
   onSelectSlot,
+  displayNameInput,
+  onDisplayNameInputChange,
   meetingStatus,
 }: JoinScreenProps) {
   const selectedSlot = selectedSlotId
@@ -3600,6 +3621,29 @@ function JoinScreen({
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className="w-full max-w-sm">
+            <label
+              htmlFor="admin-display-name"
+              className="text-xs text-white/60"
+            >
+              Display name
+            </label>
+            <input
+              id="admin-display-name"
+              type="text"
+              value={displayNameInput}
+              onChange={(e) => onDisplayNameInputChange(e.target.value)}
+              placeholder="Enter display name"
+              disabled={isLoading}
+              className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+            />
+            <div className="mt-1 text-[11px] text-white/50 text-center">
+              Applies after you join the room.
+            </div>
           </div>
         )}
 
