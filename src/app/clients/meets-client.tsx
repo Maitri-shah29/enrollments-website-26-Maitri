@@ -90,6 +90,31 @@ const ACTIVE_SPEAKER_HOLD_MS = 900;
 const REACTION_LIFETIME_MS = 3800;
 const MAX_REACTIONS = 30;
 const EMOJI_REACTIONS = ["👍", "👏", "😂", "❤️", "🎉", "😮"] as const;
+const MEETS_ICE_SERVERS = (() => {
+  const urls = (
+    process.env.NEXT_PUBLIC_TURN_URLS ??
+    process.env.NEXT_PUBLIC_TURN_URL ??
+    ""
+  )
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!urls.length) return [] as RTCIceServer[];
+
+  const iceServer: RTCIceServer = {
+    urls: urls.length === 1 ? urls[0] : urls,
+  };
+  const username = process.env.NEXT_PUBLIC_TURN_USERNAME;
+  const credential = process.env.NEXT_PUBLIC_TURN_PASSWORD;
+
+  if (username && credential) {
+    iceServer.username = username;
+    iceServer.credential = credential;
+  }
+
+  return [iceServer];
+})();
 
 type ReactionEmoji = (typeof EMOJI_REACTIONS)[number];
 type ReactionKind = "emoji" | "asset";
@@ -541,6 +566,15 @@ export default function MeetsClient({
   }, [session?.data?.user?.email]);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
 
+  // Admin help tips state
+  const [showAdminTips, setShowAdminTips] = useState(false);
+  const [hasSeenTips, setHasSeenTips] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("admin-tips-seen") === "true";
+    }
+    return false;
+  });
+
   // User slot booking info (for non-admins)
   const [userSlotInfo, setUserSlotInfo] = useState<{
     domain: string;
@@ -929,7 +963,7 @@ export default function MeetsClient({
   }, []);
 
   const playNotificationSound = useCallback(
-    (type: "join" | "leave") => {
+    (type: "join" | "leave" | "waiting") => {
       const audioContext = getAudioContext();
       if (!audioContext) return;
 
@@ -939,8 +973,12 @@ export default function MeetsClient({
 
       const now = audioContext.currentTime;
       const frequencies =
-        type === "join" ? [523.25, 659.25] : [392.0, 261.63];
-      const duration = 0.12;
+        type === "join"
+          ? [523.25, 659.25]
+          : type === "waiting"
+          ? [440.0, 523.25, 659.25] // Gentle ascending chime for waiting room
+          : [392.0, 261.63];
+      const duration = type === "waiting" ? 0.1 : 0.12;
       const gap = 0.03;
 
       frequencies.forEach((frequency, index) => {
@@ -1169,6 +1207,10 @@ export default function MeetsClient({
               console.log("[Meets] User joined:", joinedUserId);
               if (joinedUserId !== userId) {
                 playNotificationSound("join");
+                // Show admin tips when a non-admin user joins (for admins only)
+                if (isAdmin && !hasSeenTips) {
+                  setShowAdminTips(true);
+                }
               }
               if (displayName) {
                 setDisplayNames((prev) => {
@@ -1374,6 +1416,7 @@ export default function MeetsClient({
             }) => {
               if (!isRoomEvent(eventRoomId)) return;
               console.log("[Meets] User requesting to join:", userId);
+              playNotificationSound("waiting");
               setPendingUsers((prev) => {
                 const newMap = new Map(prev);
                 newMap.set(userId, displayName);
@@ -1802,7 +1845,12 @@ export default function MeetsClient({
               return;
             }
 
-            const transport = device.createSendTransport(response);
+            const transport = device.createSendTransport({
+              ...response,
+              iceServers: MEETS_ICE_SERVERS.length
+                ? MEETS_ICE_SERVERS
+                : undefined,
+            });
 
             transport.on("connect", ({ dtlsParameters }, callback, errback) => {
               socket.emit(
@@ -1860,7 +1908,12 @@ export default function MeetsClient({
               return;
             }
 
-            const transport = device.createRecvTransport(response);
+            const transport = device.createRecvTransport({
+              ...response,
+              iceServers: MEETS_ICE_SERVERS.length
+                ? MEETS_ICE_SERVERS
+                : undefined,
+            });
 
             transport.on("connect", ({ dtlsParameters }, callback, errback) => {
               socket.emit(
@@ -3145,6 +3198,7 @@ export default function MeetsClient({
             isAdmin={isAdmin}
             isParticipantsOpen={isParticipantsOpen}
             onToggleParticipants={() => setIsParticipantsOpen((prev) => !prev)}
+            pendingUsersCount={pendingUsers.size}
           />
         )}
 
@@ -3190,6 +3244,19 @@ export default function MeetsClient({
             getDisplayName={resolveDisplayName}
           />
         )}
+
+        {isJoined && isAdmin && showAdminTips && (
+          <AdminTipsOverlay
+            currentStep={0}
+            onNextStep={() => setShowAdminTips(false)}
+            onSkip={() => {
+              setShowAdminTips(false);
+              setHasSeenTips(true);
+              localStorage.setItem("admin-tips-seen", "true");
+            }}
+            onClose={() => setShowAdminTips(false)}
+          />
+        )}
       </div>
     </div>
   );
@@ -3198,6 +3265,56 @@ export default function MeetsClient({
 // ============================================
 // Sub-Components
 // ============================================
+
+// Admin Tips Toast Component - Non-intrusive hint
+interface AdminTipsOverlayProps {
+  currentStep: number;
+  onNextStep: () => void;
+  onSkip: () => void;
+  onClose: () => void;
+}
+
+function AdminTipsOverlay({
+  onSkip,
+  onClose,
+}: AdminTipsOverlayProps) {
+  return (
+    <div className="fixed bottom-24 right-4 z-40 animate-in slide-in-from-right-full duration-300">
+      <div className="bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl max-w-xs overflow-hidden">
+        <div className="p-3">
+          {/* Header with close */}
+          <div className="flex items-start justify-between gap-3 mb-1.5">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-green-400" />
+              <span className="text-sm font-medium text-white">
+                New participant joined
+              </span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-0.5 text-white/40 hover:text-white transition-colors shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Tip content */}
+          <p className="text-sm text-white/60 mb-2">
+            Click their video to verify attendance
+          </p>
+
+          {/* Action */}
+          <button
+            onClick={onSkip}
+            className="text-xs text-white/40 hover:text-white/60 transition-colors"
+          >
+            Don&apos;t show again
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ConnectionIndicator({ state }: { state: ConnectionState }) {
   const colors: Record<ConnectionState, string> = {
@@ -3696,6 +3813,7 @@ interface ControlsBarProps {
   isAdmin?: boolean | null;
   isParticipantsOpen?: boolean;
   onToggleParticipants?: () => void;
+  pendingUsersCount?: number;
 }
 
 function ControlsBar({
@@ -3715,6 +3833,7 @@ function ControlsBar({
   isAdmin,
   isParticipantsOpen,
   onToggleParticipants,
+  pendingUsersCount = 0,
 }: ControlsBarProps) {
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
   const [isReactionMenuOpen, setIsReactionMenuOpen] = useState(false);
@@ -3755,7 +3874,7 @@ function ControlsBar({
       {isAdmin && (
         <button
           onClick={onToggleParticipants}
-          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
+          className={`relative w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
             isParticipantsOpen
               ? "bg-white text-black hover:bg-neutral-200"
               : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
@@ -3763,6 +3882,11 @@ function ControlsBar({
           title="Participants"
         >
           <Users className="w-5 h-5" />
+          {pendingUsersCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-xs font-medium bg-orange-500 text-white rounded-full flex items-center justify-center">
+              {pendingUsersCount > 9 ? "9+" : pendingUsersCount}
+            </span>
+          )}
         </button>
       )}
 
