@@ -321,7 +321,9 @@ io.on("connection", (socket: Socket) => {
         const { roomId, sessionId } = data;
         const user = (socket as any).user;
         const isAdmin = user?.isAdmin;
-        const requestedDisplayName = normalizeDisplayName(data?.displayName);
+        const requestedDisplayName = isAdmin
+          ? normalizeDisplayName(data?.displayName)
+          : "";
         if (
           requestedDisplayName &&
           requestedDisplayName.length > MAX_DISPLAY_NAME_LENGTH
