@@ -751,10 +751,10 @@ export default function MeetsClient({
   useEffect(() => {
     const normalized = normalizeDisplayName(displayNameInput);
     joinOptionsRef.current = {
-      displayName: normalized || undefined,
+      displayName: isAdmin ? normalized || undefined : undefined,
       isGhost: ghostEnabled,
     };
-  }, [displayNameInput, ghostEnabled]);
+  }, [displayNameInput, ghostEnabled, isAdmin]);
 
   useEffect(() => {
     if (!displayNameStatus) return;
@@ -2465,7 +2465,7 @@ export default function MeetsClient({
       setRoomId(targetRoomId);
       const normalizedDisplayName = normalizeDisplayName(displayNameInput);
       const joinOptions = {
-        displayName: normalizedDisplayName || undefined,
+        displayName: isAdmin ? normalizedDisplayName || undefined : undefined,
         isGhost: ghostEnabled,
       };
       joinOptionsRef.current = joinOptions;
@@ -2505,6 +2505,7 @@ export default function MeetsClient({
       stopLocalTrack,
       displayNameInput,
       ghostEnabled,
+      isAdmin,
     ]
   );
 
@@ -3867,24 +3868,26 @@ function JoinScreen({
           </div>
         )}
 
-        <div className="w-full max-w-sm">
-          <label htmlFor="display-name" className="text-xs text-white/60">
-            Display name
-          </label>
-          <input
-            id="display-name"
-            type="text"
-            value={displayNameInput}
-            onChange={(e) => onDisplayNameInputChange(e.target.value)}
-            placeholder="Enter display name"
-            maxLength={40}
-            disabled={isLoading}
-            className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
-          />
-          <div className="mt-1 text-[11px] text-white/50 text-center">
-            Used when you join the room.
+        {isAdmin && (
+          <div className="w-full max-w-sm">
+            <label htmlFor="display-name" className="text-xs text-white/60">
+              Display name
+            </label>
+            <input
+              id="display-name"
+              type="text"
+              value={displayNameInput}
+              onChange={(e) => onDisplayNameInputChange(e.target.value)}
+              placeholder="Enter display name"
+              maxLength={40}
+              disabled={isLoading}
+              className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+            />
+            <div className="mt-1 text-[11px] text-white/50 text-center">
+              Used when you join the room.
+            </div>
           </div>
-        </div>
+        )}
 
         {isAdmin && (
           <div className="w-full max-w-sm">
