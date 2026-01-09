@@ -247,7 +247,7 @@ const emitUserJoined = (
   room: Room,
   userId: string,
   displayName: string,
-  options?: { ghostOnly?: boolean; excludeUserId?: string },
+  options?: { ghostOnly?: boolean; excludeUserId?: string; isGhost?: boolean },
 ): void => {
   for (const client of room.clients.values()) {
     if (options?.excludeUserId && client.id === options.excludeUserId) {
@@ -256,7 +256,11 @@ const emitUserJoined = (
     if (options?.ghostOnly && !client.isGhost) {
       continue;
     }
-    client.socket.emit("userJoined", { userId, displayName });
+    client.socket.emit("userJoined", {
+      userId,
+      displayName,
+      isGhost: options?.isGhost,
+    });
   }
 };
 
@@ -495,6 +499,7 @@ io.on("connection", (socket: Socket) => {
           emitUserJoined(currentRoom, userId, resolvedDisplayName, {
             ghostOnly: true,
             excludeUserId: userId,
+            isGhost: true,
           });
           for (const [clientId, client] of currentRoom.clients) {
             if (clientId === userId || !client.isGhost) continue;
@@ -503,6 +508,7 @@ io.on("connection", (socket: Socket) => {
             socket.emit("userJoined", {
               userId: clientId,
               displayName: ghostDisplayName,
+              isGhost: true,
             });
           }
         } else {

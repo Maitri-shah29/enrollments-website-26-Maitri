@@ -8,6 +8,7 @@ import {
   CheckCircle,
   ChevronDown,
   ClipboardList,
+  Ghost,
   Hand,
   Info,
   Loader2,
@@ -226,6 +227,7 @@ interface Participant {
   isMuted: boolean;
   isCameraOff: boolean;
   isHandRaised: boolean;
+  isGhost: boolean;
   isLeaving?: boolean;
 }
 
@@ -312,7 +314,7 @@ interface MeetError {
 // ============================================
 
 type ParticipantAction =
-  | { type: "ADD_PARTICIPANT"; userId: string }
+  | { type: "ADD_PARTICIPANT"; userId: string; isGhost?: boolean }
   | { type: "REMOVE_PARTICIPANT"; userId: string }
   | { type: "MARK_LEAVING"; userId: string }
   | {
@@ -338,7 +340,11 @@ function participantReducer(
     case "ADD_PARTICIPANT": {
       const existing = newState.get(action.userId);
       if (existing) {
-        newState.set(action.userId, { ...existing, isLeaving: false });
+        newState.set(action.userId, {
+          ...existing,
+          isLeaving: false,
+          isGhost: action.isGhost ?? existing.isGhost,
+        });
         return newState;
       }
       newState.set(action.userId, {
@@ -352,6 +358,7 @@ function participantReducer(
         isMuted: false,
         isCameraOff: false,
         isHandRaised: false,
+        isGhost: action.isGhost ?? false,
       });
       return newState;
     }
@@ -375,6 +382,7 @@ function participantReducer(
         isMuted: false,
         isCameraOff: false,
         isHandRaised: false,
+        isGhost: false,
         audioProducerId: null,
         videoProducerId: null,
         screenShareProducerId: null,
@@ -426,6 +434,7 @@ function participantReducer(
         isMuted: false,
         isCameraOff: false,
         isHandRaised: false,
+        isGhost: false,
         audioProducerId: null,
         videoProducerId: null,
         screenShareProducerId: null,
@@ -1350,9 +1359,11 @@ export default function MeetsClient({
             ({
               userId: joinedUserId,
               displayName,
+              isGhost,
             }: {
               userId: string;
               displayName?: string;
+              isGhost?: boolean;
             }) => {
               console.log("[Meets] User joined:", joinedUserId);
               if (joinedUserId !== userId) {
@@ -1377,6 +1388,7 @@ export default function MeetsClient({
               dispatchParticipants({
                 type: "ADD_PARTICIPANT",
                 userId: joinedUserId,
+                isGhost,
               });
             }
           );
@@ -3432,6 +3444,7 @@ export default function MeetsClient({
             localStream={localStream}
             isCameraOff={isCameraOff}
             isHandRaised={isHandRaised}
+            isGhost={ghostEnabled}
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
@@ -3447,6 +3460,7 @@ export default function MeetsClient({
             isCameraOff={isCameraOff}
             isMuted={isMuted}
             isHandRaised={isHandRaised}
+            isGhost={ghostEnabled}
             participants={participants}
             userEmail={userEmail}
             isMirrorCamera={isMirrorCamera}
@@ -4030,6 +4044,7 @@ interface PresentationLayoutProps {
   localStream: MediaStream | null;
   isCameraOff: boolean;
   isHandRaised: boolean;
+  isGhost: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
@@ -4045,6 +4060,7 @@ function PresentationLayout({
   localStream,
   isCameraOff,
   isHandRaised,
+  isGhost,
   participants,
   userEmail,
   isMirrorCamera,
@@ -4113,6 +4129,16 @@ function PresentationLayout({
               </div>
             </div>
           )}
+          {isGhost && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="flex flex-col items-center gap-1.5">
+                <Ghost className="w-12 h-12 text-blue-300 drop-shadow-[0_0_18px_rgba(59,130,246,0.45)]" />
+                <span className="text-[10px] text-blue-200/90 bg-black/60 border border-blue-400/30 px-2 py-0.5 rounded-full">
+                  Ghost
+                </span>
+              </div>
+            </div>
+          )}
           {isHandRaised && (
             <div
               className="absolute top-2 left-2 p-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300"
@@ -4150,6 +4176,7 @@ interface GridLayoutProps {
   isCameraOff: boolean;
   isMuted: boolean;
   isHandRaised: boolean;
+  isGhost: boolean;
   participants: Map<string, Participant>;
   userEmail: string;
   isMirrorCamera: boolean;
@@ -4167,6 +4194,7 @@ function GridLayout({
   isCameraOff,
   isMuted,
   isHandRaised,
+  isGhost,
   participants,
   userEmail,
   isMirrorCamera,
@@ -4231,6 +4259,16 @@ function GridLayout({
           <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
             <div className="w-16 h-16 rounded-full bg-[#333] border border-white/10 flex items-center justify-center text-xl">
               {userEmail[0]?.toUpperCase() || "?"}
+            </div>
+          </div>
+        )}
+        {isGhost && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="flex flex-col items-center gap-2">
+              <Ghost className="w-16 h-16 text-blue-300 drop-shadow-[0_0_22px_rgba(59,130,246,0.5)]" />
+              <span className="text-xs text-blue-200/90 bg-black/60 border border-blue-400/30 px-2 py-0.5 rounded-full">
+                Ghost
+              </span>
             </div>
           </div>
         )}
@@ -4843,6 +4881,28 @@ function ParticipantVideo({
             }`}
           >
             {displayName[0]?.toUpperCase() || "?"}
+          </div>
+        </div>
+      )}
+      {participant.isGhost && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div
+            className={`flex flex-col items-center ${
+              compact ? "gap-1" : "gap-2"
+            }`}
+          >
+            <Ghost
+              className={`${
+                compact ? "w-10 h-10" : "w-16 h-16"
+              } text-blue-300 drop-shadow-[0_0_20px_rgba(59,130,246,0.45)]`}
+            />
+            <span
+              className={`${
+                compact ? "text-[9px]" : "text-xs"
+              } text-blue-200/90 bg-black/60 border border-blue-400/30 px-2 py-0.5 rounded-full`}
+            >
+              Ghost
+            </span>
           </div>
         </div>
       )}
