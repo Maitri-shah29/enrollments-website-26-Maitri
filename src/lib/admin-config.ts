@@ -53,7 +53,7 @@ export const ADMIN_EMAILS = [
   "chitransh.saxena2023@vitstudent.ac.in",
   "devipriya.rprakash2024@vitstudent.ac.in",
   "aakanksha.singh2024@vitstudent.ac.in",
-  "Chinmayee.mallappa2024@vitstudent.ac.in",
+  "chinmayee.mallappa2024@vitstudent.ac.in",
   "rachel.patni2024@vitstudent.ac.in",
   "kareliya.meet2024@vitstudent.ac.in",
   "tarunram.p2024@vitstudent.ac.in",
