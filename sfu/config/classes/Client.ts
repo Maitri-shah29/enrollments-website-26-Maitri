@@ -9,6 +9,7 @@ import type {
 export interface ClientOptions {
   id: string;
   socket: Socket;
+  isGhost?: boolean;
 }
 
 /** Type of producer: webcam or screen share */
@@ -28,6 +29,7 @@ export function createProducerKey(
 export class Client {
   public readonly id: string;
   public readonly socket: Socket;
+  public readonly isGhost: boolean;
 
   // Transports
   public producerTransport: WebRtcTransport | null = null;
@@ -46,6 +48,7 @@ export class Client {
   constructor(options: ClientOptions) {
     this.id = options.id;
     this.socket = options.socket;
+    this.isGhost = options.isGhost ?? false;
   }
 
   /**

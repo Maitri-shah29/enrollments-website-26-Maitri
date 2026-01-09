@@ -45,6 +45,8 @@ export interface RoomOptions {
 export interface JoinRoomData {
   roomId: string;
   sessionId?: string;
+  displayName?: string;
+  ghost?: boolean;
 }
 
 export interface JoinRoomResponse {

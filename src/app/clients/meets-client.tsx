@@ -505,6 +505,10 @@ function formatDisplayName(raw: string): string {
   return words.length > 0 ? words.join(" ") : handle || raw;
 }
 
+function normalizeDisplayName(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 function isReactionEmoji(value: string): value is ReactionEmoji {
   return EMOJI_REACTIONS.includes(value as ReactionEmoji);
 }
@@ -556,6 +560,7 @@ export default function MeetsClient({
   const [isCameraOff, setIsCameraOff] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
+  const [isGhostMode, setIsGhostMode] = useState(false);
   const [activeScreenShareId, setActiveScreenShareId] = useState<string | null>(
     null
   );
@@ -687,6 +692,10 @@ export default function MeetsClient({
   const lastActiveSpeakerRef = useRef<{ id: string; ts: number } | null>(null);
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
+  const joinOptionsRef = useRef<{
+    displayName?: string;
+    isGhost: boolean;
+  }>({ displayName: undefined, isGhost: false });
 
   // Ref to track chat open state for socket listener (avoids stale closure)
   const isChatOpenRef = useRef(false);
@@ -711,9 +720,11 @@ export default function MeetsClient({
     [displayNames]
   );
   const currentUserDisplayName = resolveDisplayName(userId);
-  const canUpdateDisplayName =
-    displayNameInput.trim().length > 0 &&
-    displayNameInput.trim() !== currentUserDisplayName.trim();
+  const canUpdateDisplayName = (() => {
+    const normalizedInput = normalizeDisplayName(displayNameInput);
+    const normalizedCurrent = normalizeDisplayName(currentUserDisplayName);
+    return normalizedInput.length > 0 && normalizedInput !== normalizedCurrent;
+  })();
 
   useEffect(() => {
     const baseName = session?.data?.user?.name || session?.data?.user?.email;
@@ -731,17 +742,33 @@ export default function MeetsClient({
   }, [currentUserDisplayName]);
 
   useEffect(() => {
+    const normalized = normalizeDisplayName(displayNameInput);
+    joinOptionsRef.current = {
+      displayName: normalized || undefined,
+      isGhost: isGhostMode,
+    };
+  }, [displayNameInput, isGhostMode]);
+
+  useEffect(() => {
     if (!displayNameStatus) return;
     const timer = setTimeout(() => setDisplayNameStatus(null), 3000);
     return () => clearTimeout(timer);
   }, [displayNameStatus]);
+
+  useEffect(() => {
+    if (!isGhostMode) return;
+    setIsMuted(true);
+    setIsCameraOff(true);
+    setIsScreenSharing(false);
+    setIsHandRaised(false);
+  }, [isGhostMode]);
 
   const handleDisplayNameSubmit = useCallback(() => {
     if (!isAdmin || !canUpdateDisplayName) return;
     const socket = socketRef.current;
     if (!socket) return;
 
-    const nextName = displayNameInput.trim();
+    const nextName = normalizeDisplayName(displayNameInput);
     if (!nextName) {
       setDisplayNameStatus({
         type: "error",
@@ -1640,10 +1667,13 @@ export default function MeetsClient({
 
           socket.on("joinApproved", () => {
             console.log("[Meets] Join approved! Re-attempting join...");
-            if (currentRoomIdRef.current && localStreamRef.current) {
+            const joinOptions = joinOptionsRef.current;
+            const stream = localStreamRef.current;
+            if (currentRoomIdRef.current && (stream || joinOptions.isGhost)) {
               joinRoomInternal(
                 currentRoomIdRef.current,
-                localStreamRef.current
+                stream,
+                joinOptions
               ).catch(console.error);
             } else {
               console.error(
@@ -1651,6 +1681,7 @@ export default function MeetsClient({
                 {
                   roomId: currentRoomIdRef.current,
                   hasStream: !!localStreamRef.current,
+                  isGhost: joinOptionsRef.current.isGhost,
                 }
               );
             }
@@ -1723,9 +1754,10 @@ export default function MeetsClient({
           }
           await connectSocket(roomId);
 
+          const joinOptions = joinOptionsRef.current;
           const stream = localStreamRef.current || localStream;
-          if (roomId && stream) {
-            await joinRoomInternal(roomId, stream);
+          if (roomId && (stream || joinOptions.isGhost)) {
+            await joinRoomInternal(roomId, stream, joinOptions);
           }
           return;
         } catch (_err) {
@@ -2309,7 +2341,8 @@ export default function MeetsClient({
   const joinRoomInternal = useCallback(
     async (
       targetRoomId: string,
-      stream: MediaStream
+      stream: MediaStream | null,
+      joinOptions: { displayName?: string; isGhost: boolean }
     ): Promise<"joined" | "waiting"> => {
       const socket = socketRef.current;
       if (!socket) throw new Error("Socket not connected");
@@ -2320,7 +2353,12 @@ export default function MeetsClient({
       return new Promise<"joined" | "waiting">((resolve, reject) => {
         socket.emit(
           "joinRoom",
-          { roomId: targetRoomId, sessionId: sessionIdRef.current },
+          {
+            roomId: targetRoomId,
+            sessionId: sessionIdRef.current,
+            displayName: joinOptions.displayName,
+            ghost: joinOptions.isGhost,
+          },
           async (response: JoinRoomResponse | { error: string }) => {
             if ("error" in response) {
               reject(new Error(response.error));
@@ -2348,12 +2386,18 @@ export default function MeetsClient({
               });
               deviceRef.current = device;
 
+              const shouldProduce = !!stream && !joinOptions.isGhost;
+
               // Create transports
-              await createProducerTransport(socket, device);
+              if (shouldProduce) {
+                await createProducerTransport(socket, device);
+              }
               await createConsumerTransport(socket, device);
 
               // Start producing
-              await produce(stream);
+              if (shouldProduce && stream) {
+                await produce(stream);
+              }
 
               // Consume existing producers
               for (const producer of response.existingProducers) {
@@ -2412,22 +2456,30 @@ export default function MeetsClient({
       primeAudioOutput();
       intentionalDisconnectRef.current = false;
       setRoomId(targetRoomId);
+      const normalizedDisplayName = normalizeDisplayName(displayNameInput);
+      const joinOptions = {
+        displayName: normalizedDisplayName || undefined,
+        isGhost: isGhostMode,
+      };
+      joinOptionsRef.current = joinOptions;
       let stream: MediaStream | null = null;
 
       try {
         const _socket = await connectSocket(targetRoomId);
-        stream = await requestMediaPermissions();
-        if (!stream) {
-          setConnectionState("error");
-          return;
+        if (!joinOptions.isGhost) {
+          stream = await requestMediaPermissions();
+          if (!stream) {
+            setConnectionState("error");
+            return;
+          }
+          localStreamRef.current = stream;
+          setLocalStream(stream);
+        } else {
+          localStreamRef.current = null;
+          setLocalStream(null);
         }
-        localStreamRef.current = stream;
-        setLocalStream(stream);
 
-        const joinStatus = await joinRoomInternal(targetRoomId, stream);
-        if (joinStatus === "joined" && isAdmin && canUpdateDisplayName) {
-          handleDisplayNameSubmit();
-        }
+        await joinRoomInternal(targetRoomId, stream, joinOptions);
       } catch (err) {
         console.error("[Meets] Error joining room:", err);
         if (stream) {
@@ -2444,9 +2496,8 @@ export default function MeetsClient({
       joinRoomInternal,
       primeAudioOutput,
       stopLocalTrack,
-      isAdmin,
-      canUpdateDisplayName,
-      handleDisplayNameSubmit,
+      displayNameInput,
+      isGhostMode,
     ]
   );
 
@@ -2574,6 +2625,7 @@ export default function MeetsClient({
   // ============================================
 
   const toggleMute = useCallback(async () => {
+    if (isGhostMode) return;
     let producer = audioProducerRef.current;
     const nextMuted = !isMuted;
 
@@ -2689,9 +2741,11 @@ export default function MeetsClient({
     selectedAudioInputDeviceId,
     handleLocalTrackEnded,
     stopLocalTrack,
+    isGhostMode,
   ]);
 
   const toggleCamera = useCallback(async () => {
+    if (isGhostMode) return;
     const producer = videoProducerRef.current;
 
     if (producer) {
@@ -2803,7 +2857,7 @@ export default function MeetsClient({
         setMeetError(createMeetError(err, "MEDIA_ERROR"));
       }
     }
-  }, [isCameraOff, handleLocalTrackEnded, stopLocalTrack]);
+  }, [isCameraOff, handleLocalTrackEnded, stopLocalTrack, isGhostMode]);
 
   // Sync localStream to ref
   useEffect(() => {
@@ -2957,6 +3011,7 @@ export default function MeetsClient({
   }, []);
 
   const toggleScreenShare = useCallback(async () => {
+    if (isGhostMode) return;
     if (isScreenSharing) {
       // Stop sharing
       const producer = screenProducerRef.current;
@@ -3028,16 +3083,18 @@ export default function MeetsClient({
         setMeetError(createMeetError(err, "MEDIA_ERROR"));
       }
     }
-  }, [isScreenSharing, activeScreenShareId]);
+  }, [isScreenSharing, activeScreenShareId, isGhostMode]);
 
   const leaveRoom = useCallback(() => {
     playNotificationSound("leave");
     cleanup();
   }, [cleanup, playNotificationSound]);
 
-  const sendChat = useCallback((content: string) => {
-    const socket = socketRef.current;
-    if (!socket || !content.trim()) return;
+  const sendChat = useCallback(
+    (content: string) => {
+      if (isGhostMode) return;
+      const socket = socketRef.current;
+      if (!socket || !content.trim()) return;
 
     socket.emit(
       "sendChat",
@@ -3058,10 +3115,11 @@ export default function MeetsClient({
         }
       }
     );
-  }, []);
+  }, [isGhostMode]);
 
   const sendReaction = useCallback(
     (reaction: ReactionOption) => {
+      if (isGhostMode) return;
       // Throttle to prevent duplicate sends
       const now = Date.now();
       if (now - lastReactionSentRef.current < 100) {
@@ -3107,26 +3165,30 @@ export default function MeetsClient({
         }
       );
     },
-    [addReaction, userId]
+    [addReaction, userId, isGhostMode]
   );
 
-  const setHandRaisedState = useCallback((raised: boolean) => {
-    const socket = socketRef.current;
-    setIsHandRaised(raised);
+  const setHandRaisedState = useCallback(
+    (raised: boolean) => {
+      if (isGhostMode) return;
+      const socket = socketRef.current;
+      setIsHandRaised(raised);
 
-    if (!socket) return;
+      if (!socket) return;
 
-    socket.emit(
-      "setHandRaised",
-      { raised },
-      (response: { success: boolean } | { error: string }) => {
-        if ("error" in response) {
-          console.error("[Meets] Raise hand error:", response.error);
-          setIsHandRaised(!raised);
+      socket.emit(
+        "setHandRaised",
+        { raised },
+        (response: { success: boolean } | { error: string }) => {
+          if ("error" in response) {
+            console.error("[Meets] Raise hand error:", response.error);
+            setIsHandRaised(!raised);
+          }
         }
-      }
-    );
-  }, []);
+      );
+    },
+    [isGhostMode]
+  );
 
   const toggleHandRaised = useCallback(() => {
     setHandRaisedState(!isHandRaisedRef.current);
@@ -3286,6 +3348,15 @@ export default function MeetsClient({
               Screen is being shared
             </span>
           )}
+          {isGhostMode && isJoined && (
+            <span
+              className="bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full tracking-[0.5px] flex items-center gap-1"
+              style={{ fontWeight: 500 }}
+            >
+              <UserX className="w-3 h-3" />
+              Ghost mode
+            </span>
+          )}
           {connectionState === "reconnecting" && (
             <span
               className="bg-yellow-600 text-xs px-2 py-1 rounded flex items-center gap-1 tracking-[0.5px]"
@@ -3341,6 +3412,8 @@ export default function MeetsClient({
             onSelectSlot={handleSlotSelect}
             displayNameInput={displayNameInput}
             onDisplayNameInputChange={setDisplayNameInput}
+            isGhostMode={isGhostMode}
+            onGhostModeChange={setIsGhostMode}
             meetingStatus={userMeetingStatus}
           />
         ) : presentationStream ? (
@@ -3402,6 +3475,7 @@ export default function MeetsClient({
             onSendReaction={sendReaction}
             onLeave={leaveRoom}
             isAdmin={isAdmin}
+            isGhostMode={isGhostMode}
             isParticipantsOpen={isParticipantsOpen}
             onToggleParticipants={() => setIsParticipantsOpen((prev) => !prev)}
             pendingUsersCount={pendingUsers.size}
@@ -3417,6 +3491,7 @@ export default function MeetsClient({
             onSend={sendChat}
             onClose={toggleChat}
             currentUserId={userId}
+            isGhostMode={isGhostMode}
           />
         )}
 
@@ -3618,6 +3693,8 @@ interface JoinScreenProps {
   onSelectSlot: (slotId: string) => void;
   displayNameInput: string;
   onDisplayNameInputChange: (value: string) => void;
+  isGhostMode: boolean;
+  onGhostModeChange: (value: boolean) => void;
   meetingStatus: "loading" | "has-slot" | "needs-booking" | "not-enrolled";
 }
 
@@ -3639,6 +3716,8 @@ function JoinScreen({
   onSelectSlot,
   displayNameInput,
   onDisplayNameInputChange,
+  isGhostMode,
+  onGhostModeChange,
   meetingStatus,
 }: JoinScreenProps) {
   const selectedSlot = selectedSlotId
@@ -3781,28 +3860,53 @@ function JoinScreen({
           </div>
         )}
 
-        {isAdmin && (
-          <div className="w-full max-w-sm">
-            <label
-              htmlFor="admin-display-name"
-              className="text-xs text-white/60"
-            >
-              Display name
-            </label>
-            <input
-              id="admin-display-name"
-              type="text"
-              value={displayNameInput}
-              onChange={(e) => onDisplayNameInputChange(e.target.value)}
-              placeholder="Enter display name"
-              disabled={isLoading}
-              className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
-            />
-            <div className="mt-1 text-[11px] text-white/50 text-center">
-              Applies after you join the room.
-            </div>
+        <div className="w-full max-w-sm">
+          <label htmlFor="display-name" className="text-xs text-white/60">
+            Display name
+          </label>
+          <input
+            id="display-name"
+            type="text"
+            value={displayNameInput}
+            onChange={(e) => onDisplayNameInputChange(e.target.value)}
+            placeholder="Enter display name"
+            maxLength={40}
+            disabled={isLoading}
+            className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+          />
+          <div className="mt-1 text-[11px] text-white/50 text-center">
+            Used when you join the room.
           </div>
-        )}
+        </div>
+
+        <div className="w-full max-w-sm">
+          <button
+            type="button"
+            onClick={() => onGhostModeChange(!isGhostMode)}
+            disabled={isLoading}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#252525] border border-white/10 rounded-md text-left hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <div>
+              <div className="text-sm font-medium">Ghost mode</div>
+              <div className="text-xs text-white/50">
+                Join invisibly with mic & camera locked.
+              </div>
+            </div>
+            <div className="ml-auto">
+              <div
+                className={`w-10 h-6 rounded-full transition-colors relative ${
+                  isGhostMode ? "bg-blue-600" : "bg-white/20"
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    isGhostMode ? "left-5" : "left-1"
+                  }`}
+                />
+              </div>
+            </div>
+          </button>
+        </div>
 
         {isAdmin && (
           <input
@@ -4168,6 +4272,7 @@ interface ControlsBarProps {
   onSendReaction: (reaction: ReactionOption) => void;
   onLeave: () => void;
   isAdmin?: boolean | null;
+  isGhostMode?: boolean;
   isParticipantsOpen?: boolean;
   onToggleParticipants?: () => void;
   pendingUsersCount?: number;
@@ -4190,6 +4295,7 @@ function ControlsBar({
   onSendReaction,
   onLeave,
   isAdmin,
+  isGhostMode = false,
   isParticipantsOpen,
   onToggleParticipants,
   pendingUsersCount = 0,
@@ -4199,6 +4305,9 @@ function ControlsBar({
   const reactionMenuRef = useRef<HTMLDivElement>(null);
   const lastReactionTimeRef = useRef<number>(0);
   const REACTION_COOLDOWN_MS = 150; // Prevent rapid-fire reactions
+  const ghostDisabledClass =
+    "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed";
+  const screenShareDisabled = isGhostMode || !canStartScreenShare;
 
   useEffect(() => {
     if (!isReactionMenuOpen) return;
@@ -4251,24 +4360,36 @@ function ControlsBar({
 
       <button
         onClick={onToggleMute}
+        disabled={isGhostMode}
         className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isMuted
+          isGhostMode
+            ? ghostDisabledClass
+            : isMuted
             ? "bg-red-500 text-white hover:bg-red-600"
             : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
-        title={isMuted ? "Unmute" : "Mute"}
+        title={isGhostMode ? "Ghost mode: mic locked" : isMuted ? "Unmute" : "Mute"}
       >
         {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
       </button>
 
       <button
         onClick={onToggleCamera}
+        disabled={isGhostMode}
         className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isCameraOff
+          isGhostMode
+            ? ghostDisabledClass
+            : isCameraOff
             ? "bg-red-500 text-white hover:bg-red-600"
             : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
-        title={isCameraOff ? "Turn on camera" : "Turn off camera"}
+        title={
+          isGhostMode
+            ? "Ghost mode: camera locked"
+            : isCameraOff
+            ? "Turn on camera"
+            : "Turn off camera"
+        }
       >
         {isCameraOff ? (
           <VideoOff className="w-5 h-5" />
@@ -4279,16 +4400,18 @@ function ControlsBar({
 
       <button
         onClick={onToggleScreenShare}
-        disabled={!canStartScreenShare}
+        disabled={screenShareDisabled}
         className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
           isScreenSharing
             ? "bg-white text-black hover:bg-neutral-200"
-            : !canStartScreenShare
-            ? "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed"
+            : screenShareDisabled
+            ? ghostDisabledClass
             : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
         title={
-          !canStartScreenShare
+          isGhostMode
+            ? "Ghost mode: screen share locked"
+            : !canStartScreenShare
             ? "Someone else is presenting"
             : isScreenSharing
             ? "Stop sharing"
@@ -4300,12 +4423,21 @@ function ControlsBar({
 
       <button
         onClick={onToggleHandRaised}
+        disabled={isGhostMode}
         className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isHandRaised
+          isGhostMode
+            ? ghostDisabledClass
+            : isHandRaised
             ? "bg-amber-400 text-black hover:bg-amber-300"
             : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
-        title={isHandRaised ? "Lower hand" : "Raise hand"}
+        title={
+          isGhostMode
+            ? "Ghost mode: hand raise locked"
+            : isHandRaised
+            ? "Lower hand"
+            : "Raise hand"
+        }
       >
         <Hand className="w-5 h-5" />
       </button>
@@ -4313,12 +4445,15 @@ function ControlsBar({
       <div ref={reactionMenuRef} className="relative">
         <button
           onClick={() => setIsReactionMenuOpen((prev) => !prev)}
+          disabled={isGhostMode}
           className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-            isReactionMenuOpen
+            isGhostMode
+              ? ghostDisabledClass
+              : isReactionMenuOpen
               ? "bg-white text-black hover:bg-neutral-200"
               : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
           }`}
-          title="Reactions"
+          title={isGhostMode ? "Ghost mode: reactions locked" : "Reactions"}
         >
           <Smile className="w-5 h-5" />
         </button>
@@ -4425,6 +4560,7 @@ interface ChatPanelProps {
   onSend: (content: string) => void;
   onClose: () => void;
   currentUserId: string;
+  isGhostMode?: boolean;
 }
 
 function ChatPanel({
@@ -4434,6 +4570,7 @@ function ChatPanel({
   onSend,
   onClose,
   currentUserId,
+  isGhostMode = false,
 }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -4457,6 +4594,7 @@ function ChatPanel({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isGhostMode) return;
     if (chatInput.trim()) {
       onSend(chatInput);
       onInputChange("");
@@ -4547,16 +4685,22 @@ function ChatPanel({
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             maxLength={1000}
-            className="flex-1 px-3 py-2 bg-[#2a2a2a] border border-white/5 rounded-md text-sm focus:outline-none focus:border-white/30 transition-colors placeholder:text-neutral-600"
+            disabled={isGhostMode}
+            className="flex-1 px-3 py-2 bg-[#2a2a2a] border border-white/5 rounded-md text-sm focus:outline-none focus:border-white/30 transition-colors placeholder:text-neutral-600 disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button
             type="submit"
-            disabled={!chatInput.trim()}
+            disabled={isGhostMode || !chatInput.trim()}
             className="p-2 bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed rounded-md transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
+        {isGhostMode && (
+          <div className="mt-2 text-[11px] text-white/40">
+            Ghost mode is on. Chat is disabled.
+          </div>
+        )}
       </form>
     </div>
   );

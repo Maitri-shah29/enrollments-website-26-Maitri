@@ -52,9 +52,14 @@ export class Room {
   /**
    * Register or update identity mapping for a connected user.
    */
-  setUserIdentity(userId: string, userKey: string, displayName: string): void {
+  setUserIdentity(
+    userId: string,
+    userKey: string,
+    displayName: string,
+    options?: { forceDisplayName?: boolean }
+  ): void {
     this.userKeysById.set(userId, userKey);
-    if (!this.displayNamesByKey.has(userKey)) {
+    if (options?.forceDisplayName || !this.displayNamesByKey.has(userKey)) {
       this.displayNamesByKey.set(userKey, displayName);
     }
   }
@@ -73,7 +78,8 @@ export class Room {
    */
   getDisplayNameSnapshot(): { userId: string; displayName: string }[] {
     const snapshot: { userId: string; displayName: string }[] = [];
-    for (const userId of this.clients.keys()) {
+    for (const [userId, client] of this.clients.entries()) {
+      if (client.isGhost) continue;
       const displayName = this.getDisplayNameForUser(userId) || userId;
       snapshot.push({ userId, displayName });
     }
@@ -217,6 +223,9 @@ export class Room {
 
     for (const [clientId, client] of this.clients) {
       if (excludeClientId && clientId === excludeClientId) {
+        continue;
+      }
+      if (client.isGhost) {
         continue;
       }
       // Use the client's getProducerInfos which properly parses the new key format
