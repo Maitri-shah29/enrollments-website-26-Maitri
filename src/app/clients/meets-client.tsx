@@ -632,6 +632,7 @@ export default function MeetsClient({
       ADMIN_EMAILS.includes(session.data.user.email)
     );
   }, [session?.data?.user?.email]);
+  const ghostEnabled = isAdmin && isGhostMode;
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
 
   // Admin help tips state
@@ -742,12 +743,18 @@ export default function MeetsClient({
   }, [currentUserDisplayName]);
 
   useEffect(() => {
+    if (!isAdmin && isGhostMode) {
+      setIsGhostMode(false);
+    }
+  }, [isAdmin, isGhostMode]);
+
+  useEffect(() => {
     const normalized = normalizeDisplayName(displayNameInput);
     joinOptionsRef.current = {
       displayName: normalized || undefined,
-      isGhost: isGhostMode,
+      isGhost: ghostEnabled,
     };
-  }, [displayNameInput, isGhostMode]);
+  }, [displayNameInput, ghostEnabled]);
 
   useEffect(() => {
     if (!displayNameStatus) return;
@@ -756,12 +763,12 @@ export default function MeetsClient({
   }, [displayNameStatus]);
 
   useEffect(() => {
-    if (!isGhostMode) return;
+    if (!ghostEnabled) return;
     setIsMuted(true);
     setIsCameraOff(true);
     setIsScreenSharing(false);
     setIsHandRaised(false);
-  }, [isGhostMode]);
+  }, [ghostEnabled]);
 
   const handleDisplayNameSubmit = useCallback(() => {
     if (!isAdmin || !canUpdateDisplayName) return;
@@ -2459,7 +2466,7 @@ export default function MeetsClient({
       const normalizedDisplayName = normalizeDisplayName(displayNameInput);
       const joinOptions = {
         displayName: normalizedDisplayName || undefined,
-        isGhost: isGhostMode,
+        isGhost: ghostEnabled,
       };
       joinOptionsRef.current = joinOptions;
       let stream: MediaStream | null = null;
@@ -2497,7 +2504,7 @@ export default function MeetsClient({
       primeAudioOutput,
       stopLocalTrack,
       displayNameInput,
-      isGhostMode,
+      ghostEnabled,
     ]
   );
 
@@ -2625,7 +2632,7 @@ export default function MeetsClient({
   // ============================================
 
   const toggleMute = useCallback(async () => {
-    if (isGhostMode) return;
+    if (ghostEnabled) return;
     let producer = audioProducerRef.current;
     const nextMuted = !isMuted;
 
@@ -2741,11 +2748,11 @@ export default function MeetsClient({
     selectedAudioInputDeviceId,
     handleLocalTrackEnded,
     stopLocalTrack,
-    isGhostMode,
+    ghostEnabled,
   ]);
 
   const toggleCamera = useCallback(async () => {
-    if (isGhostMode) return;
+    if (ghostEnabled) return;
     const producer = videoProducerRef.current;
 
     if (producer) {
@@ -2857,7 +2864,7 @@ export default function MeetsClient({
         setMeetError(createMeetError(err, "MEDIA_ERROR"));
       }
     }
-  }, [isCameraOff, handleLocalTrackEnded, stopLocalTrack, isGhostMode]);
+  }, [isCameraOff, handleLocalTrackEnded, stopLocalTrack, ghostEnabled]);
 
   // Sync localStream to ref
   useEffect(() => {
@@ -3011,7 +3018,7 @@ export default function MeetsClient({
   }, []);
 
   const toggleScreenShare = useCallback(async () => {
-    if (isGhostMode) return;
+    if (ghostEnabled) return;
     if (isScreenSharing) {
       // Stop sharing
       const producer = screenProducerRef.current;
@@ -3083,7 +3090,7 @@ export default function MeetsClient({
         setMeetError(createMeetError(err, "MEDIA_ERROR"));
       }
     }
-  }, [isScreenSharing, activeScreenShareId, isGhostMode]);
+  }, [isScreenSharing, activeScreenShareId, ghostEnabled]);
 
   const leaveRoom = useCallback(() => {
     playNotificationSound("leave");
@@ -3092,7 +3099,7 @@ export default function MeetsClient({
 
   const sendChat = useCallback(
     (content: string) => {
-      if (isGhostMode) return;
+      if (ghostEnabled) return;
       const socket = socketRef.current;
       if (!socket || !content.trim()) return;
 
@@ -3115,11 +3122,11 @@ export default function MeetsClient({
         }
       }
     );
-  }, [isGhostMode]);
+  }, [ghostEnabled]);
 
   const sendReaction = useCallback(
     (reaction: ReactionOption) => {
-      if (isGhostMode) return;
+      if (ghostEnabled) return;
       // Throttle to prevent duplicate sends
       const now = Date.now();
       if (now - lastReactionSentRef.current < 100) {
@@ -3165,12 +3172,12 @@ export default function MeetsClient({
         }
       );
     },
-    [addReaction, userId, isGhostMode]
+    [addReaction, userId, ghostEnabled]
   );
 
   const setHandRaisedState = useCallback(
     (raised: boolean) => {
-      if (isGhostMode) return;
+      if (ghostEnabled) return;
       const socket = socketRef.current;
       setIsHandRaised(raised);
 
@@ -3187,7 +3194,7 @@ export default function MeetsClient({
         }
       );
     },
-    [isGhostMode]
+    [ghostEnabled]
   );
 
   const toggleHandRaised = useCallback(() => {
@@ -3348,7 +3355,7 @@ export default function MeetsClient({
               Screen is being shared
             </span>
           )}
-          {isGhostMode && isJoined && (
+          {ghostEnabled && isJoined && (
             <span
               className="bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full tracking-[0.5px] flex items-center gap-1"
               style={{ fontWeight: 500 }}
@@ -3412,7 +3419,7 @@ export default function MeetsClient({
             onSelectSlot={handleSlotSelect}
             displayNameInput={displayNameInput}
             onDisplayNameInputChange={setDisplayNameInput}
-            isGhostMode={isGhostMode}
+            isGhostMode={ghostEnabled}
             onGhostModeChange={setIsGhostMode}
             meetingStatus={userMeetingStatus}
           />
@@ -3475,7 +3482,7 @@ export default function MeetsClient({
             onSendReaction={sendReaction}
             onLeave={leaveRoom}
             isAdmin={isAdmin}
-            isGhostMode={isGhostMode}
+            isGhostMode={ghostEnabled}
             isParticipantsOpen={isParticipantsOpen}
             onToggleParticipants={() => setIsParticipantsOpen((prev) => !prev)}
             pendingUsersCount={pendingUsers.size}
@@ -3491,7 +3498,7 @@ export default function MeetsClient({
             onSend={sendChat}
             onClose={toggleChat}
             currentUserId={userId}
-            isGhostMode={isGhostMode}
+            isGhostMode={ghostEnabled}
           />
         )}
 
@@ -3879,34 +3886,36 @@ function JoinScreen({
           </div>
         </div>
 
-        <div className="w-full max-w-sm">
-          <button
-            type="button"
-            onClick={() => onGhostModeChange(!isGhostMode)}
-            disabled={isLoading}
-            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#252525] border border-white/10 rounded-md text-left hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div>
-              <div className="text-sm font-medium">Ghost mode</div>
-              <div className="text-xs text-white/50">
-                Join invisibly with mic & camera locked.
+        {isAdmin && (
+          <div className="w-full max-w-sm">
+            <button
+              type="button"
+              onClick={() => onGhostModeChange(!isGhostMode)}
+              disabled={isLoading}
+              className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#252525] border border-white/10 rounded-md text-left hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div>
+                <div className="text-sm font-medium">Ghost mode</div>
+                <div className="text-xs text-white/50">
+                  Join invisibly with mic & camera locked.
+                </div>
               </div>
-            </div>
-            <div className="ml-auto">
-              <div
-                className={`w-10 h-6 rounded-full transition-colors relative ${
-                  isGhostMode ? "bg-blue-600" : "bg-white/20"
-                }`}
-              >
+              <div className="ml-auto">
                 <div
-                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                    isGhostMode ? "left-5" : "left-1"
+                  className={`w-10 h-6 rounded-full transition-colors relative ${
+                    isGhostMode ? "bg-blue-600" : "bg-white/20"
                   }`}
-                />
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      isGhostMode ? "left-5" : "left-1"
+                    }`}
+                  />
+                </div>
               </div>
-            </div>
-          </button>
-        </div>
+            </button>
+          </div>
+        )}
 
         {isAdmin && (
           <input

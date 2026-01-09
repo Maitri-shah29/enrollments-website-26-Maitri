@@ -345,7 +345,7 @@ io.on("connection", (socket: Socket) => {
         }
         const { userKey, userId, displayName } = identity;
         const hasDisplayNameOverride = Boolean(requestedDisplayName);
-        const isGhost = Boolean(data?.ghost);
+        const isGhost = Boolean(data?.ghost) && Boolean(isAdmin);
         currentUserKey = userKey;
 
         // Get or create room
