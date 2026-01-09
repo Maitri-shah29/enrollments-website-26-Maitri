@@ -76,10 +76,12 @@ export class Room {
   /**
    * Snapshot display names for all connected clients.
    */
-  getDisplayNameSnapshot(): { userId: string; displayName: string }[] {
+  getDisplayNameSnapshot(options?: {
+    includeGhosts?: boolean;
+  }): { userId: string; displayName: string }[] {
     const snapshot: { userId: string; displayName: string }[] = [];
     for (const [userId, client] of this.clients.entries()) {
-      if (client.isGhost) continue;
+      if (client.isGhost && !options?.includeGhosts) continue;
       const displayName = this.getDisplayNameForUser(userId) || userId;
       snapshot.push({ userId, displayName });
     }

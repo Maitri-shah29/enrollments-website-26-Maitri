@@ -243,6 +243,39 @@ const normalizeDisplayName = (value?: string): string => {
   return value.trim().replace(/\s+/g, " ");
 };
 
+const emitUserJoined = (
+  room: Room,
+  userId: string,
+  displayName: string,
+  options?: { ghostOnly?: boolean; excludeUserId?: string },
+): void => {
+  for (const client of room.clients.values()) {
+    if (options?.excludeUserId && client.id === options.excludeUserId) {
+      continue;
+    }
+    if (options?.ghostOnly && !client.isGhost) {
+      continue;
+    }
+    client.socket.emit("userJoined", { userId, displayName });
+  }
+};
+
+const emitUserLeft = (
+  room: Room,
+  userId: string,
+  options?: { ghostOnly?: boolean; excludeUserId?: string },
+): void => {
+  for (const client of room.clients.values()) {
+    if (options?.excludeUserId && client.id === options.excludeUserId) {
+      continue;
+    }
+    if (options?.ghostOnly && !client.isGhost) {
+      continue;
+    }
+    client.socket.emit("userLeft", { userId });
+  }
+};
+
 const buildUserIdentity = (
   user: { email?: string; userId?: string; name?: string; sessionId?: string },
   sessionId: string | undefined,
@@ -398,7 +431,12 @@ io.on("connection", (socket: Socket) => {
           currentRoom.removeClient(currentClient.id);
 
           // Notify old room
-          if (!currentClient.isGhost) {
+          if (currentClient.isGhost) {
+            emitUserLeft(currentRoom, currentClient.id, {
+              ghostOnly: true,
+              excludeUserId: currentClient.id,
+            });
+          } else {
             socket
               .to(currentRoom.id)
               .emit("userLeft", { userId: currentClient.id });
@@ -449,27 +487,32 @@ io.on("connection", (socket: Socket) => {
         }
 
         // Notify others
-        if (!currentClient.isGhost) {
+        const resolvedDisplayName =
+          currentRoom.getDisplayNameForUser(userId) || displayName;
+        if (currentClient.isGhost) {
+          emitUserJoined(currentRoom, userId, resolvedDisplayName, {
+            ghostOnly: true,
+            excludeUserId: userId,
+          });
+          for (const [clientId, client] of currentRoom.clients) {
+            if (clientId === userId || !client.isGhost) continue;
+            const ghostDisplayName =
+              currentRoom.getDisplayNameForUser(clientId) || clientId;
+            socket.emit("userJoined", {
+              userId: clientId,
+              displayName: ghostDisplayName,
+            });
+          }
+        } else {
           socket.to(roomId).emit("userJoined", {
             userId,
-            displayName:
-              currentRoom.getDisplayNameForUser(userId) || displayName,
+            displayName: resolvedDisplayName,
           });
         }
 
-        const displayNameSnapshot = currentRoom.getDisplayNameSnapshot();
-        if (currentClient.isGhost) {
-          const selfDisplayName =
-            currentRoom.getDisplayNameForUser(userId) || displayName;
-          if (
-            !displayNameSnapshot.some((entry) => entry.userId === userId)
-          ) {
-            displayNameSnapshot.push({
-              userId,
-              displayName: selfDisplayName,
-            });
-          }
-        }
+        const displayNameSnapshot = currentRoom.getDisplayNameSnapshot({
+          includeGhosts: currentClient.isGhost,
+        });
         socket.emit("displayNameSnapshot", {
           users: displayNameSnapshot,
           roomId: currentRoom.id,
@@ -1353,7 +1396,12 @@ io.on("connection", (socket: Socket) => {
       } else {
         // Remove client from room
         currentRoom.removeClient(userId);
-        if (!currentClient.isGhost) {
+        if (currentClient.isGhost) {
+          emitUserLeft(currentRoom, userId, {
+            ghostOnly: true,
+            excludeUserId: userId,
+          });
+        } else {
           socket.to(roomId).emit("userLeft", { userId });
         }
 
