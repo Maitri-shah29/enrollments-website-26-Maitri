@@ -22,19 +22,22 @@ const pickInstance = async (
     })),
   );
 
-  const candidates = statuses.filter(
+  const healthy = statuses.filter(
     (entry) => entry.status && !entry.status.draining,
   );
 
-  if (!candidates.length) return null;
+  if (healthy.length) {
+    healthy.sort((a, b) => {
+      const roomsA = a.status?.rooms ?? 0;
+      const roomsB = b.status?.rooms ?? 0;
+      return roomsA - roomsB;
+    });
 
-  candidates.sort((a, b) => {
-    const roomsA = a.status?.rooms ?? 0;
-    const roomsB = b.status?.rooms ?? 0;
-    return roomsA - roomsB;
-  });
+    return healthy[0]?.instance ?? null;
+  }
 
-  return candidates[0]?.instance ?? null;
+  const unknown = statuses.filter((entry) => !entry.status);
+  return unknown[0]?.instance ?? null;
 };
 
 export const getSfuForRoom = async (roomId: string): Promise<SfuInstance> => {
