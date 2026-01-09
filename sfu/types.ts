@@ -45,6 +45,8 @@ export interface RoomOptions {
 export interface JoinRoomData {
   roomId: string;
   sessionId?: string;
+  displayName?: string;
+  ghost?: boolean;
 }
 
 export interface JoinRoomResponse {
@@ -162,6 +164,24 @@ export interface ReactionNotification {
   value: string;
   label?: string;
   timestamp: number;
+}
+
+// ============================================
+// Raise Hand
+// ============================================
+
+export interface SetHandRaisedData {
+  raised: boolean;
+}
+
+export interface HandRaisedNotification {
+  userId: string;
+  raised: boolean;
+  timestamp: number;
+}
+
+export interface HandRaisedSnapshot {
+  users: { userId: string; raised: boolean }[];
 }
 
 // ============================================

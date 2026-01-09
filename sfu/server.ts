@@ -20,6 +20,8 @@ import type {
   ConsumeResponse,
   CreateTransportResponse,
   GetRoomsResponse,
+  HandRaisedNotification,
+  HandRaisedSnapshot,
   JoinRoomData,
   JoinRoomResponse,
   ProduceData,
@@ -28,6 +30,7 @@ import type {
   ReactionNotification,
   RedirectData,
   SendChatData,
+  SetHandRaisedData,
   SendReactionData,
   ToggleMediaData,
 } from "./types.js";
@@ -235,10 +238,16 @@ const cleanupRoom = (roomId: string): void => {
   }
 };
 
+const normalizeDisplayName = (value?: string): string => {
+  if (!value) return "";
+  return value.trim().replace(/\s+/g, " ");
+};
+
 const buildUserIdentity = (
   user: { email?: string; userId?: string; name?: string; sessionId?: string },
   sessionId: string | undefined,
   socketId: string,
+  displayNameOverride?: string,
 ): { userKey: string; userId: string; displayName: string } | null => {
   const baseId = user?.email || user?.userId;
   if (!baseId) {
@@ -249,7 +258,7 @@ const buildUserIdentity = (
   return {
     userKey: baseId,
     userId: `${baseId}#${effectiveSessionId}`,
-    displayName: user?.name || baseId,
+    displayName: displayNameOverride?.trim() || user?.name || baseId,
   };
 };
 
@@ -279,7 +288,20 @@ io.on("connection", (socket: Socket) => {
         const { roomId, sessionId } = data;
         const user = (socket as any).user;
         const isAdmin = user?.isAdmin;
-        const identity = buildUserIdentity(user, sessionId, socket.id);
+        const requestedDisplayName = normalizeDisplayName(data?.displayName);
+        if (
+          requestedDisplayName &&
+          requestedDisplayName.length > MAX_DISPLAY_NAME_LENGTH
+        ) {
+          callback({ error: "Display name too long" });
+          return;
+        }
+        const identity = buildUserIdentity(
+          user,
+          sessionId,
+          socket.id,
+          requestedDisplayName || undefined,
+        );
         if (!identity) {
           callback({ error: "Authentication error: Invalid token payload" });
           return;
@@ -289,6 +311,8 @@ io.on("connection", (socket: Socket) => {
           return;
         }
         const { userKey, userId, displayName } = identity;
+        const hasDisplayNameOverride = Boolean(requestedDisplayName);
+        const isGhost = Boolean(data?.ghost);
         currentUserKey = userKey;
 
         // Get or create room
@@ -374,9 +398,11 @@ io.on("connection", (socket: Socket) => {
           currentRoom.removeClient(currentClient.id);
 
           // Notify old room
-          socket
-            .to(currentRoom.id)
-            .emit("userLeft", { userId: currentClient.id });
+          if (!currentClient.isGhost) {
+            socket
+              .to(currentRoom.id)
+              .emit("userLeft", { userId: currentClient.id });
+          }
 
           // Leave socket room
           socket.leave(currentRoom.id);
@@ -395,13 +421,15 @@ io.on("connection", (socket: Socket) => {
 
         // Create client based on role
         if (isAdmin) {
-          currentClient = new Admin({ id: userId, socket });
+          currentClient = new Admin({ id: userId, socket, isGhost });
         } else {
           // Should not happen here if logic above is correct, but for typescript:
-          currentClient = new Client({ id: userId, socket });
+          currentClient = new Client({ id: userId, socket, isGhost });
         }
 
-        currentRoom.setUserIdentity(userId, userKey, displayName);
+        currentRoom.setUserIdentity(userId, userKey, displayName, {
+          forceDisplayName: hasDisplayNameOverride,
+        });
         currentRoom.addClient(currentClient);
 
         // Join socket room for broadcasting
@@ -421,15 +449,36 @@ io.on("connection", (socket: Socket) => {
         }
 
         // Notify others
-        socket.to(roomId).emit("userJoined", {
-          userId,
-          displayName: currentRoom.getDisplayNameForUser(userId) || displayName,
-        });
+        if (!currentClient.isGhost) {
+          socket.to(roomId).emit("userJoined", {
+            userId,
+            displayName:
+              currentRoom.getDisplayNameForUser(userId) || displayName,
+          });
+        }
 
+        const displayNameSnapshot = currentRoom.getDisplayNameSnapshot();
+        if (currentClient.isGhost) {
+          const selfDisplayName =
+            currentRoom.getDisplayNameForUser(userId) || displayName;
+          if (
+            !displayNameSnapshot.some((entry) => entry.userId === userId)
+          ) {
+            displayNameSnapshot.push({
+              userId,
+              displayName: selfDisplayName,
+            });
+          }
+        }
         socket.emit("displayNameSnapshot", {
-          users: currentRoom.getDisplayNameSnapshot(),
+          users: displayNameSnapshot,
           roomId: currentRoom.id,
         });
+
+        socket.emit("handRaisedSnapshot", {
+          users: currentRoom.getHandRaisedSnapshot(),
+          roomId: currentRoom.id,
+        } satisfies HandRaisedSnapshot & { roomId: string });
 
         // Check for video quality update
         const newQuality = currentRoom.updateVideoQuality();
@@ -763,6 +812,10 @@ io.on("connection", (socket: Socket) => {
           callback({ error: "Not ready to produce" });
           return;
         }
+        if (currentClient.isGhost) {
+          callback({ error: "Ghost mode cannot produce media" });
+          return;
+        }
 
         const { kind, rtpParameters, appData } = data;
         const type = (appData.type as "webcam" | "screen") || "webcam";
@@ -959,6 +1012,10 @@ io.on("connection", (socket: Socket) => {
           callback({ error: "Not in a room" });
           return;
         }
+        if (currentClient.isGhost) {
+          callback({ error: "Ghost mode cannot unmute" });
+          return;
+        }
 
         await currentClient.toggleMute(data.paused);
 
@@ -987,6 +1044,10 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentClient || !currentRoom) {
           callback({ error: "Not in a room" });
+          return;
+        }
+        if (currentClient.isGhost) {
+          callback({ error: "Ghost mode cannot enable camera" });
           return;
         }
 
@@ -1019,7 +1080,6 @@ io.on("connection", (socket: Socket) => {
           callback({ error: "Not in a room" });
           return;
         }
-
         // Find and close the producer using the new method
         const removed = currentClient.removeProducerById(data.producerId);
         if (removed) {
@@ -1069,7 +1129,7 @@ io.on("connection", (socket: Socket) => {
           return;
         }
 
-        const displayName = data.displayName?.trim() || "";
+        const displayName = normalizeDisplayName(data.displayName);
         if (!displayName) {
           callback({ error: "Display name cannot be empty" });
           return;
@@ -1121,6 +1181,10 @@ io.on("connection", (socket: Socket) => {
       try {
         if (!currentClient || !currentRoom) {
           callback({ error: "Not in a room" });
+          return;
+        }
+        if (currentClient.isGhost) {
+          callback({ error: "Ghost mode cannot send chat messages" });
           return;
         }
 
@@ -1180,6 +1244,10 @@ io.on("connection", (socket: Socket) => {
           callback({ error: "Not in a room" });
           return;
         }
+        if (currentClient.isGhost) {
+          callback({ error: "Ghost mode cannot send reactions" });
+          return;
+        }
 
         if (data.kind === "asset" && typeof data.value === "string") {
           if (!isValidReactionAssetPath(data.value)) {
@@ -1227,6 +1295,42 @@ io.on("connection", (socket: Socket) => {
   );
 
   // ----------------------------------------
+  // Raise Hand
+  // ----------------------------------------
+  socket.on(
+    "setHandRaised",
+    (
+      data: SetHandRaisedData,
+      callback: (response: { success: boolean } | { error: string }) => void,
+    ) => {
+      try {
+        if (!currentClient || !currentRoom) {
+          callback({ error: "Not in a room" });
+          return;
+        }
+        if (currentClient.isGhost) {
+          callback({ error: "Ghost mode cannot raise a hand" });
+          return;
+        }
+
+        const raised = Boolean(data?.raised);
+        currentRoom.setHandRaised(currentClient.id, raised);
+
+        const notification: HandRaisedNotification = {
+          userId: currentClient.id,
+          raised,
+          timestamp: Date.now(),
+        };
+
+        io.to(currentRoom.id).emit("handRaised", notification);
+        callback({ success: true });
+      } catch (error) {
+        callback({ error: (error as Error).message });
+      }
+    },
+  );
+
+  // ----------------------------------------
   // Disconnect
   // ----------------------------------------
   socket.on("disconnect", () => {
@@ -1249,7 +1353,9 @@ io.on("connection", (socket: Socket) => {
       } else {
         // Remove client from room
         currentRoom.removeClient(userId);
-        socket.to(roomId).emit("userLeft", { userId });
+        if (!currentClient.isGhost) {
+          socket.to(roomId).emit("userLeft", { userId });
+        }
 
         // If Admin left, check if any other admins remain
         if (wasAdmin) {
