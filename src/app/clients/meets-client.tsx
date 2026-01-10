@@ -209,8 +209,7 @@ function pickDefaultSlot(
     ? options.find((slot) => slot.meetLink === preferredMeetLink) ?? null
     : null;
   const now = Date.now();
-  const upcoming =
-    options.find((slot) => slot.from.getTime() >= now) ?? null;
+  const upcoming = options.find((slot) => slot.from.getTime() >= now) ?? null;
 
   return preferred ?? upcoming ?? options[0] ?? null;
 }
@@ -608,7 +607,9 @@ export default function MeetsClient({
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatOverlayMessages, setChatOverlayMessages] = useState<ChatMessage[]>([]);
+  const [chatOverlayMessages, setChatOverlayMessages] = useState<ChatMessage[]>(
+    []
+  );
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatInput, setChatInput] = useState("");
@@ -698,7 +699,9 @@ export default function MeetsClient({
   );
   const handleReconnectRef = useRef<() => void>(async () => {});
   const audioContextRef = useRef<AudioContext | null>(null);
-  const audioAnalyserMapRef = useRef<Map<string, AudioAnalyserEntry>>(new Map());
+  const audioAnalyserMapRef = useRef<Map<string, AudioAnalyserEntry>>(
+    new Map()
+  );
   const lastActiveSpeakerRef = useRef<{ id: string; ts: number } | null>(null);
   // Ref to trigger auto-join after redirect updates the roomId
   const shouldAutoJoinRef = useRef(false);
@@ -1114,7 +1117,10 @@ export default function MeetsClient({
 
     if (!AudioContextConstructor) return null;
 
-    if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+    if (
+      !audioContextRef.current ||
+      audioContextRef.current.state === "closed"
+    ) {
       audioContextRef.current = new AudioContextConstructor();
     }
 
@@ -1240,15 +1246,14 @@ export default function MeetsClient({
 
           setConnectionState("connecting");
 
-          const roomIdForJoin =
-            targetRoomId || currentRoomIdRef.current || "";
+          const roomIdForJoin = targetRoomId || currentRoomIdRef.current || "";
           if (!roomIdForJoin) {
             throw new Error("Missing room ID");
           }
 
           const { token, sfuUrl } = await getSfuJoinInfo(
             roomIdForJoin,
-            sessionIdRef.current,
+            sessionIdRef.current
           );
 
           const socket = io(sfuUrl, {
@@ -1408,7 +1413,7 @@ export default function MeetsClient({
               });
 
               const producersToClose = Array.from(
-                producerMapRef.current.entries(),
+                producerMapRef.current.entries()
               )
                 .filter(([, info]) => info.userId === leftUserId)
                 .map(([producerId]) => producerId);
@@ -1650,7 +1655,13 @@ export default function MeetsClient({
 
           socket.on(
             "userAdmitted",
-            ({ userId, roomId: eventRoomId }: { userId: string; roomId?: string }) => {
+            ({
+              userId,
+              roomId: eventRoomId,
+            }: {
+              userId: string;
+              roomId?: string;
+            }) => {
               if (!isRoomEvent(eventRoomId)) return;
               setPendingUsers((prev) => {
                 const newMap = new Map(prev);
@@ -1662,7 +1673,13 @@ export default function MeetsClient({
 
           socket.on(
             "userRejected",
-            ({ userId, roomId: eventRoomId }: { userId: string; roomId?: string }) => {
+            ({
+              userId,
+              roomId: eventRoomId,
+            }: {
+              userId: string;
+              roomId?: string;
+            }) => {
               if (!isRoomEvent(eventRoomId)) return;
               setPendingUsers((prev) => {
                 const newMap = new Map(prev);
@@ -1674,7 +1691,13 @@ export default function MeetsClient({
 
           socket.on(
             "pendingUserLeft",
-            ({ userId, roomId: eventRoomId }: { userId: string; roomId?: string }) => {
+            ({
+              userId,
+              roomId: eventRoomId,
+            }: {
+              userId: string;
+              roomId?: string;
+            }) => {
               if (!isRoomEvent(eventRoomId)) return;
               setPendingUsers((prev) => {
                 const newMap = new Map(prev);
@@ -1885,10 +1908,7 @@ export default function MeetsClient({
           track.onended = () => {
             console.log(`[Meets] Track ended: ${track.kind}`);
             if (track.kind === "audio" || track.kind === "video") {
-              handleLocalTrackEnded(
-                track.kind as "audio" | "video",
-                track
-              );
+              handleLocalTrackEnded(track.kind as "audio" | "video", track);
             }
           };
         });
@@ -1941,7 +1961,12 @@ export default function MeetsClient({
         }
         setShowPermissionHint(false);
       }
-    }, [videoQuality, selectedAudioInputDeviceId, isCameraOff, handleLocalTrackEnded]);
+    }, [
+      videoQuality,
+      selectedAudioInputDeviceId,
+      isCameraOff,
+      handleLocalTrackEnded,
+    ]);
 
   // Device Change Handlers
 
@@ -1994,7 +2019,13 @@ export default function MeetsClient({
         }
       }
     },
-    [connectionState, isMuted, localStream, handleLocalTrackEnded, stopLocalTrack]
+    [
+      connectionState,
+      isMuted,
+      localStream,
+      handleLocalTrackEnded,
+      stopLocalTrack,
+    ]
   );
 
   const handleAudioOutputDeviceChange = useCallback(
@@ -2777,7 +2808,10 @@ export default function MeetsClient({
           { producerId: producer.id },
           (response: { success: boolean } | { error: string }) => {
             if ("error" in response) {
-              console.error("[Meets] Failed to close video producer:", response);
+              console.error(
+                "[Meets] Failed to close video producer:",
+                response
+              );
             }
           }
         );
@@ -2816,7 +2850,10 @@ export default function MeetsClient({
         { producerId: producer.id },
         (response: { success: boolean } | { error: string }) => {
           if ("error" in response) {
-            console.error("[Meets] Failed to close stale video producer:", response);
+            console.error(
+              "[Meets] Failed to close stale video producer:",
+              response
+            );
           }
         }
       );
@@ -3116,26 +3153,28 @@ export default function MeetsClient({
       const socket = socketRef.current;
       if (!socket || !content.trim()) return;
 
-    socket.emit(
-      "sendChat",
-      { content: content.trim() },
-      (
-        response:
-          | { success: boolean; message?: ChatMessage }
-          | { error: string }
-      ) => {
-        if ("error" in response) {
-          console.error("[Meets] Chat error:", response.error);
-          return;
+      socket.emit(
+        "sendChat",
+        { content: content.trim() },
+        (
+          response:
+            | { success: boolean; message?: ChatMessage }
+            | { error: string }
+        ) => {
+          if ("error" in response) {
+            console.error("[Meets] Chat error:", response.error);
+            return;
+          }
+          if (response.message) {
+            // Add our own message to the list
+            const newMessage = response.message;
+            setChatMessages((prev) => [...prev, newMessage]);
+          }
         }
-        if (response.message) {
-          // Add our own message to the list
-          const newMessage = response.message;
-          setChatMessages((prev) => [...prev, newMessage]);
-        }
-      }
-    );
-  }, [ghostEnabled]);
+      );
+    },
+    [ghostEnabled]
+  );
 
   const sendReaction = useCallback(
     (reaction: ReactionOption) => {
@@ -3386,7 +3425,9 @@ export default function MeetsClient({
               Reconnecting...
             </span>
           )}
-          <ConnectionIndicator state={connectionState} />
+          {connectionState !== "joined" ? (
+            <ConnectionIndicator state={connectionState} />
+          ) : null}
         </div>
       </div>
 
@@ -3410,7 +3451,10 @@ export default function MeetsClient({
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-4 overflow-hidden relative">
         {isJoined && reactions.length > 0 && (
-          <ReactionOverlay reactions={reactions} getDisplayName={resolveDisplayName} />
+          <ReactionOverlay
+            reactions={reactions}
+            getDisplayName={resolveDisplayName}
+          />
         )}
         {!isJoined ? (
           /* Join Screen */
@@ -3586,10 +3630,7 @@ interface AdminTipsOverlayProps {
   onClose: () => void;
 }
 
-function AdminTipsOverlay({
-  onSkip,
-  onClose,
-}: AdminTipsOverlayProps) {
+function AdminTipsOverlay({ onSkip, onClose }: AdminTipsOverlayProps) {
   return (
     <div className="fixed bottom-24 right-4 z-40 animate-in slide-in-from-right-full duration-300">
       <div className="bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl max-w-xs overflow-hidden">
@@ -3665,17 +3706,6 @@ function ChatOverlay({ messages, onDismiss }: ChatOverlayProps) {
 }
 
 function ConnectionIndicator({ state }: { state: ConnectionState }) {
-  const colors: Record<ConnectionState, string> = {
-    disconnected: "bg-neutral-600",
-    connecting: "bg-yellow-500 animate-pulse",
-    connected: "bg-green-500",
-    joining: "bg-yellow-500 animate-pulse",
-    joined: "bg-green-500",
-    reconnecting: "bg-yellow-500 animate-pulse",
-    waiting: "bg-blue-500 animate-pulse",
-    error: "bg-red-500",
-  };
-
   const labels: Record<ConnectionState, string> = {
     disconnected: "Disconnected",
     connecting: "Connecting...",
@@ -3689,7 +3719,6 @@ function ConnectionIndicator({ state }: { state: ConnectionState }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-1.5 h-1.5 rounded-full ${colors[state]}`} />
       <span className="text-xs text-neutral-500 tracking-wider">
         {labels[state]}
       </span>
@@ -3746,12 +3775,9 @@ function JoinScreen({
     ? slotOptions.find((slot) => slot.id === selectedSlotId) ?? null
     : null;
   const activeSlot = selectedSlot ?? slotOptions[0] ?? null;
-  const canJoin =
-    isAdmin
-      ? roomId.trim().length > 0
-      : meetingStatus === "has-slot" &&
-        !!activeSlot &&
-        roomId.trim().length > 0;
+  const canJoin = isAdmin
+    ? roomId.trim().length > 0
+    : meetingStatus === "has-slot" && !!activeSlot && roomId.trim().length > 0;
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4">
@@ -3767,183 +3793,183 @@ function JoinScreen({
         </p>
       </div>
 
-        {/* Loading state for non-admins */}
-        {!isAdmin && meetingStatus === "loading" && (
-          <div className="flex items-center gap-2 text-white/60">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Checking your meeting schedule...</span>
-          </div>
-        )}
+      {/* Loading state for non-admins */}
+      {!isAdmin && meetingStatus === "loading" && (
+        <div className="flex items-center gap-2 text-white/60">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Checking your meeting schedule...</span>
+        </div>
+      )}
 
-        {/* Needs to book a slot */}
-        {!isAdmin && meetingStatus === "needs-booking" && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-2 text-center max-w-sm">
-            <div className="text-yellow-400 font-medium mb-2">No slot booked</div>
-            <div className="text-sm text-white/70 mb-3">
-              You are enrolled in an interview round but haven&apos;t booked a slot yet.
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                window.postMessage(
-                  { type: "NAVIGATE_TO", url: "scheduler.com" },
-                  "*"
-                );
-              }}
-              className="inline-flex items-center justify-center px-4 py-2 bg-[#5CAFFF] text-black rounded-md font-medium text-sm hover:bg-[#7fc1ff] transition-colors"
-            >
-              Go to Scheduler
-            </button>
+      {/* Needs to book a slot */}
+      {!isAdmin && meetingStatus === "needs-booking" && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-2 text-center max-w-sm">
+          <div className="text-yellow-400 font-medium mb-2">No slot booked</div>
+          <div className="text-sm text-white/70 mb-3">
+            You are enrolled in an interview round but haven&apos;t booked a
+            slot yet.
           </div>
-        )}
+          <button
+            type="button"
+            onClick={() => {
+              window.postMessage(
+                { type: "NAVIGATE_TO", url: "scheduler.com" },
+                "*"
+              );
+            }}
+            className="inline-flex items-center justify-center px-4 py-2 bg-[#5CAFFF] text-black rounded-md font-medium text-sm hover:bg-[#7fc1ff] transition-colors"
+          >
+            Go to Scheduler
+          </button>
+        </div>
+      )}
 
-        {/* Not enrolled in any rounds */}
-        {!isAdmin && meetingStatus === "not-enrolled" && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-2 text-center max-w-sm">
-            <div className="text-red-400 font-medium mb-2">No meeting scheduled</div>
-            <div className="text-sm text-white/70">
-              You are not currently enrolled in any interview rounds.
-            </div>
+      {/* Not enrolled in any rounds */}
+      {!isAdmin && meetingStatus === "not-enrolled" && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-2 text-center max-w-sm">
+          <div className="text-red-400 font-medium mb-2">
+            No meeting scheduled
           </div>
-        )}
+          <div className="text-sm text-white/70">
+            You are not currently enrolled in any interview rounds.
+          </div>
+        </div>
+      )}
 
-        {/* Slot booking info for non-admins */}
-        {!isAdmin && slotOptions.length > 0 && meetingStatus === "has-slot" && (
-          <div className="bg-[#252525] border border-white/10 rounded-lg p-4 mb-2 text-center max-w-sm">
-            <div className="text-sm text-white/60 mb-1">
-              Your scheduled slot{slotOptions.length > 1 ? "s" : ""}
-            </div>
-            {slotOptions.length > 1 && (
-              <div className="mt-2 text-left">
-                <label
-                  htmlFor="meeting-slot"
-                  className="text-xs text-white/60"
+      {/* Slot booking info for non-admins */}
+      {!isAdmin && slotOptions.length > 0 && meetingStatus === "has-slot" && (
+        <div className="bg-[#252525] border border-white/10 rounded-lg p-4 mb-2 text-center max-w-sm">
+          <div className="text-sm text-white/60 mb-1">
+            Your scheduled slot{slotOptions.length > 1 ? "s" : ""}
+          </div>
+          {slotOptions.length > 1 && (
+            <div className="mt-2 text-left">
+              <label htmlFor="meeting-slot" className="text-xs text-white/60">
+                Choose interaction
+              </label>
+              <div className="relative mt-1">
+                <select
+                  id="meeting-slot"
+                  value={activeSlot ? activeSlot.id : ""}
+                  onChange={(event) => onSelectSlot(event.target.value)}
+                  className="w-full appearance-none rounded-md bg-[#1d1d1d] border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-white/40"
                 >
-                  Choose interaction
-                </label>
-                <div className="relative mt-1">
-                  <select
-                    id="meeting-slot"
-                    value={activeSlot ? activeSlot.id : ""}
-                    onChange={(event) => onSelectSlot(event.target.value)}
-                    className="w-full appearance-none rounded-md bg-[#1d1d1d] border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-white/40"
-                  >
-                    {slotOptions.map((slot) => (
-                      <option key={slot.id} value={slot.id}>
-                        {slot.domain} -{" "}
-                        {new Date(slot.from).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}{" "}
-                        -{" "}
-                        {new Date(slot.from).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        -{" "}
-                        {new Date(slot.to).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
-                </div>
+                  {slotOptions.map((slot) => (
+                    <option key={slot.id} value={slot.id}>
+                      {slot.domain} -{" "}
+                      {new Date(slot.from).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}{" "}
+                      -{" "}
+                      {new Date(slot.from).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      -{" "}
+                      {new Date(slot.to).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
               </div>
-            )}
-            {activeSlot && (
-              <>
-                <div className="text-lg font-semibold text-[#5CAFFF] mt-3">
-                  {activeSlot.domain} Interaction
-                </div>
-                <div className="text-sm text-white/80">
-                  {new Date(activeSlot.from).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </div>
-                <div className="text-lg font-medium text-white mt-1">
-                  {new Date(activeSlot.from).toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  -{" "}
-                  {new Date(activeSlot.to).toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {isAdmin && (
-          <div className="w-full max-w-sm">
-            <label htmlFor="display-name" className="text-xs text-white/60">
-              Display name
-            </label>
-            <input
-              id="display-name"
-              type="text"
-              value={displayNameInput}
-              onChange={(e) => onDisplayNameInputChange(e.target.value)}
-              placeholder="Enter display name"
-              maxLength={40}
-              disabled={isLoading}
-              className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
-            />
-            <div className="mt-1 text-[11px] text-white/50 text-center">
-              Used when you join the room.
             </div>
-          </div>
-        )}
-
-        {isAdmin && (
-          <div className="w-full max-w-sm">
-            <button
-              type="button"
-              onClick={() => onGhostModeChange(!isGhostMode)}
-              disabled={isLoading}
-              className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#252525] border border-white/10 rounded-md text-left hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div>
-                <div className="text-sm font-medium">Ghost mode</div>
-                <div className="text-xs text-white/50">
-                  Join invisibly with mic & camera locked.
-                </div>
+          )}
+          {activeSlot && (
+            <>
+              <div className="text-lg font-semibold text-[#5CAFFF] mt-3">
+                {activeSlot.domain} Interaction
               </div>
-              <div className="ml-auto">
-                <div
-                  className={`w-10 h-6 rounded-full transition-colors relative ${
-                    isGhostMode ? "bg-blue-600" : "bg-white/20"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                      isGhostMode ? "left-5" : "left-1"
-                    }`}
-                  />
-                </div>
+              <div className="text-sm text-white/80">
+                {new Date(activeSlot.from).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
               </div>
-            </button>
-          </div>
-        )}
+              <div className="text-lg font-medium text-white mt-1">
+                {new Date(activeSlot.from).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                -{" "}
+                {new Date(activeSlot.to).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
-        {isAdmin && (
+      {isAdmin && (
+        <div className="w-full max-w-sm">
+          <label htmlFor="display-name" className="text-xs text-white/60">
+            Display name
+          </label>
           <input
+            id="display-name"
             type="text"
-            value={roomId}
-            onChange={(e) => onRoomIdChange(e.target.value)}
-            placeholder="Enter Room ID"
+            value={displayNameInput}
+            onChange={(e) => onDisplayNameInputChange(e.target.value)}
+            placeholder="Enter display name"
+            maxLength={40}
             disabled={isLoading}
-            className="px-4 py-2 bg-[#252525] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+            className="mt-1 w-full px-4 py-2 bg-[#252525] border border-white/10 rounded-md text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
           />
-        )}
+          <div className="mt-1 text-[11px] text-white/50 text-center">
+            Used when you join the room.
+          </div>
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="w-full max-w-sm">
+          <button
+            type="button"
+            onClick={() => onGhostModeChange(!isGhostMode)}
+            disabled={isLoading}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#252525] border border-white/10 rounded-md text-left hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <div>
+              <div className="text-sm font-medium">Ghost mode</div>
+              <div className="text-xs text-white/50">
+                Join invisibly with mic & camera locked.
+              </div>
+            </div>
+            <div className="ml-auto">
+              <div
+                className={`w-10 h-6 rounded-full transition-colors relative ${
+                  isGhostMode ? "bg-blue-600" : "bg-white/20"
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    isGhostMode ? "left-5" : "left-1"
+                  }`}
+                />
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {isAdmin && (
+        <input
+          type="text"
+          value={roomId}
+          onChange={(e) => onRoomIdChange(e.target.value)}
+          placeholder="Enter Room ID"
+          disabled={isLoading}
+          className="px-4 py-2 bg-[#252525] border border-white/10 rounded-md w-64 text-center focus:outline-none focus:border-white transition-colors disabled:opacity-50 placeholder:text-neutral-600"
+        />
+      )}
 
       <button
         onClick={onJoin}
@@ -3972,7 +3998,10 @@ function JoinScreen({
       {isAdmin && (
         <div className="w-full max-w-2xl mt-6">
           <div className="flex items-center justify-between mb-2 px-1">
-            <h3 className="text-sm tracking-[0.5px]" style={{ fontWeight: 700 }}>
+            <h3
+              className="text-sm tracking-[0.5px]"
+              style={{ fontWeight: 700 }}
+            >
               Active meetings
             </h3>
             <button
@@ -4355,8 +4384,7 @@ function ControlsBar({
   const reactionMenuRef = useRef<HTMLDivElement>(null);
   const lastReactionTimeRef = useRef<number>(0);
   const REACTION_COOLDOWN_MS = 150; // Prevent rapid-fire reactions
-  const ghostDisabledClass =
-    "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed";
+  const ghostDisabledClass = "bg-[#1a1a1a] text-neutral-600 cursor-not-allowed";
   const screenShareDisabled = isGhostMode || !canStartScreenShare;
 
   useEffect(() => {
@@ -4418,7 +4446,9 @@ function ControlsBar({
             ? "bg-red-500 text-white hover:bg-red-600"
             : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
         }`}
-        title={isGhostMode ? "Ghost mode: mic locked" : isMuted ? "Unmute" : "Mute"}
+        title={
+          isGhostMode ? "Ghost mode: mic locked" : isMuted ? "Unmute" : "Mute"
+        }
       >
         {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
       </button>
@@ -4687,7 +4717,9 @@ function ChatPanel({
         ) : (
           messages.map((msg) => {
             const isOwn = msg.userId === currentUserId;
-            const displayName = formatDisplayName(msg.displayName || msg.userId);
+            const displayName = formatDisplayName(
+              msg.displayName || msg.userId
+            );
             return (
               <div
                 key={msg.id}
@@ -4703,9 +4735,7 @@ function ChatPanel({
                   }`}
                 >
                   {!isOwn && (
-                    <p className="text-xs text-gray-400 mb-1">
-                      {displayName}
-                    </p>
+                    <p className="text-xs text-gray-400 mb-1">{displayName}</p>
                   )}
                   <p className="text-sm break-words">{msg.content}</p>
                 </div>
@@ -4863,7 +4893,9 @@ function ParticipantVideo({
           : ""
       } transition-all duration-200 ${getSpeakerHighlightClasses(
         isActiveSpeaker
-      )} border-white/10 ${isAdmin && onAdminClick ? "cursor-pointer hover:border-white/20" : ""}`}
+      )} border-white/10 ${
+        isAdmin && onAdminClick ? "cursor-pointer hover:border-white/20" : ""
+      }`}
     >
       <video
         ref={setVideoRef}
@@ -5056,7 +5088,6 @@ function ParticipantsPanel({
             </button>
           </div>
         )}
-
       </div>
 
       {/* Pending Requests */}
@@ -5362,9 +5393,9 @@ function AdminActionsSidebar({
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [commentsError, setCommentsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"info" | "actions" | "comments" | "form">(
-    "actions"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "info" | "actions" | "comments" | "form"
+  >("actions");
 
   // Action states
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -5396,8 +5427,11 @@ function AdminActionsSidebar({
   const [commentDomain, setCommentDomain] = useState<string>("");
 
   // Form submissions state
-  const [formSubmissions, setFormSubmissions] = useState<UserFormSubmission[]>([]);
-  const [selectedFormSubmission, setSelectedFormSubmission] = useState<UserFormSubmission | null>(null);
+  const [formSubmissions, setFormSubmissions] = useState<UserFormSubmission[]>(
+    []
+  );
+  const [selectedFormSubmission, setSelectedFormSubmission] =
+    useState<UserFormSubmission | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -5597,7 +5631,11 @@ function AdminActionsSidebar({
     }
   };
 
-  const openTaskModal = (roundUserId: string, domain: string, existingTask?: { id: string; text: string; deadline: Date }) => {
+  const openTaskModal = (
+    roundUserId: string,
+    domain: string,
+    existingTask?: { id: string; text: string; deadline: Date }
+  ) => {
     setTaskRoundUserId(roundUserId);
     setTaskDomain(domain);
     if (existingTask) {
@@ -5844,16 +5882,21 @@ function AdminActionsSidebar({
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-xs font-semibold ${getDomainColor(ru.round.domain)}`}
+                          className={`text-xs font-semibold ${getDomainColor(
+                            ru.round.domain
+                          )}`}
                         >
                           {formatDomain(ru.round.domain)}
                         </span>
                         <span className="text-[10px] text-neutral-500">
-                          R{ru.round.number} • {ru.round.type === "task" ? "Task" : "Interview"}
+                          R{ru.round.number} •{" "}
+                          {ru.round.type === "task" ? "Task" : "Interview"}
                         </span>
                       </div>
                       <span
-                        className={`text-[9px] px-2 py-0.5 rounded-full border capitalize ${getStatusColor(ru.status)}`}
+                        className={`text-[9px] px-2 py-0.5 rounded-full border capitalize ${getStatusColor(
+                          ru.status
+                        )}`}
                       >
                         {ru.status}
                       </span>
@@ -5870,11 +5913,13 @@ function AdminActionsSidebar({
                     {/* Task info - clickable to edit */}
                     {ru.Task && (
                       <button
-                        onClick={() => openTaskModal(ru.id, ru.round.domain, {
-                          id: ru.Task!.id,
-                          text: ru.Task!.text,
-                          deadline: ru.Task!.deadline,
-                        })}
+                        onClick={() =>
+                          openTaskModal(ru.id, ru.round.domain, {
+                            id: ru.Task!.id,
+                            text: ru.Task!.text,
+                            deadline: ru.Task!.deadline,
+                          })
+                        }
                         className="w-full text-left mb-2 p-2 bg-green-500/10 hover:bg-green-500/20 rounded border border-green-500/20 hover:border-green-500/30 transition-colors group"
                       >
                         <div className="flex items-center justify-between text-green-400 text-[10px] mb-1">
@@ -5882,7 +5927,9 @@ function AdminActionsSidebar({
                             <ClipboardList className="w-3 h-3" />
                             <span className="font-medium">Task Assigned</span>
                           </div>
-                          <span className="text-[9px] text-neutral-500 group-hover:text-green-400 transition-colors">Edit</span>
+                          <span className="text-[9px] text-neutral-500 group-hover:text-green-400 transition-colors">
+                            Edit
+                          </span>
                         </div>
                         <p className="text-[10px] text-neutral-300 line-clamp-2">
                           {ru.Task.text}
@@ -5896,72 +5943,88 @@ function AdminActionsSidebar({
                     {/* Action buttons */}
                     <div className="flex flex-wrap gap-1.5">
                       {/* Verify Attendance - interview rounds only */}
-                      {ru.round.type === "interview" && ru.status === "pending" && (
-                        <button
-                          onClick={() => handleVerifyAttendance(ru)}
-                          disabled={!!actionLoading}
-                          className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500/20 transition-colors disabled:opacity-50 font-medium"
-                        >
-                          {actionLoading === `verify-${ru.id}` ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <UserCheck className="w-3 h-3" />
-                          )}
-                          Verify Attendance
-                        </button>
-                      )}
+                      {ru.round.type === "interview" &&
+                        ru.status === "pending" && (
+                          <button
+                            onClick={() => handleVerifyAttendance(ru)}
+                            disabled={!!actionLoading}
+                            className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 rounded border border-yellow-500/20 transition-colors disabled:opacity-50 font-medium"
+                          >
+                            {actionLoading === `verify-${ru.id}` ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <UserCheck className="w-3 h-3" />
+                            )}
+                            Verify Attendance
+                          </button>
+                        )}
 
                       {/* Assign Task & Promote - interview rounds only, not for management */}
-                      {ru.round.type === "interview" && ru.status === "evaluate" && !ru.Task && ru.round.domain !== "management" && (
-                        <button
-                          onClick={() => openTaskModal(ru.id, ru.round.domain)}
-                          disabled={!!actionLoading}
-                          className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded border border-green-500/30 transition-colors disabled:opacity-50 font-medium"
-                        >
-                          <ClipboardList className="w-3 h-3" />
-                          Assign Task & Promote
-                        </button>
-                      )}
+                      {ru.round.type === "interview" &&
+                        ru.status === "evaluate" &&
+                        !ru.Task &&
+                        ru.round.domain !== "management" && (
+                          <button
+                            onClick={() =>
+                              openTaskModal(ru.id, ru.round.domain)
+                            }
+                            disabled={!!actionLoading}
+                            className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded border border-green-500/30 transition-colors disabled:opacity-50 font-medium"
+                          >
+                            <ClipboardList className="w-3 h-3" />
+                            Assign Task & Promote
+                          </button>
+                        )}
 
                       {/* Reject - interview rounds only */}
-                      {ru.round.type === "interview" && (ru.status === "pending" || ru.status === "evaluate") && (
-                        <button
-                          onClick={() => handleReject(ru)}
-                          disabled={!!actionLoading}
-                          className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 transition-colors disabled:opacity-50 font-medium"
-                        >
-                          {actionLoading === `reject-${ru.id}` ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <UserX className="w-3 h-3" />
-                          )}
-                          Reject
-                        </button>
-                      )}
+                      {ru.round.type === "interview" &&
+                        (ru.status === "pending" ||
+                          ru.status === "evaluate") && (
+                          <button
+                            onClick={() => handleReject(ru)}
+                            disabled={!!actionLoading}
+                            className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 transition-colors disabled:opacity-50 font-medium"
+                          >
+                            {actionLoading === `reject-${ru.id}` ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <UserX className="w-3 h-3" />
+                            )}
+                            Reject
+                          </button>
+                        )}
 
                       {/* Already promoted - interview rounds */}
-                      {ru.round.type === "interview" && ru.status === "promoted" && (
-                        <div className="flex items-center gap-1 text-[10px] text-green-400">
-                          <Check className="w-3 h-3" />
-                          Promoted
-                        </div>
-                      )}
+                      {ru.round.type === "interview" &&
+                        ru.status === "promoted" && (
+                          <div className="flex items-center gap-1 text-[10px] text-green-400">
+                            <Check className="w-3 h-3" />
+                            Promoted
+                          </div>
+                        )}
 
                       {/* Already rejected - interview rounds */}
-                      {ru.round.type === "interview" && ru.status === "rejected" && (
-                        <div className="flex items-center gap-1 text-[10px] text-red-400">
-                          <X className="w-3 h-3" />
-                          Rejected
-                        </div>
-                      )}
+                      {ru.round.type === "interview" &&
+                        ru.status === "rejected" && (
+                          <div className="flex items-center gap-1 text-[10px] text-red-400">
+                            <X className="w-3 h-3" />
+                            Rejected
+                          </div>
+                        )}
 
                       {/* Task round status */}
                       {ru.round.type === "task" && (
-                        <div className={`flex items-center gap-1 text-[10px] ${
-                          ru.status === "pending" ? "text-yellow-400" : 
-                          ru.status === "promoted" ? "text-green-400" : 
-                          ru.status === "rejected" ? "text-red-400" : "text-neutral-400"
-                        }`}>
+                        <div
+                          className={`flex items-center gap-1 text-[10px] ${
+                            ru.status === "pending"
+                              ? "text-yellow-400"
+                              : ru.status === "promoted"
+                              ? "text-green-400"
+                              : ru.status === "rejected"
+                              ? "text-red-400"
+                              : "text-neutral-400"
+                          }`}
+                        >
                           {ru.status === "pending" ? (
                             <>
                               <ClipboardList className="w-3 h-3" />
@@ -6006,7 +6069,9 @@ function AdminActionsSidebar({
                   >
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`text-xs font-medium ${getDomainColor(ru.round.domain)}`}
+                        className={`text-xs font-medium ${getDomainColor(
+                          ru.round.domain
+                        )}`}
                       >
                         {formatDomain(ru.round.domain)}
                       </span>
@@ -6015,7 +6080,9 @@ function AdminActionsSidebar({
                       </span>
                     </div>
                     <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded-full border capitalize ${getStatusColor(ru.status)}`}
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full border capitalize ${getStatusColor(
+                        ru.status
+                      )}`}
                     >
                       {ru.status}
                     </span>
@@ -6042,37 +6109,61 @@ function AdminActionsSidebar({
                 </div>
               ) : (
                 formSubmissions.map((fs) => (
-                  <div key={fs.id} className="bg-[#252525] rounded border border-white/5 overflow-hidden">
+                  <div
+                    key={fs.id}
+                    className="bg-[#252525] rounded border border-white/5 overflow-hidden"
+                  >
                     <button
                       className="w-full p-2 flex items-center justify-between hover:bg-[#2a2a2a] transition-colors text-left"
                       onClick={() => {
-                        setSelectedFormSubmission(selectedFormSubmission?.id === fs.id ? null : fs);
+                        setSelectedFormSubmission(
+                          selectedFormSubmission?.id === fs.id ? null : fs
+                        );
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs font-medium ${getDomainColor(fs.round.domain)}`}>
+                        <span
+                          className={`text-xs font-medium ${getDomainColor(
+                            fs.round.domain
+                          )}`}
+                        >
                           {formatDomain(fs.round.domain)}
                         </span>
                         <span className="text-[9px] text-neutral-500">
                           R{fs.round.number} · {fs.responses.length} Q&A
                         </span>
                       </div>
-                      <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${
-                        selectedFormSubmission?.id === fs.id ? "rotate-180" : ""
-                      }`} />
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${
+                          selectedFormSubmission?.id === fs.id
+                            ? "rotate-180"
+                            : ""
+                        }`}
+                      />
                     </button>
                     {selectedFormSubmission?.id === fs.id && (
                       <div className="border-t border-white/5 p-2 space-y-2 max-h-[300px] overflow-y-auto">
                         {fs.responses.length === 0 ? (
-                          <p className="text-[10px] text-neutral-500 text-center py-2">No responses</p>
+                          <p className="text-[10px] text-neutral-500 text-center py-2">
+                            No responses
+                          </p>
                         ) : (
                           fs.responses.map((response, idx) => (
-                            <div key={response.id} className="p-2 bg-[#1f1f1f] rounded border border-white/5">
+                            <div
+                              key={response.id}
+                              className="p-2 bg-[#1f1f1f] rounded border border-white/5"
+                            >
                               <p className="text-[10px] font-medium text-neutral-400 mb-1">
-                                Q{idx + 1}: {response.question?.question || 'Unknown question'}
+                                Q{idx + 1}:{" "}
+                                {response.question?.question ||
+                                  "Unknown question"}
                               </p>
                               <p className="text-[11px] text-white whitespace-pre-wrap">
-                                {response.response || <span className="text-neutral-500 italic">No response</span>}
+                                {response.response || (
+                                  <span className="text-neutral-500 italic">
+                                    No response
+                                  </span>
+                                )}
                               </p>
                             </div>
                           ))
