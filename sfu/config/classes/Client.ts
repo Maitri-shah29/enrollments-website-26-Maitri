@@ -12,16 +12,13 @@ export interface ClientOptions {
   isGhost?: boolean;
 }
 
-/** Type of producer: webcam or screen share */
 export type ProducerType = "webcam" | "screen";
 
-/** Composite key for producer storage: "audio-webcam", "video-webcam", "video-screen" */
 export type ProducerKey = `${MediaKind}-${ProducerType}`;
 
-/** Helper to create a producer key */
 export function createProducerKey(
   kind: MediaKind,
-  type: ProducerType
+  type: ProducerType,
 ): ProducerKey {
   return `${kind}-${type}`;
 }
@@ -31,17 +28,13 @@ export class Client {
   public readonly socket: Socket;
   public readonly isGhost: boolean;
 
-  // Transports
   public producerTransport: WebRtcTransport | null = null;
   public consumerTransport: WebRtcTransport | null = null;
 
-  // Producers keyed by "kind-type" (e.g., "video-webcam", "video-screen")
   public producers: Map<ProducerKey, Producer> = new Map();
 
-  // Consumers keyed by producer id
   public consumers: Map<string, Consumer> = new Map();
 
-  // Media state
   public isMuted: boolean = false;
   public isCameraOff: boolean = false;
 
@@ -51,9 +44,6 @@ export class Client {
     this.isGhost = options.isGhost ?? false;
   }
 
-  /**
-   * Add a producer (audio or video, webcam or screen)
-   */
   addProducer(producer: Producer): void {
     const type = (producer.appData.type as ProducerType) || "webcam";
     const key = createProducerKey(producer.kind, type);
@@ -68,9 +58,6 @@ export class Client {
     producer.observer.on("close", cleanup);
   }
 
-  /**
-   * Add a consumer for a remote producer
-   */
   addConsumer(consumer: Consumer): void {
     this.consumers.set(consumer.producerId, consumer);
 
@@ -83,26 +70,17 @@ export class Client {
     consumer.observer.on("close", cleanup);
   }
 
-  /**
-   * Get producer by kind and type
-   */
   getProducer(
     kind: MediaKind,
-    type: ProducerType = "webcam"
+    type: ProducerType = "webcam",
   ): Producer | undefined {
     return this.producers.get(createProducerKey(kind, type));
   }
 
-  /**
-   * Get consumer by producer id
-   */
   getConsumer(producerId: string): Consumer | undefined {
     return this.consumers.get(producerId);
   }
 
-  /**
-   * Toggle audio mute state
-   */
   async toggleMute(paused: boolean): Promise<void> {
     const audioProducer = this.getProducer("audio", "webcam");
     if (audioProducer) {
@@ -115,9 +93,6 @@ export class Client {
     }
   }
 
-  /**
-   * Toggle camera state
-   */
   async toggleCamera(paused: boolean): Promise<void> {
     const videoProducer = this.getProducer("video", "webcam");
     if (videoProducer) {
@@ -130,23 +105,17 @@ export class Client {
     }
   }
 
-  /**
-   * Close all transports, producers, and consumers
-   */
   close(): void {
-    // Close all consumers
     for (const consumer of this.consumers.values()) {
       consumer.close();
     }
     this.consumers.clear();
 
-    // Close all producers
     for (const producer of this.producers.values()) {
       producer.close();
     }
     this.producers.clear();
 
-    // Close transports
     if (this.producerTransport) {
       this.producerTransport.close();
       this.producerTransport = null;
@@ -158,9 +127,6 @@ export class Client {
     }
   }
 
-  /**
-   * Get all producer info for this client
-   */
   getProducerInfos(): {
     producerId: string;
     kind: MediaKind;
@@ -185,11 +151,8 @@ export class Client {
     return infos;
   }
 
-  /**
-   * Find and remove a producer by its ID
-   */
   removeProducerById(
-    producerId: string
+    producerId: string,
   ): { kind: MediaKind; type: ProducerType } | null {
     for (const [key, producer] of this.producers) {
       if (producer.id === producerId) {

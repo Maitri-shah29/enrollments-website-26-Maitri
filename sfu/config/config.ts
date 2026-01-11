@@ -39,29 +39,19 @@ export const config = {
   version: process.env.SFU_VERSION || "dev",
   draining: toBoolean(process.env.SFU_DRAINING),
   sfuSecret: process.env.SFU_SECRET || "development-secret",
-  //generate something using openssl before deploying to production
-  //openssl rand -base64 32
   workerSettings: {
-    //rtcMinPort and max are just arbitray ports for our traffic
-    //useful for firewall or networking rules
     rtcMinPort: toNumber(process.env.RTC_MIN_PORT, 40000),
     rtcMaxPort: toNumber(process.env.RTC_MAX_PORT, 41000),
-    //log levels you want to set
     logLevel: "warn" as WorkerLogLevel,
     logTags: ["info", "ice", "dtls", "rtp", "srtp", "rtcp"] as WorkerLogTag[],
   },
   videoQuality: {
-    // Participants count to trigger Low Quality
     lowThreshold: Number(process.env.VIDEO_QUALITY_LOW_THRESHOLD) || 10,
-    // Participants count to return to Standard Quality (Hysteresis)
     standardThreshold:
       Number(process.env.VIDEO_QUALITY_STANDARD_THRESHOLD) || 8,
   },
-  // Grace period before dissolving room after last admin leaves (in ms)
   adminCleanupTimeout: Number(process.env.ADMIN_CLEANUP_TIMEOUT) || 120000,
-  // Allow non-admins to create rooms (for testing)
   allowNonAdminRoomCreation: false,
-
   routerMediaCodecs: [
     {
       kind: "audio",
@@ -89,13 +79,11 @@ export const config = {
   webRtcTransport: {
     listenIps: [
       {
-        // ip: "0.0.0.0",
         ip: "0.0.0.0",
         announcedIp: process.env.ANNOUNCED_IP || "172.16.22.196",
       },
     ],
-    // 1.5 Mbps is sufficient for decent video but prevents network congestion
-    maxIncomingBitrate: 1500000, //need to think about these
+    maxIncomingBitrate: 1500000,
     initialAvailableOutgoingBitrate: 1000000,
   },
 };

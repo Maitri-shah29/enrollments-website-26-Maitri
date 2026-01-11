@@ -34,7 +34,6 @@ const getTimestamp = () => {
   return new Date().toISOString().split("T")[1].slice(0, -1);
 };
 
-// [SFU] prefix in Magenta
 const PREFIX = `${colors.fg.magenta}[SFU]${colors.reset}`;
 
 type LogLevel = "error" | "warn" | "info" | "debug";

@@ -2,7 +2,7 @@ import * as mediasoup from "mediasoup";
 import type { Worker } from "mediasoup/types";
 import os from "os";
 import { config } from "../config/config.js";
-import { Logger } from "./Logger.js";
+import { Logger } from "./loggers.js";
 
 const totalThreads = os.cpus().length;
 
