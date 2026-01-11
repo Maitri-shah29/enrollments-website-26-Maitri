@@ -1,12 +1,13 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
+import { headers } from "next/headers";
 import { ADMIN_EMAILS } from "@/lib/admin-config";
+import { auth } from "@/lib/auth";
 import { getSfuForRoom } from "@/lib/sfu-allocator";
 
 const SFU_SECRET = process.env.SFU_SECRET || "development-secret";
+const SFU_CLIENT_ID = process.env.SFU_CLIENT_ID || "internal";
 
 export async function getSfuJoinInfo(roomId: string, sessionId: string) {
   if (!roomId) {
@@ -32,6 +33,7 @@ export async function getSfuJoinInfo(roomId: string, sessionId: string) {
       email: session.user.email,
       name: session.user.name,
       isAdmin,
+      clientId: SFU_CLIENT_ID,
       sessionId,
     },
     SFU_SECRET,
