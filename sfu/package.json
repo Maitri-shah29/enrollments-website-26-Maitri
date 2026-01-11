@@ -2,7 +2,10 @@
   "name": "sfu",
   "version": "1.0.0",
   "description": "Mediasoup SFU for video meetings",
-  "main": "server.ts",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
   "scripts": {
     "dev": "npx tsx server.ts",
     "start": "npx tsx server.ts",

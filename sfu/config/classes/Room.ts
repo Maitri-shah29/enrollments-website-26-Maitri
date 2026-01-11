@@ -5,10 +5,10 @@ import type {
   WebRtcTransport,
 } from "mediasoup/types";
 import type { VideoQuality } from "../../types.js";
-import { Logger } from "../../utilities/Logger.js";
+import { Logger } from "../../utilities/loggers.js";
 import { config } from "../config.js";
 import { Admin } from "./Admin.js";
-import type { Client } from "./Client.js"; // Needed for types/Client class
+import type { Client } from "./Client.js";
 
 export interface RoomOptions {
   id: string;
@@ -29,34 +29,26 @@ export class Room {
   public userKeysById: Map<string, string> = new Map();
   public displayNamesByKey: Map<string, string> = new Map();
   public handRaisedByUserId: Set<string> = new Set();
+  public cleanupTimer: NodeJS.Timeout | null = null;
 
   constructor(options: RoomOptions) {
     this.id = options.id;
     this.router = options.router;
   }
 
-  /**
-   * Get the router's RTP capabilities
-   */
   get rtpCapabilities(): RtpCapabilities {
     return this.router.rtpCapabilities;
   }
 
-  /**
-   * Add a client to the room
-   */
   addClient(client: Client): void {
     this.clients.set(client.id, client);
   }
 
-  /**
-   * Register or update identity mapping for a connected user.
-   */
   setUserIdentity(
     userId: string,
     userKey: string,
     displayName: string,
-    options?: { forceDisplayName?: boolean }
+    options?: { forceDisplayName?: boolean },
   ): void {
     this.userKeysById.set(userId, userKey);
     if (options?.forceDisplayName || !this.displayNamesByKey.has(userKey)) {
@@ -64,18 +56,12 @@ export class Room {
     }
   }
 
-  /**
-   * Get the display name for a given user id.
-   */
   getDisplayNameForUser(userId: string): string | undefined {
     const userKey = this.userKeysById.get(userId);
     if (!userKey) return undefined;
     return this.displayNamesByKey.get(userKey);
   }
 
-  /**
-   * Snapshot display names for all connected clients.
-   */
   getDisplayNameSnapshot(options?: {
     includeGhosts?: boolean;
   }): { userId: string; displayName: string }[] {
@@ -88,9 +74,6 @@ export class Room {
     return snapshot;
   }
 
-  /**
-   * Update display name for a user key and return affected user ids.
-   */
   updateDisplayName(userKey: string, displayName: string): string[] {
     this.displayNamesByKey.set(userKey, displayName);
     const userIds: string[] = [];
@@ -102,9 +85,6 @@ export class Room {
     return userIds;
   }
 
-  /**
-   * Remove a client from the room and clean up
-   */
   removeClient(clientId: string): Client | undefined {
     const client = this.clients.get(clientId);
     if (client) {
@@ -116,9 +96,6 @@ export class Room {
     return client;
   }
 
-  /**
-   * Update raise-hand status for a user.
-   */
   setHandRaised(userId: string, raised: boolean): void {
     if (raised) {
       this.handRaisedByUserId.add(userId);
@@ -127,9 +104,6 @@ export class Room {
     }
   }
 
-  /**
-   * Snapshot raised hands for connected users.
-   */
   getHandRaisedSnapshot(): { userId: string; raised: boolean }[] {
     const snapshot: { userId: string; raised: boolean }[] = [];
     for (const userId of this.handRaisedByUserId) {
@@ -138,16 +112,10 @@ export class Room {
     return snapshot;
   }
 
-  /**
-   * Get a client by ID
-   */
   getClient(clientId: string): Client | undefined {
     return this.clients.get(clientId);
   }
 
-  /**
-   * Get all clients except the specified one
-   */
   getOtherClients(excludeClientId: string): Client[] {
     const others: Client[] = [];
     for (const [id, client] of this.clients) {
@@ -158,16 +126,10 @@ export class Room {
     return others;
   }
 
-  /**
-   * Get total number of clients
-   */
   get clientCount(): number {
     return this.clients.size;
   }
 
-  /**
-   * Create a WebRTC transport for a client
-   */
   async createWebRtcTransport(): Promise<WebRtcTransport> {
     const transport = await this.router.createWebRtcTransport({
       listenIps: config.webRtcTransport.listenIps,
@@ -178,7 +140,6 @@ export class Room {
         config.webRtcTransport.initialAvailableOutgoingBitrate,
     });
 
-    // Set max incoming bitrate for 360p
     if (config.webRtcTransport.maxIncomingBitrate) {
       await transport.setMaxIncomingBitrate(
         config.webRtcTransport.maxIncomingBitrate,
@@ -188,9 +149,6 @@ export class Room {
     return transport;
   }
 
-  /**
-   * Check if screen is currently being shared
-   */
   get screenShareProducerId(): string | null {
     return this.currentScreenShareProducerId;
   }
@@ -205,9 +163,6 @@ export class Room {
     }
   }
 
-  /**
-   * Get all existing producers in the room (for new clients to consume)
-   */
   getAllProducers(excludeClientId?: string): {
     producerId: string;
     producerUserId: string;
@@ -230,7 +185,6 @@ export class Room {
       if (client.isGhost) {
         continue;
       }
-      // Use the client's getProducerInfos which properly parses the new key format
       for (const info of client.getProducerInfos()) {
         producers.push({
           producerId: info.producerId,
@@ -245,23 +199,14 @@ export class Room {
     return producers;
   }
 
-  /**
-   * Check if the router can consume from a producer
-   */
   canConsume(producerId: string, rtpCapabilities: RtpCapabilities): boolean {
     return this.router.canConsume({ producerId, rtpCapabilities });
   }
 
-  /**
-   * Check if room has no active or pending clients
-   */
   isEmpty(): boolean {
     return this.clients.size === 0 && this.pendingClients.size === 0;
   }
 
-  /**
-   * Get all Admin clients in the room
-   */
   getAdmins(): Admin[] {
     const admins: Admin[] = [];
     for (const client of this.clients.values()) {
@@ -272,9 +217,6 @@ export class Room {
     return admins;
   }
 
-  /**
-   * Check if there is at least one admin in the room
-   */
   hasActiveAdmin(): boolean {
     for (const client of this.clients.values()) {
       if (client instanceof Admin) {
@@ -284,14 +226,7 @@ export class Room {
     return false;
   }
 
-  /**
-   * Close the room and all clients
-   */
-  /**
-   * Determine the target video quality based on participant count
-   */
   getTargetVideoQuality(): VideoQuality {
-    // Thresholds from config
     const { lowThreshold, standardThreshold } = config.videoQuality;
 
     if (this.currentQuality === "standard") {
@@ -299,7 +234,6 @@ export class Room {
         return "low";
       }
     } else {
-      // current is 'low'
       if (this.clients.size <= standardThreshold) {
         return "standard";
       }
@@ -307,9 +241,6 @@ export class Room {
     return this.currentQuality;
   }
 
-  /**
-   * Update and return the new quality if it has changed
-   */
   updateVideoQuality(): VideoQuality | null {
     const target = this.getTargetVideoQuality();
     if (target !== this.currentQuality) {
@@ -321,22 +252,14 @@ export class Room {
 
   close(): void {
     this.stopCleanupTimer();
-    // Close all clients
     for (const client of this.clients.values()) {
       client.close();
     }
     this.clients.clear();
-
-    // Close the router
     this.router.close();
     this.userKeysById.clear();
     this.displayNamesByKey.clear();
   }
-
-  // ============================================
-  // Cleanup Timer (Admin Timeout)
-  // ============================================
-  public cleanupTimer: NodeJS.Timeout | null = null;
 
   startCleanupTimer(callback: () => void) {
     if (this.cleanupTimer) return;
@@ -359,15 +282,11 @@ export class Room {
     }
   }
 
-  // ============================================
-  // Waiting Room Methods
-  // ============================================
-
   addPendingClient(
     userKey: string,
     userId: string,
     socket: any,
-    displayName?: string
+    displayName?: string,
   ) {
     this.pendingClients.set(userKey, { userKey, userId, socket, displayName });
   }

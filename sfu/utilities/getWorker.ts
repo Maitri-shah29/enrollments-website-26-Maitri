@@ -1,8 +1,5 @@
 import type { Worker } from "mediasoup/types";
 
-/**
- * Get the least loaded worker from the pool based on CPU usage
- */
 const getWorker = (workers: Worker[]): Promise<Worker> => {
   return new Promise(async (resolve, reject) => {
     if (workers.length === 0) {
@@ -10,11 +7,9 @@ const getWorker = (workers: Worker[]): Promise<Worker> => {
       return;
     }
 
-    // Calculate load for each worker
     const workersLoad = workers.map((worker) => {
       return new Promise<number>(async (resolve) => {
         const stats = await worker.getResourceUsage();
-        // Calculate cumulative CPU usage (user time + system time)
         const cpuUsage = stats.ru_utime + stats.ru_stime;
         resolve(cpuUsage);
       });
