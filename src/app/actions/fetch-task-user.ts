@@ -25,6 +25,7 @@ export default async function fetchTaskRoundUsers() {
         round: {
           type: RoundType.task,
           active: true,
+          hidden: false,
         },
         Task: {
           isNot: null,
