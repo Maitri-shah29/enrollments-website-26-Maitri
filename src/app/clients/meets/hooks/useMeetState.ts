@@ -34,6 +34,7 @@ export function useMeetState({ initialRoomId }: UseMeetStateOptions) {
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [selectedParticipantForActions, setSelectedParticipantForActions] =
     useState<string | null>(null);
+  const [isRoomLocked, setIsRoomLocked] = useState(false);
   const [showAdminTips, setShowAdminTips] = useState(false);
   const [hasSeenTips, setHasSeenTips] = useState(() => {
     if (typeof window !== "undefined") {
@@ -75,6 +76,8 @@ export function useMeetState({ initialRoomId }: UseMeetStateOptions) {
     setIsParticipantsOpen,
     selectedParticipantForActions,
     setSelectedParticipantForActions,
+    isRoomLocked,
+    setIsRoomLocked,
     showAdminTips,
     setShowAdminTips,
     hasSeenTips,

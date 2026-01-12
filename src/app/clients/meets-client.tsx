@@ -77,6 +77,8 @@ export default function MeetsClient({
     setIsParticipantsOpen,
     selectedParticipantForActions,
     setSelectedParticipantForActions,
+    isRoomLocked,
+    setIsRoomLocked,
     showAdminTips,
     setShowAdminTips,
     hasSeenTips,
@@ -243,6 +245,7 @@ export default function MeetsClient({
     setIsCameraOff,
     setIsScreenSharing,
     setIsHandRaised,
+    setIsRoomLocked,
     setActiveScreenShareId,
     setVideoQuality,
     updateVideoQualityRef,
@@ -310,7 +313,7 @@ export default function MeetsClient({
 
   // Show login page if not authenticated
   if (!session?.data?.user) {
-    return <SignupPage onSignIn={() => {}} />;
+    return <SignupPage onSignIn={() => { }} />;
   }
 
   // Determine presentation mode
@@ -451,6 +454,8 @@ export default function MeetsClient({
         setHasSeenTips={setHasSeenTips}
         resolveDisplayName={resolveDisplayName}
         reactions={reactionEvents}
+        isRoomLocked={isRoomLocked}
+        onToggleLock={() => socket.toggleRoomLock(!isRoomLocked)}
       />
     </div>
   );
