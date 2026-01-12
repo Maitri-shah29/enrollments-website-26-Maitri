@@ -16,6 +16,7 @@ export interface SfuStatus {
 const DEFAULT_SFU_URL =
   process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 const SFU_SECRET = process.env.SFU_SECRET || "development-secret";
+const SFU_CLIENT_ID = process.env.SFU_CLIENT_ID || "internal";
 
 const fetchWithTimeout = async (
   url: string,
@@ -34,6 +35,7 @@ const fetchWithTimeout = async (
 
 const buildSfuHeaders = (): HeadersInit => ({
   "x-sfu-secret": SFU_SECRET,
+  "x-sfu-client": SFU_CLIENT_ID,
 });
 
 const parseSfuPool = (raw: string): SfuInstance[] => {
@@ -95,23 +97,37 @@ export const fetchSfuStatus = async (
 export const fetchSfuRooms = async (
   instance: SfuInstance,
 ): Promise<RoomInfo[]> => {
+  const url = `${instance.url}/rooms`;
+  console.log(`[fetchSfuRooms] Fetching from: ${url}`);
+
   try {
     const response = await fetchWithTimeout(
-      `${instance.url}/rooms`,
+      url,
       { headers: buildSfuHeaders(), cache: "no-store" },
       2500,
     );
 
-    if (!response.ok) return [];
+    console.log(`[fetchSfuRooms] Response status: ${response.status}`);
+
+    if (!response.ok) {
+      console.log(
+        `[fetchSfuRooms] Response not ok: ${response.status} ${response.statusText}`,
+      );
+      return [];
+    }
 
     const data = await response.json();
+    console.log(`[fetchSfuRooms] Raw data:`, JSON.stringify(data));
+
     const rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+    console.log(`[fetchSfuRooms] Parsed ${rooms.length} rooms`);
 
     return rooms.map((room: { id: string; clients?: number }) => ({
       id: room.id,
       userCount: Number(room.clients ?? 0),
     }));
-  } catch (_error) {
+  } catch (error) {
+    console.error(`[fetchSfuRooms] Error fetching rooms:`, error);
     return [];
   }
 };
