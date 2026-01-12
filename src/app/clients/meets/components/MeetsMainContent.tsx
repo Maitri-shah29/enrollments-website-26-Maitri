@@ -44,10 +44,10 @@ interface MeetsMainContentProps {
   ghostEnabled: boolean;
   setIsGhostMode: Dispatch<SetStateAction<boolean>>;
   userMeetingStatus:
-    | "loading"
-    | "has-slot"
-    | "needs-booking"
-    | "not-enrolled";
+  | "loading"
+  | "has-slot"
+  | "needs-booking"
+  | "not-enrolled";
   presentationStream: MediaStream | null;
   presenterName: string;
   localStream: MediaStream | null;
@@ -89,6 +89,8 @@ interface MeetsMainContentProps {
   setHasSeenTips: Dispatch<SetStateAction<boolean>>;
   resolveDisplayName: (userId: string) => string;
   reactions: ReactionEvent[];
+  isRoomLocked: boolean;
+  onToggleLock: () => void;
 }
 
 export default function MeetsMainContent({
@@ -154,6 +156,8 @@ export default function MeetsMainContent({
   setHasSeenTips,
   resolveDisplayName,
   reactions,
+  isRoomLocked,
+  onToggleLock,
 }: MeetsMainContentProps) {
   return (
     <div className="flex-1 flex flex-col p-4 overflow-hidden relative">
@@ -248,6 +252,8 @@ export default function MeetsMainContent({
           isParticipantsOpen={isParticipantsOpen}
           onToggleParticipants={() => setIsParticipantsOpen((prev) => !prev)}
           pendingUsersCount={pendingUsers.size}
+          isRoomLocked={isRoomLocked}
+          onToggleLock={onToggleLock}
         />
       )}
 

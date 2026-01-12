@@ -77,6 +77,8 @@ export default function MeetsClient({
     setIsParticipantsOpen,
     selectedParticipantForActions,
     setSelectedParticipantForActions,
+    isRoomLocked,
+    setIsRoomLocked,
     showAdminTips,
     setShowAdminTips,
     hasSeenTips,
@@ -128,13 +130,17 @@ export default function MeetsClient({
     joinOptionsRef: refs.joinOptionsRef,
   });
 
-  const { userSlotOptions, selectedSlotId, userMeetingStatus, handleSlotSelect } =
-    useMeetSlots({
-      initialRoomId,
-      isAdmin: isAdminFlag,
-      session,
-      setRoomId,
-    });
+  const {
+    userSlotOptions,
+    selectedSlotId,
+    userMeetingStatus,
+    handleSlotSelect,
+  } = useMeetSlots({
+    initialRoomId,
+    isAdmin: isAdminFlag,
+    session,
+    setRoomId,
+  });
 
   const { availableRooms, roomsStatus, refreshRooms } = useMeetRooms({
     isAdmin: isAdminFlag,
@@ -243,6 +249,7 @@ export default function MeetsClient({
     setIsCameraOff,
     setIsScreenSharing,
     setIsHandRaised,
+    setIsRoomLocked,
     setActiveScreenShareId,
     setVideoQuality,
     updateVideoQualityRef,
@@ -341,9 +348,12 @@ export default function MeetsClient({
 
   if (connectionState === "waiting") {
     const waitingTitle = waitingMessage ?? "Waiting for host...";
-    const waitingIntro = waitingMessage
-      ? "The host left the room, so there is no one available to admit you right now."
-      : "Please wait to be let in.";
+    const isLockedRoom = waitingMessage?.toLowerCase().includes("locked");
+    const waitingIntro = isLockedRoom
+      ? "Please wait while the host reviews your request."
+      : waitingMessage
+        ? "The host left the room, so there is no one available to admit you right now."
+        : "Please wait to be let in.";
     return (
       <MeetsWaitingScreen
         waitingTitle={waitingTitle}
@@ -451,6 +461,8 @@ export default function MeetsClient({
         setHasSeenTips={setHasSeenTips}
         resolveDisplayName={resolveDisplayName}
         reactions={reactionEvents}
+        isRoomLocked={isRoomLocked}
+        onToggleLock={() => socket.toggleRoomLock(!isRoomLocked)}
       />
     </div>
   );

@@ -1,9 +1,9 @@
-<div align="center">   
+<div align="center">    
       
 ![ACM GIF](https://raw.githubusercontent.com/ACM-VIT/.github/master/profile/acm_gif_banner.gif)
       
 <!-- Project Title -->     
-<h2>ACM OCS Website 2025-26</h2>
+<h2>ACM OCS Website 2025-26</h2> 
   
 <p>The selections website for ACM OCS 2025-26</p>
 

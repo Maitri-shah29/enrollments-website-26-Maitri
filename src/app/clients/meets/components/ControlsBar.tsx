@@ -2,6 +2,8 @@
 
 import {
   Hand,
+  Lock,
+  LockOpen,
   MessageSquare,
   Mic,
   MicOff,
@@ -36,6 +38,8 @@ interface ControlsBarProps {
   isParticipantsOpen?: boolean;
   onToggleParticipants?: () => void;
   pendingUsersCount?: number;
+  isRoomLocked?: boolean;
+  onToggleLock?: () => void;
 }
 
 export default function ControlsBar({
@@ -59,6 +63,8 @@ export default function ControlsBar({
   isParticipantsOpen,
   onToggleParticipants,
   pendingUsersCount = 0,
+  isRoomLocked = false,
+  onToggleLock,
 }: ControlsBarProps) {
   const canStartScreenShare = !activeScreenShareId || isScreenSharing;
   const [isReactionMenuOpen, setIsReactionMenuOpen] = useState(false);
@@ -102,11 +108,10 @@ export default function ControlsBar({
       {isAdmin && (
         <button
           onClick={onToggleParticipants}
-          className={`relative w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-            isParticipantsOpen
+          className={`relative w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isParticipantsOpen
               ? "bg-white text-black hover:bg-neutral-200"
               : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-          }`}
+            }`}
           title="Participants"
         >
           <Users className="w-5 h-5" />
@@ -118,16 +123,32 @@ export default function ControlsBar({
         </button>
       )}
 
+      {isAdmin && (
+        <button
+          onClick={onToggleLock}
+          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isRoomLocked
+              ? "bg-amber-500 text-black hover:bg-amber-400"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+            }`}
+          title={isRoomLocked ? "Unlock meeting" : "Lock meeting"}
+        >
+          {isRoomLocked ? (
+            <Lock className="w-5 h-5" />
+          ) : (
+            <LockOpen className="w-5 h-5" />
+          )}
+        </button>
+      )}
+
       <button
         onClick={onToggleMute}
         disabled={isGhostMode}
-        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isGhostMode
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isGhostMode
             ? ghostDisabledClass
             : isMuted
-            ? "bg-red-500 text-white hover:bg-red-600"
-            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-        }`}
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+          }`}
         title={isGhostMode ? "Ghost mode: mic locked" : isMuted ? "Unmute" : "Mute"}
       >
         {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -136,19 +157,18 @@ export default function ControlsBar({
       <button
         onClick={onToggleCamera}
         disabled={isGhostMode}
-        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isGhostMode
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isGhostMode
             ? ghostDisabledClass
             : isCameraOff
-            ? "bg-red-500 text-white hover:bg-red-600"
-            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-        }`}
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+          }`}
         title={
           isGhostMode
             ? "Ghost mode: camera locked"
             : isCameraOff
-            ? "Turn on camera"
-            : "Turn off camera"
+              ? "Turn on camera"
+              : "Turn off camera"
         }
       >
         {isCameraOff ? (
@@ -161,21 +181,20 @@ export default function ControlsBar({
       <button
         onClick={onToggleScreenShare}
         disabled={screenShareDisabled}
-        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isScreenSharing
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isScreenSharing
             ? "bg-white text-black hover:bg-neutral-200"
             : screenShareDisabled
-            ? ghostDisabledClass
-            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-        }`}
+              ? ghostDisabledClass
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+          }`}
         title={
           isGhostMode
             ? "Ghost mode: screen share locked"
             : !canStartScreenShare
-            ? "Someone else is presenting"
-            : isScreenSharing
-            ? "Stop sharing"
-            : "Share screen"
+              ? "Someone else is presenting"
+              : isScreenSharing
+                ? "Stop sharing"
+                : "Share screen"
         }
       >
         <Monitor className="w-5 h-5" />
@@ -184,19 +203,18 @@ export default function ControlsBar({
       <button
         onClick={onToggleHandRaised}
         disabled={isGhostMode}
-        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-          isGhostMode
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isGhostMode
             ? ghostDisabledClass
             : isHandRaised
-            ? "bg-amber-400 text-black hover:bg-amber-300"
-            : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-        }`}
+              ? "bg-amber-400 text-black hover:bg-amber-300"
+              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+          }`}
         title={
           isGhostMode
             ? "Ghost mode: hand raise locked"
             : isHandRaised
-            ? "Lower hand"
-            : "Raise hand"
+              ? "Lower hand"
+              : "Raise hand"
         }
       >
         <Hand className="w-5 h-5" />
@@ -206,13 +224,12 @@ export default function ControlsBar({
         <button
           onClick={() => setIsReactionMenuOpen((prev) => !prev)}
           disabled={isGhostMode}
-          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-            isGhostMode
+          className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${isGhostMode
               ? ghostDisabledClass
               : isReactionMenuOpen
-              ? "bg-white text-black hover:bg-neutral-200"
-              : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-          }`}
+                ? "bg-white text-black hover:bg-neutral-200"
+                : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+            }`}
           title={isGhostMode ? "Ghost mode: reactions locked" : "Reactions"}
         >
           <Smile className="w-5 h-5" />
@@ -245,11 +262,10 @@ export default function ControlsBar({
 
       <button
         onClick={onToggleChat}
-        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center relative ${
-          isChatOpen
+        className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center relative ${isChatOpen
             ? "bg-white text-black hover:bg-neutral-200"
             : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-        }`}
+          }`}
         title="Chat"
       >
         <MessageSquare className="w-5 h-5" />

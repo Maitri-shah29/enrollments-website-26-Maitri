@@ -53,6 +53,7 @@ interface UseMeetSocketOptions {
   setIsCameraOff: (value: boolean) => void;
   setIsScreenSharing: (value: boolean) => void;
   setIsHandRaised: (value: boolean) => void;
+  setIsRoomLocked: (value: boolean) => void;
   setActiveScreenShareId: (value: string | null) => void;
   setVideoQuality: (value: VideoQuality) => void;
   updateVideoQualityRef: React.MutableRefObject<
@@ -97,6 +98,7 @@ export function useMeetSocket({
   setIsCameraOff,
   setIsScreenSharing,
   setIsHandRaised,
+  setIsRoomLocked,
   setActiveScreenShareId,
   setVideoQuality,
   updateVideoQualityRef,
@@ -141,7 +143,7 @@ export function useMeetSocket({
       consumersRef.current.forEach((consumer) => {
         try {
           consumer.close();
-        } catch {}
+        } catch { }
       });
       consumersRef.current.clear();
       producerMapRef.current.clear();
@@ -156,23 +158,23 @@ export function useMeetSocket({
 
       try {
         audioProducerRef.current?.close();
-      } catch {}
+      } catch { }
       try {
         videoProducerRef.current?.close();
-      } catch {}
+      } catch { }
       try {
         screenProducerRef.current?.close();
-      } catch {}
+      } catch { }
       audioProducerRef.current = null;
       videoProducerRef.current = null;
       screenProducerRef.current = null;
 
       try {
         producerTransportRef.current?.close();
-      } catch {}
+      } catch { }
       try {
         consumerTransportRef.current?.close();
-      } catch {}
+      } catch { }
       producerTransportRef.current = null;
       consumerTransportRef.current = null;
 
@@ -270,7 +272,7 @@ export function useMeetSocket({
             consumer.track.stop();
           }
           consumer.close();
-        } catch {}
+        } catch { }
         consumersRef.current.delete(producerId);
       }
 
@@ -591,7 +593,7 @@ export function useMeetSocket({
               socket.emit(
                 "resumeConsumer",
                 { consumerId: consumer.id },
-                () => {}
+                () => { }
               );
               resolve();
             } catch (err) {
@@ -1203,6 +1205,21 @@ export function useMeetSocket({
               }
             );
 
+            socket.on(
+              "roomLockChanged",
+              ({
+                locked,
+                roomId: eventRoomId,
+              }: {
+                locked: boolean;
+                roomId?: string;
+              }) => {
+                if (!isRoomEvent(eventRoomId)) return;
+                console.log("[Meets] Room lock changed:", locked);
+                setIsRoomLocked(locked);
+              }
+            );
+
             socketRef.current = socket;
           } catch (err) {
             console.error("Failed to get join info:", err);
@@ -1423,11 +1440,35 @@ export function useMeetSocket({
     }
   }, [joinRoom, shouldAutoJoinRef]);
 
+  const toggleRoomLock = useCallback(
+    (locked: boolean): Promise<boolean> => {
+      const socket = socketRef.current;
+      if (!socket) return Promise.resolve(false);
+
+      return new Promise((resolve) => {
+        socket.emit(
+          "lockRoom",
+          { locked },
+          (response: { success: boolean; locked?: boolean } | { error: string }) => {
+            if ("error" in response) {
+              console.error("[Meets] Failed to toggle room lock:", response.error);
+              resolve(false);
+            } else {
+              resolve(response.success);
+            }
+          }
+        );
+      });
+    },
+    [socketRef]
+  );
+
   return {
     cleanup,
     cleanupRoomResources,
     connectSocket,
     joinRoom,
     joinRoomById,
+    toggleRoomLock,
   };
 }
