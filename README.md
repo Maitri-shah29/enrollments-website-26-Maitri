@@ -1,6 +1,6 @@
 <div align="center">   
       
-![Forktober GIF](https://raw.githubusercontent.com/ACM-VIT/.github/master/profile/acm_gif_banner.gif)
+![ACM GIF](https://raw.githubusercontent.com/ACM-VIT/.github/master/profile/acm_gif_banner.gif)
       
 <!-- Project Title -->     
 <h2>ACM OCS Website 2025-26</h2>
