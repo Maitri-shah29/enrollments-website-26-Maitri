@@ -345,11 +345,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                 key={domain}
                 onClick={() => handleDomainSelect(domain)}
                 style={{ fontFamily: "PoppinsReg" }}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                  selectedDomain === domain
-                    ? "bg-zinc-800 text-white"
-                    : "text-gray-400 hover:bg-zinc-800/50 hover:text-white"
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${selectedDomain === domain
+                  ? "bg-zinc-800 text-white"
+                  : "text-gray-400 hover:bg-zinc-800/50 hover:text-white"
+                  }`}
               >
                 {domain}
               </button>
@@ -376,11 +375,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
               key={domain}
               onClick={() => setSelectedDomain(domain)}
               style={{ fontFamily: "PoppinsReg" }}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                selectedDomain === domain
-                  ? "bg-zinc-800 text-white shadow-md"
-                  : "text-gray-400 hover:bg-zinc-800/50 hover:text-white hover:translate-x-1"
-              }`}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${selectedDomain === domain
+                ? "bg-zinc-800 text-white shadow-md"
+                : "text-gray-400 hover:bg-zinc-800/50 hover:text-white hover:translate-x-1"
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span>{domain}</span>
@@ -417,11 +415,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                   <>
                     <span
                       style={{ fontFamily: "PoppinsReg" }}
-                      className={`px-3 py-1 rounded-full ${
-                        isDeadlinePassed(selectedRoundUser.Task.deadline)
-                          ? "bg-red-900/30 text-red-400 border border-red-800"
-                          : "bg-yellow-900/30 text-yellow-400 border border-yellow-800"
-                      }`}
+                      className={`px-3 py-1 rounded-full ${isDeadlinePassed(selectedRoundUser.Task.deadline)
+                        ? "bg-red-900/30 text-red-400 border border-red-800"
+                        : "bg-yellow-900/30 text-yellow-400 border border-yellow-800"
+                        }`}
                     >
                       {formatDeadline(selectedRoundUser.Task.deadline)}
                     </span>
@@ -471,7 +468,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                   work!
                 </p>
               </div>
-            ) : selectedRoundUser.status === "rejected" ? (
+            ) : selectedRoundUser.status === "rejected" || ((selectedRoundUser.status === "evaluate" || selectedRoundUser.status === "pending") && selectedRoundUser.round.announced) ? (
               <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center bg-zinc-900/50 rounded-xl border border-zinc-800">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-6">
                   <svg
