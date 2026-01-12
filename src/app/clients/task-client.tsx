@@ -58,7 +58,10 @@ const FormattedText = ({
                 // Handle dash-prefixed lines as list items
                 if (partIndex === 0 && part.trim().startsWith("-")) {
                   return (
-                    <span key={`${lineIndex}-${partIndex}`} className="block pl-4">
+                    <span
+                      key={`${lineIndex}-${partIndex}`}
+                      className="block pl-4"
+                    >
                       <span className="text-blue-400 mr-2">•</span>
                       {part.trim().slice(1).trim()}
                     </span>
@@ -198,6 +201,8 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
   const isReadOnly = useMemo(() => {
     if (!selectedRoundUser) return true;
     if (selectedRoundUser.status === "evaluate") return true;
+    if (selectedRoundUser.status === "promoted") return true;
+    if (selectedRoundUser.status === "rejected") return true;
     if (
       selectedRoundUser.Task &&
       isDeadlinePassed(selectedRoundUser.Task.deadline)
@@ -261,15 +266,37 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
         >
           <div className="flex items-center gap-2">
             {notification.type === "success" ? (
-              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-5 h-5 text-green-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             ) : (
-              <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5 text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             )}
-            <span style={{ fontFamily: "PoppinsReg" }}>{notification.message}</span>
+            <span style={{ fontFamily: "PoppinsReg" }}>
+              {notification.message}
+            </span>
           </div>
         </div>
       )}
@@ -278,10 +305,16 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
       {showConfirmModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-zinc-900 border border-zinc-800 p-6 md:p-8 rounded-xl max-w-md w-full shadow-2xl">
-            <h3 className="text-xl md:text-2xl font-bold mb-4 text-white" style={{ fontFamily: "PoppinsBlack" }}>
+            <h3
+              className="text-xl md:text-2xl font-bold mb-4 text-white"
+              style={{ fontFamily: "PoppinsBlack" }}
+            >
               Confirm Submission
             </h3>
-            <p className="text-gray-300 mb-6 md:mb-8 text-base md:text-lg leading-relaxed" style={{ fontFamily: "PoppinsReg" }}>
+            <p
+              className="text-gray-300 mb-6 md:mb-8 text-base md:text-lg leading-relaxed"
+              style={{ fontFamily: "PoppinsReg" }}
+            >
               Are you sure you want to submit? <br />
               <span className="text-red-400 font-medium">
                 You will NOT be able to change your answer after this.
@@ -325,12 +358,32 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             )}
           </button>
@@ -365,7 +418,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
         >
           Tasks
         </h2>
-        <p className="text-xs text-gray-500 mb-4" style={{ fontFamily: "PoppinsReg" }}>
+        <p
+          className="text-xs text-gray-500 mb-4"
+          style={{ fontFamily: "PoppinsReg" }}
+        >
           Select a domain
         </p>
         <nav className="space-y-2">
@@ -383,8 +439,18 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
               <div className="flex items-center justify-between">
                 <span>{domain}</span>
                 {selectedDomain === domain && (
-                  <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-4 h-4 text-blue-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 )}
               </div>
@@ -432,15 +498,19 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     )}
                   </>
                 )}
-                {selectedRoundUser.status === "evaluate" && (
-                  <span className="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-medium">
-                    Under Evaluation
-                  </span>
-                )}
+                {(selectedRoundUser.status === "evaluate" ||
+                  (!selectedRoundUser.round.announced &&
+                    (selectedRoundUser.status === "promoted" ||
+                      selectedRoundUser.status === "rejected"))) && (
+                    <span className="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-medium">
+                      Under Evaluation
+                    </span>
+                  )}
               </div>
             </div>
 
-            {selectedRoundUser.status === "promoted" ? (
+            {selectedRoundUser.status === "promoted" &&
+              selectedRoundUser.round.announced ? (
               <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center bg-gradient-to-br from-green-900/20 to-zinc-900/50 rounded-xl border border-green-900/50">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-green-900/30 rounded-full flex items-center justify-center mb-6 animate-bounce">
                   <svg
@@ -460,10 +530,16 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl md:text-2xl font-bold text-green-400 mb-2" style={{ fontFamily: "PoppinsBlack" }}>
+                <h2
+                  className="text-xl md:text-2xl font-bold text-green-400 mb-2"
+                  style={{ fontFamily: "PoppinsBlack" }}
+                >
                   Congratulations!
                 </h2>
-                <p className="text-gray-300 max-w-md" style={{ fontFamily: "PoppinsReg" }}>
+                <p
+                  className="text-gray-300 max-w-md"
+                  style={{ fontFamily: "PoppinsReg" }}
+                >
                   You have been promoted to the next round. Keep up the great
                   work!
                 </p>
@@ -488,10 +564,16 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl md:text-2xl font-bold text-gray-400 mb-2" style={{ fontFamily: "PoppinsBlack" }}>
+                <h2
+                  className="text-xl md:text-2xl font-bold text-gray-400 mb-2"
+                  style={{ fontFamily: "PoppinsBlack" }}
+                >
                   Better Luck Next Time
                 </h2>
-                <p className="text-gray-500 max-w-md" style={{ fontFamily: "PoppinsReg" }}>
+                <p
+                  className="text-gray-500 max-w-md"
+                  style={{ fontFamily: "PoppinsReg" }}
+                >
                   Unfortunately, you have not been selected for the next round.
                   We appreciate your participation and effort.
                 </p>
@@ -506,8 +588,18 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                         className="text-lg md:text-xl font-semibold flex items-center gap-2"
                         style={{ fontFamily: "PoppinsBlack" }}
                       >
-                        <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg
+                          className="w-5 h-5 text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
                         </svg>
                         Task Description
                       </h2>
@@ -526,8 +618,18 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                       className="text-lg md:text-xl font-semibold flex items-center gap-2"
                       style={{ fontFamily: "PoppinsBlack" }}
                     >
-                      <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <svg
+                        className="w-5 h-5 text-green-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
                       </svg>
                       Your Submission
                     </h2>
@@ -536,8 +638,18 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                         className="text-xs md:text-sm text-gray-400 flex items-center gap-1"
                         style={{ fontFamily: "PoppinsReg" }}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         Last submitted:{" "}
                         {new Intl.DateTimeFormat("en-US", {
@@ -561,7 +673,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                       disabled={submitting || isReadOnly}
                     />
                     {/* Character count */}
-                    <div className="absolute bottom-3 right-3 text-xs text-gray-500" style={{ fontFamily: "PoppinsReg" }}>
+                    <div
+                      className="absolute bottom-3 right-3 text-xs text-gray-500"
+                      style={{ fontFamily: "PoppinsReg" }}
+                    >
                       {submissionText.length} characters
                     </div>
                   </div>
@@ -581,16 +696,41 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     >
                       {submitting ? (
                         <>
-                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          <svg
+                            className="w-5 h-5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
                           </svg>
                           Submitting...
                         </>
                       ) : (
                         <>
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                            />
                           </svg>
                           Submit Task
                         </>
@@ -609,11 +749,22 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     className="mt-4 p-4 bg-zinc-900 rounded-xl border border-zinc-800 text-gray-400 text-sm flex items-center gap-3"
                     style={{ fontFamily: "PoppinsReg" }}
                   >
-                    <svg className="w-5 h-5 text-yellow-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <svg
+                      className="w-5 h-5 text-yellow-500 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
                     </svg>
                     <span>
-                      {selectedRoundUser.status === "evaluate"
+                      {selectedRoundUser.status === "evaluate" ||
+                        selectedRoundUser.status === "pending"
                         ? "Your submission is currently under evaluation. We'll notify you once results are ready."
                         : "Submissions are no longer accepted for this task. The deadline has passed."}
                     </span>
@@ -624,13 +775,29 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center p-4">
-            <svg className="w-16 h-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <svg
+              className="w-16 h-16 text-gray-600 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
             </svg>
-            <p className="text-gray-400 text-lg" style={{ fontFamily: "PoppinsReg" }}>
+            <p
+              className="text-gray-400 text-lg"
+              style={{ fontFamily: "PoppinsReg" }}
+            >
               Select a domain to view your task
             </p>
-            <p className="text-gray-600 text-sm mt-2" style={{ fontFamily: "PoppinsReg" }}>
+            <p
+              className="text-gray-600 text-sm mt-2"
+              style={{ fontFamily: "PoppinsReg" }}
+            >
               Choose from the sidebar to get started
             </p>
           </div>
