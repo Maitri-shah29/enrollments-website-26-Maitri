@@ -398,11 +398,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                 key={domain}
                 onClick={() => handleDomainSelect(domain)}
                 style={{ fontFamily: "PoppinsReg" }}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                  selectedDomain === domain
-                    ? "bg-zinc-800 text-white"
-                    : "text-gray-400 hover:bg-zinc-800/50 hover:text-white"
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${selectedDomain === domain
+                  ? "bg-zinc-800 text-white"
+                  : "text-gray-400 hover:bg-zinc-800/50 hover:text-white"
+                  }`}
               >
                 {domain}
               </button>
@@ -432,11 +431,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
               key={domain}
               onClick={() => setSelectedDomain(domain)}
               style={{ fontFamily: "PoppinsReg" }}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                selectedDomain === domain
-                  ? "bg-zinc-800 text-white shadow-md"
-                  : "text-gray-400 hover:bg-zinc-800/50 hover:text-white hover:translate-x-1"
-              }`}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${selectedDomain === domain
+                ? "bg-zinc-800 text-white shadow-md"
+                : "text-gray-400 hover:bg-zinc-800/50 hover:text-white hover:translate-x-1"
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span>{domain}</span>
@@ -483,11 +481,10 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                   <>
                     <span
                       style={{ fontFamily: "PoppinsReg" }}
-                      className={`px-3 py-1 rounded-full ${
-                        isDeadlinePassed(selectedRoundUser.Task.deadline)
-                          ? "bg-red-900/30 text-red-400 border border-red-800"
-                          : "bg-yellow-900/30 text-yellow-400 border border-yellow-800"
-                      }`}
+                      className={`px-3 py-1 rounded-full ${isDeadlinePassed(selectedRoundUser.Task.deadline)
+                        ? "bg-red-900/30 text-red-400 border border-red-800"
+                        : "bg-yellow-900/30 text-yellow-400 border border-yellow-800"
+                        }`}
                     >
                       {formatDeadline(selectedRoundUser.Task.deadline)}
                     </span>
@@ -505,15 +502,15 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                   (!selectedRoundUser.round.announced &&
                     (selectedRoundUser.status === "promoted" ||
                       selectedRoundUser.status === "rejected"))) && (
-                  <span className="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-medium">
-                    Under Evaluation
-                  </span>
-                )}
+                    <span className="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-medium">
+                      Under Evaluation
+                    </span>
+                  )}
               </div>
             </div>
 
             {selectedRoundUser.status === "promoted" &&
-            selectedRoundUser.round.announced ? (
+              selectedRoundUser.round.announced ? (
               <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center bg-gradient-to-br from-green-900/20 to-zinc-900/50 rounded-xl border border-green-900/50">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-green-900/30 rounded-full flex items-center justify-center mb-6 animate-bounce">
                   <svg
@@ -547,8 +544,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                   work!
                 </p>
               </div>
-            ) : selectedRoundUser.status === "rejected" &&
-              selectedRoundUser.round.announced ? (
+            ) : selectedRoundUser.status === "rejected" || ((selectedRoundUser.status === "evaluate" || selectedRoundUser.status === "pending") && selectedRoundUser.round.announced) ? (
               <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center bg-zinc-900/50 rounded-xl border border-zinc-800">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-6">
                   <svg
@@ -768,9 +764,7 @@ const TaskClient = ({ initialRoundUsers }: TaskClientProps) => {
                     </svg>
                     <span>
                       {selectedRoundUser.status === "evaluate" ||
-                      (!selectedRoundUser.round.announced &&
-                        (selectedRoundUser.status === "promoted" ||
-                          selectedRoundUser.status === "rejected"))
+                        selectedRoundUser.status === "pending"
                         ? "Your submission is currently under evaluation. We'll notify you once results are ready."
                         : "Submissions are no longer accepted for this task. The deadline has passed."}
                     </span>

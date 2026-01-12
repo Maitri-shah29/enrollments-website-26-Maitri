@@ -1,10 +1,11 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 const SFU_SECRET = process.env.SFU_SECRET || "development-secret";
+const SFU_CLIENT_ID = process.env.SFU_CLIENT_ID || "internal";
 
 import { ADMIN_EMAILS } from "@/lib/admin-config";
 
@@ -29,10 +30,11 @@ export async function getSfuToken(sessionId: string) {
       email: session.user.email,
       name: session.user.name,
       isAdmin,
+      clientId: SFU_CLIENT_ID,
       sessionId,
     },
     SFU_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "1h" },
   );
 
   return token;
