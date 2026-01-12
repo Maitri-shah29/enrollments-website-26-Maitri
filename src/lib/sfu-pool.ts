@@ -16,6 +16,7 @@ export interface SfuStatus {
 const DEFAULT_SFU_URL =
   process.env.NEXT_PUBLIC_SFU_URL || "http://localhost:3031";
 const SFU_SECRET = process.env.SFU_SECRET || "development-secret";
+const SFU_CLIENT_ID = process.env.SFU_CLIENT_ID || "internal";
 
 const fetchWithTimeout = async (
   url: string,
@@ -34,6 +35,7 @@ const fetchWithTimeout = async (
 
 const buildSfuHeaders = (): HeadersInit => ({
   "x-sfu-secret": SFU_SECRET,
+  "x-sfu-client": SFU_CLIENT_ID,
 });
 
 const parseSfuPool = (raw: string): SfuInstance[] => {
@@ -108,7 +110,9 @@ export const fetchSfuRooms = async (
     console.log(`[fetchSfuRooms] Response status: ${response.status}`);
 
     if (!response.ok) {
-      console.log(`[fetchSfuRooms] Response not ok: ${response.status} ${response.statusText}`);
+      console.log(
+        `[fetchSfuRooms] Response not ok: ${response.status} ${response.statusText}`,
+      );
       return [];
     }
 
