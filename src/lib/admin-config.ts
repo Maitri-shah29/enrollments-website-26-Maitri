@@ -127,4 +127,5 @@ export const ADMIN_EMAILS = [
   "hemanth.shivanand2022@vitstudent.ac.in",
   "garv.jain2022a@vitstudent.ac.in",
   "technicaldirector.acmvit@gmail.com",
+  "harshit.vootukuri2022@vitstudent.ac.in",
 ];
