@@ -19,105 +19,102 @@ export default async function fetchInterviewRounds() {
       };
     }
 
-    const domains = Object.values(Domain);
-
-    const rounds = [];
-
-    for (const domain of domains) {
-      const interviewRound = await prisma.round.findFirst({
-        where: {
-          domain: domain,
-          type: RoundType.interview,
-          active: true,
-        },
-        select: {
-          id: true,
-          domain: true,
-          number: true,
-          Meet: {
-            include: {
-              Slot: true,
-            },
+    const interviewRounds = await prisma.round.findMany({
+      where: {
+        type: RoundType.interview,
+        active: true,
+      },
+      select: {
+        id: true,
+        domain: true,
+        number: true,
+        Meet: {
+          include: {
+            Slot: true,
           },
         },
-      });
+      },
+    });
 
-      if (interviewRound) {
-        // Check eligibility and create RoundUser if needed
-        const previousRoundNumber = interviewRound.number - 1;
+    const rounds = (
+      await Promise.all(
+        interviewRounds.map(async (interviewRound) => {
+          const previousRoundNumber = interviewRound.number - 1;
 
-        const previousRound = await prisma.round.findFirst({
-          where: {
-            domain,
-            number: previousRoundNumber,
-          },
-          select: { id: true },
-        });
-
-        if (previousRound) {
-          const previousRoundUser = await prisma.roundUser.findFirst({
+          const previousRound = await prisma.round.findFirst({
             where: {
-              roundId: previousRound.id,
-              userId,
+              domain: interviewRound.domain,
+              number: previousRoundNumber,
             },
-            select: { status: true },
+            select: { id: true },
           });
 
-          if (previousRoundUser?.status === RoundStatus.promoted) {
-            const existing = await prisma.roundUser.findUnique({
+          if (previousRound) {
+            const previousRoundUser = await prisma.roundUser.findFirst({
               where: {
-                roundId_userId: {
-                  roundId: interviewRound.id,
-                  userId,
-                },
+                roundId: previousRound.id,
+                userId,
               },
+              select: { status: true },
             });
 
-            if (!existing) {
-              await prisma.roundUser.create({
-                data: {
-                  roundId: interviewRound.id,
-                  userId,
+            if (previousRoundUser?.status === RoundStatus.promoted) {
+              const existing = await prisma.roundUser.findUnique({
+                where: {
+                  roundId_userId: {
+                    roundId: interviewRound.id,
+                    userId,
+                  },
                 },
               });
+
+              if (!existing) {
+                await prisma.roundUser.create({
+                  data: {
+                    roundId: interviewRound.id,
+                    userId,
+                  },
+                });
+              }
             }
           }
-        }
 
-        // Fetch the RoundUser
-        const roundUser = await prisma.roundUser.findUnique({
-          where: {
-            roundId_userId: {
-              roundId: interviewRound.id,
-              userId,
-            },
-          },
-          include: {
-            round: {
-              select: {
-                number: true,
+          const roundUser = await prisma.roundUser.findUnique({
+            where: {
+              roundId_userId: {
+                roundId: interviewRound.id,
+                userId,
               },
             },
-            Meet_User: {
-              include: {
-                slot: {
-                  include: {
-                    meet: true,
+            include: {
+              round: {
+                select: {
+                  number: true,
+                },
+              },
+              Meet_User: {
+                include: {
+                  slot: {
+                    include: {
+                      meet: true,
+                    },
                   },
                 },
               },
             },
-          },
-        });
-
-        if (roundUser) {
-          rounds.push({
-            ...interviewRound,
-            RoundUser: [roundUser],
           });
-        }
-      }
-    }
+
+          if (roundUser) {
+            return {
+              ...interviewRound,
+              RoundUser: [roundUser],
+            };
+          }
+          return null;
+        })
+      )
+    ).filter((r) => r !== null);
+
     console.log("Fetched rounds:", rounds);
     return { rounds };
   } catch (e) {
