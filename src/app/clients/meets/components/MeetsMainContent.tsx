@@ -213,12 +213,14 @@ export default function MeetsMainContent({
           isMuted={isMuted}
           isHandRaised={isHandRaised}
           isGhost={ghostEnabled}
+          isScreenSharing={isScreenSharing}
           participants={participants}
           userEmail={userEmail}
           isMirrorCamera={isMirrorCamera}
           activeSpeakerId={activeSpeakerId}
           currentUserId={currentUserId}
           audioOutputDeviceId={audioOutputDeviceId}
+          activeScreenShareId={activeScreenShareId}
           isAdmin={isAdmin}
           selectedParticipantId={selectedParticipantForActions}
           onParticipantClick={(userId) =>
