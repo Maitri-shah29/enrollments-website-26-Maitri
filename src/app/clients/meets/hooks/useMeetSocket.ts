@@ -1385,20 +1385,36 @@ export function useMeetSocket({
       };
       joinOptionsRef.current = joinOptions;
       let stream: MediaStream | null = null;
+      let streamPromise: Promise<MediaStream | null> | null = null;
+      const existingStream = localStreamRef.current;
+      const hasLiveTrack = existingStream?.getTracks().some(
+        (track) => track.readyState === "live"
+      );
 
       try {
-        await connectSocket(targetRoomId);
+        const connectPromise = connectSocket(targetRoomId);
+
         if (!joinOptions.isGhost) {
-          stream = await requestMediaPermissions();
+          if (hasLiveTrack) {
+            stream = existingStream ?? null;
+          } else {
+            streamPromise = requestMediaPermissions();
+          }
+        } else {
+          localStreamRef.current = null;
+          setLocalStream(null);
+        }
+
+        await connectPromise;
+
+        if (!joinOptions.isGhost && !stream) {
+          stream = await streamPromise;
           if (!stream) {
             setConnectionState("error");
             return;
           }
           localStreamRef.current = stream;
           setLocalStream(stream);
-        } else {
-          localStreamRef.current = null;
-          setLocalStream(null);
         }
 
         await joinRoomInternal(targetRoomId, stream, joinOptions);
