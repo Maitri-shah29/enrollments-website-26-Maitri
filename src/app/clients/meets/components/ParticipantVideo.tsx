@@ -14,6 +14,7 @@ interface ParticipantVideoProps {
   isAdmin?: boolean;
   isSelected?: boolean;
   onAdminClick?: (userId: string) => void;
+  className?: string;
 }
 
 export default function ParticipantVideo({
@@ -25,6 +26,7 @@ export default function ParticipantVideo({
   isAdmin = false,
   isSelected = false,
   onAdminClick,
+  className = "",
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -112,7 +114,7 @@ export default function ParticipantVideo({
         isActiveSpeaker
       )} border-white/10 ${
         isAdmin && onAdminClick ? "cursor-pointer hover:border-white/20" : ""
-      }`}
+      } ${className}`}
     >
       <video
         ref={setVideoRef}
