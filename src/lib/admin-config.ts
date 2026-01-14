@@ -5,7 +5,6 @@
 
 export const ADMIN_EMAILS = [
   // Admin emails allowed to sign in (deduplicated)
-  "ashman.singh2024@vitstudent.ac.in",
   "maitri.shah20242024@vitstudent.ac.in",
   "navaneeth.krishna2024@vitstudent.ac.in",
   "sree.rajmuthaiyaal2024@vitstudent.ac.in",
