@@ -10,8 +10,10 @@ import TechServer from "@/app/clients/tech-server";
 import Landing from "@/app/components/landing";
 import { SessionProvider } from "@/app/components/session-provider";
 import { cacheTags } from "@/lib/cache-tags";
+import { DOMAIN_LABELS, DOMAINS, type Domain } from "@/lib/domain";
 import { prisma } from "@/lib/prisma";
 import { getRequestSession } from "@/lib/request-session";
+import type { DomainResult, ResultsSummary } from "@/lib/results";
 
 type HomeShellProps = {
   initialUrl?: string;
@@ -32,11 +34,13 @@ async function HomeWithSession({ initialUrl }: HomeShellProps) {
 
   let roundUserCount = 0;
   let promotedDomains: string[] = [];
+  let resultsSummary: ResultsSummary | null = null;
   const userId = session?.session?.userId;
   if (userId) {
-    [roundUserCount, promotedDomains] = await Promise.all([
+    [roundUserCount, promotedDomains, resultsSummary] = await Promise.all([
       getRoundUserCountCached(userId),
       getPromotedDomainsCached(userId),
+      getResultsSummaryCached(userId),
     ]);
   }
   return (
@@ -46,6 +50,7 @@ async function HomeWithSession({ initialUrl }: HomeShellProps) {
         initialUrl={initialUrl}
         isAllowed={true}
         promotedDomains={promotedDomains}
+        resultsSummary={resultsSummary}
         designChild={
           <DesignServer
             roundUserCount={roundUserCount}
@@ -127,4 +132,99 @@ async function getPromotedDomainsCached(userId: string) {
     roundUsers.map((entry) => entry.round.domain.toLowerCase()),
   );
   return Array.from(unique);
+}
+
+async function getResultsSummaryCached(
+  userId: string,
+): Promise<ResultsSummary> {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 120, expire: 600 });
+  for (const domain of DOMAINS) {
+    cacheTag(cacheTags.rounds(domain));
+    cacheTag(cacheTags.roundUser(userId, domain));
+  }
+
+  const rounds = await prisma.round.findMany({
+    select: {
+      id: true,
+      domain: true,
+      number: true,
+      type: true,
+    },
+  });
+
+  const latestByDomain = new Map<string, (typeof rounds)[number]>();
+  for (const round of rounds) {
+    const domain = round.domain.toLowerCase();
+    const existing = latestByDomain.get(domain);
+    if (!existing || round.number > existing.number) {
+      latestByDomain.set(domain, round);
+    }
+  }
+
+  const lastRoundIds = Array.from(latestByDomain.values()).map(
+    (round) => round.id,
+  );
+  const roundUsers = lastRoundIds.length
+    ? await prisma.roundUser.findMany({
+        where: {
+          userId,
+          roundId: { in: lastRoundIds },
+        },
+        select: {
+          roundId: true,
+          status: true,
+        },
+      })
+    : [];
+
+  const statusByRoundId = new Map(
+    roundUsers.map((roundUser) => [roundUser.roundId, roundUser.status]),
+  );
+
+  const domains: DomainResult[] = DOMAINS.map((domain) => {
+    const lastRound = latestByDomain.get(domain);
+    const lastRoundNumber = lastRound?.number ?? null;
+    const lastRoundType = lastRound?.type ?? null;
+
+    let status: DomainResult["status"] = "pending";
+    if (lastRound && lastRound.type === "form") {
+      status =
+        statusByRoundId.get(lastRound.id) === "promoted"
+          ? "promoted"
+          : "not_promoted";
+    }
+
+    return {
+      domain,
+      label: DOMAIN_LABELS[domain],
+      lastRoundNumber,
+      lastRoundType,
+      status,
+    };
+  });
+
+  const promotedSet = domains
+    .filter((entry) => entry.status === "promoted")
+    .map((entry) => entry.domain);
+
+  const latestRoundUser = await prisma.roundUser.findFirst({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+    select: { round: { select: { domain: true } } },
+  });
+
+  const primaryDomain = (latestRoundUser?.round.domain?.toLowerCase() ??
+    null) as Domain | null;
+  const primaryEntry = primaryDomain
+    ? domains.find((entry) => entry.domain === primaryDomain)
+    : undefined;
+
+  return {
+    domains,
+    promotedDomains: promotedSet,
+    primaryDomain,
+    primaryStatus: primaryEntry?.status ?? "pending",
+    primaryLabel: primaryEntry?.label ?? null,
+  };
 }
