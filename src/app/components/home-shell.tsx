@@ -150,6 +150,8 @@ async function getResultsSummaryCached(
       domain: true,
       number: true,
       type: true,
+      active: true,
+      announced: true,
     },
   });
 
@@ -188,7 +190,12 @@ async function getResultsSummaryCached(
     const lastRoundType = lastRound?.type ?? null;
 
     let status: DomainResult["status"] = "pending";
-    if (lastRound && lastRound.type === "form") {
+    if (
+      lastRound &&
+      lastRound.type === "form" &&
+      lastRound.active &&
+      lastRound.announced
+    ) {
       status =
         statusByRoundId.get(lastRound.id) === "promoted"
           ? "promoted"
