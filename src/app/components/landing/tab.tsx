@@ -8,8 +8,10 @@ import MeetsClient from "@/app/clients/meets-client";
 import SnakeClient from "@/app/clients/snake-client";
 import { Loader } from "@/components/loader";
 import { useSearchHistory } from "@/hooks/use-search-history";
+import type { ResultsSummary } from "@/lib/results";
 import BrickGame404 from "../brick-game-404";
 import Instructions from "../instructions";
+import ResultsScreen from "../results-screen";
 import { useSessionContext } from "../session-provider"; // Adjust path as needed
 import SignupPage from "../sign-up";
 import HomePage from "./home-page";
@@ -75,6 +77,7 @@ interface TabProps {
   schedulerChildren?: ReactNode;
   taskChildren?: ReactNode;
   promotedDomains?: string[];
+  resultsSummary?: ResultsSummary | null;
 }
 
 const Tab: React.FC<TabProps> = ({
@@ -89,17 +92,19 @@ const Tab: React.FC<TabProps> = ({
   schedulerChildren,
   taskChildren,
   promotedDomains = [],
+  resultsSummary,
 }) => {
   // Get session from context
   const { session, isPending } = useSessionContext();
 
   const [navInput, setNavInput] = useState<string>(() =>
-    currentHostFromPointer(tabData)
+    currentHostFromPointer(tabData),
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeError, setIframeError] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [showResultsGate, setShowResultsGate] = useState(true);
   const navInputRef = useRef<HTMLInputElement>(null);
   const { history, addToHistory, removeFromHistory } = useSearchHistory();
 
@@ -182,7 +187,7 @@ const Tab: React.FC<TabProps> = ({
     }
 
     const currentUrl =
-      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
+      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
 
     requestFullscreen();
 
@@ -292,7 +297,7 @@ const Tab: React.FC<TabProps> = ({
 
   const goHome = () => {
     const currentUrl =
-      tabData.pointer >= 0 ? tabData.history[tabData.pointer]?.url ?? "" : "";
+      tabData.pointer >= 0 ? (tabData.history[tabData.pointer]?.url ?? "") : "";
     if (currentUrl === "") return;
 
     const newHistory = tabData.history.slice(0, tabData.pointer + 1);
@@ -350,7 +355,7 @@ const Tab: React.FC<TabProps> = ({
 
     // Also reload iframe if present (for non-client components)
     const iframe = document.querySelector(
-      'iframe[title="Browser Tab"]'
+      'iframe[title="Browser Tab"]',
     ) as HTMLIFrameElement;
     if (iframe?.src) {
       const currentSrc = iframe.src;
@@ -519,13 +524,24 @@ const Tab: React.FC<TabProps> = ({
           )
         ) : (
           <div className="h-full flex flex-col overflow-hidden">
-            <HomePageNavbar
-              onNavigate={(keyword) => commitFrom(keyword)}
-              promotedDomains={promotedDomains}
-            />
-            <div className="flex-1 min-h-0 overflow-auto">
-              <HomePage onNavigateKeyword={(keyword) => commitFrom(keyword)} />
-            </div>
+            {showResultsGate ? (
+              <ResultsScreen
+                resultsSummary={resultsSummary}
+                onContinue={() => setShowResultsGate(false)}
+              />
+            ) : (
+              <>
+                <HomePageNavbar
+                  onNavigate={(keyword) => commitFrom(keyword)}
+                  promotedDomains={promotedDomains}
+                />
+                <div className="flex-1 min-h-0 overflow-auto">
+                  <HomePage
+                    onNavigateKeyword={(keyword) => commitFrom(keyword)}
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

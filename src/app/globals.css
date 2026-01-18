@@ -45,8 +45,7 @@
 
 @font-face {
   font-family: "JetBrainsMono";
-  src: url("/fonts/JetBrainsMono-Regular.ttf")
-    format("truetype");
+  src: url("/fonts/JetBrainsMono-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -54,8 +53,7 @@
 
 @font-face {
   font-family: "ShareTechMono";
-  src: url("/fonts/ShareTechMono-Regular.ttf")
-    format("truetype");
+  src: url("/fonts/ShareTechMono-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -63,8 +61,7 @@
 
 @font-face {
   font-family: "PolysansTrial";
-  src: url("/fonts/PolySansTrial-BulkyWide.ttf")
-    format("truetype");
+  src: url("/fonts/PolySansTrial-BulkyWide.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -72,8 +69,7 @@
 
 @font-face {
   font-family: "Brushwell";
-  src: url("/fonts/Brushwell.ttf")
-    format("truetype");
+  src: url("/fonts/Brushwell.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -81,8 +77,7 @@
 
 @font-face {
   font-family: "Coolvetica";
-  src: url("/fonts/coolvetica-rg.ttf")
-    format("truetype");
+  src: url("/fonts/coolvetica-rg.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -90,8 +85,7 @@
 
 @font-face {
   font-family: "PoppinsReg";
-  src: url("/fonts/Poppins-Regular.ttf")
-    format("truetype");
+  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -99,8 +93,7 @@
 
 @font-face {
   font-family: "PoppinsBlack";
-  src: url("/fonts/Poppins-Black.ttf")
-    format("truetype");
+  src: url("/fonts/Poppins-Black.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -108,8 +101,7 @@
 
 @font-face {
   font-family: "Helvetica";
-  src: url("/fonts/Helvetica.ttf")
-    format("truetype");
+  src: url("/fonts/Helvetica.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -121,8 +113,7 @@
 
 @font-face {
   font-family: "DoppioOne";
-  src: url("/fonts/DoppioOne-Regular.ttf")
-    format("truetype");
+  src: url("/fonts/DoppioOne-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -130,8 +121,7 @@
 
 @font-face {
   font-family: "MonopolyBold";
-  src: url("/fonts/Monopoly%20Bold.ttf")
-    format("truetype");
+  src: url("/fonts/Monopoly%20Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -139,8 +129,7 @@
 
 @font-face {
   font-family: "MonopolyRegular";
-  src: url("/fonts/Monopoly%20Regular.ttf")
-    format("truetype");
+  src: url("/fonts/Monopoly%20Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -161,9 +150,11 @@
 .font-jetbrains {
   font-family: "JetBrainsMono", monospace;
 }
+
 .font-brushwell {
   font-family: "Brushwell", monospace;
 }
+
 .font-ShareTechMono {
   font-family: "ShareTechMono", monospace;
 }
@@ -180,6 +171,156 @@
   font-family: "MonopolyRegular", monospace;
 }
 
+/* Original confetti (kept for backward compatibility) */
+.confetti-piece {
+  position: absolute;
+  top: -12vh;
+  opacity: 0;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(0, 110vh, 0) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Enhanced confetti - GPU optimized */
+.confetti-piece-enhanced {
+  position: absolute;
+  top: -5vh;
+  opacity: 0;
+  border-radius: 2px;
+  will-change: transform, opacity;
+  animation-name: confetti-fall-smooth;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  backface-visibility: hidden;
+}
+
+@keyframes confetti-fall-smooth {
+  0% {
+    transform: translateY(-5vh) rotate(0deg);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(105vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Sparkle effect */
+.sparkle-effect {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: sparkle-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes sparkle-pulse {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  animation: spin-smooth 1s linear infinite;
+}
+
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Celebration icon bounce */
+.celebration-icon {
+  animation: celebration-bounce 2s ease-in-out infinite;
+}
+
+@keyframes celebration-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.05);
+  }
+}
+
+/* Status badge pulse for success */
+.status-badge-success {
+  animation: badge-glow 2s ease-in-out infinite;
+}
+
+@keyframes badge-glow {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Results card entrance animation */
+.results-card {
+  animation: card-entrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes card-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .mobile-blocker {
   display: none;
 }
@@ -189,9 +330,9 @@
 }
 
 @media (max-width: 1024px) and (pointer: coarse),
-  (max-width: 1024px) and (any-pointer: coarse),
-  (max-width: 1024px) and (hover: none),
-  (max-width: 1024px) and (any-hover: none) {
+(max-width: 1024px) and (any-pointer: coarse),
+(max-width: 1024px) and (hover: none),
+(max-width: 1024px) and (any-hover: none) {
   .mobile-blocker {
     display: block;
   }
@@ -203,9 +344,11 @@
 
 /* Container for the checkbox and text */
 .custom-checkbox {
-  display: block; /* Makes the entire label a block element */
+  display: block;
+  /* Makes the entire label a block element */
   position: relative;
-  padding-left: 35px; /* Creates space for the custom box */
+  padding-left: 35px;
+  /* Creates space for the custom box */
   cursor: pointer;
 }
 
@@ -231,24 +374,27 @@
 }
 
 /* Style the box when the input is checked */
-.custom-checkbox input:checked ~ span::before {
-  background-color: #2196f3; /* Changes color when checked */
+.custom-checkbox input:checked~span::before {
+  background-color: #2196f3;
+  /* Changes color when checked */
   border-color: #2196f3;
 }
 
 /* Create the checkmark */
 .custom-checkbox span::after {
-  content: "✓"; /* Unicode character for a checkmark */
+  content: "✓";
+  /* Unicode character for a checkmark */
   position: absolute;
   left: 6px;
   top: 0px;
   color: rgba(130, 130, 130, 1);
   font-size: 20px;
-  display: none; /* Hide the checkmark by default */
+  display: none;
+  /* Hide the checkmark by default */
 }
 
 /* Show the checkmark when the input is checked */
-.custom-checkbox input:checked ~ span::after {
+.custom-checkbox input:checked~span::after {
   display: block;
 }
 
@@ -257,7 +403,8 @@
   font-family: sans-serif;
   color: #555;
   font-size: 16px;
-  line-height: 25px; /* Aligns text vertically with the box */
+  line-height: 25px;
+  /* Aligns text vertically with the box */
 }
 
 .hide-scrollbar {
@@ -273,6 +420,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-22%);
   }
@@ -283,8 +431,7 @@
 }
 
 * {
-  cursor: url("https://assets.acmvit.in/ocs/images/design/figma_cursor.png") 10
-      10,
+  cursor: url("https://assets.acmvit.in/ocs/images/design/figma_cursor.png") 10 10,
     auto;
 }
 
@@ -292,6 +439,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -305,23 +453,23 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
 }
 
 .promo-text {
-  background: linear-gradient(
-    90deg,
-    #ff7a59,
-    #ffd66b,
-    #6be1a1,
-    #6bb6ff,
-    #ff7a59
-  );
+  background: linear-gradient(90deg,
+      #ff7a59,
+      #ffd66b,
+      #6be1a1,
+      #6bb6ff,
+      #ff7a59);
   background-size: 300% 100%;
   background-clip: text;
   color: transparent;
@@ -338,6 +486,7 @@
     0% {
       transform: rotate(0deg);
     }
+
     100% {
       transform: rotate(360deg);
     }
@@ -353,6 +502,7 @@
       transform: translateY(30px) scale(0.97);
       filter: blur(3px);
     }
+
     100% {
       opacity: 1;
       transform: translateY(0) scale(1);
@@ -369,6 +519,7 @@
       opacity: 0;
       transform: translateY(1rem) scale(0.9);
     }
+
     100% {
       opacity: 1;
       transform: translateY(0) scale(1);
@@ -384,6 +535,7 @@
       opacity: 1;
       transform: scale(1);
     }
+
     100% {
       opacity: 0;
       transform: scale(0.85);
@@ -399,10 +551,12 @@
       opacity: 0;
       transform: translate(-50%, 10px) scale(0.9);
     }
+
     15% {
       opacity: 1;
       transform: translate(-50%, 0) scale(1);
     }
+
     100% {
       opacity: 0;
       transform: translate(-50%, -160px) scale(1.05);
@@ -445,8 +599,7 @@
 /* Firefox scrollbar */
 * {
   scrollbar-width: auto;
-  scrollbar-color: var(--scrollbar-thumb, #888)
-    var(--scrollbar-track, transparent);
+  scrollbar-color: var(--scrollbar-thumb, #888) var(--scrollbar-track, transparent);
 }
 
 :root {
@@ -522,6 +675,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -532,9 +686,11 @@
     opacity: 0;
     transform: translateX(60px) scale(0.95);
   }
+
   60% {
     opacity: 1;
   }
+
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
@@ -546,9 +702,11 @@
     opacity: 0;
     transform: translateX(-60px) scale(0.95);
   }
+
   60% {
     opacity: 1;
   }
+
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
@@ -568,6 +726,7 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translateY(8px) scale(0.94);

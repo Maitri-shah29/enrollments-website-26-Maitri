@@ -1,5 +1,6 @@
 "use client";
 import { type DragEvent, Fragment, useEffect, useState } from "react";
+import type { ResultsSummary } from "@/lib/results";
 import FullscreenToggle from "./fullscreen-toggle";
 import Instructions from "./instructions";
 import Tab, { type TabData } from "./landing/tab";
@@ -150,6 +151,7 @@ const Landing: React.FC<{
   taskChild?: React.ReactNode;
   initialUrl?: string;
   promotedDomains?: string[];
+  resultsSummary?: ResultsSummary | null;
 }> = ({
   session: _session,
   isAllowed: _isAllowed,
@@ -162,6 +164,7 @@ const Landing: React.FC<{
   taskChild,
   initialUrl,
   promotedDomains = [],
+  resultsSummary,
 }) => {
   const { isPending } = useSessionContext();
   const initialId = Date.now();
@@ -721,6 +724,7 @@ const Landing: React.FC<{
               schedulerChildren={schedulerChild}
               taskChildren={taskChild}
               promotedDomains={promotedDomains}
+              resultsSummary={resultsSummary}
             />
           </div>
         ))}
